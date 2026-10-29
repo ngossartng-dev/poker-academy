@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-n';
+  var VERSION = '2.0.0-o';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -112,7 +112,7 @@
         '<div class="row">' + logo() + '<h1>Poker Academy</h1></div>' +
         yo('Salut, moi c’est Yo. Lionel de mon vrai prénom, mais au club tout le monde m’appelle Yo. Je serai ton coach : on va trouver ton style, puis le muscler, main après main.') +
         '<div class="card stack"><label for="ps">Ton pseudo</label><input id="ps" type="text" autocomplete="nickname" value="' + esc(st.pseudo || '') + '" placeholder="Vilvoord">' +
-        '<label for="ag">Ton âge</label><input id="ag" type="number" inputmode="numeric" min="1" max="120" value="' + esc(st.age || '') + '"><div class="err" id="onbErr"></div>' +
+        '<label for="ag">Ta date de naissance</label><input id="ag" type="text" inputmode="numeric" autocomplete="bday" maxlength="10" placeholder="JJ/MM/AAAA" value="' + esc(st.birth || '') + '" style="letter-spacing:.08em"><div class="small muted">Jour, mois, année : par exemple 14/07/1980.</div><div class="err" id="onbErr"></div>' +
         '<button class="btn gold block" data-act="onb1">Continuer</button></div>' +
         (Object.keys(PA.load().players).length ? '<button class="btn ghost" data-act="pickPlayer">J’ai déjà un joueur sur ce téléphone</button>' : '') + '</div>';
     } else if (st.step === 0) {
@@ -558,6 +558,7 @@
       '<button class="btn" data-act="testMenu">Refaire le test de profil</button></div>' +
       '<div class="card stack"><b>Ma progression par notion</b><table class="tbl">' + notions + '</table><div class="muted small">Mains à revoir en attente : ' + Object.keys(p.srs).length + '</div></div>' +
       '<div class="card stack"><b>Mon journal</b><table class="tbl">' + sess + '</table></div>' +
+      '<a class="tile" href="#bankroll"><b>Bankroll</b><span>Tes résultats (Winamax, club, live), ROI, repères du cours et simulateur de variance.</span></a>' +
       '<a class="tile" href="#fiche"><b>Avant la partie</b><span>Ta fiche : structure, plan par phase, tes 3 fuites à surveiller, les adversaires attendus.</span></a>' +
       '<a class="tile" href="#reglages"><b>Réglages</b><span>Taille du texte, mode gaucher, vibration, remise à zéro, tout effacer.</span></a>' +
       '<a class="tile" href="#merci"><b>Remerciements</b><span>Version ' + VERSION + '</span></a>' +
@@ -596,7 +597,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
@@ -611,12 +612,15 @@
     switch (act) {
       case 'nav': go(v); break;
       case 'onb1': {
-        var ps = $('#ps').value.trim(), ag = parseInt($('#ag').value, 10);
-        ui.onb.pseudo = ps; ui.onb.age = $('#ag').value;
+        var ps = $('#ps').value.trim(), bd = $('#ag').value.trim(), m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(bd);
+        ui.onb.pseudo = ps; ui.onb.birth = bd;
         if (!ps) { $('#onbErr').textContent = 'Indique un pseudo.'; return; }
-        if (!ag || ag < 1 || ag > 120) { $('#onbErr').textContent = 'Indique ton âge.'; return; }
+        if (!m) { $('#onbErr').textContent = 'Indique ta date de naissance sous la forme JJ/MM/AAAA.'; return; }
+        var dd = +m[1], mm = +m[2], yy = +m[3], dt = new Date(yy, mm - 1, dd), now = new Date();
+        if (dt.getFullYear() !== yy || dt.getMonth() !== mm - 1 || dt.getDate() !== dd || dt > now || yy < 1900) { $('#onbErr').textContent = 'Cette date n’existe pas : vérifie le jour, le mois et l’année.'; return; }
+        var ag = now.getFullYear() - yy - ((now.getMonth() < mm - 1 || (now.getMonth() === mm - 1 && now.getDate() < dd)) ? 1 : 0);
         if (ag < 18) { ui.onb.step = 0; render(); return; }
-        PA.newPlayer(ps, ag); ui.onb.step = 2; ui.onbActive = true; ui.welcomed = true; try { sessionStorage.setItem('pa2w', '1'); } catch (x) {} ui.forceNew = false; render(); break;
+        PA.newPlayer(ps, ag); PA.player().birth = yy + '-' + m[2] + '-' + m[1]; PA.save(); ui.onb.step = 2; ui.onbActive = true; ui.welcomed = true; try { sessionStorage.setItem('pa2w', '1'); } catch (x) {} ui.forceNew = false; render(); break;
       }
       case 'onbBack': ui.onb.step = 1; render(); break;
       case 'pickProf': ui.onb.profile = v; render(); break;
@@ -675,6 +679,15 @@
     p.perso[key] = p.perso[key] || {}; p.perso[key][h] = nx; PA.save(); rerenderRange();
   }
   window.addEventListener('hashchange', function () { ui.sheet = null; renderSheet(); render(); });
+  // date de naissance : les barres s'ajoutent toutes seules (JJ/MM/AAAA)
+  document.addEventListener('input', function (e) {
+    if (!e.target || e.target.id !== 'ag') return;
+    var d = e.target.value.replace(/\D/g, '').slice(0, 8), out = d.slice(0, 2);
+    if (d.length > 2) out += '/' + d.slice(2, 4);
+    if (d.length > 4) out += '/' + d.slice(4);
+    if (e.inputType && e.inputType.indexOf('delete') === 0 && /\/$/.test(e.target.value)) out = e.target.value;
+    e.target.value = out;
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; renderSheet(); } });
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
   window.PA_UI = { render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, IC: IC };

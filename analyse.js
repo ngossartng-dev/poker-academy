@@ -347,7 +347,7 @@
         var c = compare(window.PA.player().profile || 'tag', { hand: x.h }, { pos: x.p, ctx: x.cx, act: x.a, openerPos: x.op, bbStack: x.st });
         var note = c ? (c.verdict === 'ok' || c.verdict === 'other' ? 'Préflop conforme à ta range.' : 'Préflop : ta range dit « ' + actFr(c.want, c.s.type) + ' », tu as choisi « ' + actFr(c.mine, c.s.type) + ' ».') : '';
         return '<div class="card stack"><button class="row" data-hact="open" data-v="' + x.id + '" style="justify-content:space-between;background:none;border:0;color:inherit;padding:0;text-align:left;width:100%"><span><b>' + showHand(x) + '</b> · ' + window.PA.POS_LABEL[x.p] + ' · ' + String(x.st).replace('.', ',') + ' BB</span><span style="color:' + (x.net >= 0 ? '#4fe08f' : '#ff8080') + ';font-weight:700">' + fmtBB(x.net) + '</span></button>' +
-          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div><div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + (note ? U().yo(note) : '') : '') + '</div>';
+          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div><div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + (note ? U().yo(note) : '') + '<button class="btn" data-hact="share" data-v="' + x.id + '">Partager en image</button>' : '') + '</div>';
       }).join('');
   }
   function tournoisTab(S) {
@@ -403,6 +403,80 @@
   }
 
 
+
+  /* ---------- Partager une main en image ---------- */
+  var SU = { s: ['♠', '#111'], h: ['♥', '#d61f1f'], d: ['♦', '#d61f1f'], c: ['♣', '#111'] };
+  function drawCard(g, x, y, w, h, card) {
+    g.fillStyle = '#fff'; g.strokeStyle = '#ffd43b'; g.lineWidth = 3;
+    var r = 12; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); g.fill(); g.stroke();
+    var su = SU[card[1]] || ['?', '#111'], rk = card[0] === 'T' ? '10' : card[0];
+    g.fillStyle = su[1]; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '800 ' + Math.round(h * 0.38) + 'px "Big Shoulders Display", Impact, sans-serif'; g.fillText(rk, x + w / 2, y + h * 0.36);
+    g.font = Math.round(h * 0.36) + 'px sans-serif'; g.fillText(su[0], x + w / 2, y + h * 0.74);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  }
+  function wrapText(g, text, maxW) {
+    var words = text.split(' '), lines = [], cur = '';
+    words.forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; });
+    if (cur) lines.push(cur); return lines;
+  }
+  function handImage(x) {
+    var W = 1080, lines = [], P = window.PA.POS_LABEL[x.p] || x.p;
+    var c = compare(window.PA.player().profile || 'tag', { hand: x.h }, { pos: x.p, ctx: x.cx, act: x.a, openerPos: x.op, bbStack: x.st });
+    var cv = document.createElement('canvas'), g = cv.getContext('2d');
+    g.font = '36px "IBM Plex Sans", Arial, sans-serif';
+    var body = [];
+    if (x.log) x.log.forEach(function (l) { body.push(l[0] === '#' ? { street: l.slice(1).split(' ')[0], cards: l.split(' ').slice(1) } : { t: l }); });
+    else body.push({ t: (x.cx === 'unopened' ? 'Personne n’était entré' : x.cx === 'limped' ? 'Un ou des limps devant' : 'Ouverture ' + (window.PA.POS_LABEL[x.op] || '')) + ' · ' + actFr(x.a, x.cx === 'vsOpen' ? 'def' : 'open') });
+    if (x.note) body.push({ t: 'Note : ' + x.note });
+    // hauteur
+    var H = 420; body.forEach(function (b) { H += b.street ? 150 : 52 * Math.max(1, wrapText(g, b.t, W - 120).length); });
+    if (c) H += 120; H += 110;
+    cv.width = W; cv.height = H;
+    g.fillStyle = '#0b0b0d'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#ffd43b'; g.fillRect(0, 0, W, 14);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillStyle = '#ffd43b'; g.font = '800 64px "Big Shoulders Display", Impact, sans-serif'; g.fillText('POKER ACADEMY', 60, 100);
+    g.fillStyle = '#c9c9cf'; g.font = '32px "IBM Plex Sans", Arial, sans-serif';
+    g.fillText((x.t || '') + ' · ' + x.d.slice(0, 10).split('-').reverse().join('/'), 60, 150);
+    // main
+    if (x.c) { var cs = x.c.split(' '); drawCard(g, 60, 190, 130, 180, cs[0]); drawCard(g, 205, 190, 130, 180, cs[1]); }
+    else { g.fillStyle = '#fff'; g.font = '800 120px "Big Shoulders Display", Impact, sans-serif'; g.fillText(x.h.replace(/T/g, '10'), 60, 330); }
+    g.fillStyle = '#fff'; g.font = '700 44px "IBM Plex Sans", Arial, sans-serif'; g.fillText(P + ' · ' + String(Math.round(x.st)) + ' BB', 380, 260);
+    g.fillStyle = x.net >= 0 ? '#4fe08f' : '#ff8080'; g.font = '700 40px "IBM Plex Sans", Arial, sans-serif'; g.fillText(fmtBB(x.net), 380, 320);
+    var y = 430;
+    body.forEach(function (b) {
+      if (b.street) {
+        g.fillStyle = '#ffd43b'; g.font = '700 36px "IBM Plex Sans", Arial, sans-serif'; g.fillText({ flop: 'Flop', turn: 'Turn', river: 'River' }[b.street] || b.street, 60, y + 70);
+        b.cards.forEach(function (cd, i) { drawCard(g, 220 + i * 100, y + 10, 86, 120, cd); }); y += 150;
+      } else {
+        g.fillStyle = '#e8e8ec'; g.font = '36px "IBM Plex Sans", Arial, sans-serif';
+        wrapText(g, b.t, W - 120).forEach(function (ln) { g.fillText(ln, 60, y + 36); y += 52; });
+      }
+    });
+    if (c) {
+      y += 20; g.fillStyle = '#1b1b20'; g.fillRect(40, y, W - 80, 90); g.fillStyle = '#ffd43b'; g.font = '700 32px "IBM Plex Sans", Arial, sans-serif';
+      g.fillText('Ma range : ' + actFr(c.want, c.s.type) + ' · Mon choix : ' + actFr(c.mine, c.s.type), 64, y + 56); y += 100;
+    }
+    g.fillStyle = '#8a8a93'; g.font = '28px "IBM Plex Sans", Arial, sans-serif'; g.fillText('Partagé depuis Poker Academy', 60, H - 40);
+    return cv;
+  }
+  function shareHand(id) {
+    var x = loadDB().hands.filter(function (h) { return h.id === id; })[0]; if (!x) return;
+    var cv = handImage(x), url = cv.toDataURL('image/png'), name = 'main-' + x.h + '-' + x.d.slice(0, 10) + '.png';
+    var old = document.getElementById('paShare'); if (old) old.remove();
+    var box = document.createElement('div'); box.id = 'paShare';
+    box.setAttribute('style', 'position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;overflow:auto');
+    var canShare = false; try { canShare = !!(navigator.canShare && navigator.share); } catch (e) {}
+    box.innerHTML = '<img src="' + url + '" alt="La main en image" style="display:block;width:auto;height:auto;max-width:min(520px,100%);max-height:68vh;object-fit:contain;flex:none;border-radius:12px;border:2px solid #ffd43b">' +
+      '<div class="row" style="flex-wrap:wrap;justify-content:center">' +
+      (window.PAAndroid ? '<button class="btn gold" data-hact="shareAndroid">Partager</button>' : (canShare ? '<button class="btn gold" data-hact="shareNative">Partager</button>' : '')) +
+      (window.PAAndroid ? '' : '<a class="btn' + (canShare ? '' : ' gold') + '" href="' + url + '" download="' + name + '">Enregistrer l’image</a>') +
+      '<button class="btn" data-hact="shareClose">Fermer</button></div>' +
+      '<div class="small muted" style="text-align:center">Sur PC, tu peux aussi faire un clic droit sur l’image puis « Copier l’image », et la coller dans un message.</div>';
+    document.body.appendChild(box);
+    AV.shareUrl = url; AV.shareName = name; AV.shareCanvas = cv;
+  }
   /* ---------- Carnet des adversaires du club ---------- */
   var OPP = [
     ['nit', 'Nit (très serré)', '~10/8', 'Vole-le, couche-toi face à sa grosse mise.'],
@@ -450,7 +524,7 @@
     if (i1 === i2) return CF.r1 + CF.r2;
     return (i1 < i2 ? CF.r1 + CF.r2 : CF.r2 + CF.r1) + (CF.suited ? 's' : 'o');
   }
-  function showHand(x) { return x.c ? showHand(x) : '<span class="disp" style="font-size:1.1em">' + x.h.replace('T', '10') + '</span>'; }
+  function showHand(x) { return x.c ? cardsTxt(x.c) : '<span class="disp" style="font-size:1.1em">' + x.h.replace('T', '10') + '</span>'; }
   function segBtns(k, opts, cur) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + (String(cur) === String(o[0]) ? 'on' : '') + '" data-hact="cf" data-k="' + k + '" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
   function actOptions() {
     if (CF.cx === 'unopened') return CF.pos === 'BB' ? [['check', 'Checker']] : [['fold', 'Fold'], ['limp', 'Limp'], ['raise', 'Ouvrir'], ['allin', 'Tapis']];
@@ -481,7 +555,7 @@
   function clubTab(db) {
     var club = db.hands.filter(function (x) { return x.src === 'club'; }).slice(-30).reverse();
     var list = club.length ? '<div class="card stack"><b>Tes mains du club</b>' + club.map(function (x) {
-      return '<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>' + showHand(x) + ' · ' + window.PA.POS_LABEL[x.p] + ' · ' + x.st + ' BB · ' + actFr(x.a, x.cx === 'vsOpen' ? 'def' : 'open') + '<br><span class="small muted">' + x.d.slice(0, 10).split('-').reverse().join('/') + (x.note ? ' · ' + U().esc(x.note) : '') + '</span></span><button class="btn" data-hact="cfDel" data-v="' + x.id + '" style="min-height:40px;padding:4px 10px">Suppr.</button></div>';
+      return '<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>' + showHand(x) + ' · ' + window.PA.POS_LABEL[x.p] + ' · ' + x.st + ' BB · ' + actFr(x.a, x.cx === 'vsOpen' ? 'def' : 'open') + '<br><span class="small muted">' + x.d.slice(0, 10).split('-').reverse().join('/') + (x.note ? ' · ' + U().esc(x.note) : '') + '</span></span><span class="row" style="gap:6px"><button class="btn" data-hact="share" data-v="' + x.id + '" style="min-height:40px;padding:4px 10px">Image</button><button class="btn" data-hact="cfDel" data-v="' + x.id + '" style="min-height:40px;padding:4px 10px">Suppr.</button></span></div>';
     }).join('') + '</div>' : '';
     return U().yo('Note tes mains du club dès que possible, entre deux coups ou le soir même : position, main, ce qui s’est passé avant toi et ton choix. Je te dis tout de suite ce que dit ta range, et ces mains comptent dans tes statistiques.') + clubForm() + list;
   }
@@ -531,6 +605,10 @@
       if (k === 'pos' || k === 'cx') { CF.a = null; if (CF.op && CF.pos && POS_ALL.indexOf(CF.op) >= POS_ALL.indexOf(CF.pos)) CF.op = null; }
     }
     else if (a === 'cfSave') saveClub();
+    else if (a === 'share') { shareHand(v); return; }
+    else if (a === 'shareClose') { var bx = document.getElementById('paShare'); if (bx) bx.remove(); return; }
+    else if (a === 'shareAndroid') { try { window.PAAndroid.shareImage(AV.shareUrl.split(',')[1], AV.shareName); } catch (er) {} return; }
+    else if (a === 'shareNative') { AV.shareCanvas.toBlob(function (bl) { var f = new File([bl], AV.shareName, { type: 'image/png' }); try { if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: 'Une main de poker' }).catch(function () {}); } catch (er) {} }); return; }
     else if (a === 'opNew') { CA.tmpName = undefined; CA.tmpNote = undefined; CA.edit = 'new'; CA.prof = 'fan'; CA.armDel = false; }
     else if (a === 'opEdit') { CA.tmpName = undefined; CA.tmpNote = undefined; CA.edit = v; CA.prof = (opps().filter(function (o) { return o.id === v; })[0] || {}).prof; CA.armDel = false; }
     else if (a === 'opProf') { var ne = document.getElementById('opName'), no = document.getElementById('opNote'); CA.prof = v; if (ne) CA.tmpName = ne.value; if (no) CA.tmpNote = no.value; }
