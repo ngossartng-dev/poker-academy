@@ -41,8 +41,18 @@
     if (a === 'allin') return 'tapis';
     return 'ouvrir à ' + String(PA.openBB(sit.pos, sit.bb)).replace('.', ',') + ' BB';
   }
+  // carte unique ouverte depuis le widget Android : #cartes?q=BTN|100|K9o
+  function fromHash() {
+    var m = /[?&]q=([^&]+)/.exec(location.hash); if (!m) return;
+    var p = decodeURIComponent(m[1]).split('|'); if (p.length !== 3 || PA.POS.indexOf(p[0]) < 0 || PA.HANDS.indexOf(p[2]) < 0) return;
+    var pl = PA.player(); if (!pl) return;
+    var sit = { type: 'open', pos: p[0], bb: +p[1] || 100 };
+    C = { list: [{ sit: sit, hand: p[2], k: key(sit, p[2]), review: false, suits: suitsFor(p[2]) }], i: 0, ok: 0, ans: null, missed: 0, prof: pl.profile || 'tag', daily: true };
+    history.replaceState(null, '', '#cartes');
+  }
   function view() {
     var ui = U();
+    if (/[?&]q=/.test(location.hash)) fromHash();
     if (!C) {
       var n = due().length, total = Object.keys(store()).length;
       return ui.shell('entrainer', '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>Cartes</h1>' +
@@ -52,6 +62,7 @@
     }
     if (C.i >= C.list.length) {
       var pct = Math.round(C.ok / C.list.length * 100);
+      if (C.daily) return ui.shell('entrainer', '<div class="stack"><h1>Question du jour</h1>' + ui.yo(C.ok ? 'Bonne réponse. À demain pour la prochaine !' : 'Raté : cette main reviendra dans tes cartes demain.') + '<div class="row"><button class="btn gold" data-kact="start" style="flex:1">Faire 20 cartes</button><button class="btn" data-kact="quit">Terminer</button></div></div>', true);
       var body = '<div class="stack"><h1>Bilan</h1>' + ui.yo(pct >= 90 ? 'Excellent : ta range est presque automatique.' : (pct >= 70 ? 'Bonne séance. Les cartes ratées reviennent demain.' : 'On a du travail, et c’est normal. Les cartes ratées reviennent demain, regarde ta range d’ici là.')) +
         '<div class="grid2"><div class="card"><div class="muted small">Bonnes réponses</div><div class="disp" style="font-size:40px">' + C.ok + ' / ' + C.list.length + '</div></div><div class="card"><div class="muted small">À revoir demain</div><div class="disp" style="font-size:40px">' + C.missed + '</div></div></div>' +
         '<div class="row"><button class="btn gold" data-kact="start" style="flex:1">Encore 20 cartes</button><button class="btn" data-kact="quit">Terminer</button></div></div>';

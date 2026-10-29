@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-p';
+  var VERSION = '2.0.0-q';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -591,10 +591,11 @@
     applySettings();
     var app = $('#root');
     var s = PA.load(), p = PA.player();
-    var r = (location.hash || '#home').slice(1);
+    var r = (location.hash || '#home').slice(1).split('?')[0];
     if (r === 'pick') { app.innerHTML = pickPlayerView(); return; }
     if (!p) { app.innerHTML = Object.keys(s.players).length && !ui.forceNew ? pickPlayerView() : onbView(); return; }
     if (!p.profile || ui.onbActive) { if (!p.profile) ui.onb.step = Math.max(2, ui.onb.step); app.innerHTML = onbView(); return; }
+    if (!ui.welcomed && /[?&]q=/.test(location.hash)) ui.welcomed = true; // ouverture depuis le widget
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
