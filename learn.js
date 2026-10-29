@@ -94,23 +94,60 @@
   function savePos() { var p = PA.player(); if (!p) return; p.podPos = p.podPos || {}; p.podPos[POD.n] = POD.i; PA.save(); }
   function podControls() {
     var line = POD.lines[POD.i] || ['Y', ''];
-    return '<div class="card stack" id="podbox"><div class="small muted">' + (POD.playing ? 'Lecture' : 'En pause') + ' · réplique ' + Math.min(POD.i + 1, POD.lines.length) + ' / ' + POD.lines.length + '</div><div>' + (line[0] === 'P' ? '<i>Pause : réfléchis…</i>' : '<b style="color:#ffd23f">' + (line[0] === 'Y' ? 'Yo' : 'Le joueur') + ' :</b> ' + line[1]) + '</div>' +
+    var info = POD.audio && AU ? ' · ' + mmss(AU.currentTime) + ' / ' + mmss((window.PA_AUDIO[POD.n] || {}).d || AU.duration || 0) : ' · réplique ' + Math.min(POD.i + 1, POD.lines.length) + ' / ' + POD.lines.length;
+    return '<div class="card stack" id="podbox"><div class="small muted">' + (POD.playing ? 'Lecture' : 'En pause') + info + '</div><div>' + (line[0] === 'P' ? '<i>Pause : réfléchis…</i>' : '<b style="color:#ffd23f">' + (line[0] === 'Y' ? 'Yo' : 'Le joueur') + ' :</b> ' + line[1]) + '</div>' +
       '<div class="seg">' + [1, 1.25, 1.5].map(function (r) { return '<button class="' + (POD.rate === r ? 'on' : '') + '" data-lact="rate" data-v="' + r + '">' + String(r).replace('.', ',') + '×</button>'; }).join('') + '<button data-lact="back10">Réplique précédente</button><button data-lact="stop">Arrêter</button></div></div>';
   }
+  function mmss(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
   function refreshPod() { var b = document.getElementById('podbox'); if (b) b.outerHTML = podControls(); }
+  /* ---------- Podcasts enregistrés (voix neuronales) ---------- */
+  function hasAudio(n) { return !!(window.PA_AUDIO && window.PA_AUDIO[n]); }
+  var AU = null, lastSave = 0;
+  function audioEl() {
+    if (AU) return AU;
+    AU = new Audio(); AU.preload = 'auto';
+    AU.addEventListener('timeupdate', function () {
+      var m = (window.PA_AUDIO[POD.n] || {}).m || [], t = AU.currentTime, i = 0;
+      for (var k = 0; k < m.length; k++) if (m[k] <= t + 0.05) i = k;
+      if (i !== POD.i) { POD.i = i; refreshPod(); }
+      if (Date.now() - lastSave > 4000) { lastSave = Date.now(); saveSec(); }
+    });
+    AU.addEventListener('ended', function () { POD.playing = false; POD.i = 0; var p = PA.player(); if (p && p.podSec) { p.podSec[POD.n] = 0; PA.save(); } U().render(); });
+    AU.addEventListener('error', function () { if (POD.audio) { POD.audio = false; POD.playing = false; alertBox('Le fichier audio de cet épisode est introuvable : je passe à la voix de l’appareil.'); U().render(); } });
+    return AU;
+  }
+  function saveSec() { var p = PA.player(); if (!p || !AU || POD.n === null) return; p.podSec = p.podSec || {}; p.podSec[POD.n] = Math.floor(AU.currentTime); p.podPos = p.podPos || {}; p.podPos[POD.n] = POD.i; PA.save(); }
+  function seekLine(i) { var m = window.PA_AUDIO[POD.n].m; i = Math.max(0, Math.min(m.length - 1, i)); POD.i = i; audioEl().currentTime = m[i]; refreshPod(); }
+  function listenAudio(n) {
+    var a = audioEl(), c = LS.get(n);
+    if (POD.n === n && POD.audio) {
+      if (POD.playing) { a.pause(); POD.playing = false; saveSec(); }
+      else { a.playbackRate = POD.rate; a.play().catch(function () {}); POD.playing = true; }
+      U().render(); return;
+    }
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (AU) AU.pause();
+    var p = PA.player(), start = (p.podSec && p.podSec[n]) || 0;
+    POD = { n: n, lines: script(c), i: 0, playing: true, rate: POD.rate || 1, audio: true };
+    a.src = 'audio/pod' + (n < 10 ? '0' : '') + n + '.m4a';
+    a.addEventListener('loadedmetadata', function once() { a.removeEventListener('loadedmetadata', once); if (start > 2 && start < a.duration - 5) a.currentTime = start; a.playbackRate = POD.rate; }, false);
+    a.playbackRate = POD.rate; a.play().catch(function () {});
+    U().render();
+  }
   function listen(n) {
+    if (hasAudio(n)) { listenAudio(n); return; }
     if (!window.speechSynthesis) { alertBox('La lecture à voix haute n’est pas disponible sur cet appareil.'); return; }
     var c = LS.get(n);
     if (POD.n === n && POD.playing) { POD.playing = false; speechSynthesis.cancel(); U().render(); return; }
-    if (POD.n !== n) { speechSynthesis.cancel(); var p = PA.player(); POD = { n: n, lines: script(c), i: (p.podPos && p.podPos[n]) || 0, playing: false, rate: POD.rate || 1 }; }
+    if (POD.n !== n) { speechSynthesis.cancel(); if (AU) AU.pause(); var p = PA.player(); POD = { n: n, lines: script(c), i: (p.podPos && p.podPos[n]) || 0, playing: false, rate: POD.rate || 1 }; }
     POD.playing = true; U().render(); speakNext();
   }
   function alertBox(t) { var d = document.createElement('div'); d.className = 'zoom'; d.innerHTML = '<div>' + t + '<br><button class="btn" style="margin-top:12px">OK</button></div>'; d.onclick = function () { d.remove(); }; document.body.appendChild(d); }
 
   function podcastsView() {
     var ui = U(), p = PA.player();
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Podcasts</h1>' + ui.yo('Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions. La lecture utilise la voix de ton téléphone ou de ton PC. Sur téléphone, l’écoute peut s’arrêter quand l’écran s’éteint.') +
-      LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) { var pos = p.podPos && p.podPos[c.n]; var mins = c.podcast ? Math.round(c.podcast.reduce(function (a, l) { return a + (l[0] === 'P' ? l[1] / 60 : l[1].split(/\s+/).length / 150); }, 0)) : c.minutes; return '<div class="card row" style="justify-content:space-between"><div><b>' + c.n + '. ' + c.title + (c.podcast ? ' <span class="chip">Nouveau format</span>' : '') + '</b><div class="small muted">' + mins + ' min' + (pos ? ' · reprise à la réplique ' + (pos + 1) : '') + '</div></div><a class="btn" href="#lecon-' + c.n + '">Ouvrir</a></div>'; }).join('') + '</div>';
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Podcasts</h1>' + ui.yo(window.PA_AUDIO ? 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions et répond aux quiz. Les épisodes sont enregistrés dans l’appli : ils marchent sans internet, et tu reprends là où tu t’étais arrêté.' : 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions. Dans cette version de test, la lecture utilise la voix de ton appareil ; l’appli installée a les épisodes enregistrés.') +
+      LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) { var pos = p.podPos && p.podPos[c.n]; var sec = p.podSec && p.podSec[c.n]; var mins = hasAudio(c.n) ? Math.round(window.PA_AUDIO[c.n].d / 60) : c.podcast ? Math.round(c.podcast.reduce(function (a, l) { return a + (l[0] === 'P' ? l[1] / 60 : l[1].split(/\s+/).length / 150); }, 0)) : c.minutes; return '<div class="card row" style="justify-content:space-between"><div><b>' + c.n + '. ' + c.title + '</b><div class="small muted">' + mins + ' min' + (hasAudio(c.n) ? (sec ? ' · reprise à ' + mmss(sec) : '') : (pos ? ' · reprise à la réplique ' + (pos + 1) : '')) + '</div></div><a class="btn" href="#lecon-' + c.n + '">Ouvrir</a></div>'; }).join('') + '</div>';
     return ui.shell('apprendre', body);
   }
 
@@ -162,6 +199,9 @@
       U().render(); var z = document.querySelector('[data-lact=ans],[data-lact=quiz]'); if (z) z.scrollIntoView({ block: 'center' });
     }
     else if (a === 'listen') listen(parseInt(v, 10));
+    else if (a === 'rate' && POD.audio) { POD.rate = parseFloat(v); if (AU) AU.playbackRate = POD.rate; refreshPod(); }
+    else if (a === 'back10' && POD.audio) { seekLine(POD.i - 1); }
+    else if (a === 'stop' && POD.audio) { if (AU) { saveSec(); AU.pause(); } POD.playing = false; POD.n = null; POD.audio = false; U().render(); }
     else if (a === 'rate') { POD.rate = parseFloat(v); if (POD.playing) { speechSynthesis.cancel(); POD.playing = true; setTimeout(speakNext, 50); } refreshPod(); }
     else if (a === 'back10') { POD.i = Math.max(0, POD.i - 1); if (POD.playing) { POD.playing = false; speechSynthesis.cancel(); POD.playing = true; setTimeout(speakNext, 50); } refreshPod(); }
     else if (a === 'stop') { POD.playing = false; speechSynthesis.cancel(); POD.n = null; U().render(); }

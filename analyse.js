@@ -264,6 +264,40 @@
     return L;
   }
 
+
+  /* ---------- Import automatique (appli PC) ---------- */
+  var SY = { avail: null, busy: false, last: 0, info: null, msg: null };
+  function pcApp() { return location.hostname === '127.0.0.1' && location.port === '47816'; }
+  function autoSync(force) {
+    if (!pcApp() || SY.busy || !window.PA.player()) return;
+    if (!force && Date.now() - SY.last < 60000) return;
+    SY.busy = true; SY.last = Date.now();
+    fetch('/api/winamax', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (L) {
+      SY.avail = L.found; SY.info = L;
+      if (!L.found) { SY.busy = false; return; }
+      var db = loadDB(), seen = db.files || {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
+      if (!todo.length) { SY.busy = false; SY.msg = force ? 'Tout est à jour : aucune nouvelle main Winamax.' : SY.msg; if (force) U().render(); return; }
+      var texts = [], i = 0;
+      (function next() {
+        if (i >= todo.length) {
+          var res = importTexts(texts), db2 = loadDB(); db2.files = db2.files || {};
+          todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); saveDB(db2);
+          SY.busy = false; SY.msg = res.added ? res.added + ' nouvelles mains Winamax importées automatiquement.' : 'Tout est à jour : aucune nouvelle main Winamax.';
+          if (/^#analyser/.test(location.hash)) U().render();
+          return;
+        }
+        var f = todo[i++];
+        fetch('/api/winamax/file?p=' + encodeURIComponent(f.p), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) { if (t) texts.push(t); next(); }).catch(next);
+      })();
+    }).catch(function () { SY.busy = false; SY.avail = false; });
+  }
+  function syncPanel() {
+    if (!pcApp()) return '';
+    var I = SY.info, st = SY.avail === null ? 'Recherche du dossier Winamax…' : (SY.avail ? 'Dossier Winamax trouvé' + (I && I.accounts.length ? ' (compte ' + I.accounts.map(U().esc).join(', ') + ')' : '') + ' : tes nouvelles mains sont importées toutes seules à chaque ouverture de l’appli.' : 'Je ne trouve pas Winamax sur ce PC. Si tu l’installes, ses mains seront importées toutes seules.');
+    return '<div class="card stack"><b>Import automatique</b><div class="small">' + st + '</div>' + (SY.msg ? '<div class="small muted">' + U().esc(SY.msg) + '</div>' : '') + (SY.avail ? '<button class="btn" data-hact="syncNow">' + (SY.busy ? 'Synchronisation…' : 'Synchroniser maintenant') + '</button>' : '') + '</div>';
+  }
+  setTimeout(function () { autoSync(true); }, 1500);
+  window.addEventListener('hashchange', function () { if (/^#analyser/.test(location.hash)) autoSync(false); });
   /* ---------- Écran Analyser ---------- */
   var AV = { tab: 'resume', per: 'all', busy: false, msg: null, open: null, armClear: false };
   var TARGET = { nit: [10, 13, 8, 11], tag: [16, 20, 13, 17], equilibre: [20, 24, 16, 20], lag: [26, 32, 21, 27], perso: [16, 20, 13, 17] };
@@ -365,6 +399,7 @@
     if (!db.hands.length) {
       if (AV.tab === 'club') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button>' + clubTab(db) + '</div>');
       if (AV.tab === 'adv') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button><h2>Adversaires du club</h2>' + carnetTab() + '</div>');
+      body += syncPanel();
       body += ui.yo('Envoie-moi tes mains Winamax ou note tes mains du club : je calcule tes statistiques, je les compare à ta range et je te montre où tu perds des jetons. Tout reste sur cet appareil.') + importPanel(true) +
         '<button class="btn gold" data-hact="tab" data-v="club">Noter une main du club</button><button class="btn" data-hact="tab" data-v="adv">Carnet des adversaires du club</button>';
       return ui.shell('analyser', body + '</div>');
@@ -379,7 +414,7 @@
     else if (AV.tab === 'tournois') body += tournoisTab(S);
     else if (AV.tab === 'club') body += clubTab(db);
     else if (AV.tab === 'adv') body += carnetTab();
-    else body += importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
+    else body += syncPanel() + importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
     return ui.shell('analyser', body + '</div>');
   }
   function readFiles(list) {
@@ -605,6 +640,7 @@
       if (k === 'pos' || k === 'cx') { CF.a = null; if (CF.op && CF.pos && POS_ALL.indexOf(CF.op) >= POS_ALL.indexOf(CF.pos)) CF.op = null; }
     }
     else if (a === 'cfSave') saveClub();
+    else if (a === 'syncNow') { SY.msg = null; autoSync(true); }
     else if (a === 'share') { shareHand(v); return; }
     else if (a === 'shareClose') { var bx = document.getElementById('paShare'); if (bx) bx.remove(); return; }
     else if (a === 'shareAndroid') { try { window.PAAndroid.shareImage(AV.shareUrl.split(',')[1], AV.shareName); } catch (er) {} return; }

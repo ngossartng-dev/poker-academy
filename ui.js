@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-o';
+  var VERSION = '2.0.0-p';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -273,7 +273,8 @@
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions choisies pour toi</div></div>' + IC.arrow + '</button>' +
       '<div class="grid4">' +
       '<a class="tile" href="#preflop"><b>Préflop</b><span>Ouvrir, défendre, 3-bet, tapis ou fold. Par position et profondeur.</span></a>' +
-      '<a class="tile" href="#situations"><b>Situations</b><span>Tapis ou fold, payer un tapis, face au 3-bet. Bulle, PKO et après le flop : bientôt.</span></a>' +
+      '<a class="tile" href="#cartes"><b>Cartes</b><span>Je joue ou je jette ? 20 cartes rapides ; les ratées reviennent' + (window.PA_CARDS && window.PA_CARDS.due() ? ' (' + window.PA_CARDS.due() + ' à revoir aujourd’hui)' : '') + '.</span></a>' +
+      '<a class="tile" href="#situations"><b>Situations</b><span>Tapis ou fold, payer un tapis, face au 3-bet, bulle et ICM, PKO et Space KO, outs et cote.</span></a>' +
       '<a class="tile" href="#partie"><b>Jouer une partie</b><span>Sit &amp; Go, tournoi de 100 joueurs, moments clés, PKO et Space KO, avec ou sans Yo.</span></a>' +
       '<button class="tile" data-act="testMenu"><b>Test de profil</b><span>30, 60 ou 90 mains pour trouver ton style.</span></button></div></div>';
     return shell('entrainer', body);
@@ -597,7 +598,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
