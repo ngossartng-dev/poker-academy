@@ -290,9 +290,9 @@
       (AV.busy ? '<div class="muted">Lecture en cours…</div>' : '') + (AV.msg ? '<div>' + AV.msg + '</div>' : '') + '</div>';
   }
   function tabs() {
-    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['fuites', 'Fuites'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['import', 'Importer']];
+    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['fuites', 'Fuites'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
     return '<div class="seg">' + T.map(function (t) { return '<button class="' + (AV.tab === t[0] ? 'on' : '') + '" data-hact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
-      (AV.tab === 'import' || AV.tab === 'club' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
+      (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
         [['all', 'Winamax + club'], ['wina', 'Winamax'], ['club', 'Club']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
   }
   function resume(H, S, prof) {
@@ -364,8 +364,9 @@
     var body = '<div class="stack"><h1>Analyser</h1>';
     if (!db.hands.length) {
       if (AV.tab === 'club') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button>' + clubTab(db) + '</div>');
+      if (AV.tab === 'adv') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button><h2>Adversaires du club</h2>' + carnetTab() + '</div>');
       body += ui.yo('Envoie-moi tes mains Winamax ou note tes mains du club : je calcule tes statistiques, je les compare à ta range et je te montre où tu perds des jetons. Tout reste sur cet appareil.') + importPanel(true) +
-        '<button class="btn gold" data-hact="tab" data-v="club">Noter une main du club</button>';
+        '<button class="btn gold" data-hact="tab" data-v="club">Noter une main du club</button><button class="btn" data-hact="tab" data-v="adv">Carnet des adversaires du club</button>';
       return ui.shell('analyser', body + '</div>');
     }
     var H = filtered(db), S = stats(H, prof);
@@ -377,6 +378,7 @@
     else if (AV.tab === 'coups') body += coupsTab(H);
     else if (AV.tab === 'tournois') body += tournoisTab(S);
     else if (AV.tab === 'club') body += clubTab(db);
+    else if (AV.tab === 'adv') body += carnetTab();
     else body += importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
     return ui.shell('analyser', body + '</div>');
   }
@@ -400,6 +402,45 @@
     }
   }
 
+
+  /* ---------- Carnet des adversaires du club ---------- */
+  var OPP = [
+    ['nit', 'Nit (très serré)', '~10/8', 'Vole-le, couche-toi face à sa grosse mise.'],
+    ['reg', 'Régulier', '~18/15', 'Joue standard, cherche ses petites fuites.'],
+    ['lag', 'Large-agressif', '~28/22', 'Paie plus large, piège tes grosses mains.'],
+    ['lp', 'Large-passif', '~35/10', 'Isole-le et mise fort pour la valeur ; respecte ses relances.'],
+    ['station', 'Calling station', '~40/6', 'Jamais de bluff, mise gros sur trois rues.'],
+    ['maniac', 'Maniac', '45+/35+', 'Laisse-le bluffer, paie plus large.'],
+    ['fan', 'Récréatif fantasque', 'variable', 'Reste simple, lis ses tailles, mise pour la valeur.'],
+    ['surv', 'Survivant', '~12/10', 'Vole-le à la bulle, respecte son tapis.']];
+  var OPPI = {}; OPP.forEach(function (o) { OPPI[o[0]] = o; });
+  var CA = { edit: null, q: '' };
+  function opps() { var p = window.PA.player(); p.opps = p.opps || []; return p.opps; }
+  function carnetTab() {
+    var ui = U(), L = opps().slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'fr'); });
+    var e = CA.edit ? (CA.edit === 'new' ? { id: 'new', name: '', prof: 'fan', note: '' } : opps().filter(function (o) { return o.id === CA.edit; })[0]) : null;
+    if (e && (CA.tmpName !== undefined || CA.tmpNote !== undefined)) { e = { id: e.id, name: CA.tmpName !== undefined ? CA.tmpName : e.name, prof: e.prof, note: CA.tmpNote !== undefined ? CA.tmpNote : e.note }; }
+    var form = e ? '<div class="card stack"><b>' + (e.id === 'new' ? 'Nouvel adversaire' : 'Modifier la fiche') + '</b>' +
+      '<label class="stack" style="gap:4px"><span class="small muted">Pseudo ou prénom</span><input id="opName" value="' + ui.esc(e.name) + '" style="min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"></label>' +
+      '<div class="small muted">Son profil</div><div class="seg">' + OPP.map(function (o) { return '<button class="' + (CA.prof === o[0] ? 'on' : '') + '" data-hact="opProf" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      (CA.prof ? '<div class="small muted">Mains jouées / relance : ' + OPPI[CA.prof][2] + ' · ' + OPPI[CA.prof][3] + '</div>' : '') +
+      '<label class="stack" style="gap:4px"><span class="small muted">Note libre (ce qu’il a montré, ses habitudes, ses tailles)</span><textarea id="opNote" rows="3" style="background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:8px;font:inherit">' + ui.esc(e.note || '') + '</textarea></label>' +
+      '<div class="row"><button class="btn gold" data-hact="opSave" style="flex:1">Enregistrer</button><button class="btn" data-hact="opCancel">Annuler</button>' + (e.id !== 'new' ? '<button class="btn" data-hact="opDel" style="border-color:#e03131;color:#ff8080">' + (CA.armDel ? 'Confirmer' : 'Supprimer') + '</button>' : '') + '</div></div>' : '';
+    var list = L.length ? L.map(function (o) {
+      var P = OPPI[o.prof] || OPPI.fan;
+      return '<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b class="disp" style="font-size:1.3em">' + ui.esc(o.name) + '</b><span class="chip">' + P[1] + '</span></div><div class="small">' + P[3] + '</div>' + (o.note ? '<div class="small muted">' + ui.esc(o.note) + '</div>' : '') + '<div class="row" style="justify-content:space-between"><span class="small muted">Mis à jour le ' + new Date(o.upd).toLocaleDateString('fr-FR') + '</span><button class="btn" data-hact="opEdit" data-v="' + o.id + '" style="min-height:40px;padding:4px 12px">Modifier</button></div></div>';
+    }).join('') : '';
+    return ui.yo(L.length ? 'Relis ces fiches avant une soirée au club : un seul ajustement par joueur suffit. Mets-les à jour quand quelqu’un montre ses cartes.' : 'Crée une fiche par habitué du club : son profil parmi les huit, et ce que tu as remarqué. Avant chaque soirée, tu relis ses fiches et tu sais comment jouer contre chacun.') +
+      (e ? form : '<button class="btn gold" data-hact="opNew">Ajouter un adversaire</button>') + list;
+  }
+  function opSave() {
+    var name = (document.getElementById('opName').value || '').trim(), note = document.getElementById('opNote').value || '';
+    if (!name) return;
+    var L = opps();
+    if (CA.edit === 'new') L.push({ id: 'o' + Date.now(), name: name, prof: CA.prof || 'fan', note: note, upd: Date.now() });
+    else L.forEach(function (o) { if (o.id === CA.edit) { o.name = name; o.prof = CA.prof || o.prof; o.note = note; o.upd = Date.now(); } });
+    window.PA.save(); CA.edit = null; CA.prof = null; CA.tmpName = undefined; CA.tmpNote = undefined;
+  }
   /* ---------- Saisie rapide des mains du club ---------- */
   var CF = { pos: null, r1: null, r2: null, suited: false, st: 40, cx: 'unopened', op: null, a: null, res: 'pre', amt: '', note: '', fb: null };
   var POS_ALL = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
@@ -490,6 +531,12 @@
       if (k === 'pos' || k === 'cx') { CF.a = null; if (CF.op && CF.pos && POS_ALL.indexOf(CF.op) >= POS_ALL.indexOf(CF.pos)) CF.op = null; }
     }
     else if (a === 'cfSave') saveClub();
+    else if (a === 'opNew') { CA.tmpName = undefined; CA.tmpNote = undefined; CA.edit = 'new'; CA.prof = 'fan'; CA.armDel = false; }
+    else if (a === 'opEdit') { CA.tmpName = undefined; CA.tmpNote = undefined; CA.edit = v; CA.prof = (opps().filter(function (o) { return o.id === v; })[0] || {}).prof; CA.armDel = false; }
+    else if (a === 'opProf') { var ne = document.getElementById('opName'), no = document.getElementById('opNote'); CA.prof = v; if (ne) CA.tmpName = ne.value; if (no) CA.tmpNote = no.value; }
+    else if (a === 'opCancel') { CA.edit = null; CA.prof = null; CA.tmpName = undefined; CA.tmpNote = undefined; }
+    else if (a === 'opSave') opSave();
+    else if (a === 'opDel') { if (!CA.armDel) CA.armDel = true; else { var p0 = window.PA.player(); p0.opps = opps().filter(function (o) { return o.id !== CA.edit; }); window.PA.save(); CA.edit = null; CA.armDel = false; } }
     else if (a === 'cfDel') { var db2 = loadDB(); db2.hands = db2.hands.filter(function (x) { return x.id !== v; }); saveDB(db2); }
     else if (a === 'mic') { dictate(); return; }
     else if (a === 'src') AV.src = v;
@@ -498,5 +545,5 @@
   });
 
   window.PA_HH = { parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
-    view: view, clear: function () { try { localStorage.removeItem(key()); } catch (e) {} } };
+    view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'tag')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'tag') : null; }, clear: function () { try { localStorage.removeItem(key()); } catch (e) {} } };
 })();

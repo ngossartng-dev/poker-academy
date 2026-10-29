@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-m';
+  var VERSION = '2.0.0-n';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -245,7 +245,7 @@
       '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
       '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
       '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>L’édition 9-max complète et la version imprimable des nouvelles leçons.</span></a>' +
-      '<div class="tile" style="opacity:.6"><b>Outils</b><span>Calculateurs d’équité et d’ICM : bientôt.</span></div></div></div>';
+      '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a></div></div>';
     return shell('apprendre', body);
   }
   function rangesView() {
@@ -558,6 +558,7 @@
       '<button class="btn" data-act="testMenu">Refaire le test de profil</button></div>' +
       '<div class="card stack"><b>Ma progression par notion</b><table class="tbl">' + notions + '</table><div class="muted small">Mains à revoir en attente : ' + Object.keys(p.srs).length + '</div></div>' +
       '<div class="card stack"><b>Mon journal</b><table class="tbl">' + sess + '</table></div>' +
+      '<a class="tile" href="#fiche"><b>Avant la partie</b><span>Ta fiche : structure, plan par phase, tes 3 fuites à surveiller, les adversaires attendus.</span></a>' +
       '<a class="tile" href="#reglages"><b>Réglages</b><span>Taille du texte, mode gaucher, vibration, remise à zéro, tout effacer.</span></a>' +
       '<a class="tile" href="#merci"><b>Remerciements</b><span>Version ' + VERSION + '</span></a>' +
       '<button class="btn" data-act="pickPlayer">Changer de joueur</button></div>';
@@ -595,7 +596,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
