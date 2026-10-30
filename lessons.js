@@ -1,4 +1,4 @@
-/* Poker Academy v2.0 — le cours en leçons (nouveau plan, 32 chapitres) */
+/* Poker Academy v2.0 — le cours en leçons (nouveau plan, 34 chapitres) */
 (function () {
   'use strict';
   var PARTS = [
@@ -9,9 +9,9 @@
   var PLAN = [
     [1, 'I', 'Fondations', 8], [2, 'I', 'Positions et formats de table', 10], [3, 'I', 'Le club', 13], [4, 'I', 'Bankroll', 17],
     [5, 'II', 'Ouvrir : ranges par profil, position et profondeur', 23], [6, 'II', 'Défendre les blindes', 32], [7, 'II', 'Face aux limpers', 55],
-    [8, 'II', 'Le 3-bet et face au 3-bet', 148], [9, 'II', 'Squeeze, 4-bet et click back', 145],
+    [8, 'II', 'Le 3-bet et face au 3-bet', 148], [9, 'II', 'Squeeze, 4-bet et click back', 145], [34, 'II', 'Le limp-trap et le limp-shove', 0],
     [10, 'III', 'Outils de calcul', 67], [11, 'III', 'Lire un board', 75], [12, 'III', 'Lecture de main', 0], [13, 'III', 'Le sizing', 77],
-    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0],
+    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [33, 'III', 'Jouer les paires après le flop', 0],
     [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0], [20, 'IV', 'Tapis de 25 à 40 BB', 113], [21, 'IV', 'Tapis de 15 à 25 BB', 117], [22, 'IV', 'Tables de push/fold', 123],
     [23, 'IV', 'L’ICM complet', 134], [24, 'IV', 'Table finale et heads-up', 136], [25, 'IV', 'PKO et Space KO', 137],
     [26, 'V', 'Profils adverses', 161], [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0], [28, 'V', 'Image de table et lecture au club', 162],
@@ -2325,6 +2325,153 @@
     ['Y', 'Parfait.'],
     ['J', 'Merci, Yo. Pour tout le cours.'],
     ['Y', 'Merci à toi. On résume une dernière fois. Dix minutes par jour valent mieux qu’une longue séance. Le préflop d’abord, puis le tapis ou fold, le flop et la turn, et l’ICM. Mesure tes progrès avec le test et tes statistiques. Et quand tu n’ouvres plus ta range, elle est acquise. On se retrouve au club. À bientôt !']
+  ];
+
+  L[33] = {
+    minutes: 9, link: { href: '#apresflop?paires', label: 'S’entraîner : paires après le flop' },
+    key: ['Une paire servie ne se joue pas pareil selon ce qu’elle devient au flop : brelan, overpaire ou paire sous le tableau.', 'Avec un brelan, on construit le pot sur trois rues : petit au flop, gros à la turn, tapis à la river.'],
+    sections: [
+      { ask: 'Combien miser avec un brelan ?', h: 'Le brelan (paire servie qui touche)', p: ['Bouton contre grosse blinde, 40 BB, flop sec K♦ 8♠ 3♣, tu as 8-8. La grosse blinde checke : le solveur mise environ trois fois sur quatre, surtout petit (1/3 ou 1/2 du pot), et checke rarement (moins de 15 %).', 'Pourquoi petit : sur un tableau sec, l’adversaire a peu de mains qui paient une grosse mise. La petite mise garde ses rois faibles, ses paires de huit et ses petites paires dans le coup, et ton brelan ne craint presque rien.', 'Turn : après 1/3 payé, le pot fait environ 9 BB et il reste 36 BB. Le solveur fait tapis avec son brelan deux fois sur trois sur une carte neutre, sinon il mise 1/2 pot ou le pot. River : tout ce qui reste. Le but : tout le tapis au milieu à la river.'] },
+      { ask: 'Et quand c’est moi qui défends avec le brelan ?', h: 'Le brelan en grosse blinde : check-relance', p: ['Face à une mise du bouton, petite ou grosse, le solveur relance son brelan à 100 % sur K♦ 8♠ 3♣ et K♥ Q♦ 6♠. Le piège (payer pour relancer plus tard) ne lui sert presque pas : il fait perdre une rue de mise, alors que les tops paires adverses paient la relance.'] },
+      { ask: 'Et avec une overpaire ou une top paire ?', h: 'Overpaire et top paire', p: ['Overpaire (A-A sur K♦ 8♠ 3♣) : le solveur mise toujours, et plus que le pot environ 4 fois sur 10. Ses rois paient une grosse mise et ne peuvent pas te battre : on les fait payer tout de suite.', 'Top paire : petite mise au flop le plus souvent (check 15 à 25 %), mise souvent le pot à la turn sur une carte neutre. Si une carte plus haute tombe (un as sur K♦ 8♠ 3♣), elle checke 9 fois sur 10 : elle est devenue un attrape-bluff.'] },
+      { ask: 'Et ma paire de sept sur un tableau dame-valet-dix ?', h: 'La paire sous le tableau', p: ['Quand tu as ouvert : tu checkes le plus souvent (60 à 85 % sur les tableaux secs, 100 % à 20 BB). Ta paire a une valeur d’abattage mais ne supporte pas une relance.', 'En grosse blinde face à une mise : face à 1/3 du pot, tu paies (presque toujours sur un tableau sec, environ 60 % sur Q♦ J♠ 10♣). Face à 3/4 du pot, tu te couches souvent (40 à 55 % sur les tableaux secs, toujours sur Q♦ J♠ 10♣). À la turn, sans amélioration, couche-toi le plus souvent face à une deuxième mise : tu n’as que deux cartes pour le brelan.'] },
+      { ask: 'Et au club ?', h: 'Contre les joueurs qui paient trop', p: ['Contre une calling station, mise plus gros dès le flop avec tes brelans et tes overpaires : elle paie de toute façon, et chaque rue de mise compte. Avec une paire sous le tableau, reste prudent : ses mises sont rarement des bluffs.', 'Ces chiffres viennent du solveur de l’appli (pot simple, tête à tête, 40 BB, ranges TAG). Pour les voir sur d’autres flops, ouvre Apprendre › Solveur.'] }
+    ],
+    mistake: 'Checker un brelan au flop puis à la turn pour piéger sur un tableau sec : l’adversaire n’a rien et checke derrière, tu ne gagnes presque rien.',
+    retain: ['Brelan : petit au flop, gros à la turn, tapis à la river ; en grosse blinde, check-relance.', 'Overpaire : mise souvent et gros ; top paire : petit, et check si une carte plus haute tombe.', 'Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses et à la deuxième mise.'],
+    quiz: [
+      { q: 'Brelan au bouton, flop sec, la grosse blinde checke. Taille la plus fréquente ?', o: ['Check', '1/3 à 1/2 du pot', 'Le pot', 'Tapis'], a: 1, why: 'Peu de mains paient une grosse mise sur un flop sec : on garde ses mains faibles dans le coup.' },
+      { q: 'Même coup, 40 BB, ta mise d’1/3 a été payée. Turn neutre. Le solveur…', o: ['checke', 'mise 1/3', 'fait souvent tapis', 'se couche'], a: 2, why: 'Il reste environ 4 pots : tout doit être au milieu à la river.' },
+      { q: 'Brelan en grosse blinde, le bouton mise 1/3. Tu…', o: ['paies pour piéger', 'relances', 'te couches', 'checkes'], a: 1, why: 'Le solveur relance à 100 % : ses tops paires paient.' },
+      { q: 'Top paire de rois au bouton, un as tombe à la turn après check-check. Le plus souvent…', o: ['tapis', 'mise le pot', 'check', 'mise 1/2'], a: 2, why: 'Elle est devenue un attrape-bluff : 9 fois sur 10 check.' },
+      { q: '7-7 sur Q♦ J♠ 10♣, en grosse blinde, le bouton mise 3/4 du pot. Tu…', o: ['relances', 'paies', 'te couches', 'fais tapis'], a: 2, why: 'Le solveur se couche à 100 % : trop de mains te battent, trop de cartes te font perdre.' },
+      { q: 'Overpaire A-A sur K♦ 8♠ 3♣ : le solveur…', o: ['checke souvent', 'mise toujours, souvent gros', 'mise toujours tout petit', 'fait tapis'], a: 1, why: 'Ses rois paient une grosse mise et ne te battent pas.' }
+    ]
+  };
+
+  L[34] = {
+    minutes: 7,
+    key: ['Le limp-trap (limper une très grosse main pour sur-relancer) ne marche que s’il y a des joueurs agressifs derrière toi.', 'Sur une table de club passive, ouvre normalement tes as et tes rois : on paie tes relances de toute façon.'],
+    sections: [
+      { ask: 'C’est quoi, le limp-trap ?', h: 'Le principe', p: ['Avec A-A ou K-K, tu paies seulement la grosse blinde au lieu d’ouvrir. Si quelqu’un relance derrière pour t’isoler, tu sur-relances dans un pot déjà gonflé, avec une main qui paraissait faible.'] },
+      { ask: 'Quand est-ce que ça marche ?', h: 'Trois conditions', p: ['1. Des joueurs agressifs derrière toi, qui relancent souvent les limpers (un large-agressif ou un maniac à ta gauche, c’est la cible idéale). 2. Peu de risque que trois joueurs limpent derrière toi. 3. Une image qui ne trahit pas ta main : si tu ne limpes jamais, ton limp devient lisible.', 'Au club, beaucoup de tables sont passives : on limpe derrière toi et personne ne relance. Tu joues alors A-A contre quatre adversaires : environ 85 % d’équité contre une main, autour de 55 % contre quatre.'] },
+      { ask: 'Et si quelqu’un relance ?', h: 'Jouer la suite', p: ['On relance derrière toi : à 25 BB ou moins, tapis direct. Au-delà, sur-relance forte, 4 à 5 fois sa relance, pour ne pas laisser un bon prix aux autres.', 'Personne ne relance : tu joues un pot à plusieurs avec une seule paire. Sur un tableau connecté (8-9-10) ou à trois cartes de même couleur, ne mets pas tout ton tapis avec une paire.'] },
+      { ask: 'Et le limp-shove des tapis courts ?', h: 'Limp-shove, 8 à 15 BB', p: ['Même idée avec un petit tapis : tu limpes en début de table et tu fais tapis sur une relance. Ça marche parce qu’à ces tapis, les joueurs relancent souvent pour voler les limps. Rare, et lisible si tu ne limpes jamais autrement.'] },
+      { ask: 'Et depuis la petite blinde ?', h: 'Le cas de la petite blinde', p: ['Petite blinde contre la grosse blinde seule : limper fait partie du jeu normal (voir Défendre les blindes). Là, mélanger quelques grosses mains dans tes limps est sain : ça protège tes limps faibles, que la grosse blinde ne peut plus attaquer sans risque.', 'En dehors de ce cas, pour un joueur serré, garde le limp-trap comme une arme rare, contre un joueur précis.'] }
+    ],
+    mistake: 'Limper A-A sur une table passive, se retrouver à cinq, et payer tout son tapis sur un flop 8-9-10 avec une seule paire.',
+    retain: ['Limp-trap : seulement avec des joueurs agressifs derrière.', 'Table passive : ouvre normalement tes grosses paires.', 'Relancé : tapis sous 25 BB, sinon sur-relance de 4 à 5 fois ; pas relancé : prudence à plusieurs.', 'Garde-le rare, sinon tu deviens lisible.'],
+    quiz: [
+      { q: 'Table de club passive, A-A en début de table. Tu…', o: ['limpes pour piéger', 'ouvres normalement', 'fais tapis', 'paies seulement'], a: 1, why: 'Personne ne relancerait : tu jouerais à plusieurs avec une paire.' },
+      { q: 'Tu as limpé K-K avec 20 BB, un joueur relance. Tu…', o: ['paies', 'fais tapis', 'te couches', 'relances petit'], a: 1, why: 'Sous 25 BB, le tapis direct est la suite naturelle.' },
+      { q: 'La meilleure cible pour un limp-trap ?', o: ['Une calling station', 'Un nit', 'Un large-agressif à ta gauche', 'Un joueur absent'], a: 2, why: 'Il relance souvent les limpers.' },
+      { q: 'Le principal danger du limp-trap ?', o: ['Gagner trop', 'Jouer à plusieurs avec une seule paire et devenir lisible', 'Perdre la blinde', 'Aucun'], a: 1, why: 'Les deux risques qui coûtent le plus cher.' },
+      { q: 'A-A contre quatre adversaires : équité environ…', o: ['85 %', '70 %', '55 %', '30 %'], a: 2, why: 'L’équité fond avec le nombre de joueurs.' }
+    ]
+  };
+
+  L[33].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, une question que je me pose souvent : combien miser quand j’ai une paire servie ?'],
+    ['Y', 'Salut ! Bonne question, parce que la réponse change complètement selon ce que la paire devient au flop. On va prendre quatre cas.'],
+    ['J', 'Lesquels ?'],
+    ['Y', 'Le brelan. L’overpaire. La paire sous le tableau. Et pour comparer, la top paire. Et on se place sur un tableau sec, sans tirage couleur.'],
+    ['J', 'Commençons par le plus beau. J’ai une paire de huit, le flop vient roi, huit, trois. Brelan.'],
+    ['Y', 'Tu es au bouton, la grosse blinde checke. Que fait le solveur ?'],
+    ['J', 'Il mise gros, je suppose. Pour gagner beaucoup.'],
+    ['Y', 'Non. Il mise petit. Un tiers ou la moitié du pot, trois fois sur quatre environ. Il checke rarement, et il ne surmise presque jamais.'],
+    ['J', 'Pourquoi petit ?'],
+    ['Y', 'Parce que sur un tableau sec, l’adversaire a très peu de mains qui peuvent payer une grosse mise. Une petite mise garde dans le coup ses rois faibles, ses paires de huit, ses petites paires. Et ton brelan ne craint presque rien.'],
+    ['J', 'Donc je ne gagne pas grand-chose au flop.'],
+    ['Y', 'Au flop, non. Le gros pot se construit à la turn et à la river. Et c’est là que ça devient intéressant.'],
+    ['J', 'Raconte.'],
+    ['Y', 'Avec quarante grosses blindes, après une mise d’un tiers payée au flop, le pot fait environ neuf blindes. Il te reste trente-six. À la turn, le solveur fait tapis avec son brelan deux fois sur trois. Sinon il mise la moitié du pot ou le pot.'],
+    ['J', 'Tapis à la turn ? C’est énorme.'],
+    ['Y', 'C’est le calcul qui le veut. Ton but, avec un brelan, c’est que tout le tapis soit au milieu à la river. Petit au flop, gros à la turn, le reste à la river. Trois rues pour remplir le pot.'],
+    ['J', 'Et si la grosse blinde ne fait que payer ?'],
+    ['Y', 'À la river, tu mises tout ce qui reste. Un brelan sur un tableau sec bat presque toutes les mains qui paient.'],
+    ['J', 'Et quand c’est moi qui suis en grosse blinde, avec le brelan ?'],
+    ['Y', 'Là, c’est simple. Il mise, tu relances. Le solveur relance à cent pour cent, que la mise soit petite ou grosse.'],
+    ['J', 'Pas de piège ? Payer, et relancer plus tard ?'],
+    ['Y', 'Presque jamais. Le piège te fait perdre une rue de mise. Et la relance gagne beaucoup, parce que ses tops paires paient.'],
+    ['J', 'D’accord. L’overpaire maintenant.'],
+    ['Y', 'Paire d’as sur roi, huit, trois. Là, le solveur mise toujours. Et souvent très gros : plus que le pot, quatre fois sur dix.'],
+    ['J', 'Plus gros qu’avec un brelan ? C’est bizarre.'],
+    ['Y', 'Pas tant que ça. Ses rois ne peuvent pas te battre, et ils paient une grosse mise. Avec l’overpaire, tu veux faire payer les tops paires tout de suite, avant qu’une carte gênante arrive.'],
+    ['J', 'Et la top paire ?'],
+    ['Y', 'Petite mise au flop, le plus souvent. Elle checke de temps en temps. À la turn, sur une carte neutre, elle mise souvent le pot.'],
+    ['J', 'Et si un as tombe à la turn ?'],
+    ['Y', 'Elle checke neuf fois sur dix. Ta top paire de roi est devenue une main qui attrape les bluffs. Tu ne mises plus pour la valeur.'],
+    ['J', 'Et le cas qui m’embête : une paire de sept sur un tableau dame, valet, dix.'],
+    ['Y', 'C’est une paire sous le tableau. Elle a une valeur d’abattage, mais elle ne supporte pas la pression.'],
+    ['J', 'Si c’est moi qui ai ouvert ?'],
+    ['Y', 'Tu checkes la plupart du temps. Sur roi, huit, trois, le solveur checke les petites paires plus de huit fois sur dix.'],
+    ['J', 'Et si je suis en grosse blinde, et qu’il mise ?'],
+    ['Y', 'Ça dépend de la taille. Face à un tiers du pot, tu paies, presque toujours sur un tableau sec. Face à trois quarts du pot, tu te couches souvent. Et sur dame, valet, dix, tu te couches tout le temps face à une grosse mise.'],
+    ['J', 'Et à la turn, s’il mise encore ?'],
+    ['Y', 'Sans amélioration, tu te couches le plus souvent. Tu n’as que deux cartes pour toucher ton brelan. Et une deuxième mise, c’est rarement du vent.'],
+    ['J', 'Un dernier conseil ?'],
+    ['Y', 'Contre une calling station de club, on mise plus gros dès le flop avec les brelans. Elle paie de toute façon.'],
+    ['J', 'Un petit quiz ?'],
+    ['Y', 'Première question. Brelan au bouton, sur un flop sec. La taille la plus fréquente ?'],
+    ['P', 5],
+    ['J', 'Petite. Un tiers ou la moitié du pot.'],
+    ['Y', 'Bravo.'],
+    ['Y', 'Deuxième question. Brelan en grosse blinde, le bouton mise. Tu fais quoi ?'],
+    ['P', 5],
+    ['J', 'Je relance.'],
+    ['Y', 'Oui, toujours.'],
+    ['Y', 'Troisième question. Paire de sept sur dame, valet, dix. Il mise trois quarts du pot.'],
+    ['P', 5],
+    ['J', 'Je me couche.'],
+    ['Y', 'Parfait. On résume. Brelan : petit au flop, gros à la turn, tapis à la river. Relance-le toujours en grosse blinde. Overpaire : mise souvent et gros. Top paire : petite mise, et check si une carte plus haute tombe. Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses. À bientôt !']
+  ];
+
+  L[34].podcast = [
+    ['J', 'Salut Yo ! On m’a parlé du limp-trap. Limper avec les as pour piéger. Ça marche ?'],
+    ['Y', 'Salut ! Parfois. Mais beaucoup moins souvent que ce qu’on croit. On va voir quand c’est une bonne idée, et surtout quand ça ne l’est pas.'],
+    ['J', 'Déjà, c’est quoi exactement ?'],
+    ['Y', 'Tu as une très grosse main, souvent paire d’as ou de rois. Au lieu d’ouvrir, tu te contentes de payer la grosse blinde. Tu espères que quelqu’un relance derrière. Et là, tu sur-relances.'],
+    ['J', 'Et quel est l’intérêt ?'],
+    ['Y', 'Deux choses. Ta main paraît faible, donc les joueurs agressifs relancent pour isoler. Et ta sur-relance arrive dans un pot déjà gonflé.'],
+    ['J', 'Ça a l’air génial.'],
+    ['Y', 'Sur le papier. Mais il y a trois conditions.'],
+    ['J', 'Lesquelles ?'],
+    ['Y', 'Un : il faut des joueurs agressifs derrière toi, qui relancent souvent les limpers. Deux : il ne faut pas que trois joueurs limpent derrière toi. Trois : ta main doit pouvoir être jouée sans être lisible.'],
+    ['J', 'Et au club ?'],
+    ['Y', 'C’est justement le problème. Au club, beaucoup de tables sont passives. On limpe derrière toi, personne ne relance. Et tu te retrouves avec ta paire d’as contre quatre joueurs.'],
+    ['J', 'Et c’est grave ?'],
+    ['Y', 'Paire d’as gagne environ quatre-vingt-cinq pour cent contre une main. Contre quatre mains, elle tombe autour de cinquante-cinq pour cent. Et tu ne sais plus où tu en es après le flop.'],
+    ['J', 'Donc sur une table passive…'],
+    ['Y', 'Tu ouvres normalement. Deux blindes, ou un peu plus s’il y a déjà des limpers. Les joueurs passifs paient tes relances de toute façon.'],
+    ['J', 'Et sur une table agressive ?'],
+    ['Y', 'Là, le limp-trap peut se tenter. Un joueur à ta gauche qui relance chaque limp, c’est la cible idéale.'],
+    ['J', 'Et si quelqu’un relance ?'],
+    ['Y', 'Tu sur-relances. Avec vingt-cinq blindes ou moins, tu fais tapis directement. Avec plus, tu sur-relances fort : quatre à cinq fois sa relance.'],
+    ['J', 'Et si personne ne relance ?'],
+    ['Y', 'Alors tu joues un pot à plusieurs, avec une seule paire. Tu restes prudent. Sur un tableau connecté ou à trois cartes de même couleur, tu ne mets pas tout ton tapis avec une paire.'],
+    ['J', 'Et le limp-shove dont parle le chapitre des tapis courts ?'],
+    ['Y', 'C’est la même idée, entre huit et quinze blindes. Tu limpes en début de table, et tu fais tapis sur une relance. Ça marche parce qu’à ces tapis, les joueurs relancent souvent pour voler.'],
+    ['J', 'Et le risque ?'],
+    ['Y', 'Être lisible. Si tu ne limpes jamais, sauf avec les as, tout le monde finit par le comprendre. Le jour où tu limpes, personne ne relance.'],
+    ['J', 'Donc il faut limper aussi avec d’autres mains ?'],
+    ['Y', 'C’est la seule façon de le rendre crédible. Mais pour un joueur serré, c’est compliqué et ça coûte. Mon conseil : garde-le comme une arme rare. Une fois de temps en temps, contre un joueur précis.'],
+    ['J', 'Et de la petite blinde ?'],
+    ['Y', 'C’est un cas à part. En petite blinde contre la grosse blinde seule, limper fait partie du jeu normal. Et dans ce cas, mélanger quelques grosses mains dans ses limps, c’est sain. Ça protège tes limps faibles.'],
+    ['J', 'Et l’erreur à éviter ?'],
+    ['Y', 'Limper les as sur une table passive, se retrouver à cinq, et payer tout son tapis sur un flop huit, neuf, dix. Avec une seule paire.'],
+    ['J', 'Un quiz ?'],
+    ['Y', 'Première question. Table de club passive, tu as paire d’as en début de table. Tu fais quoi ?'],
+    ['P', 5],
+    ['J', 'J’ouvre normalement.'],
+    ['Y', 'Bravo.'],
+    ['Y', 'Deuxième question. Tu as limpé avec les rois, un joueur relance. Tu as vingt blindes.'],
+    ['P', 5],
+    ['J', 'Tapis.'],
+    ['Y', 'Oui.'],
+    ['Y', 'Troisième question. Le principal danger du limp-trap ?'],
+    ['P', 5],
+    ['J', 'Jouer à plusieurs avec une seule paire, et devenir lisible.'],
+    ['Y', 'Parfait. On résume. Le limp-trap demande des joueurs agressifs derrière toi. Sur une table passive, ouvre normalement. Si on relance, sur-relance fort, ou tapis sous vingt-cinq blindes. Si personne ne relance, joue prudemment avec une seule paire. Et garde-le rare, sinon tu deviens lisible. À bientôt !']
   ];
 
   var CHAPTERS = PLAN.map(function (c) {

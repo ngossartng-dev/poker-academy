@@ -11,7 +11,7 @@
     var ui = U(), p = PA.player(), pr = prog(p);
     var ready = LS.CHAPTERS.filter(function (c) { return c.ready; }).length, done = Object.keys(pr).filter(function (k) { return pr[k].done; }).length;
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Leçons</h1>' +
-      ui.yo((ready === LS.CHAPTERS.length ? 'Les ' + ready + ' chapitres du cours sont en leçons, avec quiz et version à écouter.' : 'Le nouveau cours compte 32 chapitres. ' + ready + ' sont déjà en leçons ; les autres s’ouvrent dans le PDF actuel, à la bonne page.') + ' Leçons acquises : ' + done + ' sur ' + ready + '.') +
+      ui.yo((ready === LS.CHAPTERS.length ? 'Les ' + ready + ' chapitres du cours sont en leçons, avec quiz et version à écouter.' : 'Le nouveau cours compte 34 chapitres. ' + ready + ' sont déjà en leçons ; les autres s’ouvrent dans le PDF actuel, à la bonne page.') + ' Leçons acquises : ' + done + ' sur ' + ready + '.') +
       LS.PARTS.map(function (part) {
         return '<div class="card stack"><h3>Partie ' + part.id + ' · ' + part.title + '</h3>' + LS.CHAPTERS.filter(function (c) { return c.part === part.id; }).map(function (c) {
           var st = pr[c.n], badge = c.ready ? (st && st.done ? '<span class="chip" style="border-color:#2f9e44;color:#4fe08f">Acquise</span>' : (st ? '<span class="chip">Quiz ' + st.best + ' %</span>' : '<span class="chip" style="border-color:#555;color:#c9c9cf">' + c.minutes + ' min</span>')) : '<span class="small muted">PDF p. ' + c.page + '</span>';
@@ -29,7 +29,7 @@
     var p = PA.player(), st = prog(p)[n];
     var h = '<div class="stack"><button class="back" data-act="nav" data-v="lecons">‹ Leçons</button>' +
       '<div class="small muted">Partie ' + c.part + ' · chapitre ' + c.n + ' · ' + c.minutes + ' min</div><h1>' + c.title + '</h1>' +
-      '<div class="row"><button class="btn gold" data-lact="listen" data-v="' + n + '">' + (POD.n === n && POD.playing ? 'Pause' : 'Écouter la leçon') + '</button>' + (c.range ? '<button class="btn" data-lact="range" data-v="' + n + '">Voir dans ma range</button>' : '') + (c.sit ? '<button class="btn" data-act="startSit" data-v="' + c.sit + '">S’entraîner sur ce point</button>' : '') + '</div>' +
+      '<div class="row"><button class="btn gold" data-lact="listen" data-v="' + n + '">' + (POD.n === n && POD.playing ? 'Pause' : 'Écouter la leçon') + '</button>' + (c.range ? '<button class="btn" data-lact="range" data-v="' + n + '">Voir dans ma range</button>' : '') + (c.sit ? '<button class="btn" data-act="startSit" data-v="' + c.sit + '">S’entraîner sur ce point</button>' : '') + (c.link ? '<a class="btn" href="' + c.link.href + '">' + c.link.label + '</a>' : '') + '</div>' +
       (POD.n === n ? podControls() : '') +
       '<div class="card stack" style="border-color:#ffd23f"><b style="color:#ffd23f">L’idée clé</b>' + c.key.map(function (k) { return '<p>' + k + '</p>'; }).join('') + '</div>' +
       c.sections.map(function (s) { return '<div class="stack" style="gap:8px"><h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + x + '</p>'; }).join('') + '</div>'; }).join('') +

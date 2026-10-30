@@ -301,7 +301,9 @@
   }
   function sum(w) { var s = 0; for (var i = 0; i < w.length; i++) s += w[i]; return s; }
   function pickWeighted(w) { var s = sum(w); if (s <= 0) return -1; var r = Math.random() * s; for (var i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; } return w.length - 1; }
-  function pickHand(n, w) {
+  function pairOK(h, board) { return h[0] === h[2] || category(h, board) === 'Top paire'; }
+  function pickHand(n, w, board) {
+    if (QZ && QZ.mode === 'paires') { w = n._c.map(function (h, i) { if (!pairOK(h, board)) return 0; var c = category(h, board), k = c === 'Brelan ou mieux' ? 6 : c === 'Overpaire' ? 2 : 1; return k * (w ? w[i] : 1); }); if (sum(w) <= 0) return -1; }
     var idx = -1;
     for (var tries = 0; tries < 15; tries++) {
       var j = w ? pickWeighted(w) : Math.floor(Math.random() * n._c.length); if (j < 0) break;
@@ -349,11 +351,11 @@
     } else {
       var nodes = flopDecisions(S, spot); path = nodes[Math.floor(Math.random() * nodes.length)]; n = node(S, path);
     }
-    var idx = pickHand(n, w);
+    var idx = pickHand(n, w, flop + (tl ? tl.card : '') + (rv ? rv.card : ''));
     if (idx < 0) return newQuestion(cb, depth + 1);
     return { spot: spot, flop: flop, path: path, tl: tl, rv: rv, i: idx, hand: n._c[idx] };
   }
-  function startQuiz() { QZ = { n: 10, k: 0, ok: 0, mix: 0, q: null, ans: null }; }
+  function startQuiz(mode) { QZ = { n: 10, k: 0, ok: 0, mix: 0, q: null, ans: null, mode: mode || '' }; }
   function situationText(q, n) {
     var sp = spotOf(q.spot), me = n.p, opp = who2(q.spot, 1 - me), il = /^la /.test(opp) ? 'elle' : 'il';
     var pre = sp.pre.replace(/\{IP\}/g, me === 1 ? 'tu' : opp).replace(/\{OOP\}/g, me === 0 ? 'tu' : opp).replace(/tu a /g, 'tu as ');
@@ -384,10 +386,11 @@
     var ui = U();
     if (!DATA) { load(function () { ui.render(); }); return ui.shell('entrainer', '<div class="stack"><h1>Après le flop</h1><p class="muted">Chargement des solutions…</p></div>'); }
     if (DATA.err) return ui.shell('entrainer', '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Après le flop</h1>' + ui.yo('Les solutions ne sont pas incluses dans cette version : elles sont dans l’appli installée (PC et Android).') + '</div>');
-    if (!QZ) startQuiz();
+    var mode = /paires/.test(location.hash) ? 'paires' : '';
+    if (!QZ || QZ.mode !== mode) startQuiz(mode);
     if (QZ.k >= QZ.n) {
       var pct = Math.round((QZ.ok + QZ.mix * 0.5) / QZ.n * 100);
-      if (!QZ.saved) { var p = PA.player(); p.sessions.unshift({ at: Date.now(), label: 'Après le flop', n: QZ.n, ok: QZ.ok, style: QZ.mix, err: QZ.n - QZ.ok - QZ.mix, consult: 0 }); PA.save(); QZ.saved = true; }
+      if (!QZ.saved) { var p = PA.player(); p.sessions.unshift({ at: Date.now(), label: QZ.mode === 'paires' ? 'Après le flop : paires' : 'Après le flop', n: QZ.n, ok: QZ.ok, style: QZ.mix, err: QZ.n - QZ.ok - QZ.mix, consult: 0 }); PA.save(); QZ.saved = true; }
       return ui.shell('entrainer', '<div class="stack"><h1>Bilan</h1>' + ui.yo(pct >= 80 ? 'Très bien : tes décisions ressemblent à celles du solveur.' : pct >= 55 ? 'Pas mal. Regarde dans l’explorateur les familles de mains où tu t’écartes.' : 'Le jeu après le flop demande du temps : refais une série, et ouvre l’explorateur sur les coups ratés.') +
         '<div class="grid2"><div class="card"><div class="muted small">Comme le solveur</div><div class="disp" style="font-size:40px">' + QZ.ok + ' / ' + QZ.n + '</div></div><div class="card"><div class="muted small">Jouable (mixte) · erreur</div><div class="disp" style="font-size:40px">' + QZ.mix + ' · ' + (QZ.n - QZ.ok - QZ.mix) + '</div></div></div>' +
         '<div class="row"><button class="btn gold" data-sact="again" style="flex:1">Encore 10 coups</button><button class="btn" data-act="nav" data-v="situations">Terminer</button></div></div>', true);
@@ -448,7 +451,7 @@
     else if (a === 'hand') { var h = (document.getElementById('solHand').value || '').trim().replace(/^10/, 'T'); h = h.length >= 2 ? h[0].toUpperCase() + h[1].toUpperCase() + (h[2] ? h[2].toLowerCase() : '') : ''; EX.hand = h; }
     else if (a === 'ans') { if (!QZ.ans) judge(v); }
     else if (a === 'next') { QZ.k++; QZ.ans = null; QZ.q = null; }
-    else if (a === 'again') startQuiz();
+    else if (a === 'again') startQuiz(QZ.mode);
     else if (a === 'quit') { QZ = null; location.hash = '#situations'; }
     else if (a === 'explore') {
       var q = QZ.q, Sq = sol(q.spot, q.flop); EX.spot = q.spot; EX.flop = q.flop; EX.hand = classOf(q.hand); EX.rv = null;

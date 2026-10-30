@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-t';
+  var VERSION = '2.0.0-u';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -240,7 +240,7 @@
   function apprendreView() {
     var body = '<div class="stack"><h1>Apprendre</h1>' +
       '<div class="grid4">' +
-      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en 32 chapitres, avec quiz et version à écouter.</span></a>' +
+      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en 34 chapitres, avec quiz et version à écouter.</span></a>' +
       '<a class="tile" href="#ranges"><b>Mes ranges</b><span>Vue globale et toutes les situations, en plein écran.</span></a>' +
       '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
       '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
@@ -259,7 +259,7 @@
   }
   function coursView() {
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Le cours</h1>' +
-      yo('Le cours est en réécriture : 32 chapitres, chacun en leçon courte avec son quiz et sa version à écouter. En attendant, voici l’édition 9-max actuelle, complète, en PDF.') +
+      yo('Le cours est en réécriture : 34 chapitres, chacun en leçon courte avec son quiz et sa version à écouter. En attendant, voici l’édition 9-max actuelle, complète, en PDF.') +
       (EMBED ? '<div class="card muted">Le PDF du cours sera inclus dans l’appli installée (téléphone et PC). Cette version de test en ligne ne le contient pas.</div>' :
       '<a class="btn gold" href="cours/strategie-poker-9max-cours.pdf" target="_blank" rel="noopener">Ouvrir le cours (PDF, 201 pages)</a>' +
       '<a class="btn" href="cours/strategie-poker-9max-cours.pdf" download>Télécharger le cours complet (PDF)</a>') + '<a class="btn" href="#cours-imprimable">Version imprimable des nouvelles leçons</a></div>';
@@ -301,7 +301,8 @@
       '<button class="tile" data-act="startSit" data-v="icm"><b>Bulle et ICM</b><span>Payer un tapis à la bulle ou en table finale : jetons contre euros.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="pko"><b>PKO et Space KO</b><span>La prime change la cote : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="outs"><b>Outs et cote</b><span>Compter ses outs à la turn et comparer à la cote.</span></button>' +
-      '<a class="tile" href="#apresflop"><b>Après le flop</b><span>Miser, checker, payer, relancer : tes décisions au flop comparées au solveur.</span></a>' +
+      '<a class="tile" href="#apresflop"><b>Après le flop</b><span>Miser, checker, payer, relancer : tes décisions au flop, à la turn et à la river comparées au solveur.</span></a>' +
+      '<a class="tile" href="#apresflop?paires"><b>Paires après le flop</b><span>Brelans, overpaires, tops paires, paires sous le tableau : quelle taille, quelle décision ?</span></a>' +
       '</div></div>';
     return shell('entrainer', body);
   }
