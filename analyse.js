@@ -483,6 +483,7 @@
     var txt = JSON.stringify(obj);
     if (window.PAAndroid && PAAndroid.shareFile) { PAAndroid.shareFile(btoa(unescape(encodeURIComponent(txt))), name, 'application/json'); return; }
     if (pcApp()) { fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, content: txt }) }).then(function (r) { return r.json(); }).then(function (j) { AV.xmsg = 'Fichier enregistré dans ' + j.path + ' : envoie-le par mail ou par message.'; U().render(); }).catch(function () { AV.xmsg = 'Enregistrement impossible.'; U().render(); }); return; }
+    if (window.PA_SYNC && window.PA_SYNC.shareFile(txt, name)) return;
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
   }
   function sendHands(list) {

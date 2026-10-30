@@ -7,6 +7,9 @@
   var REPO_WEB = 'https://github.com/ngossartng-dev/poker-academy/raw/main/telechargements/';
   var IS_PC = location.hostname === '127.0.0.1' && location.port === '47816';
   var IS_ANDROID = !!window.PAAndroid;
+  var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var IS_STANDALONE = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  var IS_WEB = !IS_PC && !IS_ANDROID;
   var ST = { pc: null, upd: null, updErr: '', last: 0, msg: '' };
 
   /* ---------- Journal d'erreurs ---------- */
@@ -89,7 +92,16 @@
     var snap = snapshot(), txt = JSON.stringify(snap), name = fileName();
     if (IS_PC) { pcSave(true, function (ok) { ST.msg = ok ? 'Sauvegarde enregistrée dans ' + (ST.pc && ST.pc.dir || 'ton Drive') + '.' : 'La sauvegarde a échoué.'; U().render(); }); return; }
     if (IS_ANDROID && PAAndroid.shareFile) { PAAndroid.shareFile(btoa(unescape(encodeURIComponent(txt))), name, 'application/json'); var m = meta(); m.savedAt = snap.savedAt; setMeta(m); return; }
+    if (shareFile(txt, name)) { var m2 = meta(); m2.savedAt = snap.savedAt; setMeta(m2); return; }
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+  // iPhone et navigateurs récents : feuille de partage (Fichiers, Drive, Mail…)
+  function shareFile(txt, name) {
+    try {
+      var f = new File([txt], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: name }).catch(function () {}); return true; }
+    } catch (e) {}
+    return false;
   }
   function importFile(file) {
     var r = new FileReader();
@@ -107,7 +119,7 @@
     ST.updErr = ''; if (manual) { ST.upd = null; U().render(); }
     fetch(REPO_RAW + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
       ST.upd = j; ST.checked = Date.now();
-      if (U() && cmpV(j.version, U().version) > 0 && !manual) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Voir', '#sauvegarde');
+      if (U() && cmpV(j.version, U().version) > 0 && !manual && !IS_WEB) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Voir', '#sauvegarde');
       if (manual) U().render();
     }).catch(function () { ST.updErr = 'Vérification impossible : pas de connexion, ou dépôt GitHub privé.'; if (manual) U().render(); });
   }
@@ -117,6 +129,10 @@
     window.open(u, '_blank', 'noopener');
   }
   setTimeout(function () { if (U()) checkUpdate(false); }, 6000);
+  if (IS_IOS && !IS_STANDALONE) setTimeout(function () {
+    var seen = false; try { seen = sessionStorage.getItem('pa2ios'); sessionStorage.setItem('pa2ios', '1'); } catch (e) {}
+    if (!seen) banner('Pour l’installer sur ton iPhone : touche le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ». L’appli s’ouvrira alors en plein écran, comme une vraie appli, et gardera tes données.', '', '');
+  }, 2500);
 
   /* ---------- Écran « Sauvegarde et mises à jour » ---------- */
   function view() {
@@ -141,6 +157,9 @@
     } else if (IS_ANDROID) {
       out += '<div>Android sauvegarde automatiquement l’appli dans ton compte Google (si la sauvegarde Google est activée sur le téléphone).</div><div class="small muted">Pour passer tes données sur le PC : « Envoyer une sauvegarde », puis choisis Google Drive, dossier Poker Academy › Sauvegardes. Le PC la proposera au démarrage.</div>' +
         '<button class="btn gold" data-syact="export">Envoyer une sauvegarde</button>';
+    } else if (IS_IOS) {
+      out += '<div>Sur iPhone, tes données restent dans l’appli tant que tu l’as ajoutée à l’écran d’accueil. Fais une sauvegarde de temps en temps : « Envoyer une sauvegarde », puis « Enregistrer dans Fichiers » ou Google Drive, dossier Poker Academy › Sauvegardes. Le PC la proposera au démarrage.</div>' +
+        '<button class="btn gold" data-syact="export">Envoyer une sauvegarde</button>';
     } else out += '<button class="btn gold" data-syact="export">Exporter un fichier de sauvegarde</button>';
     out += '<label class="btn" style="text-align:center">Importer un fichier de sauvegarde<input type="file" accept=".json,application/json" data-syimport="1" style="display:none"></label></div>';
     // rappel quotidien (Android)
@@ -151,7 +170,8 @@
     // mises à jour
     var v = ui.version, u = ST.upd;
     out += '<div class="card stack"><b>Mises à jour</b><div>Version installée : <b>' + v + '</b>' + (u ? ' · dernière version : <b>' + ui.esc(u.version) + '</b>' : '') + '</div>';
-    if (u && cmpV(u.version, v) > 0) out += '<div>' + ui.esc(u.notes || '') + '</div><button class="btn gold" data-syact="dl">' + (IS_ANDROID ? 'Télécharger le nouvel APK' : IS_PC ? 'Télécharger le nouvel installateur' : 'Ouvrir la page de téléchargement') + '</button><div class="small muted">' + (IS_PC ? 'Le téléchargement s’ouvre dans ton navigateur (connecté à GitHub) ; lance ensuite l’installateur, tes données sont conservées.' : IS_ANDROID ? 'Le téléchargement s’ouvre dans ton navigateur ; installe l’APK par-dessus, tes données sont conservées.' : '') + '</div>';
+    if (IS_WEB) out += '<div class="small muted">Version web : elle se met à jour toute seule à chaque ouverture avec une connexion. Si une ancienne version reste affichée, ferme l’appli et rouvre-la.</div>';
+    else if (u && cmpV(u.version, v) > 0) out += '<div>' + ui.esc(u.notes || '') + '</div><button class="btn gold" data-syact="dl">' + (IS_ANDROID ? 'Télécharger le nouvel APK' : IS_PC ? 'Télécharger le nouvel installateur' : 'Ouvrir la page de téléchargement') + '</button><div class="small muted">' + (IS_PC ? 'Le téléchargement s’ouvre dans ton navigateur (connecté à GitHub) ; lance ensuite l’installateur, tes données sont conservées.' : IS_ANDROID ? 'Le téléchargement s’ouvre dans ton navigateur ; installe l’APK par-dessus, tes données sont conservées.' : '') + '</div>';
     else if (u) out += '<div class="small" style="color:#4fe08f">Tu as la dernière version.</div>';
     if (ST.updErr) out += '<div class="small muted">' + ST.updErr + '</div>';
     out += '<button class="btn" data-syact="check">Vérifier maintenant</button></div>';
@@ -179,5 +199,5 @@
   });
   document.addEventListener('change', function (ev) { var t = ev.target; if (t && t.getAttribute && t.getAttribute('data-syimport') && t.files && t.files[0]) importFile(t.files[0]); });
 
-  window.PA_SYNC = { view: view, snapshot: snapshot, restore: restore, logErr: logErr, isPC: IS_PC, isAndroid: IS_ANDROID };
+  window.PA_SYNC = { shareFile: shareFile, isIOS: IS_IOS, view: view, snapshot: snapshot, restore: restore, logErr: logErr, isPC: IS_PC, isAndroid: IS_ANDROID };
 })();
