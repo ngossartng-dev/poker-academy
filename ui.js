@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-v';
+  var VERSION = '2.0.0-w';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -111,7 +111,7 @@
       body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:16px">' +
         '<div class="row">' + logo() + '<h1>Poker Academy</h1></div>' +
         yo('Salut, moi c’est Yo. Lionel de mon vrai prénom, mais au club tout le monde m’appelle Yo. Je serai ton coach : on va trouver ton style, puis le muscler, main après main.') +
-        '<div class="card stack"><label for="ps">Ton pseudo</label><input id="ps" type="text" autocomplete="nickname" value="' + esc(st.pseudo || '') + '" placeholder="Vilvoord">' +
+        '<div class="card stack"><label for="ps">Ton pseudo</label><input id="ps" type="text" autocomplete="nickname" value="' + esc(st.pseudo || '') + '" placeholder="Ton pseudo">' +
         '<label for="ag">Ta date de naissance</label><input id="ag" type="text" inputmode="numeric" autocomplete="bday" maxlength="10" placeholder="JJ/MM/AAAA" value="' + esc(st.birth || '') + '" style="letter-spacing:.08em"><div class="small muted">Jour, mois, année : par exemple 14/07/1980.</div><div class="err" id="onbErr"></div>' +
         '<button class="btn gold block" data-act="onb1">Continuer</button></div>' +
         (Object.keys(PA.load().players).length ? '<button class="btn ghost" data-act="pickPlayer">J’ai déjà un joueur sur ce téléphone</button>' : '') + '</div>';

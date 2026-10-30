@@ -20,13 +20,14 @@
     script('solver/data.js', 'data', function () { DATA = window.PA_SOLVER_DATA || { err: true }; LOADING = false; cb(); });
   }
   function spotLoaded(spot) { return !!(window.PA_SOLVER_FLOP && window.PA_SOLVER_FLOP[spot]); }
-  function ensureSpot(spot, cb) { if (spotLoaded(spot)) return true; script('solver/flop/' + spot + '.js', 'f' + spot, cb); return false; }
+  function ensureSpot(spot, cb) { if (spotLoaded(spot)) return true; script(pk('solver/flop/' + spot + '.js'), 'f' + spot, cb); return false; }
   function turnData(spot, flop, cb) {
     var k = spot + '|' + flop, T = window.PA_SOLVER_TURN || {};
     if (T[k]) return T[k];
-    script('solver/turn/' + spot + '/' + flop + '.js', 't' + k, cb);
+    script(pk('solver/turn/' + spot + '/' + flop + '.js'), 't' + k, cb);
     return null;
   }
+  function pk(rel) { return window.PA_PACK ? window.PA_PACK.url(rel) : rel; }
   function sol(spot, flop) { var F = window.PA_SOLVER_FLOP && window.PA_SOLVER_FLOP[spot]; return F && F[spot + '|' + flop]; }
 
   /* ---------- Cartes ---------- */

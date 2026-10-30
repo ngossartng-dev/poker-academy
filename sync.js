@@ -4,7 +4,7 @@
   var PA = window.PA;
   function U() { return window.PA_UI; }
   var REPO_RAW = 'https://raw.githubusercontent.com/ngossartng-dev/poker-academy/main/telechargements/version.json';
-  var REPO_WEB = 'https://github.com/ngossartng-dev/poker-academy/raw/main/telechargements/';
+  var REPO_WEB = 'https://ngossartng-dev.github.io/poker-academy/telechargements/';
   var IS_PC = location.hostname === '127.0.0.1' && location.port === '47816';
   var IS_ANDROID = !!window.PAAndroid;
   var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -162,6 +162,7 @@
         '<button class="btn gold" data-syact="export">Envoyer une sauvegarde</button>';
     } else out += '<button class="btn gold" data-syact="export">Exporter un fichier de sauvegarde</button>';
     out += '<label class="btn" style="text-align:center">Importer un fichier de sauvegarde<input type="file" accept=".json,application/json" data-syimport="1" style="display:none"></label></div>';
+    if (window.PA_PACK) out += window.PA_PACK.card();
     // rappel quotidien (Android)
     if (IS_ANDROID && PAAndroid.setReminder) {
       var cur = PAAndroid.getReminder();
