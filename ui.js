@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-u';
+  var VERSION = '2.0.0-v';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -240,13 +240,14 @@
   function apprendreView() {
     var body = '<div class="stack"><h1>Apprendre</h1>' +
       '<div class="grid4">' +
-      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en 34 chapitres, avec quiz et version à écouter.</span></a>' +
+      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en 35 chapitres, avec quiz et version à écouter.</span></a>' +
       '<a class="tile" href="#ranges"><b>Mes ranges</b><span>Vue globale et toutes les situations, en plein écran.</span></a>' +
       '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
       '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
-      '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>L’édition 9-max complète et la version imprimable des nouvelles leçons.</span></a>' +
+      '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>Les 35 chapitres en couleurs, avec encadrés, quiz et grilles de ranges.</span></a>' +
       '<a class="tile" href="#solveur"><b>Solveur</b><span>Ce que fait le solveur au flop : bouton, cut-off et petite blinde contre la grosse blinde, 30 flops types.</span></a>' +
-      '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a></div></div>';
+      '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a>' +
+      '<a class="tile" href="#minuteur"><b>Minuteur du club</b><span>Les niveaux de blindes en grand, avec signal sonore : pour les parties au club.</span></a></div></div>';
     return shell('apprendre', body);
   }
   function rangesView() {
@@ -259,10 +260,10 @@
   }
   function coursView() {
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Le cours</h1>' +
-      yo('Le cours est en réécriture : 34 chapitres, chacun en leçon courte avec son quiz et sa version à écouter. En attendant, voici l’édition 9-max actuelle, complète, en PDF.') +
+      yo('Le cours complet en PDF : les 35 chapitres, avec un encadré pour l’idée clé, l’erreur fréquente et ce qu’il faut retenir, le quiz de chaque chapitre et les grilles de ranges en annexe. Pratique à imprimer ou à lire sur tablette.') +
       (EMBED ? '<div class="card muted">Le PDF du cours sera inclus dans l’appli installée (téléphone et PC). Cette version de test en ligne ne le contient pas.</div>' :
-      '<a class="btn gold" href="cours/strategie-poker-9max-cours.pdf" target="_blank" rel="noopener">Ouvrir le cours (PDF, 201 pages)</a>' +
-      '<a class="btn" href="cours/strategie-poker-9max-cours.pdf" download>Télécharger le cours complet (PDF)</a>') + '<a class="btn" href="#cours-imprimable">Version imprimable des nouvelles leçons</a></div>';
+      '<a class="btn gold" href="cours/poker-academy-cours.pdf" target="_blank" rel="noopener">Ouvrir le cours (PDF, 86 pages)</a>' +
+      '<a class="btn" href="cours/poker-academy-cours.pdf" download>Télécharger le cours complet (PDF)</a>') + '<a class="btn" href="#cours-imprimable">Version imprimable des nouvelles leçons</a></div>';
     return shell('apprendre', body);
   }
 
@@ -302,7 +303,7 @@
       '<button class="tile" data-act="startSit" data-v="pko"><b>PKO et Space KO</b><span>La prime change la cote : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="outs"><b>Outs et cote</b><span>Compter ses outs à la turn et comparer à la cote.</span></button>' +
       '<a class="tile" href="#apresflop"><b>Après le flop</b><span>Miser, checker, payer, relancer : tes décisions au flop, à la turn et à la river comparées au solveur.</span></a>' +
-      '<a class="tile" href="#apresflop?paires"><b>Paires après le flop</b><span>Brelans, overpaires, tops paires, paires sous le tableau : quelle taille, quelle décision ?</span></a>' +
+      '<a class="tile" href="#apresflop?paires"><b>Paires et as forts après le flop</b><span>Brelans, overpaires, tops paires, paires sous le tableau, AK, AQ, AJ : quelle taille, quelle décision ?</span></a>' +
       '</div></div>';
     return shell('entrainer', body);
   }
@@ -578,6 +579,8 @@
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
       '<b>Taille d’ouverture</b>' + seg('openSize', [['club', '2 BB (habitude du club)'], ['std', '2,2 à 2,5 BB']]) + '<div class="small muted">Utilisée dans les exercices et proposée en premier à la table. Depuis la SB : 3 BB.</div></div>' +
+      '<a class="card stack" href="#sauvegarde" style="text-decoration:none;color:inherit"><b>Sauvegarde, synchronisation et mises à jour ›</b><span class="small muted">Sauvegarde automatique (Google Drive sur PC), passage PC ↔ téléphone, nouvelle version, journal des erreurs.</span></a>' +
+      '<div class="card stack"><b>Clavier (PC)</b><div class="small">Touches <b>1 à 9</b> pour choisir une réponse, <b>Entrée</b> pour passer à la suite. À la table : <b>F</b> se coucher, <b>C</b> parole ou payer, <b>R</b> relancer, <b>A</b> tapis. Dans les cartes : flèches gauche et droite.</div></div>' +
       '<div class="card stack"><b>Remise à zéro de l’entraînement</b><p class="muted">Efface tes niveaux, tes mains à revoir et ton journal. Ton profil et tes ranges personnalisées sont conservés.</p><button class="btn" data-act="resetTrain">Remettre l’entraînement à zéro</button></div>' +
       '<div class="card stack"><b>Tout effacer</b><p class="muted">Efface tous les joueurs et toutes les données de cet appareil.</p><button class="btn" data-act="wipe" style="border-color:#e03131;color:#ff8080">' + (ui.wipeArm ? 'Confirmer : tout effacer définitivement' : 'Tout effacer') + '</button></div></div>';
     return shell('moi', body);
@@ -602,7 +605,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
@@ -695,6 +698,6 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; renderSheet(); } });
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
-  window.PA_UI = { render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, IC: IC };
+  window.PA_UI = { version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, IC: IC };
   render();
 })();

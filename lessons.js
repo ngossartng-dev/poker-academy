@@ -1,4 +1,4 @@
-/* Poker Academy v2.0 — le cours en leçons (nouveau plan, 34 chapitres) */
+/* Poker Academy v2.0 — le cours en leçons (nouveau plan, 35 chapitres) */
 (function () {
   'use strict';
   var PARTS = [
@@ -11,7 +11,7 @@
     [5, 'II', 'Ouvrir : ranges par profil, position et profondeur', 23], [6, 'II', 'Défendre les blindes', 32], [7, 'II', 'Face aux limpers', 55],
     [8, 'II', 'Le 3-bet et face au 3-bet', 148], [9, 'II', 'Squeeze, 4-bet et click back', 145], [34, 'II', 'Le limp-trap et le limp-shove', 0],
     [10, 'III', 'Outils de calcul', 67], [11, 'III', 'Lire un board', 75], [12, 'III', 'Lecture de main', 0], [13, 'III', 'Le sizing', 77],
-    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [33, 'III', 'Jouer les paires après le flop', 0],
+    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [33, 'III', 'Jouer les paires et les as forts après le flop', 0], [35, 'III', 'La river avec le solveur', 0],
     [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0], [20, 'IV', 'Tapis de 25 à 40 BB', 113], [21, 'IV', 'Tapis de 15 à 25 BB', 117], [22, 'IV', 'Tables de push/fold', 123],
     [23, 'IV', 'L’ICM complet', 134], [24, 'IV', 'Table finale et heads-up', 136], [25, 'IV', 'PKO et Space KO', 137],
     [26, 'V', 'Profils adverses', 161], [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0], [28, 'V', 'Image de table et lecture au club', 162],
@@ -380,7 +380,7 @@
       { ask: 'C’est quoi une range de 3-bet équilibrée ?', h: 'Valeur et bluffs', p: ['Une ouverture est linéaire : les meilleures mains dans l’ordre. Un 3-bet mélange des mains de valeur et des bluffs choisis (A5s, A4s) ; les mains moyennes jouables, comme les petites paires, se paient plutôt.', 'Exemple du profil TAG au bouton face au CO : 88+, ATs+, KJs+, AJo+, KQo en valeur, plus des bluffs assortis (petits As, K9s, Q9s, JTs, T9s).'] },
       { ask: 'Quelle taille ?', h: 'La taille du 3-bet', p: ['En position : 3 fois l’ouverture (7,5 BB face à 2,5 BB). Hors position (blindes) : 4 fois. Plus il y a d’argent mort, plus tu peux grossir.'] },
       { ask: 'Et le 3-bet light ?', h: 'Le 3-bet léger (resteal)', p: ['Contre un voleur qui ouvre large au CO ou au bouton, sur-relancer avec des mains moyennes à bloqueurs (A8s, KTs) lui reprend le pot. C’est encore plus fort à 20-35 BB, où le 3-bet devient un tapis (chapitres 20 et 21).'] },
-      { ask: 'Que faire quand on me 3-bet ?', h: 'Face au 3-bet', p: ['Au bouton contre les blindes (tu es en position) : paie TT à 77, AJs, AQs, KQs, QJs, JTs, 98s ; 4-bet QQ+, AK et A5s-A4s en bluff.', 'Au CO contre le bouton (hors position) : paie moins (JJ à 88, AQs, AJs, KQs) ; 4-bet QQ+, AK, A5s.', 'En début de table contre un 3-bet tardif : paie JJ, TT, AQs ; 4-bet QQ+ et AK ; couche le reste.'] },
+      { ask: 'Que faire quand on me 3-bet ?', h: 'Face au 3-bet', p: ['Au bouton contre les blindes (tu es en position) : paie JJ à 55, ATs à AQs, KJs, KQs, QJs, JTs, T9s, 98s, 87s et AQo ; 4-bet QQ+, AK et A5s-A4s en bluff.', 'Au CO contre le bouton (hors position) : paie moins (JJ à 77, ATs à AQs, KJs, KQs, QJs, JTs, AQo) ; 4-bet QQ+, AK, A5s.', 'En début de table contre un 3-bet tardif : paie JJ à 99, AJs, AQs, KQs ; 4-bet QQ+ et AK ; couche le reste.', 'Ce sont les ranges du profil TAG à tapis profond. Le profil serré paie moins, les profils équilibré et large-agressif paient plus. Avec 40 BB ou moins, le 4-bet devient un tapis et on paie moins.'] },
       { ask: 'Pourquoi payer plus en position ?', h: 'La position te rend de l’équité', p: ['En position, tu vois ce que fait l’adversaire avant de décider à chaque tour : tu réalises plus de ton équité. Hors position, la même main gagne moins souvent, donc tu en paies moins.'] }
     ],
     mistake: 'Payer un 3-bet hors position avec AJo ou KQo : dominées par sa range de valeur, elles perdent de gros pots.',
@@ -1078,11 +1078,11 @@
     ['J', 'Et quand c’est moi qui me fais sur-relancer ?'],
     ['Y', 'La question clé : est-ce que tu joueras en position ?'],
     ['J', 'Par exemple, j’ouvre au bouton, et une blinde me sur-relance.'],
-    ['Y', 'Tu joueras après elle à chaque tour. Tu peux payer large. Les paires de sept à dix. As-valet, as-dame assortis. Roi-dame, dame-valet assortis. Valet-dix, neuf-huit assortis.'],
+    ['Y', 'Tu joueras après elle à chaque tour. Tu peux payer large. Les paires de cinq à valet. As-dix, as-valet, as-dame assortis. Roi-valet, roi-dame, dame-valet assortis. Valet-dix, dix-neuf, neuf-huit, huit-sept assortis. Et as-dame dépareillé.'],
     ['J', 'Et je relance encore avec quoi ?'],
     ['Y', 'Dame-dame et mieux. As-roi. Et quelques as-cinq en bluff.'],
     ['J', 'Et si je suis hors de position ?'],
-    ['Y', 'Tu paies beaucoup moins. Et si tu as ouvert en UTG, la range de celui qui te sur-relance est forte. Tu paies valet-valet, dix-dix, as-dame assorti. Tu relances dame-dame et mieux, as-roi. Et tu jettes le reste.'],
+    ['Y', 'Tu paies beaucoup moins. Et si tu as ouvert en UTG, la range de celui qui te sur-relance est forte. Tu paies valet-valet à neuf-neuf, as-valet et as-dame assortis, roi-dame assorti. Tu relances dame-dame et mieux, as-roi. Et tu jettes le reste.'],
     ['J', 'Même as-valet ?'],
     ['Y', 'Surtout as-valet dépareillé. C’est l’erreur qui coûte le plus cher. Face à une sur-relance, il a souvent as-dame, as-roi. Tu touches ton as, il a un meilleur kicker. Et tu perds un gros pot.'],
     ['J', 'Pourquoi la position compte autant ?'],
@@ -2328,24 +2328,27 @@
   ];
 
   L[33] = {
-    minutes: 9, link: { href: '#apresflop?paires', label: 'S’entraîner : paires après le flop' },
+    minutes: 9, link: { href: '#apresflop?paires', label: 'S’entraîner : paires et as forts' },
     key: ['Une paire servie ne se joue pas pareil selon ce qu’elle devient au flop : brelan, overpaire ou paire sous le tableau.', 'Avec un brelan, on construit le pot sur trois rues : petit au flop, gros à la turn, tapis à la river.'],
     sections: [
       { ask: 'Combien miser avec un brelan ?', h: 'Le brelan (paire servie qui touche)', p: ['Bouton contre grosse blinde, 40 BB, flop sec K♦ 8♠ 3♣, tu as 8-8. La grosse blinde checke : le solveur mise environ trois fois sur quatre, surtout petit (1/3 ou 1/2 du pot), et checke rarement (moins de 15 %).', 'Pourquoi petit : sur un tableau sec, l’adversaire a peu de mains qui paient une grosse mise. La petite mise garde ses rois faibles, ses paires de huit et ses petites paires dans le coup, et ton brelan ne craint presque rien.', 'Turn : après 1/3 payé, le pot fait environ 9 BB et il reste 36 BB. Le solveur fait tapis avec son brelan deux fois sur trois sur une carte neutre, sinon il mise 1/2 pot ou le pot. River : tout ce qui reste. Le but : tout le tapis au milieu à la river.'] },
       { ask: 'Et quand c’est moi qui défends avec le brelan ?', h: 'Le brelan en grosse blinde : check-relance', p: ['Face à une mise du bouton, petite ou grosse, le solveur relance son brelan à 100 % sur K♦ 8♠ 3♣ et K♥ Q♦ 6♠. Le piège (payer pour relancer plus tard) ne lui sert presque pas : il fait perdre une rue de mise, alors que les tops paires adverses paient la relance.'] },
       { ask: 'Et avec une overpaire ou une top paire ?', h: 'Overpaire et top paire', p: ['Overpaire (A-A sur K♦ 8♠ 3♣) : le solveur mise toujours, et plus que le pot environ 4 fois sur 10. Ses rois paient une grosse mise et ne peuvent pas te battre : on les fait payer tout de suite.', 'Top paire : petite mise au flop le plus souvent (check 15 à 25 %), mise souvent le pot à la turn sur une carte neutre. Si une carte plus haute tombe (un as sur K♦ 8♠ 3♣), elle checke 9 fois sur 10 : elle est devenue un attrape-bluff.'] },
+      { ask: 'Et avec As-Roi, As-Dame, As-Valet ?', h: 'As-Roi, As-Dame, As-Valet', p: ['Tu touches l’as (A♠ 7♦ 2♣) : top paire, bon kicker, c’est une main de valeur. Le solveur mise presque toujours au flop, surtout petit (1/3 du pot), puis mise le pot à la turn, parfois tapis avec AK. Sur A♠ K♦ 5♣ (double paire pour AK, top paire pour AQ et AJ), il surmise 125 % du pot 3 fois sur 4.', 'AK touche le roi (K♦ 8♠ 3♣) : petite mise, puis pot ou tapis à la turn. AQ et AJ ratent : check environ une fois sur deux, sinon petite mise ; si elle est payée et que la turn est neutre, abandon complet (check à 100 %). Si un as tombe à la turn : mise le pot.', 'Flop bas et sec (7♦ 6♠ 2♣) : AK, AQ et AJ misent souvent, plutôt gros (3/4 du pot), car deux cartes hautes peuvent toucher ; payés, ils abandonnent à la turn sauf si un as tombe. Flop bas et connecté (9♠ 7♦ 5♣) : check le plus souvent (AK 58 %, AQ et AJ 80 à 90 %), ce tableau touche la grosse blinde.', 'AJ est plus fragile qu’AK : il checke plus souvent quand il rate, et quand il touche, il est parfois dominé par AQ ou AK. En pot 3-bet depuis la grosse blinde : 1/3 du pot sur A-7-2, 1/2 pot sur K-8-3, check sur 7-6-2.'] },
       { ask: 'Et ma paire de sept sur un tableau dame-valet-dix ?', h: 'La paire sous le tableau', p: ['Quand tu as ouvert : tu checkes le plus souvent (60 à 85 % sur les tableaux secs, 100 % à 20 BB). Ta paire a une valeur d’abattage mais ne supporte pas une relance.', 'En grosse blinde face à une mise : face à 1/3 du pot, tu paies (presque toujours sur un tableau sec, environ 60 % sur Q♦ J♠ 10♣). Face à 3/4 du pot, tu te couches souvent (40 à 55 % sur les tableaux secs, toujours sur Q♦ J♠ 10♣). À la turn, sans amélioration, couche-toi le plus souvent face à une deuxième mise : tu n’as que deux cartes pour le brelan.'] },
       { ask: 'Et au club ?', h: 'Contre les joueurs qui paient trop', p: ['Contre une calling station, mise plus gros dès le flop avec tes brelans et tes overpaires : elle paie de toute façon, et chaque rue de mise compte. Avec une paire sous le tableau, reste prudent : ses mises sont rarement des bluffs.', 'Ces chiffres viennent du solveur de l’appli (pot simple, tête à tête, 40 BB, ranges TAG). Pour les voir sur d’autres flops, ouvre Apprendre › Solveur.'] }
     ],
     mistake: 'Checker un brelan au flop puis à la turn pour piéger sur un tableau sec : l’adversaire n’a rien et checke derrière, tu ne gagnes presque rien.',
-    retain: ['Brelan : petit au flop, gros à la turn, tapis à la river ; en grosse blinde, check-relance.', 'Overpaire : mise souvent et gros ; top paire : petit, et check si une carte plus haute tombe.', 'Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses et à la deuxième mise.'],
+    retain: ['Brelan : petit au flop, gros à la turn, tapis à la river ; en grosse blinde, check-relance.', 'Overpaire : mise souvent et gros ; top paire : petit, et check si une carte plus haute tombe.', 'Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses et à la deuxième mise.', 'AK, AQ, AJ : top paire = valeur sur trois rues ; ratés = un seul tir sur flop sec, puis abandon à la turn ; flop connecté = check.'],
     quiz: [
       { q: 'Brelan au bouton, flop sec, la grosse blinde checke. Taille la plus fréquente ?', o: ['Check', '1/3 à 1/2 du pot', 'Le pot', 'Tapis'], a: 1, why: 'Peu de mains paient une grosse mise sur un flop sec : on garde ses mains faibles dans le coup.' },
       { q: 'Même coup, 40 BB, ta mise d’1/3 a été payée. Turn neutre. Le solveur…', o: ['checke', 'mise 1/3', 'fait souvent tapis', 'se couche'], a: 2, why: 'Il reste environ 4 pots : tout doit être au milieu à la river.' },
       { q: 'Brelan en grosse blinde, le bouton mise 1/3. Tu…', o: ['paies pour piéger', 'relances', 'te couches', 'checkes'], a: 1, why: 'Le solveur relance à 100 % : ses tops paires paient.' },
       { q: 'Top paire de rois au bouton, un as tombe à la turn après check-check. Le plus souvent…', o: ['tapis', 'mise le pot', 'check', 'mise 1/2'], a: 2, why: 'Elle est devenue un attrape-bluff : 9 fois sur 10 check.' },
       { q: '7-7 sur Q♦ J♠ 10♣, en grosse blinde, le bouton mise 3/4 du pot. Tu…', o: ['relances', 'paies', 'te couches', 'fais tapis'], a: 2, why: 'Le solveur se couche à 100 % : trop de mains te battent, trop de cartes te font perdre.' },
-      { q: 'Overpaire A-A sur K♦ 8♠ 3♣ : le solveur…', o: ['checke souvent', 'mise toujours, souvent gros', 'mise toujours tout petit', 'fait tapis'], a: 1, why: 'Ses rois paient une grosse mise et ne te battent pas.' }
+      { q: 'Overpaire A-A sur K♦ 8♠ 3♣ : le solveur…', o: ['checke souvent', 'mise toujours, souvent gros', 'mise toujours tout petit', 'fait tapis'], a: 1, why: 'Ses rois paient une grosse mise et ne te battent pas.' },
+      { q: 'A♥ Q♣ sur K♦ 8♠ 3♣ : ta petite mise est payée, turn 7♣. Le solveur…', o: ['mise le pot', 'checke', 'fait tapis', 'mise 1/2'], a: 1, why: 'Main ratée, un seul tir : abandon complet sur une turn neutre.' },
+      { q: 'AK sur 9♠ 7♦ 5♣, la grosse blinde checke. Le plus souvent…', o: ['check', 'mise 1/3', 'mise 3/4', 'tapis'], a: 0, why: 'Ce flop bas et connecté touche la range de la grosse blinde.' }
     ]
   };
 
@@ -2411,6 +2414,16 @@
     ['Y', 'Sans amélioration, tu te couches le plus souvent. Tu n’as que deux cartes pour toucher ton brelan. Et une deuxième mise, c’est rarement du vent.'],
     ['J', 'Un dernier conseil ?'],
     ['Y', 'Contre une calling station de club, on mise plus gros dès le flop avec les brelans. Elle paie de toute façon.'],
+    ['J', 'Et avec as-roi, as-dame ou as-valet ? Ce ne sont pas des paires, mais je les joue souvent.'],
+    ['Y', 'Même logique : tout dépend de ce que tu touches. Si l’as tombe, tu as top paire avec un bon kicker. C’est de la valeur. Petite mise au flop, le pot à la turn.'],
+    ['J', 'Et si je rate ? Par exemple as-dame sur roi, huit, trois.'],
+    ['Y', 'Tu checkes une fois sur deux environ. Sinon, une petite mise. Mais si elle est payée et que la turn ne t’aide pas, tu abandonnes. Le solveur checke à cent pour cent.'],
+    ['J', 'Une seule balle, donc.'],
+    ['Y', 'Exactement. Sauf si un as tombe à la turn. Là, tu mises le pot.'],
+    ['J', 'Et sur un flop bas ?'],
+    ['Y', 'Sept, six, deux, tableau sec : tu peux miser, et même assez gros. Deux cartes hautes peuvent encore toucher. Neuf, sept, cinq, tableau connecté : tu checkes. Ce flop touche trop la grosse blinde.'],
+    ['J', 'Et as-valet comme as-roi ?'],
+    ['Y', 'Non. As-valet est plus fragile. Il checke plus souvent quand il rate. Et quand il touche l’as, il est parfois dominé par as-dame ou as-roi.'],
     ['J', 'Un petit quiz ?'],
     ['Y', 'Première question. Brelan au bouton, sur un flop sec. La taille la plus fréquente ?'],
     ['P', 5],
@@ -2423,7 +2436,7 @@
     ['Y', 'Troisième question. Paire de sept sur dame, valet, dix. Il mise trois quarts du pot.'],
     ['P', 5],
     ['J', 'Je me couche.'],
-    ['Y', 'Parfait. On résume. Brelan : petit au flop, gros à la turn, tapis à la river. Relance-le toujours en grosse blinde. Overpaire : mise souvent et gros. Top paire : petite mise, et check si une carte plus haute tombe. Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses. À bientôt !']
+    ['Y', 'Parfait. On résume. Brelan : petit au flop, gros à la turn, tapis à la river. Relance-le toujours en grosse blinde. Overpaire : mise souvent et gros. Top paire : petite mise, et check si une carte plus haute tombe. As-roi, as-dame, as-valet ratés : un seul tir, puis abandon. Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses. À bientôt !']
   ];
 
   L[34].podcast = [
@@ -2472,6 +2485,77 @@
     ['P', 5],
     ['J', 'Jouer à plusieurs avec une seule paire, et devenir lisible.'],
     ['Y', 'Parfait. On résume. Le limp-trap demande des joueurs agressifs derrière toi. Sur une table passive, ouvre normalement. Si on relance, sur-relance fort, ou tapis sous vingt-cinq blindes. Si personne ne relance, joue prudemment avec une seule paire. Et garde-le rare, sinon tu deviens lisible. À bientôt !']
+  ];
+
+  L[35] = {
+    minutes: 9,
+    links: [
+      { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'As7d2c', line: 'x-x', card: 'Kh', tend: 'x-x', rc: '3d', rpath: 'x' })), label: 'Exemple 1 dans le solveur' },
+      { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'As7d2c', line: 'x-b33-c', card: 'Kh', tend: 'x-b50-c', rc: '3d', rpath: 'x' })), label: 'Exemple 2 dans le solveur' },
+      { href: '#apresflop', label: 'S’entraîner : après le flop' }
+    ],
+    key: ['À la river, on mise avec deux sortes de mains : celles qui battent les mains qui paient (valeur) et celles qui ne gagnent jamais au check (bluff). Les mains moyennes checkent.', 'Plus le coup a été chargé avant, plus la river se polarise : grosses mains et bluffs font tapis, la top paire checke et attrape les bluffs.'],
+    sections: [
+      { ask: 'Comment le solveur choisit-il ses mises à la river ?', h: 'Valeur, bluff, et le milieu qui checke', p: ['Il n’y a plus de carte à venir : une main ne s’améliore plus. Le solveur mise donc avec les mains qui se font payer par pire, et avec des mains qui n’ont aucune chance au check. Les mains du milieu, qui gagnent souvent au check mais se font rarement payer par pire, checkent.', 'Ces exemples viennent du solveur de l’appli : bouton contre grosse blinde, 40 BB, river calculée exactement dans l’appli. Ouvre-les avec les boutons au-dessus pour voir chaque famille de mains.'] },
+      { ask: 'Montre-moi un exemple simple.', h: 'Exemple 1 : tout a été checké', p: ['A♠ 7♦ 2♣, turn K♥, river 3♦. Personne n’a misé au flop ni à la turn, le pot fait 5,5 BB. La grosse blinde checke, le bouton mise 42 % du temps (moitié du pot ou pot).', 'Avec une paire de rois faible (paire moyenne), il mise 68 % du temps : la grosse blinde a beaucoup de mains plus faibles qui paient. Avec une petite paire, il checke toujours : elle gagne souvent au check et ne se fait payer par rien de pire. Sans rien, il bluffe un tiers du temps.', 'En face, la grosse blinde se couche 80 % du temps face à une mise du pot : elle paie avec ses paires moyennes (85 %) et jette ses petites paires (73 %) et ses mains sans rien (97 %).'] },
+      { ask: 'Et quand il y a eu des mises avant ?', h: 'Exemple 2 : deux rues payées, la river se polarise', p: ['Même tableau, mais le bouton a misé 1/3 au flop et 1/2 pot à la turn, payé deux fois. Pot 18,3 BB, il reste 31,6 BB. La grosse blinde checke toujours la river.', 'Le bouton fait tapis 41 % du temps, une surmise de 1,7 fois le pot : double paire 100 %, brelan 70 %, et la moitié de ses mains sans rien en bluff. Sa top paire checke 86 % du temps : elle bat les bluffs mais se fait rarement payer par pire.', 'Face à une mise du pot, la grosse blinde paie avec sa top paire (89 %) et jette ses paires moyennes (94 %). Elle se couche à peu près une fois sur deux : c’est la défense minimale face à une mise du pot.'] },
+      { ask: 'Combien faut-il payer pour ne pas être exploité ?', h: 'La défense minimale', p: ['Face à une mise du pot, il faut garder environ la moitié de sa range pour que les bluffs adverses ne rapportent pas automatiquement. Face à une demi-mise, environ deux tiers. Ce sont tes meilleures mains qui paient : top paire avant paire moyenne, paire moyenne avant petite paire.', 'Au club, les joueurs récréatifs bluffent trop peu à la river : contre eux, on peut se coucher plus souvent avec les attrape-bluffs, et miser plus fin pour la valeur.'] }
+    ],
+    mistake: 'Miser une top paire à la river après deux rues payées « pour protéger » : les mains pires se couchent, les meilleures paient. Check, et paie si on mise.',
+    retain: ['River : mise la valeur et les bluffs, checke le milieu.', 'Après deux rues payées : tapis avec les grosses mains et les bluffs, top paire en check pour attraper les bluffs.', 'Face à une mise du pot, défends environ la moitié de ta range, avec tes meilleures mains.', 'Contre les récréatifs : moins de bluffs payés, plus de valeur fine.'],
+    quiz: [
+      { q: 'À la river, quelles mains checkent le plus ?', o: ['Les très grosses mains', 'Les mains moyennes', 'Les bluffs', 'Aucune'], a: 1, why: 'Elles gagnent souvent au check mais se font rarement payer par pire.' },
+      { q: 'Exemple 1 (tout checké), le bouton avec une petite paire…', o: ['mise le pot', 'checke toujours', 'fait tapis', 'mise 1/2'], a: 1, why: 'Aucune main pire ne paie, et elle gagne souvent à l’abattage.' },
+      { q: 'Exemple 2 (deux rues payées), le bouton avec une top paire…', o: ['fait tapis', 'checke le plus souvent', 'mise 1/2', 'se couche'], a: 1, why: 'Check 86 % : elle attrape les bluffs.' },
+      { q: 'Face à une mise du pot, quelle part de ta range dois-tu défendre environ ?', o: ['Un quart', 'La moitié', 'Les trois quarts', 'Tout'], a: 1, why: 'Sinon tous les bluffs adverses rapportent.' },
+      { q: 'Contre un récréatif qui bluffe peu à la river, avec un attrape-bluff…', o: ['tu paies toujours', 'tu te couches plus souvent', 'tu relances', 'tu fais tapis'], a: 1, why: 'Ses mises sont surtout de la valeur.' }
+    ]
+  };
+
+  L[35].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, la river. Mais avec le solveur.'],
+    ['Y', 'Salut ! Oui. On a enfin une river calculée exactement dans l’appli. Alors on va regarder ce qu’elle nous apprend.'],
+    ['J', 'Je t’écoute.'],
+    ['Y', 'À la river, plus aucune carte ne viendra. Le solveur mise donc avec deux sortes de mains. Celles qui se font payer par pire. Et celles qui ne gagnent jamais si on checke.'],
+    ['J', 'La valeur et les bluffs.'],
+    ['Y', 'Exactement. Et le milieu checke. Les mains qui gagnent souvent, mais que personne de pire ne paie.'],
+    ['J', 'Un exemple ?'],
+    ['Y', 'Tu es au bouton, la grosse blinde a payé. Flop as, sept, deux. Turn roi. River trois. Tout a été checké.'],
+    ['J', 'Le pot est tout petit.'],
+    ['Y', 'Cinq blindes et demie. La grosse blinde checke encore. Le bouton mise un peu plus de quatre fois sur dix.'],
+    ['J', 'Avec quoi ?'],
+    ['Y', 'Avec une paire de rois faible, il mise souvent : deux fois sur trois. La grosse blinde a plein de mains plus faibles qui vont payer.'],
+    ['J', 'Et avec une petite paire ?'],
+    ['Y', 'Il checke. Toujours. Elle gagne souvent si on montre, mais aucune main pire ne la paiera.'],
+    ['J', 'Et sans rien ?'],
+    ['Y', 'Il bluffe une fois sur trois. Et en face, la grosse blinde se couche quatre fois sur cinq face à une mise du pot.'],
+    ['J', 'Et si on avait misé avant ?'],
+    ['Y', 'Là, ça change tout. Même tableau, mais le bouton a misé au flop et à la turn, et la grosse blinde a payé deux fois. Le pot fait dix-huit blindes, il en reste trente et une.'],
+    ['J', 'Et alors ?'],
+    ['Y', 'Le bouton fait tapis quatre fois sur dix. Une surmise : presque deux fois le pot. Avec ses doubles paires, toujours. Avec ses brelans, sept fois sur dix. Et avec la moitié de ses mains sans rien.'],
+    ['J', 'Et sa top paire ?'],
+    ['Y', 'Elle checke. Presque neuf fois sur dix.'],
+    ['J', 'Pourquoi ? C’est une bonne main.'],
+    ['Y', 'Après deux rues payées, la grosse blinde n’a plus beaucoup de mains pires qui paieraient un tapis. Si tu mises, les pires se couchent, les meilleures paient. En checkant, ta top paire attrape les bluffs.'],
+    ['J', 'Et côté grosse blinde, quand le bouton mise ?'],
+    ['Y', 'Face à une mise du pot, elle paie avec sa top paire, presque toujours. Et elle jette ses paires moyennes. Au total, elle se couche à peu près une fois sur deux.'],
+    ['J', 'Une fois sur deux, c’est une règle ?'],
+    ['Y', 'C’est la défense minimale. Face à une mise du pot, tu gardes environ la moitié de ta range. Face à une demi-mise, à peu près deux tiers. Sinon, tous ses bluffs rapportent.'],
+    ['J', 'Et au club ?'],
+    ['Y', 'Les joueurs récréatifs bluffent peu à la river. Contre eux, couche-toi plus souvent avec tes attrape-bluffs. Et mise plus fin pour la valeur : ils paient avec des mains moyennes.'],
+    ['J', 'Un petit quiz ?'],
+    ['Y', 'Première question. À la river, quelles mains checkent le plus ?'],
+    ['P', 5],
+    ['J', 'Les mains moyennes.'],
+    ['Y', 'Oui.'],
+    ['Y', 'Deuxième question. Deux rues payées, tu as top paire au bouton. La grosse blinde checke.'],
+    ['P', 5],
+    ['J', 'Je checke, pour attraper les bluffs.'],
+    ['Y', 'Bravo.'],
+    ['Y', 'Troisième question. Face à une mise du pot, quelle part de ta range tu défends ?'],
+    ['P', 5],
+    ['J', 'Environ la moitié.'],
+    ['Y', 'Parfait. On résume. À la river, mise la valeur et les bluffs, checke le milieu. Après deux rues payées, tapis avec les grosses mains et les bluffs, check avec la top paire. Défends environ la moitié face au pot. Et contre les récréatifs, moins de bluffs payés, plus de valeur fine. Ouvre les exemples dans le solveur pour voir chaque famille de mains. À bientôt !']
   ];
 
   var CHAPTERS = PLAN.map(function (c) {

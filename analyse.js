@@ -164,6 +164,39 @@
     return { s: s, want: want, mine: mine, verdict: verdict };
   }
 
+  /* ---------- Le flop en tête à tête (pour le solveur) ---------- */
+  function flopInfo(h) {
+    if (!h.board || h.board.length < 3 || !h.cards) return null;
+    var hero = h.hero, folded = {}, raises = [], cur = {}, potPre = 0, k;
+    h.acts.forEach(function (a) { if (a.s === 'pre') { if (a.a === 'fold') folded[a.p] = 1; if (a.a === 'raise' && !a.blind) raises.push(a.p); } });
+    var live = h.seats.map(function (x) { return x.name; }).filter(function (n) { return !folded[n]; });
+    if (live.length !== 2 || live.indexOf(hero) < 0 || !raises.length || raises.length > 2) return null;
+    var vil = live[0] === hero ? live[1] : live[0];
+    // le pot au flop : antes + mises préflop
+    for (k in h.invest) potPre += h.invest[k];
+    h.acts.forEach(function (a) {
+      if (a.s !== 'pre') return;
+      var prev = cur[a.p] || 0, add = 0;
+      if (a.blind) add = a.to; else if (a.a === 'call' || a.a === 'bet') add = a.amt; else if (a.a === 'raise') add = (a.to || 0) - prev;
+      if (add > 0) { cur[a.p] = prev + add; potPre += add; }
+    });
+    var st = {}; h.seats.forEach(function (x) { st[x.name] = x.stack; });
+    var eff = Math.min(st[hero], st[vil]) / h.bb, pot = potPre, seq = [], fc = {};
+    h.acts.forEach(function (a) {
+      if (a.s !== 'flop' || (a.p !== hero && a.p !== vil)) return;
+      var who = a.p === hero ? 'h' : 'v', prev = fc[a.p] || 0, tok;
+      if (a.a === 'check') tok = 'x';
+      else if (a.a === 'fold') tok = 'f';
+      else if (a.a === 'call') { tok = a.allin ? 'c' : 'c'; fc[a.p] = prev + a.amt; pot += a.amt; }
+      else if (a.a === 'bet') { tok = (a.allin ? 'A' : 'b') + Math.round(a.amt / pot * 100); fc[a.p] = prev + a.amt; pot += a.amt; }
+      else if (a.a === 'raise') { var add = (a.to || 0) - prev; tok = (a.allin ? 'A' : 'r') + Math.round((a.to || 0) / h.bb * 10) / 10; fc[a.p] = prev + add; pot += add; }
+      if (tok) seq.push(who + tok);
+    });
+    if (!seq.length) return null;
+    return { b: h.board.slice(0, 3).join(''), c: h.cards.replace(' ', ''), t: raises.length === 1 ? 'srp' : '3bp', ag: raises[raises.length - 1] === hero ? 'h' : 'v',
+      op: h.pos[raises[0]], hp: h.pos[hero], vp: h.pos[vil], eff: Math.round(eff * 10) / 10, pot: Math.round(potPre / h.bb * 10) / 10, s: seq };
+  }
+
   /* ---------- Stockage (compact) ---------- */
   function key() { var p = PA.player(); return 'pa2hh_' + (p ? p.id : 'x'); }
   function loadDB() { try { return JSON.parse(localStorage.getItem(key()) || 'null') || { hands: [], hero: null }; } catch (e) { return { hands: [], hero: null }; } }
@@ -186,6 +219,8 @@
       net: Math.round(net * 10) / 10
     };
     // on garde le déroulé des coups importants (pot ≥ 10 BB engagés) pour la revue
+    var fl = null; try { fl = flopInfo(h); } catch (e) {}
+    if (fl) r.fl = fl;
     var big = (h.total[hero] || 0) / h.bb >= 10 || Math.abs(net) >= 10;
     if (big) r.log = logOf(h);
     return r;
@@ -210,13 +245,13 @@
   }
   function importTexts(texts) {
     var db = loadDB(), have = {}, added = 0, read = 0, heroes = {};
-    db.hands.forEach(function (x) { have[x.id] = true; });
+    var byId = {}; db.hands.forEach(function (x) { have[x.id] = true; byId[x.id] = x; });
     db.sum = db.sum || {};
     texts.forEach(function (t) {
       var sm = parseSummary(t); if (sm) { db.sum[sm.id] = sm; return; }
       parseFile(t).forEach(function (h) {
         read++; heroes[h.hero] = (heroes[h.hero] || 0) + 1;
-        if (have[h.id]) return; have[h.id] = true;
+        if (have[h.id]) { var old = byId[h.id]; if (old && !old.fl && old.src !== 'club') { var f2 = null; try { f2 = flopInfo(h); } catch (e) {} if (f2) old.fl = f2; } return; } have[h.id] = true;
         db.hands.push(compact(h)); added++;
       });
     });
@@ -275,13 +310,13 @@
     fetch('/api/winamax', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (L) {
       SY.avail = L.found; SY.info = L;
       if (!L.found) { SY.busy = false; return; }
-      var db = loadDB(), seen = db.files || {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
+      var db = loadDB(), seen = db.flv === 1 ? (db.files || {}) : {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
       if (!todo.length) { SY.busy = false; SY.msg = force ? 'Tout est à jour : aucune nouvelle main Winamax.' : SY.msg; if (force) U().render(); return; }
       var texts = [], i = 0;
       (function next() {
         if (i >= todo.length) {
           var res = importTexts(texts), db2 = loadDB(); db2.files = db2.files || {};
-          todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); saveDB(db2);
+          todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); db2.flv = 1; saveDB(db2);
           SY.busy = false; SY.msg = res.added ? res.added + ' nouvelles mains Winamax importées automatiquement.' : 'Tout est à jour : aucune nouvelle main Winamax.';
           if (/^#analyser/.test(location.hash)) U().render();
           return;
@@ -323,8 +358,44 @@
       '<label class="btn" style="cursor:pointer">Choisir des fichiers<input type="file" id="hhFiles" accept=".txt,text/plain" multiple style="display:none"></label></div>' +
       (AV.busy ? '<div class="muted">Lecture en cours…</div>' : '') + (AV.msg ? '<div>' + AV.msg + '</div>' : '') + '</div>';
   }
+  /* ---------- Après le flop : tes décisions face au solveur ---------- */
+  function postflopTab(H) {
+    var ui = U(), SV = window.PA_SOLVER, list = H.filter(function (x) { return x.fl; });
+    var miss = SV ? SV.missCount() : 0;
+    var head = '<div class="card stack"><b>Tes décisions au flop face au solveur</b><div class="small muted">Pour chaque coup en tête à tête, je retrouve le coup calculé le plus proche (positions, tapis) et le flop le plus proche de la bibliothèque, puis je compare ta décision à celle du solveur avec ta main, ou avec ta famille de mains si le flop n’est pas exactement le même.</div></div>';
+    var withFl = H.filter(function (x) { return x.src !== 'club'; }).length;
+    if (!list.length) return head + ui.yo(withFl ? 'Tes mains ont été importées avant cette version : je n’ai pas leur déroulé au flop. ' + (window.PA_SYNC && window.PA_SYNC.isPC ? 'Sur PC, elles vont être relues automatiquement au prochain passage dans Analyser.' : 'Réimporte tes fichiers Winamax (onglet Importer) : les mains déjà présentes seront complétées.') : 'Importe des mains Winamax pour voir tes décisions au flop comparées au solveur.');
+    if (!SV) return head;
+    var key = list.length + '|' + list[list.length - 1].id;
+    if (!AV.pf || AV.pf.key !== key) { var R = SV.review(list, function () { ui.render(); }); if (!R) return head + '<p class="muted">Chargement des solutions…</p>'; if (R.err) return head + ui.yo('Les solutions du solveur ne sont pas incluses dans cette version.'); AV.pf = { key: key, R: R }; }
+    var R2 = AV.pf.R, done = R2.filter(function (r) { return !r.skip; }), out = head;
+    function pct(a, b) { return b ? Math.round(a / b * 100) + ' %' : '–'; }
+    var ok = done.filter(function (r) { return r.v === 'ok'; }).length, mix = done.filter(function (r) { return r.v === 'mix'; }).length;
+    out += '<div class="grid2"><div class="card"><div class="muted small">Comme le solveur</div><div class="disp" style="font-size:34px">' + pct(ok, done.length) + '</div><div class="small muted">' + done.length + ' décisions comparées sur ' + list.length + ' coups</div></div><div class="card"><div class="muted small">Jouable · erreur</div><div class="disp" style="font-size:34px">' + pct(mix, done.length) + ' · ' + pct(done.length - ok - mix, done.length) + '</div></div></div>';
+    function row(label, rs, famK) {
+      if (!rs.length) return '';
+      var me = rs.filter(function (r) { return r.hf === famK; }).length, so = 0; rs.forEach(function (r) { so += r.fm[famK]; });
+      return '<tr><td>' + label + '</td><td>' + pct(me, rs.length) + '</td><td>' + Math.round(so / rs.length * 100) + ' %</td><td>' + rs.length + '</td></tr>';
+    }
+    var cb = done.filter(function (r) { return r.kind === 'cbet'; }), fc = done.filter(function (r) { return r.kind === 'facecb'; }), pr = done.filter(function (r) { return r.kind === 'probe'; });
+    out += '<div class="card stack"><b>Tableau de bord</b><table class="tbl"><tr><th>Situation</th><th>Toi</th><th>Solveur*</th><th>Coups</th></tr>' +
+      row('C-bet (relanceur préflop)', cb, 'bet') + row('Fold face au c-bet', fc, 'f') + row('Payer le c-bet', fc, 'c') + row('Relancer le c-bet (dont check-raise)', fc, 'raise') + row('Miser quand le relanceur checke', pr, 'bet') +
+      '</table><div class="small muted">* Le solveur avec les mêmes mains que toi (ou la même famille de mains), dans les mêmes coups.</div></div>';
+    var bad = done.filter(function (r) { return r.v !== 'ok'; }).sort(function (a, b) { return (a.v === 'err' ? 0 : 1) - (b.v === 'err' ? 0 : 1) || (a.h.d < b.h.d ? 1 : -1); }).slice(0, 25);
+    var FR = { x: 'check', bet: 'mise', f: 'fold', c: 'payer', raise: 'relance' };
+    out += '<div class="card stack"><b>Coups à regarder</b>' + (bad.length ? bad.map(function (r) {
+      var i = R2.indexOf(r), s1 = Object.keys(r.fm).filter(function (k) { return r.fm[k] >= 0.05; }).sort(function (a, b) { return r.fm[b] - r.fm[a]; }).map(function (k) { return FR[k] + ' ' + Math.round(r.fm[k] * 100) + ' %'; }).join(' · ');
+      return '<div style="border-bottom:1px solid var(--line);padding:8px 0" class="stack"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><span class="chip" style="border-color:' + (r.v === 'err' ? '#e03131' : '#ffd43b') + ';color:' + (r.v === 'err' ? '#ff8080' : '#ffd43b') + '">' + (r.v === 'err' ? 'Erreur' : 'Mixte') + '</span>' + SV.cardsTxt(r.h.fl.c) + ' <span class="small muted">sur</span> ' + SV.cardsTxt(r.h.fl.b) + '</div>' +
+        '<div class="small">' + ui.esc(r.h.fl.hp) + ' contre ' + ui.esc(r.h.fl.vp) + (r.h.fl.t === '3bp' ? ', pot 3-bet' : '') + ' · ' + r.cat + ' · toi : <b>' + FR[r.hf] + (r.hf === 'bet' || r.hf === 'raise' ? ' ' + SV.shortLabel(r.heroTok) : '') + '</b></div>' +
+        '<div class="small">Solveur : ' + s1 + (r.bestBet && r.fm.bet > 0.3 ? ' (taille préférée ' + SV.shortLabel(r.bestBet) + ')' : '') + '</div>' +
+        '<div class="small muted">' + (r.how === 'exact' ? 'Même flop, ta main exacte.' : 'Flop proche ' + SV.cardsTxt(r.flop) + ', ta famille de mains.') + (r.exact ? '' : ' Coup approché (positions ou tapis différents).') + '</div>' +
+        '<button class="btn" data-hact="pfopen" data-v="' + i + '" style="min-height:38px">Voir dans le solveur</button></div>';
+    }).join('') : '<div class="small muted">Aucune décision très éloignée du solveur. Bravo.</div>') + '</div>';
+    out += '<a class="btn gold" href="#apresflop?revoir">Rejouer mes coups ratés dans l’exercice' + (miss ? ' (' + miss + ')' : '') + '</a>';
+    return out;
+  }
   function tabs() {
-    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['fuites', 'Fuites'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
+    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['fuites', 'Fuites'], ['postflop', 'Après le flop'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
     return '<div class="seg">' + T.map(function (t) { return '<button class="' + (AV.tab === t[0] ? 'on' : '') + '" data-hact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
       (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
         [['all', 'Winamax + club'], ['wina', 'Winamax'], ['club', 'Club']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
@@ -373,16 +444,65 @@
       }).join('') + isoCard;
   }
   function coupsTab(H) {
+    var db0 = loadDB();
     var big = H.filter(function (x) { return x.log; }).sort(function (a, b) { return Math.abs(b.net) - Math.abs(a.net); }).slice(0, 30);
-    if (!big.length) return U().yo('Pas encore de gros coup (10 BB ou plus) dans ces mains.');
+    if (!big.length) return U().yo('Pas encore de gros coup (10 BB ou plus) dans ces mains.') + exchangeBlock(db0) + receivedBlock(db0);
     return U().yo('Les coups où tu as engagé ou gagné le plus. Ouvre-les pour les rejouer dans ta tête : qu’aurais-tu fait autrement ?') +
       big.map(function (x) {
         var open = AV.open === x.id;
         var c = compare(window.PA.player().profile || 'tag', { hand: x.h }, { pos: x.p, ctx: x.cx, act: x.a, openerPos: x.op, bbStack: x.st });
         var note = c ? (c.verdict === 'ok' || c.verdict === 'other' ? 'Préflop conforme à ta range.' : 'Préflop : ta range dit « ' + actFr(c.want, c.s.type) + ' », tu as choisi « ' + actFr(c.mine, c.s.type) + ' ».') : '';
         return '<div class="card stack"><button class="row" data-hact="open" data-v="' + x.id + '" style="justify-content:space-between;background:none;border:0;color:inherit;padding:0;text-align:left;width:100%"><span><b>' + showHand(x) + '</b> · ' + window.PA.POS_LABEL[x.p] + ' · ' + String(x.st).replace('.', ',') + ' BB</span><span style="color:' + (x.net >= 0 ? '#4fe08f' : '#ff8080') + ';font-weight:700">' + fmtBB(x.net) + '</span></button>' +
-          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div><div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + (note ? U().yo(note) : '') + '<button class="btn" data-hact="share" data-v="' + x.id + '">Partager en image</button>' : '') + '</div>';
-      }).join('');
+          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div><div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + (note ? U().yo(note) : '') + '<button class="btn" data-hact="share" data-v="' + x.id + '">Partager en image</button>' + notesBlock(x) : '') + '</div>';
+      }).join('') + exchangeBlock(db0) + receivedBlock(db0);
+  }
+  /* ---------- Commentaires et échange de mains (avec Lionel ou un autre joueur) ---------- */
+  function notesBlock(x) {
+    var ui = U(), N = x.notes || [];
+    return '<div class="stack" style="gap:6px;border-top:1px solid var(--line);padding-top:8px"><b>Commentaires</b>' +
+      (N.length ? N.map(function (n) { return '<div class="small"><b>' + ui.esc(n.by) + '</b> <span class="muted">' + new Date(n.at).toLocaleDateString('fr-FR') + '</span><br>' + ui.esc(n.t).replace(/\n/g, '<br>') + '</div>'; }).join('') : '<div class="small muted">Aucun commentaire. Note ce que tu en penses, ou envoie la main à Lionel pour avoir son avis.</div>') +
+      '<textarea id="hn_' + x.id + '" rows="2" placeholder="Ton commentaire…" style="width:100%;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:8px;font:inherit"></textarea>' +
+      '<button class="btn" data-hact="addnote" data-v="' + x.id + '">Ajouter le commentaire</button></div>';
+  }
+  function exchangeBlock(db) {
+    var n = db.hands.filter(function (x) { return x.log && x.notes && x.notes.length; }).length;
+    return '<div class="card stack"><b>Échanger des mains commentées</b><div class="small muted">Envoie tes mains commentées à Lionel (ou à un autre joueur de l’appli) : il les importe, ajoute ses commentaires et te les renvoie. Ses commentaires s’ajoutent alors aux tiens.</div>' +
+      '<button class="btn gold" data-hact="sendnotes"' + (n ? '' : ' disabled') + '>Envoyer mes ' + n + ' mains commentées</button>' +
+      '<label class="btn" style="text-align:center">Importer des mains reçues<input type="file" accept=".json,application/json" data-hfile="mains" style="display:none"></label>' + (AV.xmsg ? '<div class="small">' + U().esc(AV.xmsg) + '</div>' : '') + '</div>';
+  }
+  function receivedBlock(db) {
+    var R = db.recus || []; if (!R.length) return '';
+    return '<h2>Mains reçues</h2>' + R.map(function (x) {
+      var open = AV.open === 'r' + x.id;
+      return '<div class="card stack"><button class="row" data-hact="open" data-v="r' + x.id + '" style="justify-content:space-between;background:none;border:0;color:inherit;padding:0;text-align:left;width:100%"><span><b>' + showHand(x) + '</b> · ' + U().esc(x.from || '') + '</span><span class="small muted">' + (x.notes || []).length + ' comm.</span></button>' +
+        (open ? '<div class="stack" style="gap:2px">' + (x.log || []).map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + notesBlock(x) : '') + '</div>';
+    }).join('') + '<button class="btn gold" data-hact="sendrecus">Renvoyer les mains reçues avec mes commentaires</button>';
+  }
+  function findHand(db, id) { var r = null; db.hands.forEach(function (x) { if (x.id === id) r = x; }); (db.recus || []).forEach(function (x) { if (x.id === id) r = x; }); return r; }
+  function deliver(obj, name) {
+    var txt = JSON.stringify(obj);
+    if (window.PAAndroid && PAAndroid.shareFile) { PAAndroid.shareFile(btoa(unescape(encodeURIComponent(txt))), name, 'application/json'); return; }
+    if (pcApp()) { fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, content: txt }) }).then(function (r) { return r.json(); }).then(function (j) { AV.xmsg = 'Fichier enregistré dans ' + j.path + ' : envoie-le par mail ou par message.'; U().render(); }).catch(function () { AV.xmsg = 'Enregistrement impossible.'; U().render(); }); return; }
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+  function sendHands(list) {
+    var me = window.PA.player().pseudo, d = new Date();
+    deliver({ app: 'Poker Academy', kind: 'mains', from: me, at: Date.now(), hands: list.map(function (x) { return { id: x.id, d: x.d, t: x.t, h: x.h, c: x.c, p: x.p, st: x.st, net: x.net, bb: x.bb, log: x.log, notes: x.notes || [], from: x.from }; }) },
+      'mains-commentees-' + me.replace(/[^A-Za-z0-9]/g, '') + '-' + d.toISOString().slice(0, 10) + '.json');
+  }
+  function importHands(text) {
+    var j; try { j = JSON.parse(text); } catch (e) { j = null; }
+    if (!j || j.kind !== 'mains' || !j.hands) { AV.xmsg = 'Ce fichier n’est pas un envoi de mains Poker Academy.'; return; }
+    var db = loadDB(), me = window.PA.player().pseudo, back = 0, nw = 0; db.recus = db.recus || [];
+    j.hands.forEach(function (h) {
+      var mine = null; db.hands.forEach(function (x) { if (x.id === h.id) mine = x; });
+      var tgt = mine; if (!tgt) (db.recus).forEach(function (x) { if (x.id === h.id) tgt = x; });
+      if (!tgt) { tgt = { id: h.id, d: h.d, t: h.t, h: h.h, c: h.c, p: h.p, st: h.st, net: h.net, bb: h.bb, log: h.log, notes: [], from: j.from }; db.recus.unshift(tgt); nw++; } else back++;
+      tgt.notes = tgt.notes || [];
+      (h.notes || []).forEach(function (n) { if (!tgt.notes.some(function (m) { return m.at === n.at && m.by === n.by; })) tgt.notes.push(n); });
+      tgt.notes.sort(function (a, b) { return a.at - b.at; });
+    });
+    saveDB(db); AV.xmsg = (nw ? nw + ' main(s) reçue(s) de ' + j.from + '. ' : '') + (back ? back + ' main(s) déjà connue(s), commentaires de ' + j.from + ' ajoutés.' : '');
   }
   function tournoisTab(S) {
     var sum = loadDB().sum || {};
@@ -411,6 +531,7 @@
     else if (AV.tab === 'positions') body += positionsTab(S);
     else if (AV.tab === 'fuites') { AV.S = S; body += fuitesTab(S); }
     else if (AV.tab === 'coups') body += coupsTab(H);
+    else if (AV.tab === 'postflop') body += postflopTab(H);
     else if (AV.tab === 'tournois') body += tournoisTab(S);
     else if (AV.tab === 'club') body += clubTab(db);
     else if (AV.tab === 'adv') body += carnetTab();
@@ -631,6 +752,10 @@
     if (a === 'tab') { AV.tab = v; AV.armClear = false; }
     else if (a === 'per') AV.per = v;
     else if (a === 'open') AV.open = AV.open === v ? null : v;
+    else if (a === 'addnote') { var ta = document.getElementById('hn_' + v), txt = ta && ta.value.trim(); if (txt) { var db = loadDB(), x = findHand(db, v); if (x) { x.notes = x.notes || []; x.notes.push({ by: window.PA.player().pseudo, at: Date.now(), t: txt }); saveDB(db); } } }
+    else if (a === 'sendnotes') { sendHands(loadDB().hands.filter(function (x) { return x.log && x.notes && x.notes.length; })); return; }
+    else if (a === 'sendrecus') { sendHands(loadDB().recus || []); return; }
+    else if (a === 'pfopen') { var rr = AV.pf && AV.pf.R[+t.getAttribute('data-v')]; if (rr && window.PA_SOLVER) window.PA_SOLVER.openExplorer(rr); return; }
     else if (a === 'clear') { if (!AV.armClear) AV.armClear = true; else { window.PA_HH.clear(); AV.armClear = false; AV.msg = null; AV.tab = 'resume'; } }
     else if (a === 'cf') {
       var k = t.getAttribute('data-k'), nEl = document.getElementById('cfNote'), aEl = document.getElementById('cfAmt');
@@ -658,6 +783,7 @@
     U().render();
   });
 
-  window.PA_HH = { parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
+  document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-hfile') === 'mains' && t.files && t.files[0]) { var r = new FileReader(); r.onload = function () { importHands(String(r.result)); U().render(); }; r.readAsText(t.files[0]); } });
+  window.PA_HH = { flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
     view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'tag')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'tag') : null; }, clear: function () { try { localStorage.removeItem(key()); } catch (e) {} } };
 })();

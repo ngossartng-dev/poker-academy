@@ -229,6 +229,8 @@
     var ui = U();
     if (!DATA) { load(function () { ui.render(); }); return ui.shell('apprendre', '<div class="stack"><h1>Solveur</h1><p class="muted">Chargement des solutions…</p></div>'); }
     if (DATA.err) return ui.shell('apprendre', '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Solveur</h1>' + ui.yo('Les solutions ne sont pas incluses dans cette version : elles sont dans l’appli installée (PC et Android).') + '</div>');
+    var dm = /[?&]d=([^&]+)/.exec(location.hash);
+    if (dm) { try { var dd = JSON.parse(decodeURIComponent(dm[1])); EX.spot = dd.spot; EX.flop = dd.flop; EX.path = null; EX.tl = dd.line ? { line: dd.line, card: dd.card } : null; EX.tpath = dd.tend || ''; EX.rv = dd.rc ? { tend: dd.tend, card: dd.rc, rpath: dd.rpath || '' } : null; EX.hand = dd.hand || ''; } catch (e) {} history.replaceState(null, '', '#solveur'); }
     if (!spotOf(EX.spot)) EX.spot = DATA.spots[0].id;
     var sp = spotOf(EX.spot), wait = function (t) { return ui.shell('apprendre', '<div class="stack"><h1>Solveur</h1><p class="muted">' + t + '</p></div>'); };
     if (!ensureSpot(EX.spot, function () { ui.render(); })) return wait('Chargement du coup…');
@@ -274,8 +276,8 @@
     }
     var sm = summary(n, board, w);
     var hm = EX.hand ? handMix(n, EX.hand, w) : null;
-    var head = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Solveur</h1>' + spotPicker() +
-      '<div class="card stack" style="gap:8px"><b>Flop</b><div class="row" style="flex-wrap:wrap;gap:6px">' + sp.flops.map(function (f) { return '<button data-sact="flop" data-v="' + f + '" style="padding:4px;border-radius:8px;border:2px solid ' + (EX.flop === f ? 'var(--gold)' : 'var(--line)') + ';background:var(--panel2)">' + cardsTxt(f) + '</button>'; }).join('') + '</div></div>';
+    var head = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Solveur</h1><div class="sv2"><div class="stack">' + spotPicker() +
+      '<div class="card stack" style="gap:8px"><b>Flop</b><div class="row" style="flex-wrap:wrap;gap:6px">' + sp.flops.map(function (f) { return '<button data-sact="flop" data-v="' + f + '" style="padding:4px;border-radius:8px;border:2px solid ' + (EX.flop === f ? 'var(--gold)' : 'var(--line)') + ';background:var(--panel2)">' + cardsTxt(f) + '</button>'; }).join('') + '</div></div></div><div class="stack">';
     var body = head + '<div class="card stack"><div class="row" style="justify-content:space-between;flex-wrap:wrap">' + boardCards(board) + '<div class="small muted">Pot ' + f1(n.pot) + ' BB · tapis ' + f1(stackNow) + ' BB<br>Précision : ' + String(exp).replace('.', ',') + ' % du pot</div></div>' + nav +
       '<div><b>' + cap(who2(EX.spot, n.p)) + '</b> joue' + (n.call ? ' face à une mise de ' + f1(n.call) + ' BB' : '') + ' :</div>' + legend(n.a) + bar(sm.tot, n.a) +
       '<div class="small muted">' + n.a.map(function (a, k) { return shortLabel(a) + ' ' + pc(sm.tot[k]); }).join(' · ') + '</div>' +
@@ -284,8 +286,8 @@
       CATS.filter(function (c) { return sm.cat[c] && sm.cat[c].n / sm.N >= 0.005; }).map(function (c) { return '<tr><td>' + c + '</td><td>' + pc(sm.cat[c].n / sm.N) + '</td><td>' + bar(sm.cat[c].mix, n.a) + '</td></tr>'; }).join('') + '</table></div>' +
       '<div class="card stack"><b>Une main précise</b><div class="row"><input id="solHand" placeholder="ex. AKo, 77, 98s" value="' + ui.esc(EX.hand) + '" style="width:130px;min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"><button class="btn" data-sact="hand">Voir</button></div>' +
       (EX.hand ? (hm ? bar(hm, n.a) + '<div class="small">' + n.a.map(function (a, k) { return shortLabel(a) + ' ' + pc(hm[k]); }).join(' · ') + '</div>' : '<div class="small muted">Cette main n’est pas dans la range de ce joueur à ce moment du coup.</div>') : '') + '</div>' +
-      '<p class="small muted">Coup : ' + sp.pre.replace(/\{IP\}/g, ART[sp.ip] || sp.ip).replace(/\{OOP\}/g, ART[sp.oop] || sp.oop).replace(/^./, function (c) { return c.toUpperCase(); }) + ' Tapis de départ ' + sp.start + ' BB, ranges du profil TAG.</p>' +
-      '<p class="small muted">Flop et turn sont calculés à l’avance : au flop, check, mises de 1/3, 1/2, 3/4 et 125 % du pot, relance à 3 fois, tapis ; à la turn, check, mises de 1/2 pot et du pot, tapis, sur les 47 cartes possibles (affichées : six cartes types sur les deux suites de coup les plus fréquentes). La river est calculée dans l’appli quand tu l’ouvres, sur les mains exactes qui y arrivent : check, 1/2 pot, pot, tapis.</p></div>';
+      '<p class="small muted">Coup : ' + sp.pre.replace(/\{IP\}/g, ART[sp.ip] || sp.ip).replace(/\{OOP\}/g, ART[sp.oop] || sp.oop).replace(/^./, function (c) { return c.toUpperCase(); }) + ' Tapis de départ ' + sp.start + ' BB, ranges du profil TAG.' + (sp.note ? ' ' + sp.note : '') + '</p>' +
+      '<p class="small muted">Flop et turn sont calculés à l’avance : au flop, check, mises de 1/3, 1/2, 3/4 et 125 % du pot, relance à 3 fois, tapis ; à la turn, check, mises de 1/2 pot et du pot, tapis, sur les 47 cartes possibles (affichées : six cartes types sur les deux suites de coup les plus fréquentes). La river est calculée dans l’appli quand tu l’ouvres, sur les mains exactes qui y arrivent : check, 1/2 pot, pot, tapis.</p></div></div></div>';
     return ui.shell('apprendre', body);
   }
 
@@ -301,7 +303,7 @@
   }
   function sum(w) { var s = 0; for (var i = 0; i < w.length; i++) s += w[i]; return s; }
   function pickWeighted(w) { var s = sum(w); if (s <= 0) return -1; var r = Math.random() * s; for (var i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; } return w.length - 1; }
-  function pairOK(h, board) { return h[0] === h[2] || category(h, board) === 'Top paire'; }
+  function pairOK(h, board) { var k = classOf(h).substr(0, 2); return h[0] === h[2] || k === 'AK' || k === 'AQ' || k === 'AJ' || category(h, board) === 'Top paire'; }
   function pickHand(n, w, board) {
     if (QZ && QZ.mode === 'paires') { w = n._c.map(function (h, i) { if (!pairOK(h, board)) return 0; var c = category(h, board), k = c === 'Brelan ou mieux' ? 6 : c === 'Overpaire' ? 2 : 1; return k * (w ? w[i] : 1); }); if (sum(w) <= 0) return -1; }
     var idx = -1;
@@ -316,7 +318,16 @@
     if (q.rv) return riverSol(S, q.tl, q.rv.tend, q.rv.card).nodes[q.path];
     return node(S, q.path, q.tl);
   }
+  function replayQuestion(cb) {
+    var L = (PA.player().solverMiss || []); if (!L.length) return { empty: true };
+    var x = L[QZ.k % L.length];
+    if (!ensureSpot(x.spot, cb)) return null;
+    var S = sol(x.spot, x.flop); if (!S) return { empty: true };
+    if (x.tl && !turnData(x.spot, x.flop, cb)) return null;
+    return { spot: x.spot, flop: x.flop, path: x.path, tl: x.tl, rv: x.rv, i: x.i, hand: x.hand, replay: true };
+  }
   function newQuestion(cb, depth) {
+    if (QZ && QZ.mode === 'revoir') return replayQuestion(cb);
     depth = depth || 0; if (depth > 12) return null;
     var pend = QZ && QZ.pend; if (QZ) QZ.pend = null;
     var spot = pend ? pend.spot : DATA.spots[Math.floor(Math.random() * DATA.spots.length)].id;
@@ -324,6 +335,7 @@
     var flop = pend ? pend.flop : spd.flops[Math.floor(Math.random() * spd.flops.length)];
     var u = pend ? pend.u : Math.random();
     if (!ensureSpot(spot, cb)) { QZ.pend = { spot: spot, flop: flop, u: u }; return null; }
+    var heroIP = spd.group === 'Contre un récréatif';
     var S = sol(spot, flop), tl = null, path, n, w = null, rv = null;
     var street = (u < 0.4 || !S.lines || !Object.keys(S.lines).length) ? 0 : (u < 0.7 ? 1 : 2);
     if (street) {
@@ -334,6 +346,7 @@
       var TN = Td[line].nodes[card];
       if (street === 1) {
         var tps = Object.keys(TN).filter(function (p) { var s = p ? p.split('-') : []; return s.length <= 2 && TN[p].a.length > 1 && s.indexOf('ai') < 0; });
+        if (heroIP) tps = tps.filter(function (p) { return TN[p].p === 1; }); if (!tps.length) return newQuestion(cb, depth + 1);
         path = tps[Math.floor(Math.random() * tps.length)]; n = node(S, path, tl); w = rangeAt(S, n.p, tl, path, null);
       } else {
         // fins de turn qui mènent à la river, choisies selon leur fréquence
@@ -345,11 +358,12 @@
         rv = { tend: ends[k], card: rcs[Math.floor(Math.random() * rcs.length)] };
         var rs = riverSol(S, tl, rv.tend, rv.card); if (!rs) return newQuestion(cb, depth + 1);
         var rps = Object.keys(rs.nodes).filter(function (p) { var s = p ? p.split('-') : []; return s.length <= 2 && rs.nodes[p].a.length > 1 && s.indexOf('ai') < 0 && sum(rs.nodes[p]._w) > 1e-3; });
+        if (heroIP) rps = rps.filter(function (p) { return rs.nodes[p].p === 1; });
         if (!rps.length) return newQuestion(cb, depth + 1);
         path = rps[Math.floor(Math.random() * rps.length)]; n = rs.nodes[path]; w = n._w;
       }
     } else {
-      var nodes = flopDecisions(S, spot); path = nodes[Math.floor(Math.random() * nodes.length)]; n = node(S, path);
+      var nodes = flopDecisions(S, spot); if (heroIP) nodes = nodes.filter(function (p) { return S.nodes[p].p === 1; }); path = nodes[Math.floor(Math.random() * nodes.length)]; n = node(S, path);
     }
     var idx = pickHand(n, w, flop + (tl ? tl.card : '') + (rv ? rv.card : ''));
     if (idx < 0) return newQuestion(cb, depth + 1);
@@ -386,11 +400,13 @@
     var ui = U();
     if (!DATA) { load(function () { ui.render(); }); return ui.shell('entrainer', '<div class="stack"><h1>Après le flop</h1><p class="muted">Chargement des solutions…</p></div>'); }
     if (DATA.err) return ui.shell('entrainer', '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Après le flop</h1>' + ui.yo('Les solutions ne sont pas incluses dans cette version : elles sont dans l’appli installée (PC et Android).') + '</div>');
-    var mode = /paires/.test(location.hash) ? 'paires' : '';
+    var mode = /paires/.test(location.hash) ? 'paires' : /revoir/.test(location.hash) ? 'revoir' : '';
     if (!QZ || QZ.mode !== mode) startQuiz(mode);
+    if (QZ.q && QZ.q.empty) { QZ = null; return ui.shell('entrainer', '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Coups à revoir</h1>' + ui.yo('Aucun coup à revoir : tu n’as pas encore raté de coup dans « Après le flop », ou tu les as tous rejoués correctement.') + '<a class="btn gold" href="#apresflop">Faire une série « Après le flop »</a></div>', true); }
+    if (QZ.mode === 'revoir' && QZ.k === 0 && !QZ.q && !QZ.sized) { QZ.n = Math.min(10, missCount()) || 10; QZ.sized = true; }
     if (QZ.k >= QZ.n) {
       var pct = Math.round((QZ.ok + QZ.mix * 0.5) / QZ.n * 100);
-      if (!QZ.saved) { var p = PA.player(); p.sessions.unshift({ at: Date.now(), label: QZ.mode === 'paires' ? 'Après le flop : paires' : 'Après le flop', n: QZ.n, ok: QZ.ok, style: QZ.mix, err: QZ.n - QZ.ok - QZ.mix, consult: 0 }); PA.save(); QZ.saved = true; }
+      if (!QZ.saved) { var p = PA.player(); p.sessions.unshift({ at: Date.now(), label: QZ.mode === 'revoir' ? 'Après le flop : coups à revoir' : QZ.mode === 'paires' ? 'Après le flop : paires et as forts' : 'Après le flop', n: QZ.n, ok: QZ.ok, style: QZ.mix, err: QZ.n - QZ.ok - QZ.mix, consult: 0 }); PA.save(); QZ.saved = true; }
       return ui.shell('entrainer', '<div class="stack"><h1>Bilan</h1>' + ui.yo(pct >= 80 ? 'Très bien : tes décisions ressemblent à celles du solveur.' : pct >= 55 ? 'Pas mal. Regarde dans l’explorateur les familles de mains où tu t’écartes.' : 'Le jeu après le flop demande du temps : refais une série, et ouvre l’explorateur sur les coups ratés.') +
         '<div class="grid2"><div class="card"><div class="muted small">Comme le solveur</div><div class="disp" style="font-size:40px">' + QZ.ok + ' / ' + QZ.n + '</div></div><div class="card"><div class="muted small">Jouable (mixte) · erreur</div><div class="disp" style="font-size:40px">' + QZ.mix + ' · ' + (QZ.n - QZ.ok - QZ.mix) + '</div></div></div>' +
         '<div class="row"><button class="btn gold" data-sact="again" style="flex:1">Encore 10 coups</button><button class="btn" data-act="nav" data-v="situations">Terminer</button></div></div>', true);
@@ -435,7 +451,14 @@
     var q = QZ.q, n = qNode(q), mix = n._m[q.i], k = n.a.indexOf(a), mx = Math.max.apply(null, mix);
     var v = mix[k] >= 0.5 || mix[k] >= mx - 0.1 ? 'ok' : (mix[k] >= 0.15 ? 'mix' : 'err');
     QZ.ans = { a: a, v: v }; if (v === 'ok') QZ.ok++; else if (v === 'mix') QZ.mix++;
+    var p = PA.player(); if (!p) return;
+    var L = p.solverMiss = p.solverMiss || [], key = [q.spot, q.flop, q.path, q.tl ? q.tl.line + q.tl.card : '', q.rv ? q.rv.tend + q.rv.card : '', q.hand].join('|');
+    var at = -1; L.forEach(function (x, j) { if (x.key === key) at = j; });
+    if (v === 'ok' && at >= 0) L.splice(at, 1);
+    else if (v !== 'ok' && at < 0) { L.unshift({ key: key, spot: q.spot, flop: q.flop, path: q.path, tl: q.tl, rv: q.rv ? { tend: q.rv.tend, card: q.rv.card } : null, i: q.i, hand: q.hand, at: Date.now() }); if (L.length > 60) L.length = 60; }
+    PA.save();
   }
+  function missCount() { var p = PA.player(); return p && p.solverMiss ? p.solverMiss.length : 0; }
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-sact]') : null; if (!t) return;
     var a = t.getAttribute('data-sact'), v = t.getAttribute('data-v');
@@ -461,5 +484,102 @@
     }
     U().render();
   });
-  window.PA_SOLVER = { explorer: explorer, quiz: quizView, category: category, _riverCards: riverCards };
+  /* ---------- Tes mains Winamax face au solveur (flop) ---------- */
+  var EARLY = { UTG: 1, 'UTG+1': 1, MP: 1 }, MIDP = { LJ: 1, HJ: 1 }, ORD = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN'];
+  function mapSpot(f) {
+    var ok = function (id) { return spotOf(id) ? id : null; };
+    if (f.t === 'srp') {
+      var opener = f.op, caller = f.ag === 'h' ? f.vp : f.hp, exact = caller === 'BB';
+      if (opener === 'SB') return caller === 'BB' ? { id: ok('sb-bb'), exact: true } : null;
+      if (caller === 'BB' || caller === 'SB') {
+        var id = opener === 'BTN' ? (f.eff < 28 ? 'btn-bb-20' : f.eff > 50 ? 'btn-bb-60' : 'btn-bb') : opener === 'CO' ? 'co-bb' : MIDP[opener] ? 'hj-bb' : EARLY[opener] ? 'utg-bb' : null;
+        return id ? { id: ok(id), exact: exact && (opener === 'BTN' || (f.eff >= 28 && f.eff <= 55)) } : null;
+      }
+      return { id: ok('sb-bb'), exact: false }; // l'ouvreur joue hors de position contre un payeur placé après lui
+    }
+    var three = f.ag === 'h' ? f.hp : f.vp, op = f.op;
+    if (op === 'BTN' && three === 'BB') return { id: ok('bb3b-btn'), exact: true };
+    if (op === 'CO' && three === 'BTN') return { id: ok('btn3b-co'), exact: true };
+    return ORD.indexOf(three) > ORD.indexOf(op) || three === 'BTN' ? { id: ok('btn3b-co'), exact: false } : { id: ok('bb3b-btn'), exact: false };
+  }
+  function flopFeat(f) {
+    var c = [f.substr(0, 2), f.substr(2, 2), f.substr(4, 2)], r = c.map(rk).sort(function (a, b) { return b - a; }), sc = {};
+    c.forEach(function (x) { sc[x[1]] = (sc[x[1]] || 0) + 1; });
+    var sm = Math.max.apply(null, Object.keys(sc).map(function (k) { return sc[k]; }));
+    return { r: r, pair: r[0] === r[1] || r[1] === r[2], sm: sm, span: r[0] - r[2] };
+  }
+  function nearestFlop(real, list) {
+    var a = flopFeat(real), best = null, bd = 1e9;
+    list.forEach(function (f) { var b = flopFeat(f), d = 2 * Math.abs(a.r[0] - b.r[0]) + 1.5 * Math.abs(a.r[1] - b.r[1]) + Math.abs(a.r[2] - b.r[2]) + (a.pair !== b.pair ? 6 : 0) + 4 * Math.abs(a.sm - b.sm) + 0.5 * Math.abs(a.span - b.span); if (d < bd) { bd = d; best = f; } });
+    return { flop: best, d: bd, same: bd === 0 };
+  }
+  // même flop à une permutation des couleurs près : on retrouve exactement la main du joueur
+  function isoHand(real, lib, hand) {
+    var A = [0, 2, 4].map(function (i) { return real.substr(i, 2); }).sort(function (x, y) { return rk(y) - rk(x); }), B = [0, 2, 4].map(function (i) { return lib.substr(i, 2); }).sort(function (x, y) { return rk(y) - rk(x); });
+    var m = {}, used = {};
+    for (var i = 0; i < 3; i++) { if (A[i][0] !== B[i][0]) return null; if (m[A[i][1]] && m[A[i][1]] !== B[i][1]) return null; if (!m[A[i][1]] && used[B[i][1]]) return null; m[A[i][1]] = B[i][1]; used[B[i][1]] = 1; }
+    var free = 'shdc'.split('').filter(function (x) { return !used[x]; });
+    function ms(su) { if (!m[su]) { m[su] = free.shift(); } return m[su]; }
+    return hand[0] + ms(hand[1]) + hand[2] + ms(hand[3]);
+  }
+  function fam(tok, facing) { if (tok === 'x') return 'x'; if (tok === 'f') return 'f'; if (tok === 'c') return 'c'; return facing ? 'raise' : 'bet'; }
+  function mapTok(tok, n, stackLeft) {
+    if (tok === 'x' || tok === 'f' || tok === 'c') return n.a.indexOf(tok) >= 0 ? tok : null;
+    var facing = n.call > 0;
+    if (facing) return tok[0] === 'A' && n.a.indexOf('ai') >= 0 ? 'ai' : (n.a.indexOf('r') >= 0 ? 'r' : (n.a.indexOf('ai') >= 0 ? 'ai' : null));
+    if (tok[0] === 'A') return n.a.indexOf('ai') >= 0 ? 'ai' : null;
+    var frac = parseInt(tok.slice(1), 10) / 100, best = null, bd = 9, F = { b33: 0.33, b50: 0.5, b75: 0.75, b100: 1, b125: 1.25, ai: stackLeft / n.pot };
+    n.a.forEach(function (a) { if (F[a] === undefined) return; var d = Math.abs(Math.log(frac / F[a])); if (d < bd) { bd = d; best = a; } });
+    return best;
+  }
+  function famMix(n, row) { var o = { x: 0, bet: 0, f: 0, c: 0, raise: 0 }, facing = n.call > 0; n.a.forEach(function (a, k) { o[fam(a === 'x' || a === 'f' || a === 'c' ? a : 'b', facing)] += row[k]; }); return o; }
+  function reviewOne(f) {
+    var ms = mapSpot(f); if (!ms || !ms.id) return { skip: 'coup non calculé' };
+    var sp = spotOf(ms.id), nf = nearestFlop(f.b, sp.flops), S = sol(ms.id, nf.flop); if (!S) return { skip: 'chargement' };
+    // côté du joueur : on le déduit de l'ordre de parole au flop (le premier à parler est hors de position)
+    var heroP = f.s[0][0] === 'v' ? 1 : 0;
+    var path = '', contrib = [0, 0];
+    for (var i = 0; i < f.s.length; i++) {
+      var who = f.s[i][0] === 'h' ? heroP : 1 - heroP, tok = f.s[i].slice(1), n = S.nodes[path];
+      if (!n) return { skip: 'ligne hors de l’arbre' };
+      decodeNode(n, S);
+      if (n.p !== who) { if (n.a.length === 1 && n.a[0] === 'x') { path = path ? path + '-x' : 'x'; n = S.nodes[path]; if (!n) return { skip: 'ligne hors de l’arbre' }; decodeNode(n, S); } else return { skip: 'ligne hors de l’arbre' }; }
+      var st = S.stack - (n.pot - S.pot) / 2, t2 = mapTok(tok, n, st);
+      if (!t2) return { skip: 'action hors de l’arbre' };
+      if (who === heroP && n.a.length > 1) {
+        var hc = f.c, iso = nf.same ? isoHand(f.b, nf.flop, hc) : null, row = null, how;
+        if (iso) n._c.forEach(function (c, j) { if (c === iso || c === iso.substr(2) + iso.substr(0, 2)) row = n._m[j]; });
+        var cat = category(hc, f.b), sm = summary(n, nf.flop, null);
+        if (row) how = 'exact'; else if (sm.cat[cat]) { row = sm.cat[cat].mix; how = 'famille'; } else { row = sm.tot; how = 'range'; }
+        var fm = famMix(n, row), rf = famMix(n, sm.tot), hf = fam(tok, n.call > 0), mx = 0; Object.keys(fm).forEach(function (k) { if (fm[k] > mx) mx = fm[k]; });
+        var v = fm[hf] >= 0.5 || fm[hf] >= mx - 0.1 ? 'ok' : fm[hf] >= 0.15 ? 'mix' : 'err';
+        var bestBet = null, bb = 0; n.a.forEach(function (a, k) { if (a[0] === 'b' && row[k] > bb) { bb = row[k]; bestBet = a; } });
+        var kind = n.call > 0 ? (f.ag === 'h' ? 'raised' : 'facecb') : (f.ag === 'h' ? 'cbet' : 'probe');
+        return { spot: ms.id, exact: ms.exact, flop: nf.flop, near: nf.same, path: path, n: n, how: how, cat: cat, heroTok: t2, hf: hf, fm: fm, rf: rf, v: v, bestBet: bestBet, kind: kind, iso: iso };
+      }
+      path = path ? path + '-' + t2 : t2;
+    }
+    return { skip: 'pas de décision' };
+  }
+  // prépare les coups (chargement des solutions) puis rend le résultat
+  function review(hands, cb) {
+    if (!DATA) { load(function () { review(hands, cb); }); return null; }
+    if (DATA.err) return { err: true };
+    var need = {}; hands.forEach(function (x) { var m = mapSpot(x.fl); if (m && m.id) need[m.id] = 1; });
+    var wait = Object.keys(need).filter(function (id) { return !ensureSpot(id, function () { cb(); }); });
+    if (wait.length) return null;
+    return hands.map(function (x) { var r; try { r = reviewOne(x.fl); } catch (e) { r = { skip: 'erreur' }; } r.h = x; return r; });
+  }
+  function openExplorer(r) { EX.spot = r.spot; EX.flop = r.flop; EX.path = r.path; EX.tl = null; EX.rv = null; EX.hand = classOf(r.iso || r.h.fl.c); location.hash = '#solveur'; }
+
+  // aide pour rédiger le cours : résumé d'un nœud de river (les données du coup et de la turn doivent être chargées)
+  function _river(spot, flop, line, card, tend, rc, rpath) {
+    var S = sol(spot, flop), tl = { line: line, card: card }, r = riverSol(S, tl, tend, rc); if (!r) return null;
+    var n = r.nodes[rpath || '']; if (!n) return { paths: Object.keys(r.nodes) };
+    var sm = summary(n, flop + card + rc, n._w), cats = {};
+    Object.keys(sm.cat).forEach(function (k) { cats[k] = { part: Math.round(sm.cat[k].n / sm.N * 100), mix: n.a.map(function (a, j) { return a + ' ' + Math.round(sm.cat[k].mix[j] * 100); }).join(' ') }; });
+    return { pot: n.pot, R: r.R, exp: r.exp, who: n.p, tot: n.a.map(function (a, j) { return a + ' ' + Math.round(sm.tot[j] * 100); }).join(' '), cats: cats, paths: Object.keys(r.nodes) };
+  }
+  function _load(spot, flop, cb) { if (!DATA) { load(function () { _load(spot, flop, cb); }); return; } if (!ensureSpot(spot, function () { _load(spot, flop, cb); })) return; if (!turnData(spot, flop, function () { _load(spot, flop, cb); })) return; cb(sol(spot, flop)); }
+  window.PA_SOLVER = { _river: _river, _load: _load, explorer: explorer, quiz: quizView, category: category, review: review, openExplorer: openExplorer, missCount: missCount, shortLabel: shortLabel, cardsTxt: cardsTxt, _riverCards: riverCards };
 })();
