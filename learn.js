@@ -129,7 +129,7 @@
     if (AU) AU.pause();
     var p = PA.player(), start = (p.podSec && p.podSec[n]) || 0;
     POD = { n: n, lines: script(c), i: 0, playing: true, rate: POD.rate || 1, audio: true };
-    var rel = 'audio/pod' + (n < 10 ? '0' : '') + n + '.m4a'; a.src = window.PA_PACK ? window.PA_PACK.url(rel) : rel;
+    var rel = 'audio/v2/pod' + (n < 10 ? '0' : '') + n + '.m4a'; a.src = window.PA_PACK ? window.PA_PACK.url(rel) : rel;
     a.addEventListener('loadedmetadata', function once() { a.removeEventListener('loadedmetadata', once); if (start > 2 && start < a.duration - 5) a.currentTime = start; a.playbackRate = POD.rate; }, false);
     a.playbackRate = POD.rate; a.play().catch(function () {});
     U().render();

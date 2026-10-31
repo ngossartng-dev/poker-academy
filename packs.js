@@ -15,7 +15,7 @@
   }
   function list(cb) {
     var out = [];
-    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push('audio/pod' + (n < 10 ? '0' : '') + n + '.m4a'); });
+    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push('audio/v2/pod' + (n < 10 ? '0' : '') + n + '.m4a'); });
     function sol() {
       var D = window.PA_SOLVER_DATA;
       if (D && D.spots) D.spots.forEach(function (s) { out.push('solver/flop/' + s.id + '.js'); (s.flops || D.flops).forEach(function (f) { out.push('solver/turn/' + s.id + '/' + f + '.js'); }); });
@@ -48,7 +48,7 @@
   function clear(cb) {
     if (IS_PC) { fetch('/api/packs', { method: 'DELETE' }).then(function () { status(cb); }); return; }
     if (IS_ANDROID) { PAAndroid.packClear(); status(cb); return; }
-    try { caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.open(k).then(function (c) { return c.keys().then(function (rs) { return Promise.all(rs.filter(function (r) { return /\/(audio\/pod|solver\/(flop|turn)\/)/.test(r.url); }).map(function (r) { return c.delete(r); })); }); }); })); }).then(function () { cb && cb(); }); } catch (e) { cb && cb(); }
+    try { caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.open(k).then(function (c) { return c.keys().then(function (rs) { return Promise.all(rs.filter(function (r) { return /\/(audio\/|solver\/(flop|turn)\/)/.test(r.url); }).map(function (r) { return c.delete(r); })); }); }); })); }).then(function () { cb && cb(); }); } catch (e) { cb && cb(); }
   }
   function mo(b) { return (b / 1048576).toFixed(b > 10485760 ? 0 : 1).replace('.', ',') + ' Mo'; }
   // carte de l'écran Sauvegarde
