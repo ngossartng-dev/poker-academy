@@ -287,7 +287,7 @@
       CATS.filter(function (c) { return sm.cat[c] && sm.cat[c].n / sm.N >= 0.005; }).map(function (c) { return '<tr><td>' + c + '</td><td>' + pc(sm.cat[c].n / sm.N) + '</td><td>' + bar(sm.cat[c].mix, n.a) + '</td></tr>'; }).join('') + '</table></div>' +
       '<div class="card stack"><b>Une main précise</b><div class="row"><input id="solHand" placeholder="ex. AKo, 77, 98s" value="' + ui.esc(EX.hand) + '" style="width:130px;min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"><button class="btn" data-sact="hand">Voir</button></div>' +
       (EX.hand ? (hm ? bar(hm, n.a) + '<div class="small">' + n.a.map(function (a, k) { return shortLabel(a) + ' ' + pc(hm[k]); }).join(' · ') + '</div>' : '<div class="small muted">Cette main n’est pas dans la range de ce joueur à ce moment du coup.</div>') : '') + '</div>' +
-      '<p class="small muted">Coup : ' + sp.pre.replace(/\{IP\}/g, ART[sp.ip] || sp.ip).replace(/\{OOP\}/g, ART[sp.oop] || sp.oop).replace(/^./, function (c) { return c.toUpperCase(); }) + ' Tapis de départ ' + sp.start + ' BB, ranges du profil TAG.' + (sp.note ? ' ' + sp.note : '') + '</p>' +
+      '<p class="small muted">Coup : ' + sp.pre.replace(/\{IP\}/g, ART[sp.ip] || sp.ip).replace(/\{OOP\}/g, ART[sp.oop] || sp.oop).replace(/^./, function (c) { return c.toUpperCase(); }) + ' Tapis de départ ' + sp.start + ' BB' + (sp.group === 'Autres profils' ? '.' : ', ranges du profil TAG.') + (sp.note ? ' ' + sp.note : '') + '</p>' +
       '<p class="small muted">Flop et turn sont calculés à l’avance : au flop, check, mises de 1/3, 1/2, 3/4 et 125 % du pot, relance à 3 fois, tapis ; à la turn, check, mises de 1/2 pot et du pot, tapis, sur les 47 cartes possibles (affichées : six cartes types sur les deux suites de coup les plus fréquentes). La river est calculée dans l’appli quand tu l’ouvres, sur les mains exactes qui y arrivent : check, 1/2 pot, pot, tapis.</p></div></div></div>';
     return ui.shell('apprendre', body);
   }
@@ -331,7 +331,9 @@
     if (QZ && QZ.mode === 'revoir') return replayQuestion(cb);
     depth = depth || 0; if (depth > 12) return null;
     var pend = QZ && QZ.pend; if (QZ) QZ.pend = null;
-    var spot = pend ? pend.spot : DATA.spots[Math.floor(Math.random() * DATA.spots.length)].id;
+    var prof = (PA.player() && PA.player().profile) || 'tag';
+    var pool = DATA.spots.filter(function (x) { return x.group !== 'Autres profils' || /-(nit|lag)$/.test(x.id) && x.id.slice(-3) === prof; });
+    var spot = pend ? pend.spot : pool[Math.floor(Math.random() * pool.length)].id;
     var spd = spotOf(spot);
     var flop = pend ? pend.flop : spd.flops[Math.floor(Math.random() * spd.flops.length)];
     var u = pend ? pend.u : Math.random();
