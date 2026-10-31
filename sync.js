@@ -36,15 +36,23 @@
   function setMeta(m) { try { localStorage.setItem('pa2meta', JSON.stringify(m)); } catch (e) {} }
   function snapshot() {
     var d = {}; keys().forEach(function (k) { d[k] = localStorage.getItem(k); });
+    if (window.PA_STORE) window.PA_STORE.keys().forEach(function (k) { d[k] = JSON.stringify(window.PA_STORE.get(k)); });
     return { app: 'Poker Academy', version: U() ? U().version : '', device: IS_PC ? 'PC' : IS_ANDROID ? 'Android' : 'Web', savedAt: meta().changedAt || Date.now(), data: d };
   }
   function players(snap) { try { var s = JSON.parse(snap.data.pa2 || '{}'); return Object.keys(s.players || {}).map(function (k) { return s.players[k].pseudo; }).join(', '); } catch (e) { return '?'; } }
   function restore(snap) {
     if (!snap || snap.app !== 'Poker Academy' || !snap.data || !snap.data.pa2) throw new Error('Ce fichier n’est pas une sauvegarde Poker Academy.');
     keys().forEach(function (k) { localStorage.removeItem(k); });
-    Object.keys(snap.data).forEach(function (k) { if (/^pa2/.test(k)) localStorage.setItem(k, snap.data[k]); });
+    var hh = Object.keys(snap.data).filter(function (k) { return /^pa2hh_/.test(k); });
+    Object.keys(snap.data).forEach(function (k) { if (/^pa2/.test(k) && !/^pa2hh_/.test(k)) localStorage.setItem(k, snap.data[k]); });
     setMeta({ changedAt: snap.savedAt, restoredAt: Date.now(), savedAt: snap.savedAt });
-    location.hash = '#home'; location.reload();
+    function fin() { location.hash = '#home'; location.reload(); }
+    var S = window.PA_STORE;
+    if (!S) { hh.forEach(function (k) { try { localStorage.setItem(k, snap.data[k]); } catch (e) {} }); fin(); return; }
+    S.clearNow(function () {
+      var left = hh.length; if (!left) { fin(); return; }
+      hh.forEach(function (k) { var v = null; try { v = JSON.parse(snap.data[k]); } catch (e) {} S.setNow(k, v, function () { if (--left === 0) fin(); }); });
+    });
   }
   // chaque enregistrement marque les données comme modifiées
   try {

@@ -41,13 +41,14 @@
     if (a === 'allin') return 'tapis';
     return 'ouvrir à ' + String(PA.openBB(sit.pos, sit.bb)).replace('.', ',') + ' BB';
   }
-  // carte unique ouverte depuis le widget Android : #cartes?q=BTN|100|K9o
+  // questions du jour ouvertes depuis le widget Android : #cartes?q=BTN|100|K9o|k (k = rang de 0 à 4)
   function fromHash() {
     var m = /[?&]q=([^&]+)/.exec(location.hash); if (!m) return;
-    var p = decodeURIComponent(m[1]).split('|'); if (p.length !== 3 || PA.POS.indexOf(p[0]) < 0 || PA.HANDS.indexOf(p[2]) < 0) return;
+    var p = decodeURIComponent(m[1]).split('|'); if (p.length < 3 || PA.POS.indexOf(p[0]) < 0 || PA.HANDS.indexOf(p[2]) < 0) return;
+    var dk = p[3] !== undefined ? parseInt(p[3], 10) || 0 : 0;
     var pl = PA.player(); if (!pl) return;
     var sit = { type: 'open', pos: p[0], bb: +p[1] || 100 };
-    C = { list: [{ sit: sit, hand: p[2], k: key(sit, p[2]), review: false, suits: suitsFor(p[2]) }], i: 0, ok: 0, ans: null, missed: 0, prof: pl.profile || 'tag', daily: true };
+    C = { list: [{ sit: sit, hand: p[2], k: key(sit, p[2]), review: false, suits: suitsFor(p[2]) }], i: 0, ok: 0, ans: null, missed: 0, prof: pl.profile || 'tag', daily: true, dk: dk };
     history.replaceState(null, '', '#cartes');
   }
   function view() {
@@ -62,7 +63,11 @@
     }
     if (C.i >= C.list.length) {
       var pct = Math.round(C.ok / C.list.length * 100);
-      if (C.daily) return ui.shell('entrainer', '<div class="stack"><h1>Question du jour</h1>' + ui.yo(C.ok ? 'Bonne réponse. À demain pour la prochaine !' : 'Raté : cette main reviendra dans tes cartes demain.') + '<div class="row"><button class="btn gold" data-kact="start" style="flex:1">Faire 20 cartes</button><button class="btn" data-kact="quit">Terminer</button></div></div>', true);
+      if (C.daily) {
+        var more = C.nextQ !== undefined ? C.nextQ : (C.dk < 4 ? 'local' : '');
+        var msg = (C.ok ? 'Bonne réponse.' : 'Raté : cette main reviendra dans tes cartes demain.') + (more ? ' Question ' + (C.dk + 1) + ' sur 5 faite.' : ' Tes 5 questions du jour sont faites, bravo ! À demain.');
+        return ui.shell('entrainer', '<div class="stack"><h1>Questions du jour</h1>' + ui.yo(msg) + '<div class="row">' + (more ? '<button class="btn gold" data-kact="dnext" style="flex:1">Question suivante (' + (C.dk + 2) + '/5)</button><button class="btn" data-kact="quit">Terminer pour aujourd’hui</button>' : '<button class="btn gold" data-kact="start" style="flex:1">Faire 20 cartes</button><button class="btn" data-kact="quit">Terminer</button>') + '</div></div>', true);
+      }
       var body = '<div class="stack"><h1>Bilan</h1>' + ui.yo(pct >= 90 ? 'Excellent : ta range est presque automatique.' : (pct >= 70 ? 'Bonne séance. Les cartes ratées reviennent demain.' : 'On a du travail, et c’est normal. Les cartes ratées reviennent demain, regarde ta range d’ici là.')) +
         '<div class="grid2"><div class="card"><div class="muted small">Bonnes réponses</div><div class="disp" style="font-size:40px">' + C.ok + ' / ' + C.list.length + '</div></div><div class="card"><div class="muted small">À revoir demain</div><div class="disp" style="font-size:40px">' + C.missed + '</div></div></div>' +
         '<div class="row"><button class="btn gold" data-kact="start" style="flex:1">Encore 20 cartes</button><button class="btn" data-kact="quit">Terminer</button></div></div>';
@@ -82,7 +87,12 @@
     var t = e.target.closest ? e.target.closest('[data-kact]') : null; if (!t) return;
     var a = t.getAttribute('data-kact');
     if (a === 'start') start();
-    else if (a === 'ans') { if (!C.ans) answer(t.getAttribute('data-v') === '1'); }
+    else if (a === 'ans') { if (!C.ans) { answer(t.getAttribute('data-v') === '1'); if (C.daily && window.PAAndroid && PAAndroid.widgetNext) { try { C.nextQ = PAAndroid.widgetNext(); } catch (e2) {} } } }
+    else if (a === 'dnext') {
+      var nq = C.nextQ, dk = C.dk + 1;
+      if (nq && nq !== 'local') { location.hash = '#cartes?q=' + encodeURIComponent(nq); return; }
+      var c2 = newCard(C.prof); C = { list: [c2], i: 0, ok: 0, ans: null, missed: 0, prof: C.prof, daily: true, dk: dk };
+    }
     else if (a === 'next') { C.i++; C.ans = null; }
     else if (a === 'quit') { C = null; location.hash = '#entrainer'; }
     else if (a === 'range') { var c = C.list[C.i]; if (window.PA_UI_openRange) window.PA_UI_openRange({ sit: c.sit, hand: c.hand }); return; }

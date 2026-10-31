@@ -22,6 +22,7 @@
       cb(out);
     }
     if (window.PA_SOLVER_DATA) sol();
+    else if (window.PA_SOLVER) window.PA_SOLVER.loadData(sol);
     else { var s = document.createElement('script'); s.src = 'solver/data.js'; s.onload = s.onerror = sol; document.head.appendChild(s); }
   }
   function status(cb) {

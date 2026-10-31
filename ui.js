@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.0.0-z';
+  var VERSION = '2.1.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -578,6 +578,7 @@
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
+      '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique'], ['noir', 'Noir et or'], ['sombre', 'Sombre et rouge']]) +
       '<b>Taille d’ouverture</b>' + seg('openSize', [['club', '2 BB (habitude du club)'], ['std', '2,2 à 2,5 BB']]) + '<div class="small muted">Utilisée dans les exercices et proposée en premier à la table. Depuis la SB : 3 BB.</div></div>' +
       '<a class="card stack" href="#sauvegarde" style="text-decoration:none;color:inherit"><b>Sauvegarde, synchronisation et mises à jour ›</b><span class="small muted">Sauvegarde automatique (Google Drive sur PC), passage PC ↔ téléphone, nouvelle version, journal des erreurs.</span></a>' +
       '<div class="card stack"><b>Clavier (PC)</b><div class="small">Touches <b>1 à 9</b> pour choisir une réponse, <b>Entrée</b> pour passer à la suite. À la table : <b>F</b> se coucher, <b>C</b> parole ou payer, <b>R</b> relancer, <b>A</b> tapis. Dans les cartes : flèches gauche et droite.</div></div>' +
@@ -669,7 +670,7 @@
       case 'setProf': p.profile = v; PA.save(); render(); break;
       case 'set': { var k2 = t.getAttribute('data-k'); p.settings[k2] = JSON.parse(v); PA.save(); render(); break; }
       case 'resetTrain': PA.wipeTraining(p); render(); break;
-      case 'wipe': if (!ui.wipeArm) { ui.wipeArm = true; render(); } else { ui.wipeArm = false; PA.wipeAll(); ui.welcomed = false; ui.onb = { step: 1 }; try { sessionStorage.removeItem('pa2w'); } catch (x) {} go('home'); render(); } break;
+      case 'wipe': if (!ui.wipeArm) { ui.wipeArm = true; render(); } else { ui.wipeArm = false; PA.wipeAll(); if (window.PA_STORE) window.PA_STORE.clearAll(); ui.welcomed = false; ui.onb = { step: 1 }; try { sessionStorage.removeItem('pa2w'); } catch (x) {} go('home'); render(); } break;
     }
   });
   function rerenderRange() { if (ui.sheet === 'range') renderSheet(); else { var el = $('#rangeFull'); if (el) el.innerHTML = rangeBody(true); } }

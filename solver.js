@@ -14,10 +14,21 @@
     s.onload = s.onerror = function () { var l = LOADQ[key]; delete LOADQ[key]; l.forEach(function (f) { f(); }); };
     document.head.appendChild(s);
   }
+  var LOADW = [];
   function load(cb) {
-    if (window.PA_SOLVER_DATA) { DATA = window.PA_SOLVER_DATA; cb(); return; }
-    if (LOADING) return; LOADING = true;
-    script('solver/data.js', 'data', function () { DATA = window.PA_SOLVER_DATA || { err: true }; LOADING = false; cb(); });
+    if (window.PA_SOLVER_DATA && !LOADING) { DATA = window.PA_SOLVER_DATA; cb(); return; }
+    LOADW.push(cb); if (LOADING) return; LOADING = true;
+    var cb0 = cb; cb = function () { var w = LOADW; LOADW = []; w.forEach(function (f) { try { f(); } catch (e) {} }); };
+    // PC et Android : la liste des coups vient d'abord du site (nouveaux coups sans réinstaller), sinon celle de l'appli
+    var online = window.PA_PACK && /^(127\.0\.0\.1|)$/.test(location.hostname) && navigator.onLine !== false;
+    function local() { script('solver/data.js', 'data', function () { DATA = window.PA_SOLVER_DATA || { err: true }; LOADING = false; cb(); }); }
+    if (!online) { local(); return; }
+    var done = false, s = document.createElement('script');
+    function fin(ok) { if (done) return; done = true; if (ok && window.PA_SOLVER_DATA) { DATA = window.PA_SOLVER_DATA; LOADING = false; cb(); } else local(); }
+    s.src = window.PA_PACK.BASE + 'solver/data.js?j=' + new Date().toISOString().slice(0, 10);
+    s.onload = function () { fin(true); }; s.onerror = function () { fin(false); };
+    setTimeout(function () { fin(false); }, 4000);
+    document.head.appendChild(s);
   }
   function spotLoaded(spot) { return !!(window.PA_SOLVER_FLOP && window.PA_SOLVER_FLOP[spot]); }
   function ensureSpot(spot, cb) { if (spotLoaded(spot)) return true; script(pk('solver/flop/' + spot + '.js'), 'f' + spot, cb); return false; }
@@ -584,5 +595,5 @@
     return { pot: n.pot, R: r.R, exp: r.exp, who: n.p, tot: n.a.map(function (a, j) { return a + ' ' + Math.round(sm.tot[j] * 100); }).join(' '), cats: cats, paths: Object.keys(r.nodes) };
   }
   function _load(spot, flop, cb) { if (!DATA) { load(function () { _load(spot, flop, cb); }); return; } if (!ensureSpot(spot, function () { _load(spot, flop, cb); })) return; if (!turnData(spot, flop, function () { _load(spot, flop, cb); })) return; cb(sol(spot, flop)); }
-  window.PA_SOLVER = { _river: _river, _load: _load, explorer: explorer, quiz: quizView, category: category, review: review, openExplorer: openExplorer, missCount: missCount, shortLabel: shortLabel, cardsTxt: cardsTxt, _riverCards: riverCards };
+  window.PA_SOLVER = { loadData: function (cb) { load(cb); }, _river: _river, _load: _load, explorer: explorer, quiz: quizView, category: category, review: review, openExplorer: openExplorer, missCount: missCount, shortLabel: shortLabel, cardsTxt: cardsTxt, _riverCards: riverCards };
 })();

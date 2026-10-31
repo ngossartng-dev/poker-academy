@@ -545,34 +545,47 @@
     var s = ['♣', '♦', '♥', '♠'][cSuit(c)], red = cSuit(c) === 1 || cSuit(c) === 2, r = RCH[cRank(c)];
     return '<div class="pc' + (red ? ' red' : '') + '"><span class="r">' + (r === 'T' ? '10' : r) + '</span><span class="s">' + s + '</span></div>';
   }
+  function cardMid(c) {
+    var s = ['♣', '♦', '♥', '♠'][cSuit(c)], red = cSuit(c) === 1 || cSuit(c) === 2, r = RCH[cRank(c)];
+    return '<div class="pcm' + (red ? ' red' : '') + '"><span class="r">' + (r === 'T' ? '10' : r) + '</span><span class="s">' + s + '</span></div>';
+  }
   function bbTxt(x) { var H = G.hand; return String(Math.round(x / H.L.bb * 10) / 10).replace('.', ','); }
   function tableView() {
     var ui = U();
     if (!G) { location.hash = '#partie'; return ''; }
     if (G.over) return ui.shell('entrainer', bilanView(), true);
     var H = G.hand, n = G.players.length, L = H.L;
-    var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 41 : 46, RY = narrow ? 44 : 46;
-    var h = '<div class="felt game">';
+    var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 40 : 44, RY = narrow ? 41 : 42;
+    var theme = (window.PA.player().settings || {}).tableTheme || 'vert';
+    var h = '<div class="felt2 t-' + theme + '"><div class="rail"></div>';
     for (var k = 0; k < n; k++) {
       var p = G.players[k], a = SEATPOS9(k, n), x = 50 + RX * Math.cos(a), y = 50 + RY * Math.sin(a);
       var inH = H.inHand[k], fold = H.folded[k], out = p.stack <= 0 && !inH;
       var showCards = k === 0 || (H.done && H.showdown && inH && !fold);
-      h += '<div class="seat' + (k === 0 ? ' hero' : '') + ((fold || out) ? ' out' : '') + (H.toAct === k && !H.done ? ' turn' : '') + '" style="left:' + x + '%;top:' + Math.min(y, 90) + '%">';
-      if (inH && !fold && k !== 0) h += '<div class="minicards">' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</div>';
-      h += '<span class="nm">' + ui.esc(k === 0 ? 'Toi' : p.name) + ' · ' + (H.pos[k] || '—') + '</span><span class="st">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>';
-      if (k !== 0 && G.opts.coach) h += '<span class="prof">' + (narrow ? OPP[p.prof].short : OPP[p.prof].name) + '</span>';
-      if (G.opts.bounty !== 'classique' && !out) h += '<span class="prof" style="color:#7cc8ff">' + (k === 0 ? (G.opts.bounty === 'space' ? 'Ta prime : mystère' : 'Ta prime ' + p.bounty.toFixed(2).replace('.', ',') + ' €') + (G.stats.bountyCash ? '<br><b style="color:#4fe08f">Gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €</b>' : '') : (G.opts.bounty === 'space' ? 'Prime mystère' : 'Prime ' + p.bounty.toFixed(2).replace('.', ',') + ' €')) + '</span>';
-      h += '</div>';
-      if (H.bets[k]) { var bx = 50 + (narrow ? 26 : 31) * Math.cos(a), by = 50 + (narrow ? 27 : 28) * Math.sin(a); h += '<div class="bet" style="left:' + bx + '%;top:' + by + '%">' + PA.fmt(H.bets[k]) + '</div>'; }
-      if (k === G.button) { var dx = 50 + 36 * Math.cos(a + 0.28), dy = 50 + 33 * Math.sin(a + 0.28); h += '<div class="dealer" style="left:' + dx + '%;top:' + dy + '%">D</div>'; }
+      var nm = k === 0 ? 'Toi' : p.name;
+      h += '<button class="seat2' + (k === 0 ? ' hero' : '') + ((fold || out) ? ' out' : '') + (H.toAct === k && !H.done ? ' turn' : '') + '" data-gact="seat" data-v="' + k + '" style="left:' + x + '%;top:' + y + '%">';
+      if (inH && !fold && k !== 0) h += '<span class="mc">' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</span>';
+      h += '<span class="av">' + ui.esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm2">' + ui.esc(nm) + '</span><span class="ps' + (k === G.button ? ' btn-d' : '') + '">' + (H.pos[k] || '') + '</span>' +
+        '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>';
+      if (G.opts.bounty !== 'classique' && !out) h += '<span class="bty">' + (G.opts.bounty === 'space' && k !== 0 ? '?' : p.bounty.toFixed(0) + ' €') + '</span>';
+      h += '</button>';
+      if (H.bets[k]) { var bx = 50 + RX * 0.62 * Math.cos(a), by = 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2" style="left:' + bx + '%;top:' + by + '%">' + PA.fmt(H.bets[k]) + '</div>'; }
     }
-    h += '<div class="board">' + H.board.map(function (c) { return cardSmall(c); }).join('') + '</div>';
-    h += '<div class="pot" style="top:62%">Pot ' + PA.fmt(potTotal()) + ' · ' + bbTxt(potTotal()) + ' BB</div></div>';
+    h += '<div class="pot2">Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
+    h += '<div class="board2">' + [0, 1, 2, 3, 4].map(function (i) { return H.board[i] !== undefined ? cardMid(H.board[i]) : '<div class="slot"></div>'; }).join('') + '</div>';
+    if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2">' + H.hole[0].map(cardMid).join('') + '</div>';
+    if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
+      var q = G.players[G.pop];
+      h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' +
+        (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span>' : '') +
+        (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
+    }
+    h += '</div>';
     var info = '<div class="small muted" style="text-align:center">Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + (G.opts.mtt ? remaining() + ' / ' + MTT_FIELD + ' joueurs, ' + MTT_PAID + ' payés' : alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
       (G.keyMsg ? U().yo(G.keyMsg) : '');
     var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + { sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go 6', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
     var me = G.players[0];
-    var mine = H.inHand[0] ? '<div class="cards">' + H.hole[0].map(cardBig).join('') + '</div><div class="small" style="text-align:center">Ton tapis : <b>' + PA.fmt(me.stack) + '</b> (' + bbTxt(me.stack) + ' BB)' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
+    var mine = H.inHand[0] ? '<div class="small" style="text-align:center">Ton tapis : <b>' + PA.fmt(me.stack) + '</b> (' + bbTxt(me.stack) + ' BB)' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
     var bottom = '';
     if (H.done) {
       var ws = Object.keys(H.winners).map(function (w) { return (w === '0' ? 'Tu gagnes' : G.players[w].name + ' gagne') + ' ' + PA.fmt(H.winners[w]) + (H.showdown && H.scores ? ' (' + catName(H.scores[w]) + ')' : ''); }).join(' · ');
@@ -635,6 +648,7 @@
     else if (a === 'fold' || a === 'check' || a === 'call') heroAct(a);
     else if (a === 'raise') heroAct('raise', parseInt(v, 10));
     else if (a === 'allin') heroAct('allin');
+    else if (a === 'seat') { var sk = parseInt(v, 10); G.pop = sk < 0 || G.pop === sk ? null : sk; U().render(); }
   });
   function fastForward() {
     // termine la main sans attendre quand le héros est couché
