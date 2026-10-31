@@ -1,5 +1,5 @@
 /* Poker Academy : fonctionnement hors connexion (web app) */
-var CACHE = 'pa-2.1.0';
+var CACHE = 'pa-2.1.1';
 var FILES = ['./', './index.html', './style.css', './fonts/fonts.css', './data.js', './core.js', './store.js', './game.js', './situations.js', './lessons.js', './audio/index.js', './learn.js', './analyse.js', './tools.js', './bank.js', './cards.js', './packs.js', './river.js', './solver.js', './solver/data.js', './keys.js', './timer.js', './sync.js', './ui.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
   './fonts/big-shoulders-display-latin-700-normal.woff2', './fonts/big-shoulders-display-latin-800-normal.woff2',

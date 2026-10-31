@@ -556,7 +556,7 @@
     if (G.over) return ui.shell('entrainer', bilanView(), true);
     var H = G.hand, n = G.players.length, L = H.L;
     var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 40 : 44, RY = narrow ? 41 : 42;
-    var theme = (window.PA.player().settings || {}).tableTheme || 'vert';
+    var theme = (window.PA.player().settings || {}).tableTheme || 'sombre';
     var h = '<div class="felt2 t-' + theme + '"><div class="rail"></div>';
     for (var k = 0; k < n; k++) {
       var p = G.players[k], a = SEATPOS9(k, n), x = 50 + RX * Math.cos(a), y = 50 + RY * Math.sin(a);

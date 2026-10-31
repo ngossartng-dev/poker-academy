@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.1.0';
+  var VERSION = '2.1.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -572,7 +572,7 @@
   }
   function reglagesView() {
     var p = PA.player(), s = p.settings;
-    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + (s[k] === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Réglages</h1>' +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
