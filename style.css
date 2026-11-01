@@ -167,3 +167,18 @@ label{font-weight:600}
 .plan-leg span{display:flex;align-items:center;gap:8px}
 .plan-leg i{width:18px;height:18px;border-radius:4px;flex:none;display:inline-block}
 .plan-leg b{margin-left:auto;color:var(--muted);font-weight:600;white-space:nowrap;padding-left:8px}
+.plan-stack{align-items:center;gap:10px}
+.plan-leg2{display:flex;flex-direction:column;gap:6px;font-size:15px}
+.plan-leg2>div{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.plan-leg2 span{display:inline-flex;align-items:center;gap:6px}
+.plan-leg2 i{width:16px;height:16px;border-radius:4px;display:inline-block}
+.sy{display:inline-block;min-width:1.4em;text-align:center;font-weight:800;color:var(--gold)}
+.plan-rg button{position:relative}
+.plan-rg button em{position:absolute;top:1px;right:1px;font-style:normal;font-size:clamp(8px,2.2vw,12px);font-weight:900;line-height:1;color:#ffd23f;background:rgba(0,0,0,.72);border-radius:3px;padding:1px 2px;min-width:1.1em;text-align:center}
+.plan-rg button em.t{color:#fff;background:#8a0f1f}
+.plan-rg button em.f{color:#ffd23f}
+.plan-sum{display:flex;flex-direction:column;gap:10px}
+.plan-sum>div{display:flex;flex-direction:column;gap:2px}
+.plan-sum b{border-left:6px solid;padding-left:8px;font-size:16px}
+.plan-sum span:not(.sy){padding-left:14px;font-size:15px;color:#e6e6ea;line-height:1.45}
+.plan-leg2 i.bar,.plan-sum i.bar{width:22px;height:6px;border-radius:2px;display:inline-block;vertical-align:middle}

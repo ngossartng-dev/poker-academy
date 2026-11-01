@@ -98,7 +98,7 @@
         H.forEach(function (h) {
           if (def[h] === 'call') { out[h] = 'call'; return; }
           if (def[h] !== 'raise' && def[h] !== 'allin') return;
-          var e = eqVs(h, r4), cat = e >= nJ ? 'v4' : (!jam4 && e >= nC && (h.length === 2 || /s$/.test(h)) ? 'c4' : 'b4');
+          var e = eqVs(h, r4), cat = e >= nJ ? 'v4' : (!jam4 && e >= nC ? 'c4' : 'b4');
           out[h] = cat; info[h] = { eq: e, need: nJ, needC: nC, b3: b3b, b4: b4b, jam: jam4, r4: r4 };
         });
       } else {
@@ -144,33 +144,77 @@
 
   /* ----- affichage ----- */
   function seg(k, opts, cur) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + (String(cur) === String(o[0]) ? 'on' : '') + '" data-act="plan" data-k="' + k + '" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+  // couleur = ce que tu fais maintenant (mêmes couleurs que le reste de l'appli) ; symbole = la suite si on te relance
+  var NOW = { open: ['#2f9e44', 'Ouvrir'], three: ['#e03131', '3-bet'], call: ['#1c7ed6', 'Payer'], fold: ['#2a2a30', 'Se coucher'] };
+  var BAR = { '▲': '#ffd23f', '=': '#ffffff', '4✕': '#ff8a1f' };
+  function look(cat) {
+    var first = ST.mode === 'first';
+    if (cat === 'fold') return { now: 'fold', sym: '' };
+    if (cat === 'call') return { now: first ? 'open' : 'call', sym: first ? '=' : '' };
+    if (cat === 'open') return { now: 'open', sym: '✕' };
+    if (!deep() && !first) return { now: 'three', sym: '▲' };
+    return { now: first ? 'open' : 'three', sym: { v4: '▲', c4: '=', b4: first ? '4✕' : '✕' }[cat] };
+  }
+  // écriture compacte d'une liste de mains : QQ+, 99-77, ATs+, A5s-A2s, KQo
+  var RK = 'AKQJT98765432';
+  function compact(list) {
+    var set = {}; list.forEach(function (h) { set[h] = 1; });
+    var out = [], pairs = RK.split('').filter(function (r) { return set[r + r]; });
+    runs(pairs.map(function (r) { return RK.indexOf(r); })).forEach(function (g) {
+      var a = RK[g[0]], b = RK[g[g.length - 1]];
+      out.push(g.length === 1 ? a + a : (g[0] === 0 ? b + b + '+' : a + a + '-' + b + b));
+    });
+    ['s', 'o'].forEach(function (t) {
+      for (var i = 0; i < 13; i++) {
+        var hi = RK[i], ks = [];
+        for (var j = i + 1; j < 13; j++) if (set[hi + RK[j] + t]) ks.push(j);
+        runs(ks).forEach(function (g) {
+          var a = hi + RK[g[0]] + t, b = hi + RK[g[g.length - 1]] + t;
+          out.push(g.length === 1 ? a : (g[0] === i + 1 ? b + '+' : a + '-' + b));
+        });
+      }
+    });
+    return out.join(', ');
+  }
+  function runs(idx) { var out = [], cur = []; idx.forEach(function (x) { if (cur.length && x !== cur[cur.length - 1] + 1) { out.push(cur); cur = []; } cur.push(x); }); if (cur.length) out.push(cur); return out; }
   function body(hero) {
-    var out = '<p class="muted small">D’un coup d’œil : quoi faire maintenant, et quoi faire si on te sur-relance. Touche une main pour le détail.</p>';
-    out += seg('mode', [['first', 'Personne n’a ouvert'], ['vs', 'Quelqu’un a ouvert']], ST.mode);
-    out += '<div class="small muted">Ton tapis</div>' + seg('stack', [[25, '20-40 BB'], [40, '40 BB'], [60, '60 BB'], [100, '100 BB']], ST.stack);
-    var heroes = ST.mode === 'first' ? POS.slice(0, 8) : POS.slice(1);
-    if (heroes.indexOf(ST.pos) < 0) ST.pos = ST.mode === 'first' ? 'BTN' : 'BB';
-    out += '<div class="small muted">Je suis en :</div>' + seg('pos', heroes.map(function (p) { return [p, p]; }), ST.pos);
-    if (ST.mode === 'vs') {
-      var ops = POS.slice(0, POS.indexOf(ST.pos)); if (ST.pos !== 'BB') ops = ops.filter(function (x) { return x !== 'SB'; });
-      if (ops.indexOf(ST.opener) < 0) ST.opener = ops[ops.length - 1];
-      out += '<div class="small muted">Celui qui a ouvert :</div>' + seg('opener', ops.map(function (p) { return [p, p]; }), ST.opener);
-    }
-    var R = compute(), cnt = {};
-    H.forEach(function (h) { cnt[R.map[h]] = (cnt[R.map[h]] || 0) + PA.combos(h); });
-    var order = ST.mode === 'first' ? ['v4', 'b4', 'call', 'open', 'fold'] : ['v4', 'c4', 'b4', 'call', 'fold'];
-    out += '<div class="plan-leg">' + order.filter(function (k) { return cnt[k]; }).map(function (k) { return '<span><i style="background:' + C[k][0] + '"></i>' + label(k) + ' <b>' + String(Math.round(cnt[k] / 13.26 * 10) / 10).replace('.', ',') + ' %</b></span>'; }).join('') + '</div>';
+    var out = '';
+    var heroes = POS.slice(0);
+    if (heroes.indexOf(ST.pos) < 0) ST.pos = 'BTN';
+    out += '<div class="small muted">Je suis en</div>' + seg('pos', heroes.map(function (p) { return [p, p]; }), ST.pos);
+    var ops = POS.slice(0, POS.indexOf(ST.pos)); if (ST.pos !== 'BB') ops = ops.filter(function (x) { return x !== 'SB'; });
+    var who = ST.mode === 'first' ? 'none' : ST.opener;
+    if (ST.pos === 'BB' && who === 'none') { ST.mode = 'vs'; who = ST.opener; }
+    if (ST.pos === 'UTG') { ST.mode = 'first'; who = 'none'; }
+    if (who !== 'none' && ops.indexOf(who) < 0) { ST.opener = who = ops[ops.length - 1]; }
+    var wopts = (ST.pos === 'BB' ? [] : [['none', 'Personne']]).concat(ops.map(function (p) { return [p, p]; }));
+    out += '<div class="small muted">Qui a ouvert avant toi ?</div>' + seg('who', wopts, who);
+    out += '<div class="row plan-stack"><span class="small muted">Tapis</span>' + seg('stack', [[25, '20-40'], [40, '40'], [60, '60'], [100, '100 BB']], ST.stack) + '</div>';
+    var R = compute(), first = ST.mode === 'first', used = {}, syms = {};
+    H.forEach(function (h) { var L = look(R.map[h]); used[L.now] = 1; if (L.sym) syms[L.sym] = 1; });
+    var then = first ? (deep() ? 'si on te 3-bet' : 'si on te relance à tapis') : 'si on te 4-bet';
+    var SYM = { '▲': 'tapis', '=': 'payer', '✕': 'se coucher (pas de barre)', '4✕': '4-bet, puis couche-toi s’il fait tapis' };
+    out += '<div class="plan-leg2"><div>' + ['open', 'three', 'call', 'fold'].filter(function (k) { return used[k]; }).map(function (k) { return '<span><i style="background:' + NOW[k][0] + '"></i>' + (k === 'three' && !deep() ? '3-bet tapis' : NOW[k][1]) + '</span>'; }).join('') + '</div>' +
+      (Object.keys(syms).length && (deep() || first) ? '<div><span class="muted">Puis, ' + then + ' :</span>' + ['▲', '=', '✕', '4✕'].filter(function (k) { return syms[k]; }).map(function (k) { return '<span><i class="bar" style="' + (BAR[k] ? 'background:' + BAR[k] : 'border:1px dashed #888') + '"></i>' + SYM[k] + '</span>'; }).join('') + '</div>' : '') + '</div>';
     if (hero && R.map[hero]) out += '<div class="banner">Ta main <b>' + hand(hero) + '</b> : ' + detail(hero) + '</div>';
-    out += '<div class="rg" role="grid" aria-label="Plan de jeu, 169 mains">' + H.map(function (h) { var c = C[R.map[h]]; return '<button data-act="planCell" data-v="' + h + '" style="background:' + c[0] + ';color:' + c[1] + '"' + (h === hero ? ' class="hero"' : '') + '>' + h + '</button>'; }).join('') + '</div>';
-    out += '<p class="muted small">' + (deep() ? 'Valeur ou bluff : calculé avec l’équité de chaque main contre la range adverse de sur-relance et la cote à payer (ouverture à ' + bb(openSize()) + ', 3-bet 3 fois en position, 4 fois depuis les blindes, ante de grosse blinde).' : 'Entre 20 et 40 BB, un 3-bet est un tapis : la seule question est de payer ou non le tapis adverse.') + '</p>';
+    out += '<div class="rg plan-rg" role="grid" aria-label="Plan de jeu, 169 mains">' + H.map(function (h) { var L = look(R.map[h]), c = NOW[L.now]; var bar = (deep() || first) && BAR[L.sym] ? ';box-shadow:inset 0 -6px 0 ' + BAR[L.sym] : ''; return '<button data-act="planCell" data-v="' + h + '" style="background:' + c[0] + bar + (L.now === 'fold' ? ';color:#77777f' : '') + '"' + (h === hero ? ' class="hero"' : '') + '>' + h + '' + '</button>'; }).join('') + '</div>';
+    // résumé écrit
+    var groups = first ? (deep() ? [['v4', 'Ouvrir, et tapis si on te 3-bet', '▲'], ['b4', 'Ouvrir, 4-bet, puis couche-toi s’il fait tapis', '4✕'], ['call', 'Ouvrir, et payer un 3-bet', '='], ['open', 'Ouvrir, et te coucher face à un 3-bet', '✕']] : [['v4', 'Ouvrir, et payer un tapis', '▲'], ['open', 'Ouvrir, et te coucher face à un tapis', '✕']])
+      : (deep() ? [['v4', '3-bet, et tapis s’il 4-bet', '▲'], ['c4', '3-bet, et payer son 4-bet', '='], ['b4', '3-bet, et te coucher s’il 4-bet (3-bet fold)', '✕'], ['call', 'Payer l’ouverture', '']] : [['v4', '3-bet tapis', ''], ['call', 'Payer l’ouverture', '']]);
+    out += '<div class="plan-sum">' + groups.map(function (g) {
+      var l = H.filter(function (h) { return R.map[h] === g[0]; }); if (!l.length) return '';
+      var c = NOW[look(g[0]).now][0];
+      return '<div><b style="border-color:' + c + '">' + (g[2] && BAR[g[2]] ? '<i class="bar" style="background:' + BAR[g[2]] + '"></i> ' : '') + g[1] + '</b><span>' + compact(l) + '</span></div>';
+    }).join('') + '<div><b style="border-color:#3a3a42">Tout le reste</b><span>Se coucher.</span></div></div>';
+    out += '<p class="muted small">Touche une main pour le détail chiffré. ' + (deep() ? 'La suite est calculée avec l’équité de chaque main contre la range adverse de sur-relance et la cote à payer.' : 'Entre 20 et 40 BB, un 3-bet est un tapis.') + '</p>';
     return out;
   }
-  function set(k, v) { if (k === 'stack') v = +v; ST[k] = v; }
+  function set(k, v) { if (k === 'stack') v = +v; if (k === 'who') { if (v === 'none') ST.mode = 'first'; else { ST.mode = 'vs'; ST.opener = v; } return; } ST[k] = v; }
   function fromSit(s) {
     if (!s) return;
     if (s.type === 'open') { ST.mode = 'first'; ST.pos = s.pos; }
     else if (s.type === 'def') { ST.mode = 'vs'; ST.pos = s.pos; ST.opener = s.opener; }
     if (s.bb) ST.stack = s.bb >= 40 ? (ST.stack >= 40 ? ST.stack : 40) : 25;
   }
-  window.PA_PLAN = { body: body, set: set, detail: detail, label: function (h) { var R = compute(); return { cat: R.map[h], text: label(R.map[h]), color: C[R.map[h]] }; }, fromSit: fromSit, state: ST };
+  window.PA_PLAN = { body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
 })();
