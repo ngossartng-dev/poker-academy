@@ -11,7 +11,7 @@
     var ui = U(), p = PA.player(), pr = prog(p);
     var ready = LS.CHAPTERS.filter(function (c) { return c.ready; }).length, done = Object.keys(pr).filter(function (k) { return pr[k].done; }).length;
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Leçons</h1>' +
-      ui.yo((ready === LS.CHAPTERS.length ? 'Les ' + ready + ' chapitres du cours sont en leçons, avec quiz et version à écouter.' : 'Le nouveau cours compte 35 chapitres. ' + ready + ' sont déjà en leçons ; les autres s’ouvrent dans le PDF actuel, à la bonne page.') + ' Leçons acquises : ' + done + ' sur ' + ready + '.') +
+      ui.yo((ready === LS.CHAPTERS.length ? 'Les ' + ready + ' chapitres du cours sont en leçons, avec quiz et version à écouter.' : 'Le nouveau cours compte ' + LS.CHAPTERS.length + ' chapitres. ' + ready + ' sont déjà en leçons ; les autres s’ouvrent dans le PDF actuel, à la bonne page.') + ' Leçons acquises : ' + done + ' sur ' + ready + '.') +
       LS.PARTS.map(function (part) {
         return '<div class="card stack"><h3>Partie ' + part.id + ' · ' + part.title + '</h3>' + LS.CHAPTERS.filter(function (c) { return c.part === part.id; }).map(function (c) {
           var st = pr[c.n], badge = c.ready ? (st && st.done ? '<span class="chip" style="border-color:#2f9e44;color:#4fe08f">Acquise</span>' : (st ? '<span class="chip">Quiz ' + st.best + ' %</span>' : '<span class="chip" style="border-color:#555;color:#c9c9cf">' + c.minutes + ' min</span>')) : '<span class="small muted">PDF p. ' + c.page + '</span>';

@@ -13,7 +13,7 @@
     [10, 'III', 'Outils de calcul', 67], [11, 'III', 'Lire un board', 75], [12, 'III', 'Lecture de main', 0], [13, 'III', 'Le sizing', 77],
     [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [33, 'III', 'Jouer les paires et les as forts après le flop', 0], [35, 'III', 'La river avec le solveur', 0],
     [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0], [20, 'IV', 'Tapis de 25 à 40 BB', 113], [21, 'IV', 'Tapis de 15 à 25 BB', 117], [22, 'IV', 'Tables de push/fold', 123],
-    [23, 'IV', 'L’ICM complet', 134], [24, 'IV', 'Table finale et heads-up', 136], [25, 'IV', 'PKO et Space KO', 137],
+    [23, 'IV', 'L’ICM complet', 134], [24, 'IV', 'Table finale et heads-up', 136], [36, 'IV', 'Le heads-up', 0], [25, 'IV', 'PKO et Space KO', 137],
     [26, 'V', 'Profils adverses', 161], [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0], [28, 'V', 'Image de table et lecture au club', 162],
     [29, 'VI', 'Mental et tilt', 172], [30, 'VI', 'Revue de sessions', 175], [31, 'VI', 'Mains commentées', 176], [32, 'VI', 'Plan de progression', 189]
   ];
@@ -607,17 +607,17 @@
       { ask: 'Comment aborder la table finale ?', h: 'Les paliers de gains', p: ['Chaque élimination fait monter les gains des autres : la pression de la bulle revient à chaque palier. Repère qui est le plus petit tapis : tant qu’il est là, les tapis moyens doivent éviter les gros coups entre eux.'] },
       { ask: 'Que faire selon son tapis ?', h: 'Jouer selon son tapis', p: ['Petit tapis : cherche le bon spot pour pousser avant d’être trop court ; sous 10 BB, ta fold equity fond.', 'Tapis moyen : vole les blindes des gros tapis qui jouent serré, évite de payer les tapis des autres moyens.', 'Gros tapis : presse les moyens par des relances fréquentes et petites, évite le duel avec l’autre gros tapis.'] },
       { ask: 'Et le deal ?', h: 'Le deal ICM', p: ['Les joueurs peuvent s’accorder pour partager les gains selon les tapis (deal ICM ou chip chop). C’est ton choix : un deal réduit la variance, mais si tu es meilleur que tes adversaires, continuer peut rapporter plus.'] },
-      { ask: 'Comment jouer le heads-up ?', h: 'Le heads-up', p: ['Le bouton est aussi la petite blinde : il parle en premier préflop et en dernier après le flop. Ouvre 70 à 80 % des mains au bouton à 25 BB et plus, et défends la grosse blinde très large (plus de 60 % face à une relance minimum).', 'Sous 15 BB, le heads-up se joue en tapis ou fold : les tables du chapitre 22 pour la SB et la BB sont exactes en heads-up.'] },
+      { ask: 'Comment jouer le heads-up ?', h: 'Le heads-up', p: ['Le bouton est aussi la petite blinde : il parle en premier préflop et en dernier après le flop. Joue 75 à 85 % des mains au bouton à 25 BB et plus, et défends la grosse blinde très large (plus de 60 % face à une relance minimum).', 'Sous 15 BB, le heads-up se joue en tapis ou fold : les tables du chapitre 22 pour la SB et la BB sont exactes en heads-up.', 'Tout le détail du heads-up (préflop selon le tapis, grosse blinde, jeu après le flop, adaptation à l’adversaire, deal) est au chapitre 36.'] },
       { ask: 'Et les surmises qu’on voit en heads-up ?', h: 'La surmise en heads-up', p: ['En heads-up, les ranges sont si larges que les surmises sont beaucoup plus fréquentes : relance préflop au tapis à 15-20 BB, surmise au flop sur un board qui te favorise, surmise à la river avec les nuts ou un bluff à bloqueurs.', 'Pour te défendre, compte : face à une surmise de 1,5 pot, il te faut 37,5 %. Contre une range très large, une paire moyenne suffit souvent. Ne te couche pas par réflexe : en heads-up, la main moyenne est souvent la meilleure.'] },
       { ask: 'Comment jouer à trois joueurs ?', h: 'À trois joueurs', p: ['À trois, le bouton n’a que les deux blindes derrière lui : c’est exactement la situation du bouton à neuf quand tout le monde s’est couché. Il ouvre donc sa range de bouton : environ 47 % des mains à 40 BB et plus, 35 % entre 20 et 40 BB (profil TAG).', 'La petite blinde ouvre environ un tiers de ses mains face à la grosse blinde seule. Et les blindes reviennent tous les trois coups : attendre coûte trois fois plus cher qu’à neuf, alors élargis un peu.', 'En tapis ou fold, prends les tables du bouton et de la petite blinde : à 10 BB, le bouton pousse 44 % et la petite blinde 74 %.'] },
       { ask: 'Quels chiffres retenir en heads-up ?', h: 'Le heads-up en chiffres', p: ['En heads-up à moins de 15 BB, la petite blinde pousse : 65 % des mains à 15 BB, 74 % à 10 BB, 83 % à 5 BB. Roi-sept et dame-cinq dépareillés partent à tapis à 10 BB.', 'La grosse blinde paie le tapis : 41 % des mains à 15 BB, 56 % à 10 BB, 86 % à 5 BB. À 10 BB, roi-deux dépareillé paie ; valet-six se couche.', 'Ce sont les mêmes tables que « petite blinde contre grosse blinde » du chapitre 22 : en heads-up, elles s’appliquent telles quelles.'] },
       { ask: 'Et l’ICM à trois ?', h: 'L’ICM à trois joueurs', p: ['À trois, l’écart de prix entre la 3e et la 2e place pèse lourd. Le tapis moyen doit éviter de payer le tapis du gros quand le petit tapis risque de sauter : c’est là qu’il perd le plus.', 'Le gros tapis, lui, pousse très large sur le moyen. Utilise l’outil ICM de l’appli pour vérifier tes coups après la partie.'] }
     ],
     mistake: 'Jouer le heads-up comme une table pleine : se coucher trop souvent et laisser l’adversaire voler les blindes à chaque main.',
-    retain: ['Chaque palier réactive l’ICM : les tapis moyens évitent les coups entre eux.', 'Heads-up : ouvre 70 à 80 % au bouton, défends la BB très large.', 'Face à une surmise en heads-up, compte l’équité requise et paie plus large qu’en table pleine.', 'À trois : le bouton ouvre sa range de bouton, la petite blinde un tiers de ses mains ; élargis un peu, les blindes reviennent vite.', 'Heads-up à 10 BB : la petite blinde pousse 74 %, la grosse blinde paie 56 %.'],
+    retain: ['Chaque palier réactive l’ICM : les tapis moyens évitent les coups entre eux.', 'Heads-up : joue 75 à 85 % au bouton, défends la BB très large.', 'Face à une surmise en heads-up, compte l’équité requise et paie plus large qu’en table pleine.', 'À trois : le bouton ouvre sa range de bouton, la petite blinde un tiers de ses mains ; élargis un peu, les blindes reviennent vite.', 'Heads-up à 10 BB : la petite blinde pousse 74 %, la grosse blinde paie 56 %.'],
     quiz: [
       { q: 'En heads-up, qui est la petite blinde ?', o: ['Le joueur hors position', 'Le bouton', 'Personne', 'La grosse blinde'], a: 1, why: 'En heads-up, le bouton poste la petite blinde.' },
-      { q: 'Part de mains à ouvrir au bouton en heads-up à 30 BB ?', o: ['20 %', '40 %', '70 à 80 %', '100 %'], a: 2, why: 'Il ne reste qu’un adversaire, la position et les blindes poussent à ouvrir très large.' },
+      { q: 'Part de mains à ouvrir au bouton en heads-up à 30 BB ?', o: ['20 %', '40 %', '75 à 85 %', '100 %'], a: 2, why: 'Il ne reste qu’un adversaire, la position et les blindes poussent à ouvrir très large.' },
       { q: 'En table finale, le petit tapis est encore là. Deux tapis moyens doivent…', o: ['s’affronter', 'éviter les gros coups entre eux', 'pousser à chaque main', 'faire un deal'], a: 1, why: 'L’élimination du petit tapis rapporterait à tous les deux.' },
       { q: 'Face à une surmise de 1,5 fois le pot en heads-up, équité requise ?', o: ['25 %', '33 %', '37,5 %', '50 %'], a: 2, why: '1,5 ÷ (1 + 3) = 37,5 %.' },
       { q: 'Un deal ICM…', o: ['est obligatoire', 'partage les gains selon les tapis, c’est ton choix', 'donne tout au chip leader', 'est interdit sur Winamax'], a: 1, why: 'C’est un accord entre joueurs.' },
@@ -2044,7 +2044,7 @@
     ['J', 'Et le face-à-face final ?'],
     ['Y', 'Le heads-up, c’est un autre jeu. D’abord, le bouton est aussi la petite blinde. Il parle en premier avant le flop, et en dernier après.'],
     ['J', 'D’accord.'],
-    ['Y', 'Ensuite, les ranges explosent. Au bouton, avec vingt-cinq grosses blindes ou plus, tu ouvres soixante-dix à quatre-vingts pour cent des mains.'],
+    ['Y', 'Ensuite, les ranges explosent. Au bouton, avec vingt-cinq grosses blindes ou plus, tu joues soixante-quinze à quatre-vingt-cinq pour cent des mains.'],
     ['J', 'Même roi-quatre ?'],
     ['Y', 'Même roi-quatre. Même neuf-six. Il n’y a qu’un adversaire, tu as la position, et les blindes reviennent toutes les deux mains.'],
     ['J', 'Et en grosse blinde ?'],
@@ -2085,7 +2085,7 @@
     ['Y', 'Troisième question. Le petit tapis est encore là. Deux tapis moyens doivent faire quoi ?'],
     ['P', 5],
     ['J', 'Éviter les gros coups entre eux.'],
-    ['Y', 'Parfait. On résume. Chaque palier réactive l’ICM : les tapis moyens évitent de s’affronter. Le deal, c’est ton choix. En face-à-face, on ouvre soixante-dix à quatre-vingts pour cent au bouton, et on défend très large. Et face à une surmise, on compte. À bientôt !']
+    ['Y', 'Parfait. On résume. Chaque palier réactive l’ICM : les tapis moyens évitent de s’affronter. Le deal, c’est ton choix. En face-à-face, on joue soixante-quinze à quatre-vingt-cinq pour cent au bouton, et on défend très large. Et face à une surmise, on compte. À bientôt !']
   ];
   L[25].podcast = [
     ['J', 'Salut Yo ! Les PKO, et les Space KO. Sur Winamax, il y en a plein.'],
@@ -2744,6 +2744,87 @@
     ['P', 5],
     ['J', 'Environ la moitié.'],
     ['Y', 'Parfait. On résume. À la river, mise la valeur et les bluffs, checke le milieu. Après deux rues payées, tapis avec les grosses mains et les bluffs, check avec la top paire. Défends environ la moitié face au pot. Et contre les récréatifs, moins de bluffs payés, plus de valeur fine. Ouvre les exemples dans le solveur pour voir chaque famille de mains. À bientôt !']
+  ];
+
+  L[36] = {
+    minutes: 18,
+    links: [{ href: '#partie', label: 'Jouer un heads-up' }, { href: '#situations', label: 'S’entraîner : tapis ou fold en heads-up' }],
+    key: ['À deux, presque toutes les mains ont de la valeur : le bouton joue 75 à 85 % de ses mains, la grosse blinde en défend 60 à 70 %.', 'Une top paire, même faible, est une grosse main ; celui qui mise souvent ramasse les pots que l’autre rate deux fois sur trois.', 'Sous 15 BB : tapis ou fold avec les tables petite blinde contre grosse blinde.'],
+    sections: [
+      { ask: 'Qu’est-ce qui change quand on n’est plus que deux ?', h: 'Ce qui change à deux', p: ['Il n’y a plus de pression ICM : il ne reste qu’un écart de prix, entre la 1re et la 2e place, et chaque jeton gagné te rapproche de la victoire. Les décisions se prennent en jetons, comme en début de tournoi.', 'Les blindes tombent à chaque coup : tu es petite blinde un coup sur deux, grosse blinde l’autre. Attendre une grosse main coûte très cher.', 'Le bouton est aussi la petite blinde. Il parle en premier avant le flop, et en dernier après le flop : c’est un gros avantage, qu’on exploite en jouant beaucoup de mains au bouton.'] },
+      { ask: 'Pourquoi jouer autant de mains ?', h: 'Presque toutes les mains ont de la valeur', p: ['Contre une main au hasard, la pire main du jeu, 3-2 dépareillé, gagne encore 32 %. 7-2 dépareillé : 35 %. Dame-5 dépareillé : 50 %. Roi-7 dépareillé : 55 %. As-2 dépareillé : 55 %.', 'À deux, il n’y a pas de « mauvaise main » au sens où on l’entend à neuf : il y a des mains un peu meilleures que la moyenne, et des mains un peu moins bonnes. Les as et les rois avec n’importe quelle carte sont déjà au-dessus de la moyenne.', 'Au flop, une main au hasard touche au moins une paire avec ses cartes environ une fois sur trois (36 %). Deux fois sur trois, l’adversaire n’a rien : celui qui mise souvent ramasse beaucoup de pots.'] },
+      { ask: 'Que faire au bouton selon mon tapis ?', h: 'Le bouton (petite blinde) selon le tapis', p: ['Au-dessus de 25 BB : joue 75 à 85 % de tes mains. Relance au minimum (2 BB) avec la plupart. Certains joueurs limpent aussi des mains faibles mais jouables (petites mains assorties, mains dépareillées moyennes) pour voir des flops pas chers ; c’est une option, pas une obligation.', 'Pourquoi une relance minimum ? Tu risques 1,5 BB de plus pour gagner les blindes. Si l’adversaire se couche plus d’une fois sur trois environ, la relance gagne déjà, même sans compter ce que tu gagnes quand il paie.', 'De 15 à 25 BB : relance moins de mains, et décide avant de relancer ce que tu feras s’il fait tapis. Une main qui ne paierait pas son tapis peut parfois pousser directement à la place.', 'Sous 15 BB : tapis ou fold, avec les tables. Le bouton pousse 65 % des mains à 15 BB, 74 % à 10 BB, 83 % à 5 BB. Roi-7 et dame-5 dépareillés poussent à 10 BB.'] },
+      { ask: 'Et en grosse blinde ?', h: 'La grosse blinde', p: ['Face à une relance minimum, il te faut environ 25 % d’équité pour payer, et presque toutes les mains l’ont contre une range de bouton large. Défends 60 à 70 % de tes mains : paie la plupart, et sur-relance (3-bet) tes meilleures mains et quelques mains bloquantes (as faibles, rois assortis).', 'Si le bouton limpe, relance souvent : il a montré une main moyenne. Relance à 3 ou 4 BB avec tes bonnes mains et une partie de tes mains moyennes ; checke le reste et regarde le flop gratuitement.', 'Face au tapis du bouton sous 15 BB, paie avec 41 % des mains à 15 BB, 56 % à 10 BB, 86 % à 5 BB. À 10 BB, roi-2 dépareillé paie ; valet-6 dépareillé se couche.'] },
+      { ask: 'Comment jouer après le flop à deux ?', h: 'Après le flop : l’agressivité paie', p: ['Une top paire, même avec un petit kicker, est une grosse main à deux : K-3 sur K♥ 7♠ 2♦ gagne 83 % contre une main au hasard. Mise pour la valeur sur deux ou trois rues.', 'Une paire moyenne garde de la valeur : 7-7 sur K♥ 9♠ 2♦ gagne encore 62 % contre une main au hasard. As hauteur sur ce flop : 47 %. Ces mains aiment checker et payer, pas se coucher à la première mise.', 'Sans rien, mise souvent au flop quand tu as relancé avant : l’adversaire rate deux fois sur trois. Mais choisis tes deuxièmes mises (turn) : avec des tirages, des cartes hautes qui t’aident, ou contre un joueur qui se couche beaucoup.', 'En défense, ne te couche pas par réflexe : les ranges sont larges, une paire faible ou un as hauteur gagnent souvent. Relance parfois au flop (check-raise) avec tes paires et tes tirages : à deux, c’est l’arme qui punit les mises trop fréquentes.'] },
+      { ask: 'Et contre un adversaire précis ?', h: 'S’adapter à l’adversaire', p: ['Le passif qui attend sa main : vole sans arrêt avant le flop, mise souvent au flop, et quand il paie ou relance, crois-le. Mise gros pour la valeur, il paie avec ses paires.', 'L’agressif qui relance tout : paie plus large, laisse-le bluffer, piège avec tes paires (check, puis paie ou relance tard). Sur-relance plus souvent avant le flop pour la valeur.', 'Le joueur qui se couche trop face au tapis : pousse plus large que les tables. Celui qui paie tout : pousse plus serré, mais avec des mains qui dominent les siennes (as, rois).', 'Regarde ce qu’il montre à l’abattage : à deux, chaque main montrée en dit beaucoup sur sa range.'] },
+      { ask: 'Faut-il faire un deal ?', h: 'Le deal et le mental', p: ['À deux, on peut se partager les gains selon les tapis (deal). Un deal réduit la variance. Si tu penses être meilleur que ton adversaire en heads-up, continuer rapporte plus en moyenne ; si tu es fatigué ou plus faible, le deal protège ton résultat.', 'Le heads-up est rapide et intense : chaque coup compte, les écarts de tapis bougent vite. Garde la même discipline qu’en début de tournoi : un mauvais coup ne doit pas décider des cinq suivants.', 'Pour t’entraîner : S’entraîner › Jouer une partie, format Heads-up (25, 40 ou 100 BB), et l’exercice « Tapis ou fold en heads-up ».'] }
+    ],
+    mistake: 'Jouer le heads-up comme une table à neuf : attendre une grosse main pendant que les blindes, à chaque coup, mangent le tapis.',
+    retain: ['Bouton : 75 à 85 % des mains au-dessus de 25 BB, relance minimum.', 'Grosse blinde : défends 60 à 70 %, relance les limps.', 'Sous 15 BB, tables : bouton 74 % et grosse blinde 56 % à 10 BB.', 'Top paire = grosse main ; paire moyenne et as hauteur : checker et payer.', 'Adapte-toi : vole le passif, laisse bluffer l’agressif.'],
+    quiz: [
+      { q: 'En heads-up, le bouton est aussi…', o: ['la grosse blinde', 'la petite blinde', 'le premier à parler après le flop', 'hors du coup'], a: 1, why: 'Il paie la petite blinde, parle en premier avant le flop et en dernier après.' },
+      { q: 'Contre une main au hasard, 7-2 dépareillé gagne environ…', o: ['5 %', '15 %', '35 %', '50 %'], a: 2, why: 'Environ 35 % : même la pire main garde de l’équité à deux.' },
+      { q: 'Au bouton avec 40 BB, quelle part de tes mains joues-tu environ ?', o: ['20 %', '40 %', '75 à 85 %', '100 %'], a: 2, why: 'À deux, presque toutes les mains ont assez d’équité et la position aide.' },
+      { q: 'Ta relance minimum au bouton est rentable dès que l’adversaire se couche environ…', o: ['une fois sur dix', 'un peu plus d’une fois sur trois', 'deux fois sur trois', 'jamais'], a: 1, why: 'Tu risques 1,5 BB pour gagner les blindes : environ 37 % d’abandons suffisent, sans compter tes gains quand il paie.' },
+      { q: 'Heads-up à 10 BB, en grosse blinde avec roi-2 dépareillé face au tapis :', o: ['tu te couches', 'tu paies', 'tu relances', 'ça dépend du flop'], a: 1, why: 'La grosse blinde paie 56 % des mains à 10 BB, roi-2 est dedans.' },
+      { q: 'K♥ 7♠ 2♦ à deux, tu as K♣3♦. Ta main est…', o: ['faible, check-fold', 'moyenne', 'forte : mise pour la valeur', 'à jouer seulement en bluff'], a: 2, why: 'Elle gagne 83 % contre une main au hasard.' },
+      { q: 'Ton adversaire relance presque tous ses boutons. Tu…', o: ['te couches plus', 'paies et sur-relances plus large', 'limpes', 'ne changes rien'], a: 1, why: 'Contre une range très large, tes mains moyennes deviennent fortes.' },
+      { q: 'Sous 15 BB en heads-up, on joue…', o: ['des petites relances', 'tapis ou fold avec les tables', 'uniquement les paires', 'en limpant'], a: 1, why: 'Les tables petite blinde contre grosse blinde s’appliquent telles quelles en heads-up.' }
+    ]
+  };
+
+  L[36].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, le heads-up. Il ne reste que nous deux à la table finale.'],
+    ['Y', 'Salut ! Le moment le plus important du tournoi. C’est là que se joue le plus gros écart de gains. Et c’est là que les joueurs serrés laissent le plus d’argent.'],
+    ['J', 'Pourquoi ?'],
+    ['Y', 'Parce qu’ils jouent comme à neuf. Ils attendent une grosse main. Mais à deux, tu paies une blinde à chaque coup. Attendre coûte très cher.'],
+    ['J', 'Qu’est-ce qui change d’autre ?'],
+    ['Y', 'Le bouton est aussi la petite blinde. Il parle en premier avant le flop, et en dernier après le flop. Et il n’y a plus de pression ICM : chaque jeton gagné te rapproche de la victoire.'],
+    ['J', 'Alors, combien de mains je joue au bouton ?'],
+    ['Y', 'Avec plus de vingt-cinq blindes, entre trois quarts et presque toutes. Soixante-quinze à quatre-vingt-cinq pour cent.'],
+    ['J', 'Même sept-deux ?'],
+    ['Y', 'Sept-deux, c’est la limite. Mais regarde : contre une main au hasard, sept-deux gagne trente-cinq pour cent. La pire main du jeu, trois-deux, trente-deux pour cent. Dame-cinq, cinquante. Roi-sept, cinquante-cinq.'],
+    ['J', 'Donc à deux, il n’y a presque pas de mauvaise main.'],
+    ['Y', 'Voilà. Il y a des mains un peu meilleures que la moyenne, et des mains un peu moins bonnes. Les as et les rois avec n’importe quoi sont déjà au-dessus.'],
+    ['J', 'Et je relance combien ?'],
+    ['Y', 'Le minimum, deux blindes. Tu risques une blinde et demie pour gagner les blindes. Si l’adversaire se couche un peu plus d’une fois sur trois, c’est déjà rentable, sans même compter les coups que tu gagnes quand il paie.'],
+    ['J', 'Et en grosse blinde ?'],
+    ['Y', 'Face à une relance minimum, il te faut environ un quart d’équité pour payer. Presque toutes tes mains l’ont. Défends soixante à soixante-dix pour cent : paie la plupart, et sur-relance tes meilleures mains.'],
+    ['J', 'Et s’il limpe ?'],
+    ['Y', 'Relance souvent. Un limp, c’est une main moyenne. Relance à trois ou quatre blindes avec tes bonnes mains et une partie des moyennes, et checke le reste.'],
+    ['J', 'Et quand les tapis sont courts ?'],
+    ['Y', 'Sous quinze blindes, tapis ou fold. Le bouton pousse soixante-cinq pour cent des mains à quinze blindes, trois mains sur quatre à dix blindes, et presque tout à cinq. Roi-sept, dame-cinq dépareillés : tapis à dix blindes.'],
+    ['J', 'Et la grosse blinde paie avec quoi ?'],
+    ['Y', 'À dix blindes, un peu plus de la moitié des mains. Roi-deux paie. Valet-six se couche. À cinq blindes, presque tout paie.'],
+    ['J', 'Passons au flop.'],
+    ['Y', 'Au flop, une main au hasard touche au moins une paire une fois sur trois. Deux fois sur trois, ton adversaire n’a rien. Alors celui qui mise souvent ramasse beaucoup de pots.'],
+    ['J', 'Et une top paire avec un petit kicker ?'],
+    ['Y', 'C’est une grosse main à deux. Roi-trois sur roi, sept, deux : quatre-vingt-trois pour cent contre une main au hasard. Mise pour la valeur, deux ou trois fois.'],
+    ['J', 'Et une paire moyenne ?'],
+    ['Y', 'Sept-sept sur roi, neuf, deux : encore soixante-deux pour cent. As hauteur sur ce flop : quarante-sept. Ces mains-là aiment checker et payer. Ne les jette pas à la première mise.'],
+    ['J', 'Et quand je n’ai rien ?'],
+    ['Y', 'Mise souvent au flop si tu as relancé avant. Mais choisis bien ta deuxième mise : avec un tirage, avec une carte haute qui t’aide, ou contre quelqu’un qui se couche trop.'],
+    ['J', 'Et en défense ?'],
+    ['Y', 'Ne te couche pas par réflexe. Et relance parfois au flop avec tes paires et tes tirages. À deux, le check-raise punit ceux qui misent tout le temps.'],
+    ['J', 'Et selon l’adversaire ?'],
+    ['Y', 'Contre le passif qui attend sa main : vole sans arrêt, et crois-le quand il relance. Contre l’agressif : paie plus large, laisse-le bluffer, et piège avec tes paires.'],
+    ['J', 'Et le deal ?'],
+    ['Y', 'Si tu penses être meilleur que lui en heads-up, continue. Si tu es fatigué ou moins fort, le deal protège ton résultat. C’est ton choix, il n’y a pas de honte.'],
+    ['J', 'Et pour m’entraîner ?'],
+    ['Y', 'Dans l’appli, Jouer une partie, format heads-up, avec vingt-cinq, quarante ou cent blindes. Et l’exercice tapis ou fold en heads-up.'],
+    ['J', 'Le quiz ?'],
+    ['Y', 'Première question. Contre une main au hasard, sept-deux gagne environ combien ?'],
+    ['P', 5],
+    ['J', 'Trente-cinq pour cent.'],
+    ['Y', 'Oui.'],
+    ['Y', 'Deuxième question. Roi, sept, deux. Tu as roi-trois. Ta main est forte ou faible ?'],
+    ['P', 5],
+    ['J', 'Forte : je mise pour la valeur.'],
+    ['Y', 'Bravo.'],
+    ['Y', 'Troisième question. Dix blindes, grosse blinde, roi-deux dépareillé face au tapis.'],
+    ['P', 5],
+    ['J', 'Je paie.'],
+    ['Y', 'Parfait. On résume. À deux, presque toutes les mains ont de la valeur : joue trois quarts de tes mains au bouton, défends deux tiers en grosse blinde. Relance au minimum. Sous quinze blindes, tapis ou fold avec les tables. Une top paire, même faible, est une grosse main. Mise souvent : ton adversaire rate deux fois sur trois. Et adapte-toi à lui. Bon heads-up !']
   ];
 
   var CHAPTERS = PLAN.map(function (c) {

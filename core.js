@@ -169,6 +169,7 @@
       if (pos !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; });
       s = { type: 'def', pos: pos, opener: rnd(ops), bb: rnd([100, 100, 30]) };
     } else if (k === 'push') { s = { type: 'push', pos: rnd(POS.slice(0, 8)), bb: rnd(PUSH_DEPTHS) }; }
+    else if (k === 'hu') { bb = rnd(PUSH_DEPTHS); s = Math.random() < 0.5 ? { type: 'push', pos: 'SB', bb: bb, hu: true } : { type: 'callshove', pos: 'BB', opener: 'SB', bb: bb, hu: true }; }
     else if (k === 'callshove') { bb = rnd(PUSH_DEPTHS); var sk = rnd(shoveSituations(bb)); var m = sk.split(' vs shove '); s = { type: 'callshove', pos: m[0], opener: m[1], bb: bb }; }
     else { var sc = rnd(['ip', 'oop', 'early']); s = { type: 'vs3bet', scen: sc, pos: sc === 'ip' ? 'BTN' : (sc === 'oop' ? 'CO' : 'UTG'), opener: sc === 'ip' ? 'BB' : (sc === 'oop' ? 'BTN' : 'CO'), bb: 100 }; }
     return s;

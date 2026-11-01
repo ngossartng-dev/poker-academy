@@ -83,17 +83,18 @@
     3000: [[10, 20], [15, 30], [20, 40], [25, 50], [30, 60], [40, 80], [50, 100], [60, 120], [80, 160], [100, 200], [125, 250], [150, 300], [200, 400], [250, 500], [300, 600], [400, 800], [500, 1000], [600, 1200], [800, 1600], [1000, 2000]]
   };
   var PACE = { normal: 12, semi: 8, turbo: 5 };
-  var PAYOUT = { 9: [0.5, 0.3, 0.2], 6: [0.65, 0.35] };
+  var PAYOUT = { 9: [0.5, 0.3, 0.2], 6: [0.65, 0.35], 2: [1] };
 
   /* ---------- État de partie ---------- */
   var G = null; // partie en cours
-  var SETUP = { format: 'sng9', chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique' };
+  var SETUP = { format: 'sng9', chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique', huChips: 8000 };
   var MTT_FIELD = 100, MTT_PAID = 15;
   var MTT_PAY = [25, 16, 11.5, 8.5, 6.5, 5, 4, 3.2, 2.6, 2.95, 2.95, 2.95, 2.95, 2.95, 2.95];
   var BUYIN = 10;
 
   function newGame(opts) {
-    opts.seats = opts.format === 'sng6' ? 6 : 9;
+    opts.seats = opts.format === 'hu' ? 2 : (opts.format === 'sng6' ? 6 : 9);
+    if (opts.format === 'hu') opts.chips = opts.huChips || 8000;
     opts.mtt = opts.format === 'mtt' || opts.format === 'moments';
     if (opts.mtt) opts.chips = 20000;
     var p = PA.player(), n = opts.seats, players = [], names = NAMES.slice().sort(function () { return Math.random() - 0.5; });
@@ -160,7 +161,7 @@
       p.fresh = true;
     });
   }
-  function levelInfo() { var s = STRUCT[G.opts.chips], l = Math.min(G.level, s.length - 1); return { sb: s[l][0], bb: s[l][1], ante: l >= 3 ? s[l][1] : 0, n: l + 1 }; }
+  function levelInfo() { var s = STRUCT[G.opts.chips] || STRUCT[20000], l = Math.min(G.level, s.length - 1); return { sb: s[l][0], bb: s[l][1], ante: l >= 3 ? s[l][1] : 0, n: l + 1 }; }
   function nextSeat(i) { var n = G.players.length; for (var k = 1; k <= n; k++) { var j = (i + k) % n; if (G.players[j].stack > 0 || (G.hand && G.hand.inHand[j])) return j; } return i; }
   function nextAlive(i) { var n = G.players.length; for (var k = 1; k <= n; k++) { var j = (i + k) % n; if (G.players[j].stack > 0) return j; } return i; }
 
@@ -348,23 +349,23 @@
   function botDecide(i) {
     var H = G.hand, p = G.players[i], P = OPP[p.prof], L = H.L, tc = toCall(i), bbs = p.stack / L.bb, pot = potTotal();
     var code = handCode(H.hole[i][0], H.hole[i][1]), hp = PCT[code];
-    var pos = H.pos[i], late = { CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1, MP: 0.85, 'UTG+1': 0.75, UTG: 0.7, BB: 1 }[pos] || 1;
+    var pos = H.pos[i], hu = H.order.length === 2, late = hu ? (pos === 'BTN' ? 5 : 1) : ({ CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1, MP: 0.85, 'UTG+1': 0.75, UTG: 0.7, BB: 1 }[pos] || 1);
     var eff = Math.min(p.stack + H.bets[i], Math.max.apply(null, Object.keys(H.inHand).filter(function (k) { return +k !== i && !H.folded[k]; }).map(function (k) { return G.players[k].stack + H.bets[k]; })));
     var effBB = eff / L.bb, wild = P.wild ? (Math.random() - 0.5) * 0.15 : 0;
     var rem = remaining(), bubble = rem > paidPlaces() && rem <= paidPlaces() + (G.opts.mtt ? 3 : 1);
     if (H.street === 0) {
       // tapis courts : tapis ou fold
       if (effBB <= 15 && H.preRaises === 0) {
-        var t = PA.D.pushfold[String(PA.nearestPush(effBB))].push[pos === 'BB' ? 'SB' : pos] || [];
+        var t = PA.D.pushfold[String(PA.nearestPush(effBB))].push[pos === 'BB' || hu ? 'SB' : pos] || [];
         var push = t.indexOf(code) >= 0 || hp < (P.vpip * 0.9 + wild);
         if (P.surv && bubble) push = hp < 0.08;
         if (push) return ['raise', p.stack + H.bets[i]];
         return tc === 0 ? ['check'] : ['fold'];
       }
       if (H.preRaises === 0) {
-        var openP = Math.min(0.6, P.pfr * late + wild);
+        var openP = Math.min(hu ? 0.85 : 0.6, P.pfr * late + wild);
         if (hp < openP) { var std = (G.opts.table === 'club' || G.opts.table === 'monclub') ? 2 : (L.ante ? 2.2 : 2.5); var sz = L.bb * (P.wild ? [2, 2, 2.5, 3, 4, 5][Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= 1.4; return ['raise', Math.round(sz)]; }
-        if (hp < Math.min(0.7, P.vpip * late + wild) && (P.limp > 0 || i === H.bbSeat)) return tc === 0 ? ['check'] : ['call'];
+        if (hp < Math.min(hu ? 0.95 : 0.7, P.vpip * late + wild) && (P.limp > 0 || i === H.bbSeat)) return tc === 0 ? ['check'] : ['call'];
         return tc === 0 ? ['check'] : ['fold'];
       }
       // face à une relance
@@ -372,6 +373,7 @@
       var threeP = P.pfr * 0.22 * (H.preRaises >= 2 ? 0.35 : 1) * (0.7 + P.agg * 0.6);
       var callP = P.vpip * (0.45 + P.sticky * 0.5) * (H.preRaises >= 2 ? 0.35 : 1);
       if (i === H.bbSeat) callP *= 1.3;
+      if (hu) { callP = Math.min(0.75, callP * 2.2); threeP = Math.min(0.25, threeP * 2); }
       if (bubble && P.surv) { threeP *= 0.4; callP *= 0.4; }
       if (allInFacing || tc >= p.stack * 0.5) { var need = Math.max(0.03, 0.12 - 0.002 * Math.min(40, tc / L.bb) + P.sticky * 0.04); if (P.name === 'Maniac') need += 0.06;
         if (G.opts.bounty !== 'classique' && H.opener !== null && G.players[H.opener] && G.players[H.opener].bounty > 0 && p.stack >= G.players[H.opener].stack) need += 0.07;
@@ -443,6 +445,11 @@
     if (H.street !== 0) return null;
     var map9 = { UTG: 'UTG', 'UTG+1': 'UTG+1', MP: 'MP', LJ: 'LJ', HJ: 'HJ', CO: 'CO', BTN: 'BTN', SB: 'SB', BB: 'BB' };
     var p = map9[pos];
+    // heads-up : le bouton est la petite blinde ; tables tapis ou fold exactes sous 15 BB, pas de range à 9 au-dessus
+    if (H.order.length === 2) {
+      if (eff > 15) return null;
+      map9 = { BTN: 'SB', BB: 'BB' }; p = map9[pos];
+    }
     if (H.preRaises === 0 && H.limpers === 0 && p !== 'BB') return { sit: { type: 'open', pos: p, bb: eff > 40 ? 100 : (eff >= 20 ? 30 : eff) }, hand: code };
     if (H.preRaises === 1 && H.opener !== null) {
       var op = map9[H.pos[H.opener]];
@@ -518,7 +525,7 @@
     G.prize = prizeFor(G.place);
     var pl = PA.player();
     var s = G.stats;
-    var fname = { sng9: 'Sit & Go 9 joueurs', sng6: 'Sit & Go 6 joueurs', mtt: 'Tournoi 100 joueurs', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? ' ' + (G.opts.bounty === 'pko' ? 'PKO' : 'Space KO') : '');
+    var fname = { sng9: 'Sit & Go 9 joueurs', sng6: 'Sit & Go 6 joueurs', hu: 'Heads-up', mtt: 'Tournoi 100 joueurs', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? ' ' + (G.opts.bounty === 'pko' ? 'PKO' : 'Space KO') : '');
     pl.sessions.unshift({ at: Date.now(), label: fname + ' (' + TABLES[G.opts.table].name + ') · ' + G.place + 'e', n: s.pre.n, ok: s.pre.ok, style: s.pre.style, err: s.pre.err, consult: s.consult });
     pl.last = null; PA.save();
     U().render();
@@ -530,9 +537,10 @@
     function seg(key, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + (SETUP[key] === o[0] ? 'on' : '') + '" data-gact="setup" data-k="' + key + '" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>Jouer une partie</h1>' +
       (G && !G.over ? '<button class="big-cta" data-act="nav" data-v="jeu"><div><div class="disp">Reprendre la partie</div><div style="font-weight:500">Main ' + G.handNo + ' · niveau ' + levelInfo().n + '</div></div></button>' : '') +
-      '<div class="card stack"><b>Format</b>' + seg('format', [['sng9', 'Sit & Go 9 joueurs'], ['sng6', 'Sit & Go 6 joueurs'], ['mtt', 'Tournoi 100 joueurs'], ['moments', 'Moments clés']]) +
+      '<div class="card stack"><b>Format</b>' + seg('format', [['sng9', 'Sit & Go 9 joueurs'], ['sng6', 'Sit & Go 6 joueurs'], ['hu', 'Heads-up'], ['mtt', 'Tournoi 100 joueurs'], ['moments', 'Moments clés']]) +
+      (SETUP.format === 'hu' ? '<b>Tapis de départ</b>' + seg('huChips', [[5000, '25 BB'], [8000, '40 BB'], [20000, '100 BB']]) + '<div class="small muted">Un contre un, blindes 100/200 au départ : le bouton est aussi la petite blinde. Le gagnant prend tout. Ton adversaire est tiré de la table choisie ci-dessous.</div>' : '') +
       (SETUP.format === 'moments' ? '<div class="small muted">Tournoi de 100 joueurs : les mains sans enjeu sont jouées automatiquement selon ta range, tu ne joues que la bulle, les tapis courts, la table finale et le heads-up.</div>' : '') +
-      (SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
+      (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal'], ['semi', 'Semi-turbo'], ['turbo', 'Turbo']]) +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
@@ -591,7 +599,7 @@
     h += '</div>';
     var info = '<div class="small muted" style="text-align:center">Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + (G.opts.mtt ? remaining() + ' / ' + MTT_FIELD + ' joueurs, ' + MTT_PAID + ' payés' : alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
       (G.keyMsg ? U().yo(G.keyMsg) : '');
-    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + { sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go 6', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
+    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + { sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go 6', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
     var me = G.players[0];
     var mine = H.inHand[0] ? '<div class="small" style="text-align:center">Ton tapis : <b>' + PA.fmt(me.stack) + '</b> (' + bbTxt(me.stack) + ' BB)' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
     var bottom = '';
@@ -647,7 +655,7 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-gact]'); if (!t) return;
     var a = t.getAttribute('data-gact'), v = t.getAttribute('data-v');
-    if (a === 'setup') { var k = t.getAttribute('data-k'); SETUP[k] = k === 'chips' ? parseInt(v, 10) : (k === 'coach' ? v === 'true' : v); U().render(); }
+    if (a === 'setup') { var k = t.getAttribute('data-k'); SETUP[k] = k === 'chips' || k === 'huChips' ? parseInt(v, 10) : (k === 'coach' ? v === 'true' : v); U().render(); }
     else if (a === 'start') { newGame(Object.assign({}, SETUP)); location.hash = '#jeu'; U().render(); }
     else if (a === 'again') { newGame(Object.assign({}, G.opts)); U().render(); }
     else if (a === 'quit') { location.hash = '#partie'; }

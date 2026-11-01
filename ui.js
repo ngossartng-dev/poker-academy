@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.2.4';
+  var VERSION = '2.3.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -225,6 +225,7 @@
     return out;
   }
   function describeSit(s) {
+    if (s.hu) return s.type === 'push' ? 'en heads-up au bouton (petite blinde) à ' + PA.nearestPush(s.bb) + ' BB' : 'en heads-up en grosse blinde, face au tapis du bouton à ' + PA.nearestPush(s.bb) + ' BB';
     if (s.type === 'open') { var first = s.pos === 'UTG' ? 'premier à parler' : 'personne n’a ouvert avant toi'; return PA.depthKey(s.bb) === 'push' ? 'en ' + s.pos + ' à ' + PA.nearestPush(s.bb) + ' BB, ' + first : 'en ' + s.pos + ', ' + first; }
     if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener;
     if (s.type === 'vs3bet') return { ip: 'au bouton face au 3-bet des blindes', oop: 'au CO face au 3-bet du bouton', early: 'en début de table face à un 3-bet tardif' }[s.scen];
@@ -300,6 +301,7 @@
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>Situations</h1><div class="grid4">' +
       '<button class="tile" data-act="startSit" data-v="push"><b>Tapis ou fold</b><span>Moins de 20 BB, tout le monde s’est couché jusqu’à toi.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="callshove"><b>Payer un tapis</b><span>Un adversaire pousse : payer ou se coucher ?</span></button>' +
+      '<button class="tile" data-act="startSit" data-v="hu"><b>Tapis ou fold en heads-up</b><span>Un contre un, moins de 15 BB : pousser au bouton, payer en grosse blinde.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="vs3bet"><b>Face au 3-bet</b><span>Tu as ouvert, on te relance.</span></button>' +
       '<a class="tile" href="#planquiz"><b>Plan de jeu</b><span>Ouvrir, 3-bet ou payer… puis la suite si on te sur-relance : tapis, payer ou 3-bet fold ?</span></a>' +
       '<button class="tile" data-act="startSit" data-v="icm"><b>Bulle et ICM</b><span>Payer un tapis à la bulle ou en table finale : jetons contre euros.</span></button>' +
@@ -402,12 +404,13 @@
     var pot = 0; Object.keys(bets).forEach(function (k) { pot += bets[k]; });
     var h = '<div class="felt">';
     for (var k = 0; k < 9; k++) {
-      var pos = POS[(hi + k) % 9]; var xy = seatXY(k, [46, 46]);
+      var pos = POS[(hi + k) % 9]; var xy = seatXY(s.hu ? (pos === heroPos ? 0 : 4.5) : k, [46, 46]);
+      if (s.hu && pos !== 'SB' && pos !== 'BB') continue;
       var isHero = k === 0;
       var stackBB = bb - (bets[pos] || 0);
       h += '<div class="seat' + (isHero ? ' hero' : '') + (folded[pos] ? ' out' : '') + '" style="left:' + xy[0] + '%;top:' + Math.min(xy[1], 92) + '%"><span class="nm">' + (isHero ? 'Toi · ' : '') + pos + '</span><span class="st">' + (allin[pos] ? 'Tapis' : PA.fmt(stackBB * BB)) + '</span></div>';
-      if (bets[pos]) { var bxy = seatXY(k, [33, 30]); h += '<div class="bet" style="left:' + bxy[0] + '%;top:' + bxy[1] + '%">' + PA.fmt(bets[pos] * BB) + '</div>'; }
-      if (pos === 'BTN') { var dxy = seatXY(k + 0.35, [35, 32]); h += '<div class="dealer" style="left:' + dxy[0] + '%;top:' + dxy[1] + '%">D</div>'; }
+      if (bets[pos]) { var bxy = seatXY(s.hu ? (pos === heroPos ? 0 : 4.5) : k, [33, 30]); h += '<div class="bet" style="left:' + bxy[0] + '%;top:' + bxy[1] + '%">' + PA.fmt(bets[pos] * BB) + '</div>'; }
+      if (s.hu ? pos === 'SB' : pos === 'BTN') { var dxy = s.hu ? seatXY((pos === heroPos ? 0 : 4.5) + 1.2, [40, 36]) : seatXY(k + 0.35, [35, 32]); h += '<div class="dealer" style="left:' + dxy[0] + '%;top:' + dxy[1] + '%">D</div>'; }
     }
     var potTxt = PA.fmt((pot + (ante ? 1 : 0)) * BB) + ' · ' + String(Math.round((pot + (ante ? 1 : 0)) * 10) / 10).replace('.', ',') + ' BB';
     h += '<div class="pot">Pot ' + potTxt + '</div></div>';
@@ -416,7 +419,8 @@
   }
   function questionText(q, t) {
     var s = q.sit, txt;
-    if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
+    if (s.hu) txt = s.type === 'push' ? 'Heads-up : tu es au <b>bouton</b> (petite blinde), tu parles en premier.' : 'Heads-up : tu es en <b>grosse blinde</b>. Le bouton fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
+    else if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
     else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.';
     else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = t.bets[s.opener]; txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.' }[s.scen]; }
     else txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
@@ -671,7 +675,7 @@
       case 'seance': startDrill('seance', {}, 'Séance du jour'); render(); break;
       case 'pf': { var k = t.getAttribute('data-k'); PF[k] = k === 'n' ? parseInt(v, 10) : (k === 'chrono' ? v === 'true' : v); render(); break; }
       case 'startPreflop': startDrill('preflop', { kind: PF.kind, pos: PF.pos, depth: PF.depth, n: PF.n, chrono: PF.chrono }, 'Préflop'); render(); break;
-      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { push: 'Tapis ou fold', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
+      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { push: 'Tapis ou fold', hu: 'Tapis ou fold en heads-up', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
       case 'answer': answer(v); break;
       case 'next': ui.drill.i++; ui.drill.fb = null; render(); break;
       case 'quitDrill': clearInterval(timerH); ui.drill = null; go('entrainer'); break;
