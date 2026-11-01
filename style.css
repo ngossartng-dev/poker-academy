@@ -182,3 +182,9 @@ label{font-weight:600}
 .plan-sum b{border-left:6px solid;padding-left:8px;font-size:16px}
 .plan-sum span:not(.sy){padding-left:14px;font-size:15px;color:#e6e6ea;line-height:1.45}
 .plan-leg2 i.bar,.plan-sum i.bar{width:22px;height:6px;border-radius:2px;display:inline-block;vertical-align:middle}
+.pq-hand{display:flex;gap:10px;justify-content:center;margin:6px 0}
+.pq-card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:64px;height:88px;border-radius:10px;background:#fff;color:#111;font-weight:800;font-size:30px;line-height:1}
+.pq-card small{font-size:26px}
+.pq-card.red{color:#d61f1f}
+.pq-res{font-weight:800;font-size:19px}
+.pq-res.ok{color:#4fe08f}.pq-res.ko{color:#ff7070}

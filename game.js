@@ -68,8 +68,10 @@
     micro: { name: 'Micro Winamax', mix: ['station', 'nit', 'station', 'lag', 'nit', 'reg', 'station', 'lag'] },
     agressive: { name: 'Agressive', mix: ['lag', 'maniac', 'lag', 'reg', 'maniac', 'lag', 'lag', 'reg'] },
     miroir: { name: 'Miroir', mix: null },
-    mixte: { name: 'Huit profils', mix: ['nit', 'reg', 'lag', 'lp', 'station', 'maniac', 'fan', 'surv'] }
+    mixte: { name: 'Huit profils', mix: ['nit', 'reg', 'lag', 'lp', 'station', 'maniac', 'fan', 'surv'] },
+    monclub: { name: 'Mes adversaires du club', mix: ['fan', 'fan', 'lp', 'lp', 'reg', 'fan', 'station', 'reg'] }
   };
+  function p0() { return PA.player() || {}; }
   var NAMES = ['Ludo', 'Sabrina', 'Marco', 'Gégé', 'Nadia', 'Bruno', 'Coralie', 'Didier', 'Fanfan', 'Jojo', 'Karine', 'Momo'];
 
   // rang de force (0 = meilleure) en % des combinaisons
@@ -98,8 +100,12 @@
     var mix = TABLES[opts.table].mix;
     if (!mix) { var mp = { nit: 'nit', tag: 'reg', equilibre: 'reg', lag: 'lag', perso: 'reg' }[p.profile || 'tag']; mix = [mp, mp, mp, mp, mp, mp, mp, mp]; }
     mix = mix.slice().sort(function () { return Math.random() - 0.5; });
+    // « Mes adversaires du club » : les fiches du carnet (Analyser › Adversaires) prennent place à la table, avec leur profil
+    var mine = opts.table === 'monclub' ? (p.opps || []).filter(function (o) { return o.name && OPP[o.prof]; }).slice().sort(function () { return Math.random() - 0.5; }) : [];
+    names = names.filter(function (x) { return !mine.some(function (o) { return o.name === x; }); });
     for (var i = 0; i < n; i++) {
       if (i === 0) players.push({ id: 0, name: p.pseudo, hero: true, prof: null, stack: opts.chips, bounty: startBounty(opts) });
+      else if (mine[i - 1]) players.push({ id: i, name: mine[i - 1].name, hero: false, prof: mine[i - 1].prof, note: mine[i - 1].note || '', stack: opts.chips, bounty: startBounty(opts) });
       else players.push({ id: i, name: names[i - 1], hero: false, prof: mix[(i - 1) % mix.length], stack: opts.chips, bounty: startBounty(opts) });
     }
     var field = [];
@@ -357,7 +363,7 @@
       }
       if (H.preRaises === 0) {
         var openP = Math.min(0.6, P.pfr * late + wild);
-        if (hp < openP) { var std = G.opts.table === 'club' ? 2 : (L.ante ? 2.2 : 2.5); var sz = L.bb * (P.wild ? [2, 2, 2.5, 3, 4, 5][Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= 1.4; return ['raise', Math.round(sz)]; }
+        if (hp < openP) { var std = (G.opts.table === 'club' || G.opts.table === 'monclub') ? 2 : (L.ante ? 2.2 : 2.5); var sz = L.bb * (P.wild ? [2, 2, 2.5, 3, 4, 5][Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= 1.4; return ['raise', Math.round(sz)]; }
         if (hp < Math.min(0.7, P.vpip * late + wild) && (P.limp > 0 || i === H.bbSeat)) return tc === 0 ? ['check'] : ['call'];
         return tc === 0 ? ['check'] : ['fold'];
       }
@@ -530,6 +536,7 @@
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal'], ['semi', 'Semi-turbo'], ['turbo', 'Turbo']]) +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
+      (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
       '<b>Coach</b>' + seg('coach', [[true, 'Avec Yo'], [false, 'Sans coach (bilan à la fin)']]) +
       '<button class="btn gold block" data-gact="start">Lancer la partie</button></div>' +
       '</div>';
@@ -578,6 +585,7 @@
       var q = G.players[G.pop];
       h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' +
         (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span>' : '') +
+        (G.pop !== 0 && q.note ? '<br><span class="small">Ta note : ' + ui.esc(q.note.slice(0, 120)) + '</span>' : '') +
         (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
     }
     h += '</div>';

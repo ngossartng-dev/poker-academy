@@ -750,7 +750,8 @@
       return '<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b class="disp" style="font-size:1.3em">' + ui.esc(o.name) + '</b><span class="chip">' + P[1] + '</span></div><div class="small">' + P[3] + '</div>' + (o.note ? '<div class="small muted">' + ui.esc(o.note) + '</div>' : '') + '<div class="row" style="justify-content:space-between"><span class="small muted">Mis à jour le ' + new Date(o.upd).toLocaleDateString('fr-FR') + '</span><button class="btn" data-hact="opEdit" data-v="' + o.id + '" style="min-height:40px;padding:4px 12px">Modifier</button></div></div>';
     }).join('') : '';
     return ui.yo(L.length ? 'Relis ces fiches avant une soirée au club : un seul ajustement par joueur suffit. Mets-les à jour quand quelqu’un montre ses cartes.' : 'Crée une fiche par habitué du club : son profil parmi les huit, et ce que tu as remarqué. Avant chaque soirée, tu relis ses fiches et tu sais comment jouer contre chacun.') +
-      (e ? form : '<button class="btn gold" data-hact="opNew">Ajouter un adversaire</button>') + list + wmxOppCard();
+      (e ? form : '<button class="btn gold" data-hact="opNew">Ajouter un adversaire</button>') + list +
+      (L.length ? '<div class="small muted">Entraîne-toi contre eux : S’entraîner › Jouer une partie, adversaires « Mes adversaires du club ». Ils jouent avec le profil de leur fiche.</div>' : '') + wmxOppCard();
   }
   function opSave() {
     var name = (document.getElementById('opName').value || '').trim(), note = document.getElementById('opNote').value || '';

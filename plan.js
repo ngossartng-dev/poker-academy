@@ -206,9 +206,97 @@
       var c = NOW[look(g[0]).now][0];
       return '<div><b style="border-color:' + c + '">' + (g[2] && BAR[g[2]] ? '<i class="bar" style="background:' + BAR[g[2]] + '"></i> ' : '') + g[1] + '</b><span>' + compact(l) + '</span></div>';
     }).join('') + '<div><b style="border-color:#3a3a42">Tout le reste</b><span>Se coucher.</span></div></div>';
+    out += '<a class="btn block" href="#planquiz" data-act="closeSheet">S’entraîner sur le plan de jeu</a>';
     out += '<p class="muted small">Touche une main pour le détail chiffré. ' + (deep() ? 'La suite est calculée avec l’équité de chaque main contre la range adverse de sur-relance et la cote à payer.' : 'Entre 20 et 40 BB, un 3-bet est un tapis.') + '</p>';
     return out;
   }
+
+  /* ----- entraînement : la décision, puis la suite ----- */
+  var Q = null, NQ = 10;
+  function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function newQ() {
+    var first = Math.random() < 0.45, tries = 0, R, h, cat;
+    ST.stack = Math.random() < 0.7 ? 40 : rnd([25, 100]);
+    do {
+      if (first) { ST.mode = 'first'; ST.pos = rnd(['UTG', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB']); }
+      else {
+        ST.mode = 'vs'; ST.pos = rnd(['HJ', 'CO', 'BTN', 'SB', 'BB', 'BB']);
+        var ops = POS.slice(0, POS.indexOf(ST.pos)); if (ST.pos !== 'BB') ops = ops.filter(function (x) { return x !== 'SB'; });
+        ST.opener = rnd(ops);
+      }
+      R = compute();
+      var play = H.filter(function (x) { return R.map[x] !== 'fold'; });
+      // surtout des mains jouées, parfois une main limite qui se couche
+      if (Math.random() < 0.8) h = rnd(play);
+      else { var near = H.filter(function (x) { return R.map[x] === 'fold' && PA.D.eq[x] > 0.5; }); h = near.length ? rnd(near) : rnd(play); }
+      cat = R.map[h]; tries++;
+    } while (!h && tries < 20);
+    return { mode: ST.mode, pos: ST.pos, opener: ST.opener, stack: ST.stack, hand: h, cat: cat, suits: suitsFor(h), step: 1, a1: null, a2: null };
+  }
+  function suitsFor(h) {
+    var S = ['♠', '♥', '♦', '♣'], a = rnd(S), b;
+    if (h.length === 2) { do { b = rnd(S); } while (b === a); } else if (h[2] === 's') b = a; else { do { b = rnd(S); } while (b === a); }
+    return [a, b];
+  }
+  function cardHtml(r, s) { var red = s === '♥' || s === '♦'; return '<span class="pq-card' + (red ? ' red' : '') + '">' + (r === 'T' ? '10' : r) + '<small>' + s + '</small></span>'; }
+  function restore(q) { ST.mode = q.mode; ST.pos = q.pos; ST.opener = q.opener; ST.stack = q.stack; }
+  function step1Opts(q) {
+    if (q.mode === 'first') return [['now:open', 'Ouvrir à ' + bb(openSize())], ['now:fold', 'Se coucher']];
+    return [['now:three', deep() ? '3-bet' : '3-bet tapis'], ['now:call', 'Payer'], ['now:fold', 'Se coucher']];
+  }
+  function hasStep2(q) { return q.cat !== 'fold' && (q.mode === 'first' || (deep() && q.cat !== 'call')); }
+  function step2Q(q) {
+    if (q.mode === 'first') {
+      if (!deep()) return { t: 'Un joueur derrière toi fait tapis. Que fais-tu ?', o: [['v4', 'Payer le tapis'], ['open', 'Se coucher']] };
+      if (firstJam(q)) return { t: 'Un joueur derrière toi te 3-bet. Que fais-tu ?', o: [['v4', 'Tapis'], ['call', 'Payer le 3-bet'], ['open', 'Se coucher']] };
+      return { t: 'Un joueur derrière toi te 3-bet. Que fais-tu ?', o: [['v4', '4-bet, et payer s’il fait tapis'], ['b4', '4-bet, puis coucher s’il fait tapis'], ['call', 'Payer le 3-bet'], ['open', 'Se coucher']] };
+    }
+    return { t: 'Le ' + posFr(q.opener) + ' te 4-bet. Que fais-tu ?', o: fourSize(threeSize(q.pos === 'SB' || q.pos === 'BB')) >= ST.stack ? [['v4', 'Payer son tapis'], ['b4', 'Se coucher']] : [['v4', 'Tapis'], ['c4', 'Payer le 4-bet'], ['b4', 'Se coucher']] };
+  }
+  // à ce tapis, ton 4-bet est déjà un tapis : valeur et bluff se jouent pareil
+  function firstJam(q) { var tb = (q.pos === 'BTN' || q.pos === 'SB') ? 'BB' : 'BTN'; return fourSize(threeSize(tb === 'BB')) >= ST.stack; }
+  function good2(q) { return q.a2 === q.cat || (q.mode === 'first' && deep() && firstJam(q) && q.cat === 'b4' && q.a2 === 'v4'); }
+  function quizView() {
+    var ui = window.PA_UI;
+    if (!Q || Q.i >= NQ && !Q.fin) Q = { i: 0, ok: 0, q: newQ(), fin: false };
+    var q = Q.q; restore(q);
+    var head = '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Plan de jeu</h1>';
+    if (Q.fin) {
+      return ui.shell('entrainer', head + ui.yo(Q.ok + (Q.ok > 1 ? ' bonnes réponses' : ' bonne réponse') + ' sur ' + NQ + '. ' + (Q.ok >= 8 ? 'Ton plan de jeu est solide.' : Q.ok >= 5 ? 'C’est en bonne voie : revois les mains où tu as hésité dans Ma range › Plan de jeu.' : 'Ouvre Ma range › Plan de jeu et regarde le résumé écrit de chaque situation, puis recommence.')) +
+        '<button class="btn gold block" data-pq="again">Recommencer</button><button class="btn block" data-act="range">Ouvrir Ma range</button></div>');
+    }
+    var sit = q.mode === 'first' ? 'Tu es en <b>' + posFr(q.pos) + '</b>, tout le monde s’est couché jusqu’à toi.' : 'Tu es en <b>' + posFr(q.pos) + '</b>. Le <b>' + posFr(q.opener) + '</b> ouvre à ' + bb(openSize()) + ', les autres se couchent.';
+    var out = head + '<div class="small muted">Question ' + (Q.i + 1) + ' sur ' + NQ + ' · ' + Q.ok + ' bonne' + (Q.ok > 1 ? 's' : '') + ' réponse' + (Q.ok > 1 ? 's' : '') + '</div>' +
+      '<div class="card stack"><div>' + sit + ' Tapis de ' + (q.stack === 25 ? '30' : q.stack) + ' BB.</div><div class="pq-hand">' + cardHtml(q.hand[0], q.suits[0]) + cardHtml(q.hand[1], q.suits[1]) + '</div></div>';
+    var want1 = look(q.cat).now;
+    if (q.step === 1) {
+      out += '<div class="stack">' + step1Opts(q).map(function (o) { return '<button class="btn block" data-pq="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    } else {
+      var ok1 = q.a1 === want1;
+      out += '<div class="pq-res ' + (ok1 ? 'ok' : 'ko') + '">' + (ok1 ? 'Oui : ' : 'Non : ') + (want1 === 'open' ? 'on ouvre' : want1 === 'three' ? (deep() ? 'on 3-bet' : 'on fait tapis') : want1 === 'call' ? 'on paye' : 'on se couche') + '.</div>';
+      if (ok1 && hasStep2(q) && q.step === 2) {
+        var s2 = step2Q(q);
+        out += '<div><b>Et ensuite ?</b> ' + s2.t + '</div><div class="stack">' + s2.o.map(function (o) { return '<button class="btn block" data-pq="then:' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
+      } else {
+        if (q.a2) { var g2 = good2(q); out += '<div class="pq-res ' + (g2 ? 'ok' : 'ko') + '">' + (g2 ? 'Bonne suite.' : 'Pas la bonne suite.') + '</div>'; }
+        out += ui.yo(detail(q.hand)) + '<button class="btn gold block" data-pq="next">' + (Q.i + 1 >= NQ ? 'Voir mon score' : 'Main suivante') + '</button>';
+      }
+    }
+    return ui.shell('entrainer', out + '</div>');
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-pq]') : null; if (!t || !Q) return;
+    var a = t.getAttribute('data-pq'), q = Q.q; restore(q);
+    if (a === 'again') { Q = null; }
+    else if (a === 'next') { Q.i++; if (Q.i >= NQ) Q.fin = true; else Q.q = newQ(); }
+    else if (a.indexOf('now:') === 0) {
+      q.a1 = a.slice(4); var ok1 = q.a1 === look(q.cat).now;
+      if (ok1 && hasStep2(q)) q.step = 2; else { q.step = 3; if (ok1) Q.ok++; }
+    } else if (a.indexOf('then:') === 0) {
+      q.a2 = a.slice(5); q.step = 3; if (good2(q)) Q.ok++;
+    }
+    window.PA_UI.render(); window.scrollTo(0, 0);
+  });
   function set(k, v) { if (k === 'stack') v = +v; if (k === 'who') { if (v === 'none') ST.mode = 'first'; else { ST.mode = 'vs'; ST.opener = v; } return; } ST[k] = v; }
   function fromSit(s) {
     if (!s) return;
@@ -216,5 +304,5 @@
     else if (s.type === 'def') { ST.mode = 'vs'; ST.pos = s.pos; ST.opener = s.opener; }
     if (s.bb) ST.stack = s.bb >= 40 ? (ST.stack >= 40 ? ST.stack : 40) : 25;
   }
-  window.PA_PLAN = { body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
+  window.PA_PLAN = { quiz: quizView, body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
 })();

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.1.3';
+  var VERSION = '2.2.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -300,6 +300,7 @@
       '<button class="tile" data-act="startSit" data-v="push"><b>Tapis ou fold</b><span>Moins de 20 BB, tout le monde s’est couché jusqu’à toi.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="callshove"><b>Payer un tapis</b><span>Un adversaire pousse : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="vs3bet"><b>Face au 3-bet</b><span>Tu as ouvert, on te relance.</span></button>' +
+      '<a class="tile" href="#planquiz"><b>Plan de jeu</b><span>Ouvrir, 3-bet ou payer… puis la suite si on te sur-relance : tapis, payer ou 3-bet fold ?</span></a>' +
       '<button class="tile" data-act="startSit" data-v="icm"><b>Bulle et ICM</b><span>Payer un tapis à la bulle ou en table finale : jetons contre euros.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="pko"><b>PKO et Space KO</b><span>La prime change la cote : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="outs"><b>Outs et cote</b><span>Compter ses outs à la turn et comparer à la cote.</span></button>' +
@@ -607,7 +608,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
