@@ -69,7 +69,7 @@
           if (open[h] !== 'raise') return;
           if (v3[h] === 'fourbet') {
             var e = eqVs(h, five);
-            out[h] = jam ? (e >= 0.5 ? 'v4' : 'b4') : (e >= need ? 'v4' : 'b4');
+            out[h] = jam ? 'v4' : (e >= need ? 'v4' : 'b4');
             info[h] = { eq: e, need: jam ? 0.5 : need, b4: b4, jam: jam, b3: b3, tb: tb };
           } else if (v3[h] === 'call') { out[h] = 'call'; info[h] = { b3: b3, tb: tb }; }
           else { out[h] = 'open'; info[h] = { b3: b3, tb: tb }; }
@@ -132,7 +132,7 @@
     if (first) {
       if (I.shove) return 'Ouvre à ' + bb(o) + '. Si un joueur te relance à tapis : ' + (cat === 'v4' ? 'paye' : 'couche-toi') + '. Ton équité contre sa range : ' + pct(I.eq) + ', il te faut ' + pct(I.need) + '.';
       if (cat === 'open') return 'Ouvre à ' + bb(o) + '. Si on te 3-bet, couche-toi : la main est trop faible pour continuer.';
-      if (I.jam) return 'Ouvre à ' + bb(o) + '. Si on te 3-bet, fais tapis. ' + (cat === 'v4' ? 'C’est pour la valeur : contre les mains qui paient, tu as ' + pct(I.eq) + '.' : 'C’est un bluff : il compte surtout sur ses abandons (contre les mains qui paient, tu n’as que ' + pct(I.eq) + ').');
+      if (I.jam) return 'Ouvre à ' + bb(o) + '. Si on te 3-bet, fais tapis : à ce tapis, un 4-bet engage tout. Contre les mains qui paient ton tapis, tu as ' + pct(I.eq) + (I.eq < 0.5 ? ', et beaucoup de 3-bets se coucheront.' : '.');
       return 'Ouvre à ' + bb(o) + '. Si on te 3-bet, 4-bet à environ ' + bb(I.b4) + '. ' + (cat === 'v4' ? 'S’il fait tapis, paye : tu as ' + pct(I.eq) + ' contre ses mains de tapis, il te faut ' + pct(I.need) + '.' : 'S’il fait tapis, couche-toi : tu n’as que ' + pct(I.eq) + ' contre ses mains de tapis, il te faut ' + pct(I.need) + '.' + (I.eq < 0.36 ? ' Ton 4-bet sert surtout à le faire coucher.' : ''));
     }
     if (I.shove) return 'Face à l’ouverture du ' + posFr(ST.opener) + ', fais tapis directement : à ce tapis, un 3-bet engage tout.';
@@ -206,7 +206,7 @@
       var c = NOW[look(g[0]).now][0];
       return '<div><b style="border-color:' + c + '">' + (g[2] && BAR[g[2]] ? '<i class="bar" style="background:' + BAR[g[2]] + '"></i> ' : '') + g[1] + '</b><span>' + compact(l) + '</span></div>';
     }).join('') + '<div><b style="border-color:#3a3a42">Tout le reste</b><span>Se coucher.</span></div></div>';
-    out += '<a class="btn block" href="#planquiz" data-act="closeSheet">S’entraîner sur le plan de jeu</a>';
+    out += '<div class="row"><a class="btn" style="flex:1" href="#planquiz" data-act="closeSheet">S’entraîner</a><a class="btn" style="flex:1" href="#plan-imprimable" data-act="closeSheet">Fiche à imprimer</a></div>';
     out += '<p class="muted small">Touche une main pour le détail chiffré. ' + (deep() ? 'La suite est calculée avec l’équité de chaque main contre la range adverse de sur-relance et la cote à payer.' : 'Entre 20 et 40 BB, un 3-bet est un tapis.') + '</p>';
     return out;
   }
@@ -297,6 +297,39 @@
     }
     window.PA_UI.render(); window.scrollTo(0, 0);
   });
+
+  /* ----- fiche imprimable : une page par position, à 40 BB par défaut ----- */
+  var SHEET = { stack: 40 };
+  var VS = { LJ: ['UTG'], HJ: ['UTG', 'LJ'], CO: ['UTG', 'HJ'], BTN: ['UTG', 'HJ', 'CO'], SB: ['UTG', 'CO', 'BTN'], BB: ['UTG', 'CO', 'BTN', 'SB'] };
+  var POSNAME = { UTG: 'UTG (premier à parler)', 'UTG+1': 'UTG+1', MP: 'Milieu (MP)', LJ: 'Lojack (LJ)', HJ: 'Hijack (HJ)', CO: 'Cut-off (CO)', BTN: 'Bouton (BTN)', SB: 'Petite blinde (SB)', BB: 'Grosse blinde (BB)' };
+  function miniGrid() {
+    var R = compute(), first = ST.mode === 'first';
+    var g = '<div class="fp-grid">' + H.map(function (h) { var L = look(R.map[h]), c = NOW[L.now], bar = (deep() || first) && BAR[L.sym] ? ';box-shadow:inset 0 -3px 0 ' + BAR[L.sym] : ''; return '<span' + (L.now === 'fold' ? ' class="f"' : '') + ' style="background:' + c[0] + bar + (L.now === 'fold' ? ';color:#999' : '') + '">' + h + '</span>'; }).join('') + '</div>';
+    var groups = first ? (deep() ? [['v4', 'Tapis si 3-bet', '▲'], ['b4', '4-bet puis couche', '4✕'], ['call', 'Paye le 3-bet', '='], ['open', 'Couche face au 3-bet', '✕']] : [['v4', 'Paye un tapis', '▲'], ['open', 'Couche face au tapis', '✕']])
+      : (deep() ? [['v4', '3-bet, tapis', '▲'], ['c4', '3-bet, paye le 4-bet', '='], ['b4', '3-bet fold', '✕'], ['call', 'Payer', '']] : [['v4', '3-bet tapis', ''], ['call', 'Payer', '']]);
+    var sum = groups.map(function (gr) { var l = H.filter(function (h) { return R.map[h] === gr[0]; }); return l.length ? '<div><b>' + gr[1] + ' :</b> ' + compact(l) + '</div>' : ''; }).join('');
+    return g + '<div class="fp-sum">' + sum + '</div>';
+  }
+  function sheetView() {
+    var ui = window.PA_UI, keep = { mode: ST.mode, pos: ST.pos, opener: ST.opener, stack: ST.stack };
+    ST.stack = SHEET.stack;
+    var prof = (window.PA.PROFILES[prof0()] || {}).short || '';
+    var out = '<div class="stack fp"><button class="back" data-act="nav" data-v="ranges">‹ Ranges</button><h1>Plan de jeu à imprimer</h1>' +
+      '<div class="small muted">Une page par position : quoi faire, et la suite si on te sur-relance. Profil ' + prof + '.</div>' +
+      '<div class="row plan-stack"><span class="small muted">Tapis</span>' + ['25', '40', '60', '100'].map(function (v) { return '<button class="btn' + (String(SHEET.stack) === v ? ' gold' : '') + '" data-fp="' + v + '">' + (v === '25' ? '20-40' : v) + ' BB</button>'; }).join('') + '</div>' +
+      '<button class="btn gold block" data-act="print">Imprimer ou enregistrer en PDF</button>' +
+      '<div class="fp-leg"><span><i style="background:#2f9e44"></i>Ouvrir</span><span><i style="background:#e03131"></i>3-bet</span><span><i style="background:#1c7ed6"></i>Payer</span><span><i style="background:#2a2a30"></i>Coucher</span><span><i class="bar" style="background:#ffd23f"></i>puis tapis</span><span><i class="bar" style="background:#fff;border:1px solid #999"></i>puis payer</span><span><i class="bar" style="background:#ff8a1f"></i>4-bet puis couche</span><span>pas de barre : puis coucher</span></div>';
+    POS.forEach(function (p) {
+      var blocks = [];
+      if (p !== 'BB') { ST.mode = 'first'; ST.pos = p; blocks.push(['Personne n’a ouvert', miniGrid()]); }
+      (VS[p] || []).forEach(function (o) { ST.mode = 'vs'; ST.pos = p; ST.opener = o; blocks.push(['Ouverture ' + o, miniGrid()]); });
+      out += '<section class="fp-page"><h2>' + POSNAME[p] + ' · ' + (SHEET.stack === 25 ? '20-40' : SHEET.stack) + ' BB</h2><div class="fp-blocks">' + blocks.map(function (b) { return '<div class="fp-block"><h3>' + b[0] + '</h3>' + b[1] + '</div>'; }).join('') + '</div></section>';
+    });
+    ST.mode = keep.mode; ST.pos = keep.pos; ST.opener = keep.opener; ST.stack = keep.stack;
+    return ui.shell('apprendre', out + '</div>');
+  }
+  function prof0() { return (PA.player() && PA.player().profile) || 'tag'; }
+  document.addEventListener('click', function (e) { var t = e.target.closest ? e.target.closest('[data-fp]') : null; if (!t) return; SHEET.stack = +t.getAttribute('data-fp'); window.PA_UI.render(); });
   function set(k, v) { if (k === 'stack') v = +v; if (k === 'who') { if (v === 'none') ST.mode = 'first'; else { ST.mode = 'vs'; ST.opener = v; } return; } ST[k] = v; }
   function fromSit(s) {
     if (!s) return;
@@ -304,5 +337,5 @@
     else if (s.type === 'def') { ST.mode = 'vs'; ST.pos = s.pos; ST.opener = s.opener; }
     if (s.bb) ST.stack = s.bb >= 40 ? (ST.stack >= 40 ? ST.stack : 40) : 25;
   }
-  window.PA_PLAN = { quiz: quizView, body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
+  window.PA_PLAN = { sheet: sheetView, quiz: quizView, body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
 })();

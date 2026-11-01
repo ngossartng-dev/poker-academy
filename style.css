@@ -188,3 +188,29 @@ label{font-weight:600}
 .pq-card.red{color:#d61f1f}
 .pq-res{font-weight:800;font-size:19px}
 .pq-res.ok{color:#4fe08f}.pq-res.ko{color:#ff7070}
+/* Fiche imprimable du plan de jeu */
+.fp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.fp-leg span{display:inline-flex;align-items:center;gap:5px}
+.fp-leg i{width:14px;height:14px;border-radius:3px;display:inline-block}
+.fp-leg i.bar{width:18px;height:5px}
+.fp-page h2{margin:18px 0 6px}
+.fp-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.fp-block h3{margin:0 0 4px;font-size:15px}
+.fp-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:1px}
+.fp-grid span{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:#fff;border-radius:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fp-sum{font-size:11.5px;line-height:1.35;margin-top:4px}
+@media print{
+  .fp h1{color:#000;font-size:22px}.fp .muted{color:#333}
+  .fp-page{page-break-after:always;break-after:page}
+  .fp-page h2{color:#000;font-size:18px;margin-top:0}
+  .fp-blocks{grid-template-columns:1fr 1fr;gap:10px}
+  .fp-block h3{color:#000}.fp-sum{color:#000;font-size:9.5px}
+  .fp-grid span{font-size:7px}
+  .fp-leg{color:#000}.fp-leg i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .plan-stack{display:none!important}
+}
+@media print{
+  html,body,.main,.app,#app{background:#fff!important}
+  .fp-grid span.f{background:#ececef!important;color:#9a9aa2!important}
+}
+@media print{:root{color-scheme:light}html{background:#fff!important}}

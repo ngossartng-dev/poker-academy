@@ -458,9 +458,9 @@
     return out;
   }
   function tabs() {
-    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['fuites', 'Fuites'], ['postflop', 'Après le flop'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
+    var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['progres', 'Progression'], ['fuites', 'Fuites'], ['postflop', 'Après le flop'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
     return '<div class="seg">' + T.map(function (t) { return '<button class="' + (AV.tab === t[0] ? 'on' : '') + '" data-hact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
-      (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
+      (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' || AV.tab === 'progres' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
         [['all', 'Winamax + club'], ['wina', 'Winamax'], ['club', 'Club']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
   }
   function resume(H, S, prof) {
@@ -498,6 +498,42 @@
       '<svg viewBox="0 0 ' + W + ' ' + (H + 4) + '" style="width:100%;height:auto"><line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#555" stroke-dasharray="4 4"/>' + line(1, '#ffd43b') + line(0, '#4fe08f') + '</svg>' +
       '<div class="small"><span style="color:#4fe08f">━ gains réels</span> · <span style="color:#ffd43b">━ gains corrigés</span> (tapis payés remplacés par ce qu’ils valaient en moyenne)</div>' +
       '<div class="small muted">' + S.evN + ' tapis payés avant la river avec les cartes adverses connues. ' + (S.evN ? (luck > 0 ? 'La chance t’a coûté environ ' + fmtBB(luck) + ' sur ces tapis.' : luck < 0 ? 'La chance t’a rapporté environ ' + fmtBB(-luck) + ' sur ces tapis.' : 'La chance s’est équilibrée sur ces tapis.') : '') + '</div></div>';
+  }
+
+  /* ---------- Progression mois par mois ---------- */
+  var MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  function progresTab(all, prof) {
+    var ui = U(), by = {};
+    all.forEach(function (x) { var m = (x.d || '').slice(0, 7); if (/^\d{4}-\d{2}$/.test(m)) (by[m] = by[m] || []).push(x); });
+    var months = Object.keys(by).sort().slice(-12);
+    if (!months.length) return ui.yo('Pas encore de mains datées.');
+    var rows = months.map(function (m) {
+      var H = by[m], S = stats(H, prof), cmp = 0, ok = 0, tours = {};
+      Object.keys(S.byPos).forEach(function (p) { cmp += S.byPos[p].cmp; ok += S.byPos[p].ok; });
+      H.forEach(function (x) { tours[x.ti || x.t] = 1; });
+      return { m: m, n: H.length, t: Object.keys(tours).length, bb100: S.net / H.length * 100, adj: (S.net + S.evAdj) / H.length * 100, vpip: S.v / H.length * 100, pfr: S.r / H.length * 100, conf: cmp ? ok / cmp * 100 : null, cmp: cmp, small: H.length < 200 };
+    });
+    function lab(m) { var p = m.split('-'); return ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'][+p[1] - 1] + ' ' + p[0].slice(2); }
+    function num(v, d) { return (v >= 0 && d ? '+' : '') + (Math.round(v * 10) / 10).toString().replace('.', ','); }
+    // courbe de la part de décisions conformes
+    var pts = rows.filter(function (r) { return r.conf !== null; }), W = 320, Hh = 120, svg = '';
+    if (pts.length >= 2) {
+      var x = function (i) { return 44 + i * (W - 84) / (pts.length - 1); }, y = function (v) { return Hh - 20 - (v - 50) / 50 * (Hh - 34); };
+      svg = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;max-width:520px" role="img" aria-label="Part de décisions conformes à ta range, mois par mois">' +
+        [50, 75, 100].map(function (g) { return '<line x1="30" x2="' + (W - 10) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#2e2e35"/><text x="2" y="' + (y(g) + 4) + '" fill="#a9a9b3" font-size="10">' + g + ' %</text>'; }).join('') +
+        '<polyline fill="none" stroke="#ffd23f" stroke-width="2.5" points="' + pts.map(function (r, i) { return x(i) + ',' + y(Math.max(50, r.conf)); }).join(' ') + '"/>' +
+        pts.map(function (r, i) { return '<circle cx="' + x(i) + '" cy="' + y(Math.max(50, r.conf)) + '" r="3.5" fill="' + (r.small ? '#77777f' : '#ffd23f') + '"/><text x="' + x(i) + '" y="' + (Hh - 4) + '" fill="#a9a9b3" font-size="9" text-anchor="middle">' + lab(r.m) + '</text>'; }).join('') + '</svg>';
+    }
+    var last = rows[rows.length - 1], prev = rows.length > 1 ? rows[rows.length - 2] : null, msg;
+    if (prev && last.conf !== null && prev.conf !== null) {
+      var d = last.conf - prev.conf;
+      msg = 'En ' + MOIS[+last.m.split('-')[1] - 1] + ', ' + Math.round(last.conf) + ' % de tes décisions avant le flop sont conformes à ta range (' + (d >= 0 ? '+' : '') + Math.round(d) + ' point' + (Math.abs(Math.round(d)) > 1 ? 's' : '') + ' par rapport au mois d’avant). ' + (d >= 3 ? 'Tu progresses.' : d <= -3 ? 'Regarde l’onglet Fuites : quelque chose a glissé.' : 'C’est stable.');
+    } else msg = 'Ta progression apparaîtra ici mois après mois, dès que tu auras des mains sur au moins deux mois.';
+    if (last.small) msg += ' Attention : moins de 200 mains ce mois-ci, les chiffres bougent beaucoup.';
+    return ui.yo(msg) + (svg ? '<div class="card stack"><b>Décisions conformes à ta range</b>' + svg + '<div class="small muted">Points gris : moins de 200 mains dans le mois.</div></div>' : '') +
+      '<div class="card stack"><b>Mois par mois</b><div style="overflow-x:auto"><table class="tbl" style="font-size:15px"><tr><th>Mois</th><th>Mains</th><th>BB/100</th><th>Corrigé</th><th>Conf.</th></tr>' +
+      rows.slice().reverse().map(function (r) { return '<tr' + (r.small ? ' style="opacity:.6"' : '') + '><td style="white-space:nowrap">' + lab(r.m) + '<div class="small muted">' + r.t + ' tournoi' + (r.t > 1 ? 's' : '') + ' · ' + Math.round(r.vpip) + '/' + Math.round(r.pfr) + '</div></td><td>' + r.n + '</td><td style="color:' + (r.bb100 >= 0 ? '#4fe08f' : '#ff8080') + '">' + num(r.bb100, 1) + '</td><td>' + num(r.adj, 1) + '</td><td>' + (r.conf === null ? '–' : Math.round(r.conf) + ' %') + '</td></tr>'; }).join('') +
+      '</table></div><div class="small muted">Sous chaque mois : nombre de tournois et VPIP/PFR. BB/100 : résultat en BB pour 100 mains. « Corrigé » : le même résultat en remplaçant tes tapis par leur espérance (ce que tu aurais gagné en moyenne). « Conf. » : décisions avant le flop conformes à ta range.</div></div>';
   }
   function positionsTab(S) {
     var order = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
@@ -611,6 +647,7 @@
     body += '<div class="muted small">' + (db.hands.length - nc) + ' mains Winamax' + (db.hero ? ' (<b>' + ui.esc(db.hero) + '</b>)' : '') + ' · ' + nc + ' mains du club</div>' + tabs();
     if (AV.tab === 'resume') body += resume(H, S, prof);
     else if (AV.tab === 'positions') body += positionsTab(S);
+    else if (AV.tab === 'progres') body += progresTab(db.hands, prof);
     else if (AV.tab === 'fuites') { AV.S = S; body += fuitesTab(S); }
     else if (AV.tab === 'coups') body += coupsTab(H);
     else if (AV.tab === 'postflop') body += postflopTab(H);

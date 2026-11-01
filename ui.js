@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.2.1';
+  var VERSION = '2.2.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -256,7 +256,7 @@
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button>' +
       '<div class="seg">' + Object.keys(PA.PROFILES).map(function (k) { return '<button class="' + (RS.profile === k ? 'on' : '') + '" data-act="rsProf" data-v="' + k + '">' + PA.PROFILES[k].short + '</button>'; }).join('') + '</div>' +
       '<div class="stack" id="rangeFull">' + rangeBody(true) + '</div>' +
-      (EMBED ? '' : '<button class="btn" data-act="print">Imprimer cette range</button>') + '</div>';
+      (EMBED ? '' : '<div class="row"><button class="btn" data-act="print">Imprimer cette range</button><a class="btn gold" href="#plan-imprimable">Plan de jeu à imprimer</a></div>') + '</div>';
     return shell('apprendre', body);
   }
   function coursView() {
@@ -608,7 +608,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
