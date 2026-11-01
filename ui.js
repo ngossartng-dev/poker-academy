@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.2.2';
+  var VERSION = '2.2.3';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -175,7 +175,7 @@
     var prof = RS.profile, pr = PA.PROFILES[prof];
     var out = '<div class="row" style="justify-content:space-between"><h2>Ma range</h2><span class="chip">' + pr.short + '</span></div>';
     out += '<div class="seg"><button class="' + (RS.tab === 'sit' ? 'on' : '') + '" data-act="rsTab" data-v="sit">Ma situation</button><button class="' + (RS.tab === 'plan' ? 'on' : '') + '" data-act="rsTab" data-v="plan">Plan de jeu</button><button class="' + (RS.tab === 'glob' ? 'on' : '') + '" data-act="rsTab" data-v="glob">Vue globale</button></div>';
-    if (RS.tab === 'plan' && window.PA_PLAN) return out + window.PA_PLAN.body(RS.hero);
+    if (RS.tab === 'plan' && window.PA_PLAN) return out + window.PA_PLAN.body(RS.hero, RS.profile);
     if (RS.tab === 'glob') {
       var f = PA.firstOpenPos(prof), map = {};
       PA.HANDS.forEach(function (h) { var i = f[h]; map[h] = i < 0 ? { bg: '#2a2a30', fg: '#77777f' } : { bg: GLOBAL_COLORS[i][0], fg: GLOBAL_COLORS[i][1] }; });

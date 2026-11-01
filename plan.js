@@ -7,7 +7,7 @@
   H.forEach(function (h, i) { IDX[h] = i; });
   var POS = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
   var EARLY = { 'UTG': 1, 'UTG+1': 1, 'MP': 1 };
-  var ST = { mode: 'first', pos: 'BTN', opener: 'CO', stack: 40 };
+  var ST = { mode: 'first', pos: 'BTN', opener: 'CO', stack: 40, prof: null };
   var DEAD = 2.5; // petite blinde + grosse blinde + ante de grosse blinde
 
   var C = {
@@ -28,7 +28,7 @@
   function list(map, act) { return H.filter(function (h) { return map[h] === act; }); }
   function pct(x) { return Math.round(x * 100) + ' %'; }
   function bb(x) { return (Math.round(x * 10) / 10).toString().replace('.', ',') + ' BB'; }
-  function prof() { return (PA.player() && PA.player().profile) || 'tag'; }
+  function prof() { return ST.prof || (PA.player() && PA.player().profile) || 'tag'; }
   function depthBB() { return ST.stack >= 40 ? 100 : 30; } // ranges « 40 BB et + » ou « 20-40 BB »
   function deep() { return ST.stack >= 40; }
 
@@ -177,7 +177,8 @@
     return out.join(', ');
   }
   function runs(idx) { var out = [], cur = []; idx.forEach(function (x) { if (cur.length && x !== cur[cur.length - 1] + 1) { out.push(cur); cur = []; } cur.push(x); }); if (cur.length) out.push(cur); return out; }
-  function body(hero) {
+  function body(hero, profId) {
+    ST.prof = profId || null;
     var out = '';
     var heroes = POS.slice(0);
     if (heroes.indexOf(ST.pos) < 0) ST.pos = 'BTN';
@@ -257,6 +258,7 @@
   function firstJam(q) { var tb = (q.pos === 'BTN' || q.pos === 'SB') ? 'BB' : 'BTN'; return fourSize(threeSize(tb === 'BB')) >= ST.stack; }
   function good2(q) { return q.a2 === q.cat || (q.mode === 'first' && deep() && firstJam(q) && q.cat === 'b4' && q.a2 === 'v4'); }
   function quizView() {
+    ST.prof = null;
     var ui = window.PA_UI;
     if (!Q || Q.i >= NQ && !Q.fin) Q = { i: 0, ok: 0, q: newQ(), fin: false };
     var q = Q.q; restore(q);
@@ -311,6 +313,7 @@
     return g + '<div class="fp-sum">' + sum + '</div>';
   }
   function sheetView() {
+    ST.prof = null;
     var ui = window.PA_UI, keep = { mode: ST.mode, pos: ST.pos, opener: ST.opener, stack: ST.stack };
     ST.stack = SHEET.stack;
     var prof = (window.PA.PROFILES[prof0()] || {}).short || '';
