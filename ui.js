@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.2.3';
+  var VERSION = '2.2.4';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -94,6 +94,7 @@
     var last = p.last ? '<a href="#' + p.last.route + '" class="card row" style="text-decoration:none;color:#fff"><div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center">' + IC.play + '</div><div class="stack" style="gap:6px;flex:1;min-width:0"><span class="muted small">Reprendre</span><b>' + esc(p.last.label) + '</b></div></a>' : '';
     var body = '<div class="stack">' +
       '<div class="row" style="justify-content:space-between"><div class="row">' + logo() + '<div><div class="disp" style="font-size:26px">Poker Academy</div><div class="muted">' + greet() + ', ' + esc(p.pseudo) + '</div></div></div><span class="chip">' + pr.short + '</span></div>' +
+      (window.PA_SEASON && window.PA_SEASON.current() !== 'classique' ? '<div><a class="season-tag" href="#reglages">Décor ' + window.PA_SEASON.NAMES[window.PA_SEASON.current()] + '</a></div>' : '') +
       yo(msg) + last +
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions · environ 10 min</div></div>' + IC.arrow + '</button>' +
       '<div class="grid2">' +
@@ -574,13 +575,14 @@
   }
   function reglagesView() {
     var p = PA.player(), s = p.settings;
-    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Réglages</h1>' +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
       '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique'], ['noir', 'Noir et or'], ['sombre', 'Sombre et rouge']]) +
+      '<b>Décor de saison</b>' + seg('season', [['auto', 'Selon la date'], ['classique', 'Toujours classique'], ['halloween', 'Halloween'], ['noel', 'Noël'], ['hiver', 'Hiver']]) + '<div class="small muted">« Selon la date » : Halloween fin octobre, Noël en décembre, Hiver en janvier et février, classique le reste de l’année.</div>' +
       '<b>Taille d’ouverture</b>' + seg('openSize', [['club', '2 BB (habitude du club)'], ['std', '2,2 à 2,5 BB']]) + '<div class="small muted">Utilisée dans les exercices et proposée en premier à la table. Depuis la SB : 3 BB.</div></div>' +
       '<a class="card stack" href="#sauvegarde" style="text-decoration:none;color:inherit"><b>Sauvegarde, synchronisation et mises à jour ›</b><span class="small muted">Sauvegarde automatique (Google Drive sur PC), passage PC ↔ téléphone, nouvelle version, journal des erreurs.</span></a>' +
       '<div class="card stack"><b>Clavier (PC)</b><div class="small">Touches <b>1 à 9</b> pour choisir une réponse, <b>Entrée</b> pour passer à la suite. À la table : <b>F</b> se coucher, <b>C</b> parole ou payer, <b>R</b> relancer, <b>A</b> tapis. Dans les cartes : flèches gauche et droite.</div></div>' +
@@ -676,7 +678,7 @@
       case 'again': { var d = ui.drill; startDrill(d.mode, d.opts, d.label); render(); break; }
       case 'adopt': p.profile = v; PA.save(); go('home'); render(); break;
       case 'setProf': p.profile = v; PA.save(); render(); break;
-      case 'set': { var k2 = t.getAttribute('data-k'); p.settings[k2] = JSON.parse(v); PA.save(); render(); break; }
+      case 'set': { var k2 = t.getAttribute('data-k'); p.settings[k2] = JSON.parse(v); PA.save(); if (window.PA_SEASON) window.PA_SEASON.apply(); render(); break; }
       case 'resetTrain': PA.wipeTraining(p); render(); break;
       case 'wipe': if (!ui.wipeArm) { ui.wipeArm = true; render(); } else { ui.wipeArm = false; PA.wipeAll(); if (window.PA_STORE) window.PA_STORE.clearAll(); ui.welcomed = false; ui.onb = { step: 1 }; try { sessionStorage.removeItem('pa2w'); } catch (x) {} go('home'); render(); } break;
     }
