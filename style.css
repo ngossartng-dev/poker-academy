@@ -161,3 +161,9 @@ label{font-weight:600}
 @media(min-width:700px){.board2 .slot,.pcm{width:46px;height:64px}.pcm .r{font-size:22px}.pcm .s{font-size:19px}.mine2 .pcm{width:56px;height:78px}.mine2 .pcm .r{font-size:27px}.mine2 .pcm .s{font-size:23px}.seat2 .nm2{max-width:110px;font-size:13px}.seat2 .av{width:30px;height:30px}.seat2 .pcs{width:22px;height:31px;font-size:11px}}
 @media(max-width:699px){.felt2{aspect-ratio:.82;border-radius:46%/40%}.felt2 .rail{border-radius:46%/40%}}
 .seat2 .ps.btn-d{background:#fff;color:#000;border-color:var(--gold)}
+
+/* Plan de jeu (Ma range) */
+.plan-leg{display:flex;flex-direction:column;gap:6px;font-size:15px}
+.plan-leg span{display:flex;align-items:center;gap:8px}
+.plan-leg i{width:18px;height:18px;border-radius:4px;flex:none;display:inline-block}
+.plan-leg b{margin-left:auto;color:var(--muted);font-weight:600;white-space:nowrap;padding-left:8px}

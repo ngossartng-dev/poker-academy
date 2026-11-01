@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.1.1';
+  var VERSION = '2.1.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -174,7 +174,8 @@
   function rangeBody(full) {
     var prof = RS.profile, pr = PA.PROFILES[prof];
     var out = '<div class="row" style="justify-content:space-between"><h2>Ma range</h2><span class="chip">' + pr.short + '</span></div>';
-    out += '<div class="seg"><button class="' + (RS.tab === 'sit' ? 'on' : '') + '" data-act="rsTab" data-v="sit">Ma situation</button><button class="' + (RS.tab === 'glob' ? 'on' : '') + '" data-act="rsTab" data-v="glob">Vue globale</button></div>';
+    out += '<div class="seg"><button class="' + (RS.tab === 'sit' ? 'on' : '') + '" data-act="rsTab" data-v="sit">Ma situation</button><button class="' + (RS.tab === 'plan' ? 'on' : '') + '" data-act="rsTab" data-v="plan">Plan de jeu</button><button class="' + (RS.tab === 'glob' ? 'on' : '') + '" data-act="rsTab" data-v="glob">Vue globale</button></div>';
+    if (RS.tab === 'plan' && window.PA_PLAN) return out + window.PA_PLAN.body(RS.hero);
     if (RS.tab === 'glob') {
       var f = PA.firstOpenPos(prof), map = {};
       PA.HANDS.forEach(function (h) { var i = f[h]; map[h] = i < 0 ? { bg: '#2a2a30', fg: '#77777f' } : { bg: GLOBAL_COLORS[i][0], fg: GLOBAL_COLORS[i][1] }; });
@@ -645,7 +646,13 @@
         if (ui.drill && location.hash === '#drill' && ui.drill.i < ui.drill.qs.length) { ui.drill.consult++; var q = ui.drill.qs[ui.drill.i]; openRange({ sit: q.sit, hand: ui.drill.fb ? q.hand : null }); } else openRange(); break;
       case 'rangeCtx': { var q2 = ui.drill.qs[ui.drill.i]; openRange({ sit: q2.sit, hand: q2.hand }); break; }
       case 'closeSheet': ui.sheet = null; renderSheet(); break;
-      case 'rsTab': RS.tab = v; rerenderRange(); break;
+      case 'rsTab': if (v === 'plan' && RS.tab === 'sit' && window.PA_PLAN) window.PA_PLAN.fromSit(rsSit()); RS.tab = v; rerenderRange(); break;
+      case 'plan': window.PA_PLAN.set(t.getAttribute('data-k'), v); rerenderRange(); break;
+      case 'planCell': {
+        var L = window.PA_PLAN.label(v), dz = document.createElement('div'); dz.className = 'zoom';
+        dz.innerHTML = '<div style="max-width:420px;margin:0 16px"><span class="disp" style="display:block;font-size:64px;line-height:1">' + (v === 'TT' ? '10-10' : v.replace(/T/g, '10')) + '</span><span class="pill" style="display:inline-block;margin:14px 0;font-size:17px;background:' + L.color[0] + ';color:' + L.color[1] + '">' + L.text + '</span><p style="font-size:18px;line-height:1.5;text-align:left;margin:0">' + window.PA_PLAN.detail(v) + '</p><button class="btn" style="margin-top:16px">Fermer</button></div>';
+        dz.addEventListener('click', function () { dz.remove(); }); document.body.appendChild(dz); break;
+      }
       case 'rsType': RS.type = v; if (v === 'callshove' && PA.PUSH_DEPTHS.indexOf(RS.bb) < 0) RS.bb = 10; rerenderRange(); break;
       case 'rsDepth': RS.depth = v; rerenderRange(); break;
       case 'rsBB': RS.bb = parseInt(v, 10); rerenderRange(); break;
