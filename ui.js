@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.3.2';
+  var VERSION = '2.3.3';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -258,6 +258,7 @@
     var p = PA.player(); if (!RS.profile) RS.profile = p.profile || 'tag';
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button>' +
       '<div class="seg">' + Object.keys(PA.PROFILES).map(function (k) { return '<button class="' + (RS.profile === k ? 'on' : '') + '" data-act="rsProf" data-v="' + k + '">' + PA.PROFILES[k].short + '</button>'; }).join('') + '</div>' +
+      (ui.persoMsg && RS.profile === 'perso' ? yo('Ton profil Perso est prêt. Il est maintenant ton profil actif : Ma range, le plan de jeu, les exercices et le tracker l’utilisent. Tu peux encore modifier chaque case.') + '<div class="card stack"><b>Ce que j’ai construit</b>' + window.PA_PERSO.summary(ui.persoMsg) + '</div>' : '') +
       '<div class="stack" id="rangeFull">' + rangeBody(true) + '</div>' +
       (EMBED ? '' : '<div class="row"><button class="btn" data-act="print">Imprimer cette range</button><a class="btn gold" href="#plan-imprimable">Plan de jeu à imprimer</a></div>') + '</div>';
     return shell('apprendre', body);
@@ -550,6 +551,10 @@
     var out = '<div class="stack"><h1>Ton profil</h1>' + yo('Ton style : <b>' + pr.name + (pr.short !== pr.name ? ' (' + pr.short + ')' : '') + '</b>' + (tend.length ? ', ' + tend.join(', ') : '') + '. ' + (errors.length ? errors.length + ' erreur' + (errors.length > 1 ? 's' : '') + ' à corriger : aucun profil ne joue ces mains comme toi. Elles reviendront dans ta séance du jour.' : 'Aucune erreur hors style : bravo.')) +
       '<div class="card stack"><b>Accord avec chaque profil</b><table class="tbl">' + PA.BASE_PROFILES.map(function (id) { return '<tr><td>' + PA.PROFILES[id].name + '</td><td>' + agree[id] + ' / ' + d.answers.length + '</td></tr>'; }).join('') + '</table></div>';
     if (errors.length) out += '<div class="card stack"><b>Erreurs à corriger</b>' + errors.map(function (e) { return '<div>' + handText(e.a.q.cards) + ' — ' + describeSit(e.a.q.sit) + ' : tu as choisi « ' + (e.a.given ? actName(e.a.given, e.a.q.sit) : 'rien') + ' », ton profil joue « ' + actName(e.right, e.a.q.sit) + ' ».</div>'; }).join('') + '</div>';
+    if (window.PA_PERSO) {
+      var nA = d.answers.length;
+      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : ' + pr.name + '. Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, je prends le profil voisin. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
+    }
     out += '<div class="row"><button class="btn gold" data-act="adopt" data-v="' + best + '" style="flex:1">Adopter le profil ' + pr.short + '</button><button class="btn" data-act="nav" data-v="home">Garder mon profil (' + PA.PROFILES[p.profile || 'tag'].short + ')</button></div></div>';
     return out;
   }
@@ -682,6 +687,11 @@
       case 'quitDrill': clearInterval(timerH); ui.drill = null; go('entrainer'); break;
       case 'again': { var d = ui.drill; startDrill(d.mode, d.opts, d.label); render(); break; }
       case 'adopt': p.profile = v; PA.save(); go('home'); render(); break;
+      case 'mkPerso': {
+        var r = window.PA_PERSO.build(ui.drill.answers, v);
+        p.perso = r.perso; p.profile = 'perso'; p.persoFrom = { at: Date.now(), n: ui.drill.answers.length, base: r.base, groups: r.groups, hands: r.hands }; PA.save();
+        RS.profile = 'perso'; RS.tab = 'glob'; ui.persoMsg = r; go('ranges'); render(); break;
+      }
       case 'setProf': p.profile = v; PA.save(); render(); break;
       case 'set': { var k2 = t.getAttribute('data-k'); p.settings[k2] = JSON.parse(v); PA.save(); if (window.PA_SEASON) window.PA_SEASON.apply(); render(); break; }
       case 'resetTrain': PA.wipeTraining(p); render(); break;
