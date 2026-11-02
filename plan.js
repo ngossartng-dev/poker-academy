@@ -333,6 +333,42 @@
   }
   function prof0() { return (PA.player() && PA.player().profile) || 'tag'; }
   document.addEventListener('click', function (e) { var t = e.target.closest ? e.target.closest('[data-fp]') : null; if (!t) return; SHEET.stack = +t.getAttribute('data-fp'); window.PA_UI.render(); });
+
+  /* ----- résumé d'une main dans toutes les positions (Vue globale) ----- */
+  var SHORT = {
+    first: { v4: 'ouvrir, puis tapis si on te 3-bet', b4: 'ouvrir, 4-bet puis couche-toi s’il fait tapis', call: 'ouvrir, puis payer un 3-bet', open: 'ouvrir, puis te coucher face à un 3-bet' },
+    firstShort: { v4: 'ouvrir, puis payer un tapis', open: 'ouvrir, puis te coucher face à un tapis' },
+    vs: { v4: '3-bet, puis tapis s’il 4-bet', c4: '3-bet, puis payer son 4-bet', b4: '3-bet, puis te coucher s’il 4-bet (3-bet fold)', call: 'payer' },
+    vsShort: { v4: '3-bet tapis', call: 'payer' }
+  };
+  // regroupe les positions qui se suivent avec la même décision
+  function runsOf(list) { var out = []; list.forEach(function (x) { var g = out[out.length - 1]; if (g && g.c === x[1] && POS.indexOf(x[0]) === POS.indexOf(g.b) + 1) g.b = x[0]; else out.push({ a: x[0], b: x[0], c: x[1] }); }); return out; }
+  function handSummary(h, profId, stack) {
+    var keep = { mode: ST.mode, pos: ST.pos, opener: ST.opener, stack: ST.stack, prof: ST.prof };
+    ST.prof = profId || null; ST.stack = stack || ST.stack || 40;
+    var first = [], vs = [];
+    POS.slice(0, 8).forEach(function (p) { ST.mode = 'first'; ST.pos = p; var c = compute().map[h]; if (c !== 'fold') first.push([p, c]); });
+    POS.slice(1).forEach(function (p) {
+      var ops = POS.slice(0, POS.indexOf(p)); if (p !== 'BB') ops = ops.filter(function (x) { return x !== 'SB'; });
+      ops.forEach(function (o) { ST.mode = 'vs'; ST.pos = p; ST.opener = o; var c = compute().map[h]; if (c !== 'fold') vs.push([p, o, c]); });
+    });
+    var d = deep(), dot = function (cat, m) { var L = (ST.mode = m, look(cat)); return '<i style="background:' + NOW[L.now][0] + (BAR[L.sym] && (d || m === 'first') ? ';box-shadow:inset 0 -4px 0 ' + BAR[L.sym] : '') + '"></i>'; };
+    var out = '<div class="hs"><div class="hs-h">Personne n’a ouvert</div>' + (first.length ? runsOf(first).map(function (g) { return '<div>' + dot(g.c, 'first') + '<b>' + (g.a === g.b ? g.a : 'de ' + g.a + ' à ' + g.b) + '</b> : ' + (d ? SHORT.first : SHORT.firstShort)[g.c] + '</div>'; }).join('') : '<div class="muted">Jamais ouverte : couche-la.</div>');
+    // regroupe par décision, avec les positions concernées
+    var groups = {}, order = [];
+    var byK = {};
+    vs.forEach(function (x) { var k = x[2]; if (!byK[k]) { byK[k] = {}; order.push(k); } (byK[k][x[0]] = byK[k][x[0]] || []).push(x[1]); });
+    order.forEach(function (k) {
+      groups[k] = POS.slice(1).filter(function (p) { return byK[k][p]; }).map(function (p) {
+        var all = POS.slice(0, POS.indexOf(p)); if (p !== 'BB') all = all.filter(function (x) { return x !== 'SB'; });
+        var l = byK[k][p];
+        return '<b>' + p + '</b> ' + (l.length === all.length ? (all.length > 1 ? '(toutes les ouvertures)' : '(face à ' + l[0] + ')') : '(face à ' + l.join(', ') + ')');
+      });
+    });
+    out += '<div class="hs-h">Quelqu’un a ouvert</div>' + (order.length ? ['v4', 'c4', 'b4', 'call'].filter(function (k) { return groups[k]; }).map(function (k) { return '<div>' + dot(k, 'vs') + (d ? SHORT.vs : SHORT.vsShort)[k] + ' : ' + groups[k].join(' · ') + '</div>'; }).join('') + '<div class="muted small">Dans les autres cas : se coucher.</div>' : '<div class="muted">Se coucher face à toute ouverture.</div>') + '</div>';
+    ST.mode = keep.mode; ST.pos = keep.pos; ST.opener = keep.opener; ST.stack = keep.stack; ST.prof = keep.prof;
+    return out;
+  }
   function set(k, v) { if (k === 'stack') v = +v; if (k === 'who') { if (v === 'none') ST.mode = 'first'; else { ST.mode = 'vs'; ST.opener = v; } return; } ST[k] = v; }
   function fromSit(s) {
     if (!s) return;
@@ -340,5 +376,5 @@
     else if (s.type === 'def') { ST.mode = 'vs'; ST.pos = s.pos; ST.opener = s.opener; }
     if (s.bb) ST.stack = s.bb >= 40 ? (ST.stack >= 40 ? ST.stack : 40) : 25;
   }
-  window.PA_PLAN = { sheet: sheetView, quiz: quizView, body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
+  window.PA_PLAN = { handSummary: handSummary, sheet: sheetView, quiz: quizView, body: body, set: set, detail: detail, label: function (h) { var R = compute(), L = look(R.map[h]); return { cat: R.map[h], text: label(R.map[h]), color: [NOW[L.now][0], L.now === 'fold' ? '#ccc' : '#fff'] }; }, fromSit: fromSit, state: ST };
 })();

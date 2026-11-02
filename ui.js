@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.3.0';
+  var VERSION = '2.3.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -182,7 +182,8 @@
       PA.HANDS.forEach(function (h) { var i = f[h]; map[h] = i < 0 ? { bg: '#2a2a30', fg: '#77777f' } : { bg: GLOBAL_COLORS[i][0], fg: GLOBAL_COLORS[i][1] }; });
       out += '<p class="muted">À partir de quelle position j’ouvre chaque main (40 BB et plus). Plus c’est foncé, plus la main s’ouvre tôt.</p>';
       out += '<div class="legend">' + PA.POS.slice(0, 8).map(function (p, i) { return '<span><i style="background:' + GLOBAL_COLORS[i][0] + '"></i>' + p + '</span>'; }).join('') + '<span><i style="background:#2a2a30"></i>Jamais</span></div>';
-      out += rangeGrid(map, 'open', RS.hero, false);
+      if (window.PA_PLAN) out += '<div class="small muted">' + (window.matchMedia && window.matchMedia('(hover: hover)').matches ? 'Survole' : 'Touche') + ' une main pour voir son plan dans toutes les positions : ouvrir, 3-bet, et la suite si on te sur-relance.</div><div class="row plan-stack"><span class="small muted">Tapis</span>' + [[25, '20-40'], [40, '40'], [60, '60'], [100, '100 BB']].map(function (o) { return '<button class="btn' + (window.PA_PLAN.state.stack === o[0] ? ' gold' : '') + '" data-act="plan" data-k="stack" data-v="' + o[0] + '" style="min-height:40px;padding:4px 12px">' + o[1] + '</button>'; }).join('') + '</div>';
+      out += '<div class="glob-wrap">' + rangeGrid(map, 'open', RS.hero, false) + '</div>';
       return out;
     }
     var s = rsSit(), cm = PA.chart(prof, s);
@@ -689,6 +690,11 @@
   });
   function rerenderRange() { if (ui.sheet === 'range') renderSheet(); else { var el = $('#rangeFull'); if (el) el.innerHTML = rangeBody(true); } }
   function zoomCell(h) {
+    if (RS.tab === 'glob' && window.PA_PLAN) {
+      var dz = document.createElement('div'); dz.className = 'zoom';
+      dz.innerHTML = '<div style="max-width:520px;margin:0 12px;text-align:left;max-height:86vh;overflow:auto"><span class="disp" style="display:block;font-size:48px;line-height:1;text-align:center">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</span><div class="small muted" style="text-align:center;margin:6px 0 10px">Profil ' + PA.PROFILES[RS.profile].short + ' · tapis ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</div>' + window.PA_PLAN.handSummary(h, RS.profile) + '<div style="text-align:center"><button class="btn" style="margin-top:14px">Fermer</button></div></div>';
+      dz.addEventListener('click', function () { dz.remove(); }); document.body.appendChild(dz); return;
+    }
     var s = rsSit(), a = RS.tab === 'glob' ? null : PA.chart(RS.profile, s)[h];
     var div = document.createElement('div'); div.className = 'zoom';
     div.innerHTML = '<div><div class="disp" style="font-size:64px">' + h + '</div>' + (a ? '<div style="margin:12px 0"><span class="pill" style="font-size:22px;background:' + CSSVAR[actColor(a, s.type)] + '">' + actName(a, s) + '</span></div>' : '') + '<div class="muted">Bat une main au hasard ' + Math.round(PA.D.eq[h] * 100) + ' % du temps</div><button class="btn" style="margin-top:16px">Fermer</button></div>';
@@ -712,6 +718,24 @@
     e.target.value = out;
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; renderSheet(); } });
+  (function () {
+    var tip = null, cur = null;
+    function hide() { if (tip) { tip.remove(); tip = null; } cur = null; }
+    document.addEventListener('mouseover', function (e) {
+      if (!window.matchMedia || !window.matchMedia('(hover: hover)').matches || RS.tab !== 'glob' || !window.PA_PLAN) return;
+      var b = e.target.closest ? e.target.closest('.glob-wrap .rg button') : null;
+      if (!b) { hide(); return; }
+      var h = b.getAttribute('data-v'); if (h === cur) return; hide(); cur = h;
+      tip = document.createElement('div'); tip.className = 'hs-tip';
+      tip.innerHTML = '<b class="disp" style="font-size:22px">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</b> <span class="small muted">' + PA.PROFILES[RS.profile].short + ' · ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</span>' + window.PA_PLAN.handSummary(h, RS.profile);
+      document.body.appendChild(tip);
+      var r = b.getBoundingClientRect(), w = tip.offsetWidth, hh = tip.offsetHeight;
+      var x = r.right + 10; if (x + w > window.innerWidth - 8) x = Math.max(8, r.left - w - 10);
+      var y = Math.min(Math.max(8, r.top - 20), window.innerHeight - hh - 8);
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    });
+    document.addEventListener('scroll', hide, true);
+  })();
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
   window.PA_UI = { version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, IC: IC };
   render();

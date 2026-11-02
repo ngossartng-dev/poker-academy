@@ -237,3 +237,10 @@ html[data-season=halloween] .season-tag{border-color:#ff8a1f;color:#ffb057}
 html[data-season=noel] .season-tag{border-color:#e03131;color:#ff9b9b}
 html[data-season=hiver] .season-tag{border-color:#9cc6ff;color:#cfe3ff}
 @media print{html[data-season] body::before{display:none}html[data-season] body{background:#fff!important}}
+/* Vue globale : plan d'une main */
+.hs{display:flex;flex-direction:column;gap:6px;font-size:15px;line-height:1.4}
+.hs-h{font-weight:800;color:var(--gold);margin-top:6px}
+.hs>div{display:block}
+.hs i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.hs-tip{position:fixed;z-index:70;max-width:380px;background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.6);pointer-events:none}
+.hs-tip .hs{font-size:13.5px}
