@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.3.1';
+  var VERSION = '2.3.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -689,10 +689,12 @@
     }
   });
   function rerenderRange() { if (ui.sheet === 'range') renderSheet(); else { var el = $('#rangeFull'); if (el) el.innerHTML = rangeBody(true); } }
+  function globColors() { var c = {}; PA.POS.slice(0, 8).forEach(function (p, i) { c[p] = GLOBAL_COLORS[i]; }); c.BB = ['#3a3a42', '#fff']; return c; }
+  function globHead(h) { var i = PA.firstOpenPos(RS.profile)[h], col = i < 0 ? ['#2a2a30', '#aaa'] : GLOBAL_COLORS[i]; return '<span class="pchip big" style="background:' + col[0] + ';color:' + col[1] + '">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</span> <span class="small muted">' + (i < 0 ? 'jamais ouverte' : 'ouverte à partir de ' + PA.POS[i]) + '</span>'; }
   function zoomCell(h) {
     if (RS.tab === 'glob' && window.PA_PLAN) {
       var dz = document.createElement('div'); dz.className = 'zoom';
-      dz.innerHTML = '<div style="max-width:520px;margin:0 12px;text-align:left;max-height:86vh;overflow:auto"><span class="disp" style="display:block;font-size:48px;line-height:1;text-align:center">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</span><div class="small muted" style="text-align:center;margin:6px 0 10px">Profil ' + PA.PROFILES[RS.profile].short + ' · tapis ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</div>' + window.PA_PLAN.handSummary(h, RS.profile) + '<div style="text-align:center"><button class="btn" style="margin-top:14px">Fermer</button></div></div>';
+      dz.innerHTML = '<div style="max-width:520px;margin:0 12px;text-align:left;max-height:86vh;overflow:auto"><div style="text-align:center">' + globHead(h) + '</div><div class="small muted" style="text-align:center;margin:6px 0 10px">Profil ' + PA.PROFILES[RS.profile].short + ' · tapis ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</div>' + window.PA_PLAN.handSummary(h, RS.profile, null, globColors()) + '<div style="text-align:center"><button class="btn" style="margin-top:14px">Fermer</button></div></div>';
       dz.addEventListener('click', function () { dz.remove(); }); document.body.appendChild(dz); return;
     }
     var s = rsSit(), a = RS.tab === 'glob' ? null : PA.chart(RS.profile, s)[h];
@@ -727,7 +729,7 @@
       if (!b) { hide(); return; }
       var h = b.getAttribute('data-v'); if (h === cur) return; hide(); cur = h;
       tip = document.createElement('div'); tip.className = 'hs-tip';
-      tip.innerHTML = '<b class="disp" style="font-size:22px">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</b> <span class="small muted">' + PA.PROFILES[RS.profile].short + ' · ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</span>' + window.PA_PLAN.handSummary(h, RS.profile);
+      tip.innerHTML = globHead(h) + ' <span class="small muted">· ' + PA.PROFILES[RS.profile].short + ' · ' + (window.PA_PLAN.state.stack === 25 ? '20-40' : window.PA_PLAN.state.stack) + ' BB</span>' + window.PA_PLAN.handSummary(h, RS.profile, null, globColors());
       document.body.appendChild(tip);
       var r = b.getBoundingClientRect(), w = tip.offsetWidth, hh = tip.offsetHeight;
       var x = r.right + 10; if (x + w > window.innerWidth - 8) x = Math.max(8, r.left - w - 10);

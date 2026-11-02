@@ -244,3 +244,5 @@ html[data-season=hiver] .season-tag{border-color:#9cc6ff;color:#cfe3ff}
 .hs i{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px}
 .hs-tip{position:fixed;z-index:70;max-width:380px;background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.6);pointer-events:none}
 .hs-tip .hs{font-size:13.5px}
+.pchip{display:inline-block;padding:1px 7px;border-radius:6px;font-weight:800;font-size:.92em;line-height:1.5}
+.pchip.big{font-size:22px;padding:2px 12px;font-family:'Big Shoulders Display','Arial Narrow',Impact,sans-serif}

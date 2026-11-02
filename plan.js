@@ -343,7 +343,8 @@
   };
   // regroupe les positions qui se suivent avec la même décision
   function runsOf(list) { var out = []; list.forEach(function (x) { var g = out[out.length - 1]; if (g && g.c === x[1] && POS.indexOf(x[0]) === POS.indexOf(g.b) + 1) g.b = x[0]; else out.push({ a: x[0], b: x[0], c: x[1] }); }); return out; }
-  function handSummary(h, profId, stack) {
+  function handSummary(h, profId, stack, PC) {
+    var chip = function (p) { var c = PC && PC[p]; return c ? '<span class="pchip" style="background:' + c[0] + ';color:' + c[1] + '">' + p + '</span>' : '<b>' + p + '</b>'; };
     var keep = { mode: ST.mode, pos: ST.pos, opener: ST.opener, stack: ST.stack, prof: ST.prof };
     ST.prof = profId || null; ST.stack = stack || ST.stack || 40;
     var first = [], vs = [];
@@ -353,7 +354,7 @@
       ops.forEach(function (o) { ST.mode = 'vs'; ST.pos = p; ST.opener = o; var c = compute().map[h]; if (c !== 'fold') vs.push([p, o, c]); });
     });
     var d = deep(), dot = function (cat, m) { var L = (ST.mode = m, look(cat)); return '<i style="background:' + NOW[L.now][0] + (BAR[L.sym] && (d || m === 'first') ? ';box-shadow:inset 0 -4px 0 ' + BAR[L.sym] : '') + '"></i>'; };
-    var out = '<div class="hs"><div class="hs-h">Personne n’a ouvert</div>' + (first.length ? runsOf(first).map(function (g) { return '<div>' + dot(g.c, 'first') + '<b>' + (g.a === g.b ? g.a : 'de ' + g.a + ' à ' + g.b) + '</b> : ' + (d ? SHORT.first : SHORT.firstShort)[g.c] + '</div>'; }).join('') : '<div class="muted">Jamais ouverte : couche-la.</div>');
+    var out = '<div class="hs"><div class="hs-h">Personne n’a ouvert</div>' + (first.length ? runsOf(first).map(function (g) { return '<div>' + dot(g.c, 'first') + (g.a === g.b ? chip(g.a) : 'de ' + chip(g.a) + ' à ' + chip(g.b)) + ' : ' + (d ? SHORT.first : SHORT.firstShort)[g.c] + '</div>'; }).join('') : '<div class="muted">Jamais ouverte : couche-la.</div>');
     // regroupe par décision, avec les positions concernées
     var groups = {}, order = [];
     var byK = {};
@@ -362,7 +363,7 @@
       groups[k] = POS.slice(1).filter(function (p) { return byK[k][p]; }).map(function (p) {
         var all = POS.slice(0, POS.indexOf(p)); if (p !== 'BB') all = all.filter(function (x) { return x !== 'SB'; });
         var l = byK[k][p];
-        return '<b>' + p + '</b> ' + (l.length === all.length ? (all.length > 1 ? '(toutes les ouvertures)' : '(face à ' + l[0] + ')') : '(face à ' + l.join(', ') + ')');
+        return chip(p) + ' ' + (l.length === all.length ? (all.length > 1 ? '(toutes les ouvertures)' : '(face à ' + l[0] + ')') : '(face à ' + l.join(', ') + ')');
       });
     });
     out += '<div class="hs-h">Quelqu’un a ouvert</div>' + (order.length ? ['v4', 'c4', 'b4', 'call'].filter(function (k) { return groups[k]; }).map(function (k) { return '<div>' + dot(k, 'vs') + (d ? SHORT.vs : SHORT.vsShort)[k] + ' : ' + groups[k].join(' · ') + '</div>'; }).join('') + '<div class="muted small">Dans les autres cas : se coucher.</div>' : '<div class="muted">Se coucher face à toute ouverture.</div>') + '</div>';
