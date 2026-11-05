@@ -8,10 +8,10 @@
   function body() {
     var sizes = tbl(['Coup', 'Taille'], [
       ['Ouverture (club)', '2 BB · petite blinde 3 BB'],
-      ['Isolement d’un limper', '3 BB en position, 4 BB des blindes, +1 BB par limper'],
-      ['3-bet', '3 × l’ouverture en position, 4 × hors position'],
+      ['Isolement d’un limper', '3 BB du hijack, du cut-off ou du bouton (en position), 4 BB des blindes (hors position), +1 BB par limper'],
+      ['3-bet', '3 × l’ouverture en position (cut-off ou bouton face à une ouverture plus tôt), 4 × hors position (petite ou grosse blinde)'],
       ['Squeeze', '4 × l’ouverture + 1 BB par payeur (+1 à 2 BB des blindes)'],
-      ['4-bet (100 BB)', '2,2 × le 3-bet en position, 2,5 × hors position'],
+      ['4-bet (100 BB)', '2,2 × le 3-bet si tu parles après lui au flop, 2,5 × si tu parles avant (ex. : tu as ouvert au cut-off, le bouton 3-bet → 2,5 ×)'],
       ['5-bet (100 BB)', 'tapis'],
       ['20 à 30 BB', '3-bet, squeeze et isolement à tapis'],
       ['40 BB', 'le 4-bet est un tapis'],
@@ -39,16 +39,17 @@
       'Avantage de nuts (overpaire sur flop bas) : mise moins souvent, mais gros.',
       'Aucun avantage (874 à deux couleurs pour l’ouvreur) : checke beaucoup.',
       'C-bet retardé : flop checké, il checke la turn → mise (2 fois sur 3).',
-      'Mise sonde : l’ouvreur a checké le flop → mise la turn en premier.',
-      'Float : en position, contre un c-bet qui abandonne à la turn ; jamais contre une station.',
+      'Mise sonde (hors position, ex. grosse blinde contre le bouton) : l’ouvreur a checké le flop → mise la turn en premier.',
+      'Float : en position (bouton, cut-off), contre un c-bet qui abandonne à la turn ; jamais contre une station.',
       'Slowplay : seulement sur tableau sec quand tu bloques tout.',
       'Check-raise : mains très fortes et tirages avec des outs, jamais sans rien.'
     ].map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
     var pre = '<ul class="memo-l">' + [
       '3-bet linéaire depuis la petite blinde et contre ceux qui paient trop.',
-      '3-bet polarisé en position et en grosse blinde : valeur + As assortis.',
+      '3-bet polarisé au cut-off, au bouton et en grosse blinde : valeur + As assortis.',
       'Petite blinde : 3-bet ou couche. Cold call surtout au bouton.',
-      'Pas de 3-bet light contre UTG ni contre une calling station.'
+      'Pas de 3-bet light contre UTG ni contre une calling station.',
+      'Ordre de parole après le flop : SB, BB, UTG, UTG+1, MP, LJ, HJ, CO, BTN. Le dernier à parler est « en position ».'
     ].map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
     return '<div class="memo-grid"><section><h2>Les tailles</h2>' + sizes + '<h2>Avant le flop</h2>' + pre + '</section>' +
       '<section><h2>Les seuils</h2>' + seuils + '</section>' +
