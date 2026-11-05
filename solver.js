@@ -595,5 +595,21 @@
     return { pot: n.pot, R: r.R, exp: r.exp, who: n.p, tot: n.a.map(function (a, j) { return a + ' ' + Math.round(sm.tot[j] * 100); }).join(' '), cats: cats, paths: Object.keys(r.nodes) };
   }
   function _load(spot, flop, cb) { if (!DATA) { load(function () { _load(spot, flop, cb); }); return; } if (!ensureSpot(spot, function () { _load(spot, flop, cb); })) return; if (!turnData(spot, flop, function () { _load(spot, flop, cb); })) return; cb(sol(spot, flop)); }
-  window.PA_SOLVER = { loadData: function (cb) { load(cb); }, _river: _river, _load: _load, explorer: explorer, quiz: quizView, category: category, review: review, openExplorer: openExplorer, missCount: missCount, shortLabel: shortLabel, cardsTxt: cardsTxt, _riverCards: riverCards };
+  // stratégie d'une main précise à un nœud (pour « Après le flop : que faire ? »)
+  function query(spot, flop, path, combo, cb) {
+    load(function () {
+      function run() {
+        var S = sol(spot, flop); if (!S || !S.nodes[path]) { cb(null); return; }
+        var n = decodeNode(S.nodes[path], S), idx = n._c.indexOf(combo);
+        if (idx < 0) idx = n._c.indexOf(combo.slice(2) + combo.slice(0, 2));
+        var cat = category(combo, flop), mix = null, k = 0;
+        n._c.forEach(function (c, i) { if (category(c, flop) !== cat) return; var row = n._m[i], s0 = row.reduce(function (x, y) { return x + y; }, 0); if (s0 < 0.5) return; mix = mix || n.a.map(function () { return 0; }); row.forEach(function (v, j) { mix[j] += v / s0; }); k++; });
+        if (mix) mix = mix.map(function (v) { return v / k; });
+        var row = idx >= 0 ? n._m[idx] : null, tot = row ? row.reduce(function (x, y) { return x + y; }, 0) : 0;
+        cb({ a: n.a, p: row && tot > 0.5 ? row.map(function (v) { return v / tot; }) : null, mix: mix, cat: cat, pot: n.pot, call: n.call, stack: S.stack, nodes: S.nodes });
+      }
+      if (ensureSpot(spot, run)) run();
+    });
+  }
+  window.PA_SOLVER = { query: query, data: function () { return DATA; }, loadData: function (cb) { load(cb); }, _river: _river, _load: _load, explorer: explorer, quiz: quizView, category: category, review: review, openExplorer: openExplorer, missCount: missCount, shortLabel: shortLabel, cardsTxt: cardsTxt, _riverCards: riverCards };
 })();

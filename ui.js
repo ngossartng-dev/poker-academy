@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.4.1';
+  var VERSION = '2.5.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -244,13 +244,14 @@
   /* ---------- Apprendre ---------- */
   function apprendreView() {
     var body = '<div class="stack"><h1>Apprendre</h1>' +
+      '<a class="big-cta" href="#apf" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Après le flop : que faire&nbsp;?</div><div style="font-weight:500">Ta position, le flop, ta main : la réponse du solveur, et la suite.</div></div>' + IC.arrow + '</a>' +
       '<div class="grid4">' +
-      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en 35 chapitres, avec quiz et version à écouter.</span></a>' +
+      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en ' + (window.PA_LESSONS ? window.PA_LESSONS.CHAPTERS.length : 38) + ' chapitres, avec quiz et version à écouter.</span></a>' +
       '<a class="tile" href="#ranges"><b>Mes ranges</b><span>Vue globale et toutes les situations, en plein écran.</span></a>' +
       '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
       '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
-      '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>Les 35 chapitres en couleurs, avec encadrés, quiz et grilles de ranges.</span></a>' +
-      '<a class="tile" href="#solveur"><b>Solveur</b><span>Ce que fait le solveur au flop : bouton, cut-off et petite blinde contre la grosse blinde, 30 flops types.</span></a>' +
+      '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>Tous les chapitres en couleurs, avec encadrés, quiz et grilles de ranges.</span></a>' +
+      '<a class="tile" href="#solveur"><b>Solveur (mode avancé)</b><span>Tous les coups calculés, flop par flop, famille par famille, jusqu’à la river.</span></a>' +
       '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a>' +
       '<a class="tile" href="#minuteur"><b>Minuteur du club</b><span>Les niveaux de blindes en grand, avec signal sonore : pour les parties au club.</span></a></div></div>';
     return shell('apprendre', body);
@@ -629,7 +630,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }

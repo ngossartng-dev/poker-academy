@@ -2883,7 +2883,7 @@
 
   L[38] = {
     minutes: 20,
-    links: [{ href: '#cas', label: 'S’entraîner : cas concrets' }, { href: '#solveur', label: 'Le solveur' }],
+    links: [{ href: '#cas', label: 'S’entraîner : cas concrets' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['Chaque cas vient du solveur de l’appli, à 40 BB : ce qu’il fait avec une main précise, pourquoi, avec quelle mise, et la suite.', 'Une règle revient partout : on mise quand le flop favorise sa range, on checke ou on abandonne quand il favorise celle de l’adversaire.'],
     sections: [
       { ask: 'J’ai 3-bet avec A4 assorti en grosse blinde, le bouton a payé, je rate le flop. Je fais quoi ?', h: 'Cas 1 : A4 assorti, 3-bet en grosse blinde, flop raté', p: ['Le bouton ouvre, tu 3-bet à 8 BB en grosse blinde avec A♥4♥, il paie. Pot 17,5 BB, il te reste 32 BB, tu parles en premier.', 'K♦ 8♠ 3♣ : tu mises presque toujours, surtout la moitié du pot (75 %). Ta range de 3-bet a beaucoup de AK, KK, AA ; la sienne peu de rois forts. Tu représentes la force, et ton as bloque ses as. S’il paie, tu as encore l’as. S’il fait tapis, tu te couches.', 'Q♥ T♠ 7♠ ou J♦ T♠ 3♣ : mitigé. Tu checkes un tiers du temps, et tu mises la moitié du pot environ quatre fois sur dix.', '9♠ 7♦ 5♣ : tu checkes 91 %, et tu te couches s’il mise (98 %). Ce flop touche sa range de paye, pas la tienne : on abandonne.'] },
