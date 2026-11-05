@@ -564,6 +564,10 @@
     var s = ['♣', '♦', '♥', '♠'][cSuit(c)], red = cSuit(c) === 1 || cSuit(c) === 2, r = RCH[cRank(c)];
     return '<div class="pcm' + (red ? ' red' : '') + '"><span class="r">' + (r === 'T' ? '10' : r) + '</span><span class="s">' + s + '</span></div>';
   }
+  var CHIPC = [[10, '#26262c', '#0b0b0d'], [5, '#2b8a3e', '#123d1b'], [1, '#1c7ed6', '#0b3a66'], [0.5, '#d61f1f', '#5c0c0c'], [0.1, '#e9e9ee', '#8a8a93']];
+  function chipList(x) { var r = x / G.hand.L.bb, out = []; CHIPC.forEach(function (c) { while (r >= c[0] - 1e-9 && out.length < 12) { out.push(c); r -= c[0]; } }); if (!out.length) out.push(CHIPC[4]); return out; }
+  function pileHtml(L) { return '<span class="cpile" style="height:' + (13 + L.length * 3.2) + 'px">' + L.map(function (c, i) { return '<i style="--i:' + i + ';--k:' + c[1] + ';--e:' + c[2] + '"></i>'; }).join('') + '</span>'; }
+  function chipPiles(x, max, per) { var L = chipList(x).slice(0, max), P = []; for (var i = 0; i < L.length; i += per) P.push(pileHtml(L.slice(i, i + per))); return '<span class="cpiles">' + P.join('') + '</span>'; }
   function bbTxt(x) { var H = G.hand; return String(Math.round(x / H.L.bb * 10) / 10).replace('.', ','); }
   function tableView() {
     var ui = U();
@@ -584,9 +588,9 @@
         '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>';
       if (G.opts.bounty !== 'classique' && !out) h += '<span class="bty">' + (G.opts.bounty === 'space' && k !== 0 ? '?' : p.bounty.toFixed(0) + ' €') + '</span>';
       h += '</button>';
-      if (H.bets[k]) { var bx = 50 + RX * 0.62 * Math.cos(a), by = 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2" style="left:' + bx + '%;top:' + by + '%">' + PA.fmt(H.bets[k]) + '</div>'; }
+      if (H.bets[k]) { var bx = 50 + RX * 0.62 * Math.cos(a), by = 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2" style="left:' + bx + '%;top:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + PA.fmt(H.bets[k]) + '</div>'; }
     }
-    h += '<div class="pot2">Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
+    h += '<div class="pot2">' + (potTotal() > 0 ? chipPiles(potTotal(), 12, 4) : '') + 'Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
     h += '<div class="board2">' + [0, 1, 2, 3, 4].map(function (i) { return H.board[i] !== undefined ? cardMid(H.board[i]) : '<div class="slot"></div>'; }).join('') + '</div>';
     if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2">' + H.hole[0].map(cardMid).join('') + '</div>';
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
