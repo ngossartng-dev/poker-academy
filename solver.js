@@ -243,7 +243,7 @@
     if (!DATA) { load(function () { ui.render(); }); return ui.shell('apprendre', '<div class="stack"><h1>Solveur</h1><p class="muted">Chargement des solutions…</p></div>'); }
     if (DATA.err) return ui.shell('apprendre', '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Solveur</h1>' + ui.yo('Les solutions ne sont pas incluses dans cette version : elles sont dans l’appli installée (PC et Android).') + '</div>');
     var dm = /[?&]d=([^&]+)/.exec(location.hash);
-    if (dm) { try { var dd = JSON.parse(decodeURIComponent(dm[1])); EX.spot = dd.spot; EX.flop = dd.flop; EX.path = null; EX.tl = dd.line ? { line: dd.line, card: dd.card } : null; EX.tpath = dd.tend || ''; EX.rv = dd.rc ? { tend: dd.tend, card: dd.rc, rpath: dd.rpath || '' } : null; EX.hand = dd.hand || ''; } catch (e) {} history.replaceState(null, '', '#solveur'); }
+    if (dm) { try { var dd = JSON.parse(decodeURIComponent(dm[1])); EX.spot = dd.spot; EX.flop = dd.flop; EX.path = dd.path || null; EX.tl = dd.line ? { line: dd.line, card: dd.card } : null; EX.tpath = dd.tend || ''; EX.rv = dd.rc ? { tend: dd.tend, card: dd.rc, rpath: dd.rpath || '' } : null; EX.hand = dd.hand || ''; } catch (e) {} history.replaceState(null, '', '#solveur'); }
     if (!spotOf(EX.spot)) EX.spot = DATA.spots[0].id;
     var sp = spotOf(EX.spot), wait = function (t) { return ui.shell('apprendre', '<div class="stack"><h1>Solveur</h1><p class="muted">' + t + '</p></div>'); };
     if (!ensureSpot(EX.spot, function () { ui.render(); })) return wait('Chargement du coup…');
