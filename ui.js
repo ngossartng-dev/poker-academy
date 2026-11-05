@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.3.3';
+  var VERSION = '2.3.4';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -91,7 +91,8 @@
     var due = PA.srsDue(p).length;
     var msg = !p.testDone ? 'Avant tout, fais le test de profil : 30 mains suffisent pour voir où tu en es. Je t’attends à S’entraîner.'
       : (due ? 'Ta séance du jour est prête : 20 décisions, dont ' + due + ' main' + (due > 1 ? 's' : '') + ' ratée' + (due > 1 ? 's' : '') + ' à revoir. On y va ?' : 'Ta séance du jour est prête : 20 décisions sur tes points faibles. On y va ?');
-    var last = p.last ? '<a href="#' + p.last.route + '" class="card row" style="text-decoration:none;color:#fff"><div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center">' + IC.play + '</div><div class="stack" style="gap:6px;flex:1;min-width:0"><span class="muted small">Reprendre</span><b>' + esc(p.last.label) + '</b></div></a>' : '';
+    if (p.last && p.last.route === 'drill' && !ui.drill) p.last = { route: /Test de profil/.test(p.last.label || '') ? 'testmenu' : 'entrainer', label: (/Test de profil/.test(p.last.label || '') ? 'Relancer le test de profil' : 'Relancer : ' + p.last.label), redo: true };
+    var last = p.last ? '<a href="#' + p.last.route + '" class="card row" style="text-decoration:none;color:#fff"><div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center">' + IC.play + '</div><div class="stack" style="gap:6px;flex:1;min-width:0"><span class="muted small">' + (p.last.redo ? 'Série interrompue' : 'Reprendre') + '</span><b>' + esc(p.last.label) + '</b></div></a>' : '';
     var body = '<div class="stack">' +
       '<div class="row" style="justify-content:space-between"><div class="row">' + logo() + '<div><div class="disp" style="font-size:26px">Poker Academy</div><div class="muted">' + greet() + ', ' + esc(p.pseudo) + '</div></div></div><span class="chip">' + pr.short + '</span></div>' +
       (window.PA_SEASON && window.PA_SEASON.current() !== 'classique' ? '<div><a class="season-tag" href="#reglages">Décor ' + window.PA_SEASON.NAMES[window.PA_SEASON.current()] + '</a></div>' : '') +
@@ -438,7 +439,14 @@
     return '<div class="small muted">Rappel : tu paies ' + String(Math.round(call * 10) / 10).replace('.', ',') + ' BB pour un pot final de ' + String(Math.round(pot * 10) / 10).replace('.', ',') + ' BB → il te faut <b>' + need + ' %</b> d’équité (paye ÷ pot final).</div>';
   }
   function drillView() {
-    var d = ui.drill; if (!d) { go('home'); return ''; }
+    var d = ui.drill;
+    if (!d) {
+      // série interrompue (appli fermée ou rechargée) : on ne peut pas la reprendre, on renvoie au bon menu pour la relancer
+      var pl = PA.player(), isTest = pl && pl.last && /Test de profil/.test(pl.last.label || '');
+      if (pl && pl.last && pl.last.route === 'drill') { pl.last = null; PA.save(); }
+      setTimeout(function () { go(isTest ? 'testmenu' : 'entrainer'); }, 0);
+      return '';
+    }
     if (d.i >= d.qs.length) return shell('entrainer', bilanHtml());
     var q = d.qs[d.i], t = q.custom ? null : tableHtml(q), choices = q.custom ? q.choices : PA.choicesFor(q.sit);
     var head = '<div class="drill-top"><button class="back" data-act="quitDrill">‹ Quitter</button><span class="muted small">' + esc(d.label) + ' · ' + (d.i + 1) + '/' + d.qs.length + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button></div>' +
