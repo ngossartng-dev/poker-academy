@@ -163,6 +163,7 @@
       case 'x': return 'Check';
       case 'b33': return 'Miser 1/3 du pot (' + f1(pot * 0.33) + ' BB)';
       case 'b50': return 'Miser la moitié du pot (' + f1(pot * 0.5) + ' BB)';
+      case 'b66': return 'Miser 2/3 du pot (' + f1(pot * 0.66) + ' BB)';
       case 'b75': return 'Miser 3/4 du pot (' + f1(pot * 0.75) + ' BB)';
       case 'b100': return 'Miser le pot (' + f1(pot) + ' BB)';
       case 'b125': return 'Surmiser 125 % (' + f1(pot * 1.25) + ' BB)';
@@ -173,8 +174,8 @@
     }
     return a;
   }
-  function shortLabel(a) { return { x: 'Check', b33: '1/3', b50: '1/2', b75: '3/4', b100: 'Pot', b125: '125 %', ai: 'Tapis', f: 'Fold', c: 'Payer', r: 'Relance' }[a] || a; }
-  var COL = { x: '#5c7cfa', c: '#2f9e44', f: '#868e96', b33: '#fcc419', b50: '#f59f00', b75: '#f76707', b100: '#e8590c', b125: '#d9480f', r: '#e03131', ai: '#c2255c' };
+  function shortLabel(a) { return { x: 'Check', b33: '1/3', b50: '1/2', b66: '2/3', b75: '3/4', b100: 'Pot', b125: '125 %', ai: 'Tapis', f: 'Fold', c: 'Payer', r: 'Relance' }[a] || a; }
+  var COL = { x: '#5c7cfa', c: '#2f9e44', f: '#868e96', b33: '#fcc419', b50: '#f59f00', b66: '#fd7e14', b75: '#f76707', b100: '#e8590c', b125: '#d9480f', r: '#e03131', ai: '#c2255c' };
   function bar(mix, acts) { return '<div style="display:flex;height:16px;border-radius:6px;overflow:hidden;background:#222;min-width:120px">' + acts.map(function (a, k) { return mix[k] > 0.005 ? '<span title="' + shortLabel(a) + ' ' + pc(mix[k]) + '" style="width:' + (mix[k] * 100) + '%;background:' + COL[a] + '"></span>' : ''; }).join('') + '</div>'; }
   function legend(acts) { return '<div class="row" style="flex-wrap:wrap;gap:10px">' + acts.map(function (a) { return '<span class="small"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:' + COL[a] + ';margin-right:4px;vertical-align:-1px"></span>' + shortLabel(a) + '</span>'; }).join('') + '</div>'; }
   function summary(n, board, w) {
@@ -457,7 +458,7 @@
     else if (a === 'r' || a === 'ai') why = river ? 'Tapis : soit tu as une main très forte qui se fait payer, soit un bluff qui bloque les bonnes mains adverses.' : 'Relancer ici rapporte : soit tu fais coucher des mains qui ont de l’équité, soit tu te fais payer par pire.';
     else if (a === 'x') why = river ? 'Checker : ta main gagne souvent à l’abattage mais se fait rarement payer par pire, ou elle n’a aucune chance de faire coucher mieux.' : 'Checker protège ta range et garde les mains moyennes dans le coup.';
     else if (river) why = 'À la river, on mise avec des mains qui se font payer par pire, et avec des bluffs qui n’ont aucune chance à l’abattage.';
-    else if (a === 'b33' || a === 'b50') why = 'Une mise petite ou moyenne suffit : beaucoup de mains adverses doivent abandonner ou payer cher pour leur équité.';
+    else if (a === 'b33' || a === 'b50' || a === 'b66') why = 'Une mise petite ou moyenne suffit : beaucoup de mains adverses doivent abandonner ou payer cher pour leur équité.';
     else why = 'Une grosse mise met la pression : elle fait payer les mains moyennes et les tirages, ou les fait coucher.';
     return why + ' ' + catTxt;
   }
@@ -542,7 +543,7 @@
     var facing = n.call > 0;
     if (facing) return tok[0] === 'A' && n.a.indexOf('ai') >= 0 ? 'ai' : (n.a.indexOf('r') >= 0 ? 'r' : (n.a.indexOf('ai') >= 0 ? 'ai' : null));
     if (tok[0] === 'A') return n.a.indexOf('ai') >= 0 ? 'ai' : null;
-    var frac = parseInt(tok.slice(1), 10) / 100, best = null, bd = 9, F = { b33: 0.33, b50: 0.5, b75: 0.75, b100: 1, b125: 1.25, ai: stackLeft / n.pot };
+    var frac = parseInt(tok.slice(1), 10) / 100, best = null, bd = 9, F = { b33: 0.33, b50: 0.5, b66: 0.66, b75: 0.75, b100: 1, b125: 1.25, ai: stackLeft / n.pot };
     n.a.forEach(function (a) { if (F[a] === undefined) return; var d = Math.abs(Math.log(frac / F[a])); if (d < bd) { bd = d; best = a; } });
     return best;
   }

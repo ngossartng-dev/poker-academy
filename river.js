@@ -33,7 +33,7 @@
   }
 
   /* ---------- Arbre de river ---------- */
-  // tailles : 1/2 pot, pot, tapis ; face à une mise : se coucher, payer, tapis
+  // tailles : 1/3, 2/3 du pot, pot, tapis ; face à une mise : se coucher, payer, tapis
   function build(P, R) {
     var nodes = [];
     function mk(p, c, toCall, path, raised) {
@@ -42,7 +42,7 @@
       var sep = path ? '-' : '', pot = P + c[0] + c[1];
       if (toCall === 0) {
         add('x', p === 0 ? mk(1, c, 0, path + sep + 'x', false) : { k: 'show', c: c });
-        [['b50', 0.5], ['b100', 1]].forEach(function (s) {
+        [['b33', 0.33], ['b66', 0.66], ['b100', 1]].forEach(function (s) {
           var b = Math.round(pot * s[1] * 10) / 10; if (c[p] + b >= R * 0.7) return;
           var cc = c.slice(); cc[p] += b; add(s[0], mk(1 - p, cc, b, path + sep + s[0], false));
         });

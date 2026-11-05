@@ -6,16 +6,20 @@
   var R = '23456789TJQKA', SUITS = ['s', 'h', 'd', 'c'], SU = { s: '♠', h: '♥', d: '♦', c: '♣' };
   var POS = [['BTN', 'Bouton'], ['CO', 'Cut-off'], ['HJ', 'Hijack'], ['UTG', 'UTG'], ['SB', 'Petite blinde'], ['BB', 'Grosse blinde']];
   var SC = {
-    BTN: [['btn-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['btn3b-co', 'ip', 'Le cut-off a ouvert, j’ai relancé (3-bet), il a payé'], ['bb3b-btn', 'ip', 'J’ai ouvert, la grosse blinde a relancé (3-bet), j’ai payé'], ['limp-iso', 'ip', 'Un joueur a limpé, je l’ai isolé, il a payé']],
-    CO: [['co-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['btn3b-co', 'oop', 'J’ai ouvert, le bouton a relancé (3-bet), j’ai payé']],
-    HJ: [['hj-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé']],
+    BTN: [['btn-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['co-btn', 'ip', 'Le cut-off a ouvert, j’ai payé'], ['hj-btn', 'ip', 'Le hijack a ouvert, j’ai payé'], ['btn3b-co', 'ip', 'Le cut-off a ouvert, j’ai relancé (3-bet), il a payé'], ['btn3b-hj', 'ip', 'Le hijack a ouvert, j’ai relancé (3-bet), il a payé'], ['bb3b-btn', 'ip', 'J’ai ouvert, la grosse blinde a relancé (3-bet), j’ai payé'], ['sb3b-btn', 'ip', 'J’ai ouvert, la petite blinde a relancé (3-bet), j’ai payé'], ['co4b-btn', 'ip', '100 BB : j’ai relancé (3-bet) le cut-off, il a 4-bet, j’ai payé'], ['limp-iso', 'ip', 'Un joueur a limpé, je l’ai isolé, il a payé']],
+    CO: [['co-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['co-btn', 'oop', 'J’ai ouvert, le bouton a payé'], ['btn3b-co', 'oop', 'J’ai ouvert, le bouton a relancé (3-bet), j’ai payé'], ['sb3b-co', 'ip', 'J’ai ouvert, la petite blinde a relancé (3-bet), j’ai payé'], ['co4b-btn', 'oop', '100 BB : j’ai ouvert, le bouton a 3-bet, j’ai 4-bet, il a payé']],
+    HJ: [['hj-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['hj-btn', 'oop', 'J’ai ouvert, le bouton a payé'], ['btn3b-hj', 'oop', 'J’ai ouvert, le bouton a relancé (3-bet), j’ai payé']],
     UTG: [['utg-bb', 'ip', 'J’ai ouvert, la grosse blinde a payé'], ['limp-iso', 'oop', 'J’ai limpé, le bouton a relancé, j’ai payé']],
-    SB: [['sb-bb', 'oop', 'J’ai ouvert à 3 BB, la grosse blinde a payé'], ['sb-limp', 'oop', 'J’ai complété (limp), la grosse blinde a checké']],
+    SB: [['sb-bb', 'oop', 'J’ai ouvert à 3 BB, la grosse blinde a payé'], ['sb3b-btn', 'oop', 'Le bouton a ouvert, j’ai relancé (3-bet), il a payé'], ['sb3b-co', 'oop', 'Le cut-off a ouvert, j’ai relancé (3-bet), il a payé'], ['sb-limp', 'oop', 'J’ai complété (limp), la grosse blinde a checké']],
     BB: [['btn-bb', 'oop', 'Le bouton a ouvert, j’ai payé'], ['co-bb', 'oop', 'Le cut-off a ouvert, j’ai payé'], ['hj-bb', 'oop', 'Le hijack a ouvert, j’ai payé'], ['utg-bb', 'oop', 'UTG a ouvert, j’ai payé'], ['sb-bb', 'ip', 'La petite blinde a ouvert, j’ai payé'], ['bb3b-btn', 'oop', 'Le bouton a ouvert, j’ai relancé (3-bet), il a payé'], ['sb-limp', 'ip', 'La petite blinde a complété, j’ai checké']]
   };
+  // tapis de 25 BB : variantes quand elles existent
+  var V25 = { 'btn-bb': 'btn-bb-25', 'co-bb': 'co-bb-25', 'sb-bb': 'sb-bb-25' };
   var OPP = [['', 'Un joueur normal'], ['btn-bb-station', 'Une calling station'], ['btn-bb-vsnit', 'Un joueur très serré'], ['btn-bb-bulle', 'À la bulle'], ['btn-bb-pko', 'En PKO (primes)'], ['btn-bb-20', 'Tapis de 20 BB'], ['btn-bb-60', 'Tapis de 60 BB']];
+  function hasSpot(id) { var D = window.PA_SOLVER.data(); return !!(D && D.spots.some(function (s) { return s.id === id; })); }
+  function scList(pos) { return SC[pos].filter(function (s) { return hasSpot(s[0]); }); }
   var ST = { pos: null, sc: null, opp: '', cards: [], res: null, busy: false };
-  var SIZE = { b33: 'un tiers du pot', b50: 'la moitié du pot', b75: 'trois quarts du pot', b100: 'la taille du pot', b125: '1,25 fois le pot', ai: 'tapis' };
+  var SIZE = { b33: 'un tiers du pot', b50: 'la moitié du pot', b66: 'deux tiers du pot', b75: 'trois quarts du pot', b100: 'la taille du pot', b125: '1,25 fois le pot', ai: 'tapis' };
   function actName(a) { return a === 'x' ? 'Check' : a === 'f' ? 'Se coucher' : a === 'c' ? 'Payer' : a === 'r' ? 'Relancer' : a === 'ai' ? 'Tapis' : 'Miser ' + SIZE[a]; }
   function cardH(c, sel) { var red = c[1] === 'h' || c[1] === 'd'; return '<span class="apf-c' + (red ? ' red' : '') + (sel ? ' ' + sel : '') + '">' + (c[0] === 'T' ? '10' : c[0]) + SU[c[1]] + '</span>'; }
   function U() { return window.PA_UI; }
@@ -23,6 +27,7 @@
   function spotId() {
     if (!ST.sc) return null; var id = ST.sc[0];
     if (id === 'btn-bb' && ST.sc[1] === 'ip' && ST.opp) id = ST.opp;
+    if (ST.d25 && V25[id] && hasSpot(V25[id])) return V25[id];
     // profils serré / large-agressif quand le coup existe
     var D = window.PA_SOLVER.data(), pr = prof(), v = id + '-' + (pr === 'nit' ? 'nit' : pr === 'lag' ? 'lag' : '');
     if ((pr === 'nit' || pr === 'lag') && D && D.spots.some(function (s) { return s.id === v; })) return v;
@@ -98,8 +103,9 @@
       ui.yo('Dis-moi où tu étais, ce qui s’est passé avant le flop, le flop et ta main : je te dis ce que fait le solveur, et la suite.');
     out += '<div class="card stack"><b>1. Où étais-tu ?</b><div class="seg">' + POS.map(function (p) { return '<button class="' + (ST.pos === p[0] ? 'on' : '') + '" data-apf="pos" data-v="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div></div>';
     if (ST.pos) {
-      out += '<div class="card stack"><b>2. Avant le flop</b><div class="apf-list">' + SC[ST.pos].map(function (s, i) { return '<button class="btn' + (ST.sc === s ? ' gold' : '') + '" data-apf="sc" data-v="' + i + '">' + s[2] + '</button>'; }).join('') + '</div>';
+      out += '<div class="card stack"><b>2. Avant le flop</b><div class="apf-list">' + scList(ST.pos).map(function (s, i) { return '<button class="btn' + (ST.sc === s ? ' gold' : '') + '" data-apf="sc" data-v="' + i + '">' + s[2] + '</button>'; }).join('') + '</div>';
       if (ST.sc && ST.sc[0] === 'btn-bb' && ST.sc[1] === 'ip') out += '<div class="small muted">Contre qui ?</div><div class="seg">' + OPP.map(function (o) { return '<button class="' + (ST.opp === o[0] ? 'on' : '') + '" data-apf="opp" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>';
+      if (ST.sc && V25[ST.sc[0]] && hasSpot(V25[ST.sc[0]]) && !(ST.sc[0] === 'btn-bb' && ST.opp)) out += '<div class="small muted">Ton tapis</div><div class="seg"><button class="' + (!ST.d25 ? 'on' : '') + '" data-apf="d25" data-v="0">40 BB</button><button class="' + (ST.d25 ? 'on' : '') + '" data-apf="d25" data-v="1">25 BB</button></div>';
       out += '</div>';
     }
     if (ST.sc) {
@@ -124,8 +130,9 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-apf]') : null; if (!t) return;
     var a = t.getAttribute('data-apf'), v = t.getAttribute('data-v');
-    if (a === 'pos') { ST.pos = v; ST.sc = SC[v].length === 1 ? SC[v][0] : null; ST.res = null; }
-    else if (a === 'sc') { ST.sc = SC[ST.pos][+v]; ST.opp = ''; ST.res = null; }
+    if (a === 'pos') { ST.pos = v; var L0 = scList(v); ST.sc = L0.length === 1 ? L0[0] : null; ST.res = null; }
+    else if (a === 'sc') { ST.sc = scList(ST.pos)[+v]; ST.opp = ''; ST.res = null; }
+    else if (a === 'd25') { ST.d25 = v === '1'; ST.res = null; }
     else if (a === 'opp') { ST.opp = v; ST.res = null; }
     else if (a === 'clear') { ST.cards = []; ST.res = null; }
     else if (a === 'card') { var i = ST.cards.indexOf(v); if (i >= 0) ST.cards.splice(i, 1); else if (ST.cards.length < 5) ST.cards.push(v); ST.res = null; }
