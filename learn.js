@@ -82,7 +82,7 @@
   }
   function speakNext() {
     if (!POD.playing) return;
-    if (POD.i >= POD.lines.length) { POD.playing = false; POD.i = 0; savePos(); U().render(); return; }
+    if (POD.i >= POD.lines.length) { POD.playing = false; POD.i = 0; savePos(); finished(POD.n); return; }
     var line = POD.lines[POD.i];
     if (line[0] === 'P') { refreshPod(); setTimeout(function () { if (!POD.playing) return; POD.i++; savePos(); refreshPod(); speakNext(); }, line[1] * 1000); return; }
     var u = new SpeechSynthesisUtterance(speakable(line[1])), v = voices();
@@ -95,14 +95,60 @@
   function podControls() {
     var line = POD.lines[POD.i] || ['Y', ''];
     var info = POD.audio && AU ? ' · ' + mmss(AU.currentTime) + ' / ' + mmss((window.PA_AUDIO[POD.n] || {}).d || AU.duration || 0) : ' · réplique ' + Math.min(POD.i + 1, POD.lines.length) + ' / ' + POD.lines.length;
-    return '<div class="card stack" id="podbox"><div class="small muted">' + (POD.playing ? 'Lecture' : 'En pause') + info + '</div><div>' + (line[0] === 'P' ? '<i>Pause : réfléchis…</i>' : '<b style="color:#ffd23f">' + (line[0] === 'Y' ? 'Yo' : 'Le joueur') + ' :</b> ' + line[1]) + '</div>' +
-      '<div class="seg">' + [1, 1.25, 1.5].map(function (r) { return '<button class="' + (POD.rate === r ? 'on' : '') + '" data-lact="rate" data-v="' + r + '">' + String(r).replace('.', ',') + '×</button>'; }).join('') + '<button data-lact="back10">Réplique précédente</button><button data-lact="stop">Arrêter</button></div></div>';
+    var c = LS.get(POD.n) || { n: '', title: '' }, ch = chainOn();
+    return '<div class="card stack" id="podbox" style="border-color:#ffd23f"><div class="row" style="justify-content:space-between;gap:8px"><a href="#lecon-' + c.n + '" style="color:#ffd23f;text-decoration:none"><b>' + c.n + '. ' + c.title + '</b></a><span class="small muted">' + (POD.playing ? 'Lecture' : 'En pause') + info + '</span></div>' +
+      '<div class="seg"><button data-lact="podprev"' + (prevEp(POD.n) ? '' : ' disabled') + '>‹ Épisode précédent</button><button class="on" data-lact="podtoggle">' + (POD.playing ? 'Pause' : 'Lecture') + '</button><button data-lact="podnext"' + (nextEp(POD.n) ? '' : ' disabled') + '>Épisode suivant ›</button></div>' +
+      '<div>' + (line[0] === 'P' ? '<i>Pause : réfléchis…</i>' : '<b style="color:#ffd23f">' + (line[0] === 'Y' ? 'Yo' : 'Le joueur') + ' :</b> ' + line[1]) + '</div>' +
+      '<div class="seg">' + [1, 1.25, 1.5].map(function (r) { return '<button class="' + (POD.rate === r ? 'on' : '') + '" data-lact="rate" data-v="' + r + '">' + String(r).replace('.', ',') + '×</button>'; }).join('') + '<button data-lact="back10">Réplique précédente</button><button data-lact="stop">Arrêter</button></div>' + '<div class="small muted">' + (ch ? 'Enchaînement automatique activé : l’épisode suivant démarre tout seul.' : 'Enchaînement automatique désactivé.') + '</div></div>';
   }
   function mmss(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
-  function refreshPod() { var b = document.getElementById('podbox'); if (b) b.outerHTML = podControls(); }
+  function refreshPod() { var b = document.getElementById('podbox'); if (b) b.outerHTML = podControls(); var m = document.getElementById('podmini'); if (m) m.outerHTML = mini(); }
   /* ---------- Podcasts enregistrés (voix neuronales) ---------- */
   function hasAudio(n) { return !!(window.PA_AUDIO && window.PA_AUDIO[n]); }
   var AU = null, lastSave = 0;
+  /* ---------- Écoute à la suite ---------- */
+  function eps() { return LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) { return c.n; }); }
+  function nextEp(n) { var l = eps(), i = l.indexOf(n); return i >= 0 && i < l.length - 1 ? l[i + 1] : null; }
+  function prevEp(n) { var l = eps(), i = l.indexOf(n); return i > 0 ? l[i - 1] : null; }
+  function chainOn() { var p = PA.player(); return !p || p.podChain !== false; }
+  function firstToHear() {
+    var p = PA.player() || {}, l = eps(), done = p.podDone || {}, sec = p.podSec || {};
+    for (var i = 0; i < l.length; i++) if (sec[l[i]] > 2) return l[i];
+    for (var j = 0; j < l.length; j++) if (!done[l[j]]) return l[j];
+    return l[0];
+  }
+  function finished(n) {
+    var p = PA.player(); if (p) { p.podDone = p.podDone || {}; p.podDone[n] = Date.now(); PA.save(); }
+    var nx = nextEp(n);
+    if (chainOn() && nx) { startEp(nx, true); return; } // tout de suite : un délai bloquerait la suite écran verrouillé
+    POD.n = null; POD.audio = false; msState(); U().render();
+  }
+  function startEp(n, fromStart) {
+    var p = PA.player();
+    if (fromStart && p) { if (p.podSec) p.podSec[n] = 0; if (p.podPos) p.podPos[n] = 0; }
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    POD.n = null; POD.playing = false; listen(n);
+  }
+  function togglePod() { if (POD.n === null) return; listen(POD.n); }
+  function mini() {
+    if (POD.n === null || /^#(lecon-|podcasts)/.test(location.hash)) return '<div id="podmini" hidden></div>';
+    var c = LS.get(POD.n) || { title: '' };
+    return '<div id="podmini" class="podmini"><a href="#podcasts" class="pm-t"><span class="small muted">Podcast ' + POD.n + (POD.playing ? '' : ' · en pause') + '</span><b>' + c.title + '</b></a><button data-lact="podtoggle" aria-label="' + (POD.playing ? 'Pause' : 'Lecture') + '">' + (POD.playing ? '❚❚' : '▶') + '</button><button data-lact="podnext" aria-label="Épisode suivant"' + (nextEp(POD.n) ? '' : ' disabled') + '>⏭</button></div>';
+  }
+  /* commandes de l’écran verrouillé et des casques */
+  function msMeta() {
+    var ms = navigator.mediaSession; if (!ms || POD.n === null) return;
+    try {
+      var c = LS.get(POD.n);
+      ms.metadata = new MediaMetadata({ title: POD.n + '. ' + c.title, artist: 'Yo · Poker Academy', album: 'Podcasts du cours', artwork: [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] });
+      ms.setActionHandler('play', function () { if (!POD.playing) togglePod(); });
+      ms.setActionHandler('pause', function () { if (POD.playing) togglePod(); });
+      ms.setActionHandler('nexttrack', function () { var nx = nextEp(POD.n); if (nx) startEp(nx, true); });
+      ms.setActionHandler('previoustrack', function () { var pv = prevEp(POD.n); if (pv) startEp(pv, true); });
+    } catch (e) {}
+    msState();
+  }
+  function msState() { try { if (navigator.mediaSession) navigator.mediaSession.playbackState = POD.n === null ? 'none' : POD.playing ? 'playing' : 'paused'; } catch (e) {} }
   function audioEl() {
     if (AU) return AU;
     AU = new Audio(); AU.preload = 'auto';
@@ -112,7 +158,9 @@
       if (i !== POD.i) { POD.i = i; refreshPod(); }
       if (Date.now() - lastSave > 4000) { lastSave = Date.now(); saveSec(); }
     });
-    AU.addEventListener('ended', function () { POD.playing = false; POD.i = 0; var p = PA.player(); if (p && p.podSec) { p.podSec[POD.n] = 0; PA.save(); } U().render(); });
+    AU.addEventListener('ended', function () { POD.playing = false; POD.i = 0; var p = PA.player(); if (p && p.podSec) { p.podSec[POD.n] = 0; PA.save(); } finished(POD.n); });
+    AU.addEventListener('play', function () { msState(); });
+    AU.addEventListener('pause', function () { msState(); });
     AU.addEventListener('error', function () { if (POD.audio) { POD.audio = false; POD.playing = false; alertBox('Le fichier audio de cet épisode est introuvable : je passe à la voix de l’appareil.'); U().render(); } });
     return AU;
   }
@@ -132,7 +180,7 @@
     var rel = window.PA.audioFile(n); a.src = window.PA_PACK ? window.PA_PACK.url(rel) : rel;
     a.addEventListener('loadedmetadata', function once() { a.removeEventListener('loadedmetadata', once); if (start > 2 && start < a.duration - 5) a.currentTime = start; a.playbackRate = POD.rate; }, false);
     a.playbackRate = POD.rate; a.play().catch(function () {});
-    U().render();
+    msMeta(); U().render();
   }
   function listen(n) {
     if (hasAudio(n)) { listenAudio(n); return; }
@@ -140,14 +188,22 @@
     var c = LS.get(n);
     if (POD.n === n && POD.playing) { POD.playing = false; speechSynthesis.cancel(); U().render(); return; }
     if (POD.n !== n) { speechSynthesis.cancel(); if (AU) AU.pause(); var p = PA.player(); POD = { n: n, lines: script(c), i: (p.podPos && p.podPos[n]) || 0, playing: false, rate: POD.rate || 1 }; }
-    POD.playing = true; U().render(); speakNext();
+    POD.playing = true; msMeta(); U().render(); speakNext();
   }
   function alertBox(t) { var d = document.createElement('div'); d.className = 'zoom'; d.innerHTML = '<div>' + t + '<br><button class="btn" style="margin-top:12px">OK</button></div>'; d.onclick = function () { d.remove(); }; document.body.appendChild(d); }
 
+  function suiteCard(p) {
+    var l = eps(), nd = l.filter(function (n) { return p.podDone && p.podDone[n]; }).length, f = firstToHear(), fc = LS.get(f), ch = chainOn();
+    var tot = Math.round(l.reduce(function (a, n) { return a + (hasAudio(n) ? window.PA_AUDIO[n].d : LS.get(n).minutes * 60); }, 0) / 3600 * 10) / 10;
+    return (POD.n !== null ? podControls() : '') + '<div class="card stack"><b>Écouter tout le cours à la suite</b><div class="small muted">' + l.length + ' épisodes dans l’ordre du cours, environ ' + String(tot).replace('.', ',') + ' h. ' + nd + ' déjà écouté' + (nd > 1 ? 's' : '') + '. Quand un épisode se termine, le suivant démarre tout seul, même si tu changes d’écran.</div>' +
+      (POD.n === null ? '<button class="btn gold block" data-lact="podsuite">' + ((p.podSec && p.podSec[f] > 2) || nd ? 'Reprendre : ' : 'Commencer : ') + f + '. ' + fc.title + '</button>' : '') +
+      '<div class="row" style="justify-content:space-between;gap:8px"><span>Enchaîner les épisodes automatiquement</span><div class="seg"><button class="' + (ch ? 'on' : '') + '" data-lact="podchain" data-v="1">Oui</button><button class="' + (ch ? '' : 'on') + '" data-lact="podchain" data-v="0">Non</button></div></div>' +
+      (nd ? '<button class="btn block" data-lact="podreset">Repartir du chapitre 1</button>' : '') + '</div>';
+  }
   function podcastsView() {
     var ui = U(), p = PA.player();
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Podcasts</h1>' + ui.yo(window.PA_AUDIO ? 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions et répond aux quiz. Les épisodes sont enregistrés dans l’appli : ils marchent sans internet, et tu reprends là où tu t’étais arrêté.' : 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions. Dans cette version de test, la lecture utilise la voix de ton appareil ; l’appli installée a les épisodes enregistrés.') +
-      LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) { var pos = p.podPos && p.podPos[c.n]; var sec = p.podSec && p.podSec[c.n]; var mins = hasAudio(c.n) ? Math.round(window.PA_AUDIO[c.n].d / 60) : c.podcast ? Math.round(c.podcast.reduce(function (a, l) { return a + (l[0] === 'P' ? l[1] / 60 : l[1].split(/\s+/).length / 150); }, 0)) : c.minutes; return '<div class="card row" style="justify-content:space-between"><div><b>' + c.n + '. ' + c.title + '</b><div class="small muted">' + mins + ' min' + (hasAudio(c.n) ? (sec ? ' · reprise à ' + mmss(sec) : '') : (pos ? ' · reprise à la réplique ' + (pos + 1) : '')) + '</div></div><a class="btn" href="#lecon-' + c.n + '">Ouvrir</a></div>'; }).join('') + '</div>';
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Podcasts</h1>' + ui.yo(window.PA_AUDIO ? 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions et répond aux quiz. Les épisodes sont enregistrés dans l’appli : ils marchent sans internet, et tu reprends là où tu t’étais arrêté.' : 'Chaque leçon existe en version à écouter : je t’explique, le joueur pose les questions. Dans cette version de test, la lecture utilise la voix de ton appareil ; l’appli installée a les épisodes enregistrés.') + suiteCard(p) +
+      LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) { var pos = p.podPos && p.podPos[c.n]; var sec = p.podSec && p.podSec[c.n]; var mins = hasAudio(c.n) ? Math.round(window.PA_AUDIO[c.n].d / 60) : c.podcast ? Math.round(c.podcast.reduce(function (a, l) { return a + (l[0] === 'P' ? l[1] / 60 : l[1].split(/\s+/).length / 150); }, 0)) : c.minutes; return '<div class="card row" style="justify-content:space-between"><div><b>' + c.n + '. ' + c.title + '</b><div class="small muted">' + mins + ' min' + (hasAudio(c.n) ? (sec ? ' · reprise à ' + mmss(sec) : '') : (pos ? ' · reprise à la réplique ' + (pos + 1) : '')) + (p.podDone && p.podDone[c.n] ? ' · <span style="color:#4fe08f">écouté</span>' : '') + '</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn' + (POD.n === c.n ? ' gold' : '') + '" data-lact="podfrom" data-v="' + c.n + '" aria-label="Écouter à partir de cet épisode">' + (POD.n === c.n && POD.playing ? '❚❚' : '▶') + '</button><a class="btn" href="#lecon-' + c.n + '">Ouvrir</a></div></div>'; }).join('') + '</div>';
     return ui.shell('apprendre', body);
   }
 
@@ -199,12 +255,19 @@
       U().render(); var z = document.querySelector('[data-lact=ans],[data-lact=quiz]'); if (z) z.scrollIntoView({ block: 'center' });
     }
     else if (a === 'listen') listen(parseInt(v, 10));
+    else if (a === 'podtoggle') togglePod();
+    else if (a === 'podnext') { var nx = nextEp(POD.n); if (nx) startEp(nx, true); }
+    else if (a === 'podprev') { var pv = prevEp(POD.n); if (pv) startEp(pv, true); }
+    else if (a === 'podsuite') listen(firstToHear());
+    else if (a === 'podfrom') { var nf = parseInt(v, 10); if (POD.n === nf) togglePod(); else listen(nf); }
+    else if (a === 'podchain') { p.podChain = v === '1'; PA.save(); U().render(); }
+    else if (a === 'podreset') { p.podDone = {}; p.podSec = {}; p.podPos = {}; PA.save(); startEp(eps()[0], true); }
     else if (a === 'rate' && POD.audio) { POD.rate = parseFloat(v); if (AU) AU.playbackRate = POD.rate; refreshPod(); }
     else if (a === 'back10' && POD.audio) { seekLine(POD.i - 1); }
     else if (a === 'stop' && POD.audio) { if (AU) { saveSec(); AU.pause(); } POD.playing = false; POD.n = null; POD.audio = false; U().render(); }
     else if (a === 'rate') { POD.rate = parseFloat(v); if (POD.playing) { speechSynthesis.cancel(); POD.playing = true; setTimeout(speakNext, 50); } refreshPod(); }
     else if (a === 'back10') { POD.i = Math.max(0, POD.i - 1); if (POD.playing) { POD.playing = false; speechSynthesis.cancel(); POD.playing = true; setTimeout(speakNext, 50); } refreshPod(); }
-    else if (a === 'stop') { POD.playing = false; speechSynthesis.cancel(); POD.n = null; U().render(); }
+    else if (a === 'stop') { POD.playing = false; speechSynthesis.cancel(); POD.n = null; msState(); U().render(); }
     else if (a === 'range') { var c3 = LS.get(parseInt(v, 10)); if (window.PA_UI_openRange) window.PA_UI_openRange({ sit: c3.range, hand: null }); }
     else if (a === 'exam') { var pl = pool(v).sort(function () { return Math.random() - 0.5; }).slice(0, 15); EX = { qs: pl, i: 0, score: 0, answered: null, miss: [] }; U().render(); }
     else if (a === 'exans') { var it = EX.qs[EX.i], k2 = parseInt(v, 10); EX.answered = k2; if (k2 === it.q.a) EX.score++; else EX.miss.push(it); U().render(); }
@@ -216,6 +279,7 @@
 
   window.PA_LEARN = {
     views: { lecons: listView, podcasts: podcastsView, examens: examsView, 'cours-imprimable': printView },
-    lesson: lessonView
+    lesson: lessonView,
+    mini: mini
   };
 })();
