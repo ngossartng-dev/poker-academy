@@ -15,7 +15,7 @@
   }
   function list(cb) {
     var out = [];
-    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push('audio/v3/pod' + (n < 10 ? '0' : '') + n + '.m4a'); });
+    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push(window.PA.audioFile(n)); });
     function sol() {
       var D = window.PA_SOLVER_DATA;
       if (D && D.spots) D.spots.forEach(function (s) { out.push('solver/flop/' + s.id + '.js'); (s.flops || D.flops).forEach(function (f) { out.push('solver/turn/' + s.id + '/' + f + '.js'); }); });
