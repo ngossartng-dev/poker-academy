@@ -139,5 +139,11 @@
     if (ST.sc && ST.cards.length === 5 && !ST.res) { compute(); return; }
     U().render();
   });
-  window.PA_APF = { view: view };
+  // ouverture préremplie (mode coach : « ce que fait le solveur » sur une main du club)
+  function open(o) {
+    ST.pos = o.pos; var L0 = scList(o.pos); ST.sc = L0.filter(function (s) { return s[0] === o.spot && s[1] === o.side; })[0] || null;
+    ST.opp = ''; ST.d25 = !!o.d25; ST.cards = (o.flop || []).concat(o.hand || []); ST.res = null;
+    location.hash = '#apf'; if (ST.sc && ST.cards.length === 5) setTimeout(compute, 50);
+  }
+  window.PA_APF = { view: view, open: open, scenarios: function (pos) { return window.PA_SOLVER && window.PA_SOLVER.data() ? scList(pos) : SC[pos] || []; }, positions: POS, has25: function (id) { return !!(V25[id] && hasSpot(V25[id])); } };
 })();

@@ -3061,7 +3061,7 @@
 
   L[43] = {
     minutes: 14,
-    links: [{ href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'Kd8s3c', line: 'x-x', card: '2d' })), label: 'Le solveur : la mise sonde sur K♦8♠3♣' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
+    links: [{ href: '#cas', label: 'S’entraîner : cas concrets (mise sonde, c-bet retardé, float)' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'Kd8s3c', line: 'x-x', card: '2d' })), label: 'Le solveur : la mise sonde sur K♦8♠3♣' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['Le float : payer en position avec une main faible pour reprendre le pot quand l’adversaire abandonne. La mise sonde : miser la turn hors de position quand l’ouvreur n’a pas misé le flop.', 'Le c-bet retardé : checker le flop, miser la turn. La donk bet : miser en premier vers celui qui avait l’initiative ; rare au flop, plus utile à la turn.'],
     sections: [
       { ask: 'C’est quoi un float ?', h: 'Le float : payer pour voler plus tard', p: ['Tu es en position, l’adversaire fait son c-bet au flop. Tu paies avec une main faible ou moyenne, non pas pour gagner à l’abattage, mais pour miser quand il checkera la turn.', 'Exemple du solveur : le hijack ouvre, le bouton paie. Flop K♦8♠3♣, le hijack mise un tiers du pot : le bouton ne se couche que 20 % du temps, il paie 61 %. Puis, quand le hijack checke la turn, le bouton mise 53 % du temps.', 'Bonnes mains pour floater : des cartes hautes, une porte arrière de couleur ou de quinte, un tirage ventral. Tu as un peu d’équité si on te paie.', 'Quand floater : en position, contre un joueur qui mise souvent au flop et abandonne à la turn. Jamais contre une calling station (elle ne se couche pas), et rarement à plusieurs.'] },
@@ -3084,7 +3084,7 @@
 
   L[44] = {
     minutes: 12,
-    links: [{ href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'KsKd5c', path: 'x' })), label: 'Le solveur : 55 sur K♠K♦5♣' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: '8h7h4d', path: 'x-b33' })), label: 'Le solveur : le check-raise sur 8♥7♥4♦' }],
+    links: [{ href: '#cas', label: 'S’entraîner : cas concrets (check-raise)' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'KsKd5c', path: 'x' })), label: 'Le solveur : 55 sur K♠K♦5♣' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: '8h7h4d', path: 'x-b33' })), label: 'Le solveur : le check-raise sur 8♥7♥4♦' }],
     key: ['Le slowplay (jouer lentement une très grosse main) se fait sur les tableaux secs où l’adversaire n’a rien à payer ; sur les tableaux humides, on mise.', 'Le check-raise se joue avec les mains très fortes et les tirages qui ont des outs ; jamais avec rien du tout.'],
     sections: [
       { ask: 'C’est quoi le slowplay ?', h: 'Jouer lentement une grosse main', p: ['Tu as une main très forte et tu checkes ou tu paies au lieu de miser, pour laisser l’adversaire bluffer ou toucher une deuxième meilleure main.', 'L’exemple parfait : tu as 5♥5♦ au bouton sur K♠K♦5♣ (full). Le solveur checke 96 % du temps. Le tableau est sec, tu as presque tout bloqué, l’adversaire n’a quasiment rien qui puisse payer une mise. Lui donner une carte ne coûte presque rien.'] },

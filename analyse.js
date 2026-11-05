@@ -141,6 +141,53 @@
     };
   }
 
+
+  /* ---------- Coups des chapitres 39 à 44 : squeeze, cold call, 3-bet par position, coups après le flop ---------- */
+  function moves(h) {
+    var hero = h.hero, pre = h.acts.filter(function (a) { return a.s === 'pre' && !a.blind; }), m = {};
+    var raises = 0, callersAfter = 0, done = false, lastRaiser = null;
+    pre.forEach(function (a) {
+      if (done) return;
+      if (a.p === hero) {
+        done = true;
+        if (raises === 1 && callersAfter >= 1) { m.sqO = 1; if (a.a === 'raise' || a.allin) m.sq = 1; }
+        if (raises === 1 && callersAfter === 0) {
+          m.vo = 1; // face à une ouverture seule
+          if (a.a === 'raise' || a.allin) m.b3 = 1;
+          if (a.a === 'call' && h.pos[hero] !== 'BB') m.cc = 1;
+        }
+        return;
+      }
+      if (a.a === 'raise' || a.a === 'bet') { raises++; callersAfter = 0; }
+      else if (a.a === 'call' && raises === 1) callersAfter++;
+    });
+    pre.forEach(function (a) { if (a.a === 'raise' || a.a === 'bet') lastRaiser = a.p; });
+    // après le flop, en tête-à-tête seulement
+    var folded = {}; pre.forEach(function (a) { if (a.a === 'fold') folded[a.p] = 1; });
+    var live = h.seats.map(function (x) { return x.name; }).filter(function (n) { return !folded[n]; });
+    if (live.length === 2 && live.indexOf(hero) >= 0 && lastRaiser) {
+      var vil = live[0] === hero ? live[1] : live[0], pfa = lastRaiser === hero;
+      var F = h.acts.filter(function (a) { return a.s === 'flop'; }), T = h.acts.filter(function (a) { return a.s === 'turn'; });
+      var heroFirst = F.length && F[0].p === hero, betF = F.filter(function (a) { return a.a === 'bet' || a.a === 'raise'; });
+      var flopChecked = F.length >= 2 && !betF.length && !F.some(function (a) { return a.a === 'fold'; });
+      // check-raise : sans initiative, hors de position, tu checkes et il mise
+      if (!pfa && heroFirst && F[0].a === 'check' && F[1] && F[1].p === vil && F[1].a === 'bet' && F[2] && F[2].p === hero) { m.xrO = 1; if (F[2].a === 'raise') m.xr = 1; }
+      if (T.length) {
+        var tFirst = T[0];
+        // c-bet retardé : tu avais l’initiative, flop checké, tu peux miser la turn sans mise devant toi
+        if (pfa && flopChecked) {
+          var tH = T.filter(function (a) { return a.p === hero; })[0], before = T.slice(0, T.indexOf(tH));
+          if (tH && !before.some(function (a) { return a.a === 'bet'; })) { m.dcO = 1; if (tH.a === 'bet') m.dc = 1; }
+        }
+        // mise sonde : il avait l’initiative, il a checké le flop derrière, tu parles en premier à la turn
+        if (!pfa && flopChecked && heroFirst && tFirst.p === hero) { m.prO = 1; if (tFirst.a === 'bet') m.pr = 1; }
+        // float : sans initiative, en position, tu as payé son c-bet ; il checke la turn
+        if (!pfa && !heroFirst && betF.length === 1 && betF[0].p === vil && F[F.length - 1].p === hero && F[F.length - 1].a === 'call' && tFirst.p === vil && tFirst.a === 'check' && T[1] && T[1].p === hero) { m.flO = 1; if (T[1].a === 'bet') m.fl = 1; }
+      }
+    }
+    return m;
+  }
+
   /* ---------- Comparaison avec ta range ---------- */
   var ACT_FR = { fold: 'te coucher', raise: 'ouvrir', limp: 'limper', allin: 'faire tapis', call: 'payer', fourbet: 'sur-relancer', check: 'checker' };
   function actFr(a, type) { if (type === 'def' && (a === 'raise' || a === 'fourbet')) return 'sur-relancer (3-bet)'; if (type === 'def' && a === 'call') return 'payer'; return ACT_FR[a] || a; }
@@ -268,6 +315,7 @@
     if (fl) r.fl = fl;
     var ag = heroAgg(h); if (ag) r.ag = ag;
     var ev = null; try { ev = allinEV(h); } catch (e) {} if (ev) { r.ev = ev.ev; r.eq = ev.eq; }
+    try { r.mv = moves(h); } catch (e) { r.mv = {}; }
     r.x2 = 1;
     var big = (h.total[hero] || 0) / h.bb >= 10 || Math.abs(net) >= 10;
     if (big) r.log = logOf(h);
@@ -301,6 +349,7 @@
         read++; heroes[h.hero] = (heroes[h.hero] || 0) + 1;
         if (have[h.id]) {
           var old = byId[h.id];
+          if (old && old.src !== 'club' && !old.mv) { try { old.mv = moves(h); } catch (e) { old.mv = {}; } }
           if (old && old.src !== 'club' && !old.x2) {
             var f2 = null; try { f2 = flopInfo(h); } catch (e) {} if (f2 && !old.fl) old.fl = f2;
             var ag2 = heroAgg(h); if (ag2) old.ag = ag2;
@@ -323,9 +372,14 @@
   /* ---------- Statistiques ---------- */
   function pctOf(a, b) { return b ? Math.round(a / b * 1000) / 10 : null; }
   function stats(hands, profileId) {
-    var S = { agB: 0, agC: 0, evN: 0, evAdj: 0, curve: [], n: hands.length, v: 0, r: 0, b3o: 0, b3: 0, f3o: 0, f3f: 0, net: 0, sf: 0, sd: 0, sw: 0, stealO: 0, steal: 0, bbDefO: 0, bbDef: 0, limp: 0, byPos: {}, dev: [], tours: {} };
+    var S = { mv: { n: 0, sqO: 0, sq: 0, xrO: 0, xr: 0, dcO: 0, dc: 0, prO: 0, pr: 0, flO: 0, fl: 0, pos: {} }, agB: 0, agC: 0, evN: 0, evAdj: 0, curve: [], n: hands.length, v: 0, r: 0, b3o: 0, b3: 0, f3o: 0, f3f: 0, net: 0, sf: 0, sd: 0, sw: 0, stealO: 0, steal: 0, bbDefO: 0, bbDef: 0, limp: 0, byPos: {}, dev: [], tours: {} };
     hands.forEach(function (x) {
       if (x.ag) { S.agB += x.ag[0]; S.agC += x.ag[1]; }
+      if (x.mv) {
+        var M = S.mv, mv = x.mv; M.n++;
+        ['sqO', 'sq', 'xrO', 'xr', 'dcO', 'dc', 'prO', 'pr', 'flO', 'fl'].forEach(function (k) { if (mv[k]) M[k]++; });
+        if (mv.vo) { var Q = M.pos[x.p] || (M.pos[x.p] = { o: 0, b3: 0, cc: 0 }); Q.o++; if (mv.b3) Q.b3++; if (mv.cc) Q.cc++; }
+      }
       if (x.ev !== undefined) { S.evN++; S.evAdj += x.ev - x.net; }
       S.curve.push([x.net, x.ev !== undefined ? x.ev : x.net]);
       S.v += x.v; S.r += x.r; S.net += x.net; S.sf += x.sf; S.sd += x.sd; S.sw += x.sw; if (x.src === 'club') S.club = (S.club || 0) + 1;
@@ -372,13 +426,13 @@
     fetch('/api/winamax', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (L) {
       SY.avail = L.found; SY.info = L;
       if (!L.found) { SY.busy = false; return; }
-      var db = loadDB(), seen = db.flv === 2 ? (db.files || {}) : {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
+      var db = loadDB(), seen = db.flv === 3 ? (db.files || {}) : {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
       if (!todo.length) { SY.busy = false; SY.msg = force ? 'Tout est à jour : aucune nouvelle main Winamax.' : SY.msg; if (force) U().render(); return; }
       var texts = [], i = 0;
       (function next() {
         if (i >= todo.length) {
           var res = importTexts(texts), db2 = loadDB(); db2.files = db2.files || {};
-          todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); db2.flv = 2; saveDB(db2);
+          todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); db2.flv = 3; saveDB(db2);
           SY.busy = false; SY.msg = res.added ? res.added + ' nouvelles mains Winamax importées automatiquement.' : 'Tout est à jour : aucune nouvelle main Winamax.';
           if (/^#analyser/.test(location.hash)) U().render();
           return;
@@ -463,6 +517,38 @@
       (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' || AV.tab === 'progres' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
         [['all', 'Winamax + club'], ['wina', 'Winamax'], ['club', 'Club']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
   }
+
+  // repères (profil TAG, ranges de l’appli et solveur) et renvois aux chapitres
+  var AUPOS = { HJ: 'Au hijack', CO: 'Au cut-off', BTN: 'Au bouton', SB: 'En petite blinde', BB: 'En grosse blinde' };
+  var MV_T = { b3: { HJ: [4, 8], CO: [6, 10], BTN: [9, 14], SB: [7, 12], BB: [7, 13] }, cc: { HJ: [0, 4], CO: [3, 9], BTN: [4, 10], SB: [0, 3] } };
+  function movesCard(S) {
+    var M = S.mv, ui = U();
+    if (!M || !M.n) return '<div class="card stack"><b>Squeeze, 3-bet, coups après le flop</b><div class="small muted">Ces statistiques se calculent sur les mains Winamax importées à partir de la version 2.8. Sur PC, l’appli relit tes dossiers toute seule ; sur téléphone, réimporte tes fichiers.</div></div>';
+    var com = [], rows = [];
+    function line(label, a, b, tgt, ch) { var p = pctOf(a, b); rows.push('<tr><td>' + label + '</td><td style="text-align:right"><b>' + fmtPct(p) + '</b></td><td class="small muted" style="text-align:right">' + b + ' fois</td><td class="small muted">' + tgt + '</td><td class="small"><a href="#lecon-' + ch + '">ch. ' + ch + '</a></td></tr>'); return p; }
+    var sq = line('Squeeze', M.sq, M.sqO, 'repère 6-10 %', 40);
+    if (M.sqO >= 25 && sq < 3) com.push('Tu ne squeezes presque jamais (' + fmtPct(sq) + ' sur ' + M.sqO + ' occasions) : une ouverture et un call devant toi, c’est 6,5 BB d’argent mort. Relis le chapitre 40.');
+    if (M.sqO >= 25 && sq > 16) com.push('Tu squeezes beaucoup (' + fmtPct(sq) + ') : vérifie que tes bluffs sont des As assortis, pas des KJo ou QJo.');
+    ['HJ', 'CO', 'BTN', 'SB', 'BB'].forEach(function (pos) {
+      var Q = M.pos[pos]; if (!Q || !Q.o) return;
+      var t = MV_T.b3[pos], p = line('3-bet ' + PA.POS_LABEL[pos], Q.b3, Q.o, 'repère ' + t[0] + '-' + t[1] + ' %', 39);
+      if (Q.o >= 25 && p < t[0] - 3) com.push(AUPOS[pos] + ', tu 3-bet ' + fmtPct(p) + ' face à une ouverture (repère ' + t[0] + '-' + t[1] + ' %) : ajoute des 3-bets light avec les As assortis (chapitre 39).');
+      if (MV_T.cc[pos]) {
+        var c = MV_T.cc[pos], pc = line('Cold call ' + PA.POS_LABEL[pos], Q.cc, Q.o, 'repère ' + c[0] + '-' + c[1] + ' %', 41);
+        if (Q.o >= 20 && pc > c[1] + 5) com.push(pos === 'SB' ? 'En petite blinde, tu paies ' + fmtPct(pc) + ' des ouvertures : c’est 3-bet ou couche (chapitres 39 et 41).' : AUPOS[pos] + ', tu paies ' + fmtPct(pc) + ' des ouvertures : beaucoup de cold calls, souvent dominés ou squeezés (chapitre 41).');
+      }
+    });
+    var xr = line('Check-raise au flop', M.xr, M.xrO, 'repère 12-20 %', 44);
+    if (M.xrO >= 20 && xr < 6) com.push('Tu ne check-raises presque jamais (' + fmtPct(xr) + ') : tes brelans et tes gros tirages devraient relancer plus souvent (chapitre 44).');
+    if (M.xrO >= 20 && xr > 30) com.push('Tu check-raises beaucoup (' + fmtPct(xr) + ') : garde-le pour les mains fortes et les tirages avec des outs (chapitre 44).');
+    var dc = line('C-bet retardé', M.dc, M.dcO, 'repère 55-70 %', 43);
+    if (M.dcO >= 15 && dc < 35) com.push('Quand tu as checké le flop et qu’il checke la turn, tu ne mises que ' + fmtPct(dc) + ' : le solveur mise 63 à 71 % du temps (c-bet retardé, chapitre 43).');
+    var pr = line('Mise sonde', M.pr, M.prO, 'repère 35-50 %', 43);
+    if (M.prO >= 15 && pr < 20) com.push('Quand l’ouvreur checke le flop, tu ne sondes la turn que ' + fmtPct(pr) + ' du temps (repère 35-50 %, chapitre 43).');
+    line('Float (mise à la turn après avoir payé)', M.fl, M.flO, 'repère 45-55 %', 43);
+    return '<div class="card stack"><b>Squeeze, 3-bet, coups après le flop</b><div class="small muted">Sur ' + M.n + ' mains Winamax. Repères : profil TAG, ranges de l’appli et solveur.</div>' + (com.length ? ui.yo(com.join('<br><br>')) : '') +
+      '<div style="overflow-x:auto"><table class="small" style="width:100%;border-collapse:collapse"><tbody>' + rows.join('') + '</tbody></table></div></div>';
+  }
   function resume(H, S, prof) {
     var vp = pctOf(S.v, S.n), pr = pctOf(S.r, S.n), tg = TARGET[prof] || TARGET.tag, P = window.PA.PROFILES[prof] || window.PA.PROFILES.tag;
     var bb100 = S.n ? S.net / S.n * 100 : 0;
@@ -483,7 +569,7 @@
       stat('Défense BB', fmtPct(pctOf(S.bbDef, S.bbDefO)), 'face à un vol (' + S.bbDefO + ' fois)', null, S.bbDefO) + stat('Fold au 3-bet', fmtPct(pctOf(S.f3f, S.f3o)), 'après ton ouverture (' + S.f3o + ' fois)', null, S.f3o) +
       stat('Abattage', fmtPct(pctOf(S.sd, S.sf)), 'quand tu vois le flop', null, S.sf) + stat('Gagné à l’abattage', fmtPct(pctOf(S.sw, S.sd)), '', null, S.sd) +
       stat('Agressivité', S.agC ? String(Math.round(S.agB / S.agC * 10) / 10).replace('.', ',') : (S.agB ? '∞' : '–'), 'mises et relances ÷ paiements après le flop · repère TAG : 2 à 3', null, S.agB + S.agC) + '</div>';
-    return U().yo(com.join(' ')) + g + luckCard(S);
+    return U().yo(com.join(' ')) + g + movesCard(S) + luckCard(S);
   }
   // courbe de gains réelle et « corrigée de la chance » (tapis remplacés par leur espérance)
   function luckCard(S) {
@@ -997,6 +1083,6 @@
 
   document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-hfile') === 'mains' && t.files && t.files[0]) { var r = new FileReader(); r.onload = function () { importHands(String(r.result)); U().render(); }; r.readAsText(t.files[0]); } });
   if (window.PA_STORE) window.PA_STORE.whenReady(function () { setTimeout(function () { if (U() && U().render && window.PA.player()) U().render(); }, 0); });
-  window.PA_HH = { flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
+  window.PA_HH = { moves: moves, flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
     view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'tag')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'tag') : null; }, clear: function () { if (window.PA_STORE) window.PA_STORE.del(key()); try { localStorage.removeItem(key()); } catch (e) {} } };
 })();

@@ -45,7 +45,7 @@
     keys().forEach(function (k) { localStorage.removeItem(k); });
     var hh = Object.keys(snap.data).filter(function (k) { return /^pa2hh_/.test(k); });
     Object.keys(snap.data).forEach(function (k) { if (/^pa2/.test(k) && !/^pa2hh_/.test(k)) localStorage.setItem(k, snap.data[k]); });
-    setMeta({ changedAt: snap.savedAt, restoredAt: Date.now(), savedAt: snap.savedAt });
+    setMeta({ changedAt: snap.savedAt, restoredAt: Date.now(), savedAt: snap.savedAt, syncedAt: snap.savedAt });
     function fin() { location.hash = '#home'; location.reload(); }
     var S = window.PA_STORE;
     if (!S) { hh.forEach(function (k) { try { localStorage.setItem(k, snap.data[k]); } catch (e) {} }); fin(); return; }
@@ -93,6 +93,68 @@
         else pcSave(false);
       });
     }, 2500);
+  }
+
+
+  /* ---------- Synchronisation automatique PC ↔ téléphone : un fichier partagé dans Google Drive ---------- */
+  var SY2 = { busy: false, conflict: null, info: null, last: 0 };
+  function hasAndroidSync() { return IS_ANDROID && !!window.PAAndroid.syncRead; }
+  function syncConfigured() { return IS_PC || (hasAndroidSync() && !!PAAndroid.syncInfo()); }
+  function rRead(cb) {
+    if (IS_PC) { fetch('/api/sync', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { cb(j); }).catch(function () { cb(null); }); return; }
+    if (!syncConfigured()) { cb(null); return; }
+    var t = null; try { t = PAAndroid.syncRead(); } catch (e) {} var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {} cb(j);
+  }
+  function rWrite(snap, cb) {
+    var txt = JSON.stringify(snap);
+    if (IS_PC) { fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: txt }).then(function (r) { cb(r.ok); }).catch(function () { cb(false); }); return; }
+    var ok = false; try { ok = PAAndroid.syncWrite(txt); } catch (e) {} cb(ok);
+  }
+  // startup : au lancement on peut recharger ; ensuite on propose seulement
+  function syncNow(startup, choice) {
+    if (!syncConfigured() || SY2.busy) return;
+    SY2.busy = true;
+    rRead(function (remote) {
+      var m = meta(), base = m.syncedAt || 0, dirty = (m.changedAt || 0) > base;
+      var valid = remote && remote.app === 'Poker Academy' && remote.data && remote.data.pa2;
+      var newer = valid && remote.savedAt > base && remote.savedAt !== m.changedAt;
+      SY2.last = Date.now(); SY2.info = valid ? { device: remote.device, at: remote.savedAt } : null;
+      function done() { SY2.busy = false; }
+      function push() { var snap = snapshot(); rWrite(snap, function (ok) { if (ok) { var mm = meta(); mm.syncedAt = snap.savedAt; setMeta(mm); SY2.conflict = null; } done(); }); }
+      function pull() { try { sessionStorage.setItem('pa2syncMsg', remote.device + '|' + remote.savedAt); } catch (e) {} SY2.busy = false; restore(remote); }
+      if (choice === 'local') { push(); return; }
+      if (choice === 'remote' && valid) { pull(); return; }
+      if (newer && dirty && base) { SY2.conflict = { device: remote.device, at: remote.savedAt, local: m.changedAt }; done(); banner('Tu as joué sur ' + (remote.device === 'PC' ? 'le PC' : 'le téléphone') + ' et ici depuis la dernière synchronisation. Choisis la progression à garder.', 'Choisir', '#sauvegarde'); return; }
+      if (newer && dirty && !base) { SY2.conflict = { device: remote.device, at: remote.savedAt, local: m.changedAt, first: true }; done(); banner('Une progression ' + (remote.device === 'PC' ? 'du PC' : 'du téléphone') + ' existe dans ton Drive. Laquelle veux-tu garder sur les deux appareils ?', 'Choisir', '#sauvegarde'); return; }
+      if (newer) { if (startup) { pull(); return; } done(); banner('Ta progression a avancé sur ' + (remote.device === 'PC' ? 'le PC' : 'le téléphone') + ' (' + dt(remote.savedAt) + ').', 'Reprendre', '#sauvegarde'); SY2.conflict = { device: remote.device, at: remote.savedAt, local: m.changedAt, pull: true }; return; }
+      if (dirty || !valid) { push(); return; }
+      done();
+    });
+  }
+  if (IS_PC || hasAndroidSync()) {
+    setTimeout(function () {
+      try { var msg = sessionStorage.getItem('pa2syncMsg'); if (msg) { sessionStorage.removeItem('pa2syncMsg'); var p = msg.split('|'); banner('Progression reprise depuis ' + (p[0] === 'PC' ? 'le PC' : 'le téléphone') + ' (' + dt(+p[1]) + ').'); } } catch (e) {}
+      syncNow(true);
+    }, 3000);
+    setInterval(function () { syncNow(false); }, 2 * 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) { var m = meta(); if ((m.changedAt || 0) > (m.syncedAt || 0)) syncNow(false); } else syncNow(false); });
+    window.__paSyncPicked = function (name) { if (name) { var mm = meta(); delete mm.syncedAt; setMeta(mm); ST.msg = 'Fichier de synchronisation choisi : ' + name + '.'; syncNow(false); } else ST.msg = 'Aucun fichier choisi.'; U().render(); };
+  }
+  function syncCard() {
+    var ui = U(), m = meta(), out = '<div class="card stack"><b>Synchronisation PC ↔ téléphone</b>';
+    if (IS_PC) out += '<div class="small">Le PC écrit ta progression dans <b>poker-academy-sync.json</b>, dans le même dossier Drive que les sauvegardes. Sur le téléphone, choisis une fois ce fichier : les deux appareils le relisent et le réécrivent tout seuls.</div>';
+    else if (hasAndroidSync()) {
+      var nm = PAAndroid.syncInfo();
+      out += nm ? '<div class="small">Fichier synchronisé : <b>' + ui.esc(nm) + '</b>. L’appli le relit au lancement et le réécrit toutes les 2 minutes et quand tu la quittes.</div><div class="row"><button class="btn" data-syact="syncnow">Synchroniser maintenant</button><button class="btn" data-syact="syncpick">Changer de fichier</button><button class="btn" data-syact="syncforget">Arrêter</button></div>'
+        : '<div class="small">Une seule fois : touche le bouton, ouvre <b>Drive › Poker Academy › Sauvegardes</b> et choisis <b>poker-academy-sync.json</b> (le PC le crée au premier lancement). Ensuite, tout est automatique.</div><button class="btn gold" data-syact="syncpick">Choisir le fichier dans Google Drive</button><button class="btn" data-syact="synccreate">Pas de PC : créer le fichier ici</button>';
+    } else { return ''; }
+    if (syncConfigured()) out += '<div class="small muted">Dernière synchronisation : ' + dt(m.syncedAt) + (SY2.info ? ' · dans le fichier : ' + ui.esc(SY2.info.device) + ', ' + dt(SY2.info.at) : '') + '.</div>';
+    if (SY2.conflict) {
+      var c = SY2.conflict, other = c.device === 'PC' ? 'du PC' : 'du téléphone';
+      out += '<div class="card stack" style="border-color:var(--gold,#ffd23f)"><b>' + (c.pull ? 'Ta progression a avancé ailleurs' : 'Quelle progression garder ?') + '</b><div class="small">Celle ' + other + ' : ' + dt(c.at) + '. Celle de cet appareil : ' + dt(c.local) + '.</div>' +
+        '<div class="row"><button class="btn gold" data-syact="syncremote">Garder celle ' + other + '</button>' + (c.pull ? '' : '<button class="btn" data-syact="synclocal">Garder celle-ci</button>') + '</div><div class="small muted">L’autre n’est pas perdue : elle reste dans les sauvegardes horodatées.</div></div>';
+    }
+    return out + '</div>';
   }
 
   /* ---------- Fichier : export et import ---------- */
@@ -170,6 +232,7 @@
         '<button class="btn gold" data-syact="export">Envoyer une sauvegarde</button>';
     } else out += '<button class="btn gold" data-syact="export">Exporter un fichier de sauvegarde</button>';
     out += '<label class="btn" style="text-align:center">Importer un fichier de sauvegarde<input type="file" accept=".json,application/json" data-syimport="1" style="display:none"></label></div>';
+    out += syncCard();
     if (window.PA_PACK) out += window.PA_PACK.card();
     // rappel quotidien (Android)
     if (IS_ANDROID && PAAndroid.setReminder) {
@@ -196,6 +259,11 @@
     var a = t.getAttribute('data-syact'), v = t.getAttribute('data-v');
     if (a === 'close') { closeBanner(); return; }
     if (a === 'export') { exportFile(); return; }
+    if (a === 'syncpick' || a === 'synccreate') { PAAndroid.syncPick(a === 'synccreate'); return; }
+    if (a === 'syncforget') { PAAndroid.syncForget(); ST.msg = 'Synchronisation arrêtée sur ce téléphone.'; }
+    if (a === 'syncnow') { syncNow(false); setTimeout(function () { U().render(); }, 600); }
+    if (a === 'synclocal') { syncNow(false, 'local'); SY2.conflict = null; ST.msg = 'Ta progression de cet appareil est envoyée sur l’autre.'; }
+    if (a === 'syncremote') { syncNow(false, 'remote'); return; }
     if (a === 'restore') { try { restore(ST.pending); } catch (e) { ST.msg = e.message; U().render(); } return; }
     if (a === 'cancel') { ST.pending = null; }
     if (a === 'pcload') { pcLoad(v, function (snap) { if (snap && snap.data) { ST.pending = snap; ST.msg = ''; } else ST.msg = 'Lecture de la sauvegarde impossible.'; U().render(); }); return; }

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.7.1';
+  var VERSION = '2.8.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -251,6 +251,7 @@
       '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
       '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
       '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>Tous les chapitres en couleurs, avec encadrés, quiz et grilles de ranges.</span></a>' +
+      '<a class="tile" href="#memo"><b>Fiche mémo</b><span>Toutes les tailles et tous les seuils sur une page, à imprimer pour le club.</span></a>' +
       '<a class="tile" href="#solveur"><b>Solveur (mode avancé)</b><span>Tous les coups calculés, flop par flop, famille par famille, jusqu’à la river.</span></a>' +
       '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a>' +
       '<a class="tile" href="#minuteur"><b>Minuteur du club</b><span>Les niveaux de blindes en grand, avec signal sonore : pour les parties au club.</span></a></div></div>';
@@ -308,6 +309,7 @@
       '<button class="tile" data-act="startSit" data-v="hu"><b>Tapis ou fold en heads-up</b><span>Un contre un, moins de 15 BB : pousser au bouton, payer en grosse blinde.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="vs3bet"><b>Face au 3-bet</b><span>Tu as ouvert, on te relance.</span></button>' +
       '<a class="tile" href="#cas"><b>Cas concrets après le flop</b><span>A4 assorti en pot 3-bet, AK raté, top paire en grosse blinde… : que fait le solveur ?</span></a>' +
+      '<a class="tile" href="#calcul"><b>Calcul rapide</b><span>Cote du pot, défense minimale, bluff, outs : 20 secondes par question.</span></a>' +
       '<a class="tile" href="#choix3b"><b>3-bet, squeeze ou pas ?</b><span>Valeur, bluff, payer ou se coucher, selon qui ouvre, qui paie et ton tapis.</span></a>' +
       '<a class="tile" href="#planquiz"><b>Plan de jeu</b><span>Ouvrir, 3-bet ou payer… puis la suite si on te sur-relance : tapis, payer ou 3-bet fold ?</span></a>' +
       '<button class="tile" data-act="startSit" data-v="icm"><b>Bulle et ICM</b><span>Payer un tapis à la bulle ou en table finale : jetons contre euros.</span></button>' +
@@ -590,6 +592,7 @@
       '<a class="tile" href="#bankroll"><b>Bankroll</b><span>Tes résultats (Winamax, club, live), ROI, repères du cours et simulateur de variance.</span></a>' +
       '<a class="tile" href="#fiche"><b>Avant la partie</b><span>Ta fiche : structure, plan par phase, tes 3 fuites à surveiller, les adversaires attendus.</span></a>' +
       '<a class="tile" href="#reglages"><b>Réglages</b><span>Taille du texte, mode gaucher, vibration, remise à zéro, tout effacer.</span></a>' +
+      '<a class="tile" href="#coach"><b>Mode coach</b><span>Transformer une main du club en quiz à partager sur le groupe.</span></a>' +
       '<a class="tile" href="#merci"><b>Remerciements</b><span>Version ' + VERSION + '</span></a>' +
       '<button class="btn" data-act="pickPlayer">Changer de joueur</button></div>';
     return shell('moi', body);
@@ -625,13 +628,14 @@
     var s = PA.load(), p = PA.player();
     var r = (location.hash || '#home').slice(1).split('?')[0];
     if (r === 'pick') { app.innerHTML = pickPlayerView(); return; }
+    if (r === 'quizclub' && window.PA_COACH) { app.innerHTML = window.PA_COACH.quiz(); window.scrollTo(0, 0); return; }
     if (!p) { app.innerHTML = Object.keys(s.players).length && !ui.forceNew ? pickPlayerView() : onbView(); return; }
     if (!p.profile || ui.onbActive) { if (!p.profile) ui.onb.step = Math.max(2, ui.onb.step); app.innerHTML = onbView(); return; }
     if (!ui.welcomed && /[?&]q=/.test(location.hash)) ui.welcomed = true; // ouverture depuis le widget
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, calcul: function () { return window.PA_CALC ? window.PA_CALC.view() : homeView(); }, coach: function () { return window.PA_COACH ? window.PA_COACH.compose() : homeView(); }, memo: function () { return window.PA_MEMO ? window.PA_MEMO.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }

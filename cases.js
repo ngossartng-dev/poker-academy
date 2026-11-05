@@ -20,7 +20,8 @@
     { sit: 'Bouton contre un nit en grosse blinde. Il checke. Pot 5,5 BB.', hand: '5c4c', board: 'KhQd6s', o: ['Check', 'Mise un tiers du pot', 'Mise 1,25 fois le pot'], a: 2, why: 'Contre un nit, le solveur mise 92 % de ses mains, presque toujours 1,25 fois le pot : il se couche trop.' }
   ];
   var F = 'all', LOADING = false;
-  var FILT = [['all', 'Tout'], ['pos', 'Pots simples'], ['3bet', 'Pots 3-bet'], ['sb', 'Petite blinde'], ['rec', 'Contre récréatifs'], ['limp', 'Pots limpés'], ['bulle', 'Bulle']];
+  var m0 = /[?&]t=([a-z0-9]+)/.exec(location.hash); if (m0) F = m0[1];
+  var FILT = [['all', 'Tout'], ['pos', 'Pots simples'], ['3bet', 'Pots 3-bet'], ['sb', 'Petite blinde'], ['rec', 'Contre récréatifs'], ['limp', 'Pots limpés'], ['bulle', 'Bulle'], ['sonde', 'Mise sonde'], ['retard', 'C-bet retardé'], ['float', 'Float'], ['xr', 'Check-raise']];
   function pool() {
     var G = window.PA_CASES_GEN || [];
     if (F === 'all') return { hand: C, gen: G };
