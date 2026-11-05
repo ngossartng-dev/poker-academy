@@ -290,3 +290,14 @@ html[data-season=hiver] .season-tag{border-color:#9cc6ff;color:#cfe3ff}
 .podmini~.fab{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 @media(min-width:900px){.podmini{left:auto;right:20px;bottom:20px;width:380px}.podmini~.fab{bottom:96px}}
 @media print{.podmini{display:none}}
+
+/* lexique */
+.lx{border-bottom:2px dotted var(--gold);cursor:help}
+.lx:focus{outline:2px solid var(--gold);outline-offset:2px}
+.zoom .lxbox{max-height:85vh;overflow:auto}
+.zoom .lxbox div{background:none;border:0;padding:0;min-width:0;border-radius:0;text-align:left}
+.lx-letter{margin:10px 0 0;color:var(--gold)}
+.lx-item{scroll-margin-top:12px}
+.lx-p{margin:0 0 6px}.lx-ch{color:var(--muted);font-size:.9em}
+@media print{.lx{border:0}}
+.lx-item{gap:4px;padding-block:14px}

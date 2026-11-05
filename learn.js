@@ -18,7 +18,9 @@
           return c.ready ? '<a class="row" href="#lecon-' + c.n + '" style="justify-content:space-between;text-decoration:none;color:#fff;padding:8px 0;border-bottom:1px solid var(--line)"><span>' + c.n + '. ' + c.title + '</span>' + badge + '</a>'
             : '<a class="row" ' + (embed() ? '' : 'href="cours/poker-academy-cours.pdf#page=' + c.page + '" target="_blank" rel="noopener"') + ' style="justify-content:space-between;text-decoration:none;color:#c9c9cf;padding:8px 0;border-bottom:1px solid var(--line)"><span>' + c.n + '. ' + c.title + '</span>' + badge + '</a>';
         }).join('') + '</div>';
-      }).join('') + (embed() ? '<p class="muted small">Le PDF n’est pas inclus dans cette version de test en ligne : il est dans l’appli installée.</p>' : '') + '</div>';
+      }).join('') + '<div class="card stack"><h3>Annexes · à garder sous la main</h3>' +
+      '<a class="row" href="#memo" style="justify-content:space-between;text-decoration:none;color:#fff;padding:8px 0;border-bottom:1px solid var(--line)"><span>Fiche mémo</span><span class="chip">1 page</span></a>' +
+      '<a class="row" href="#lexique" style="justify-content:space-between;text-decoration:none;color:#fff;padding:8px 0"><span>Lexique</span><span class="chip">' + (window.PA_LEX ? window.PA_LEX.TERMS.length : '') + ' termes</span></a></div>' + (embed() ? '<p class="muted small">Le PDF n’est pas inclus dans cette version de test en ligne : il est dans l’appli installée.</p>' : '') + '</div>';
     return ui.shell('apprendre', body);
   }
 
@@ -26,15 +28,17 @@
   var QZ = null; // quiz en cours {n, i, score, answered}
   function lessonView(n) {
     var ui = U(), c = LS.get(n); if (!c || !c.ready) { location.hash = '#lecons'; return ''; }
-    var p = PA.player(), st = prog(p)[n];
+    var p = PA.player(), st = prog(p)[n], seen = {};
+    function lx(t) { return window.PA_LEX ? window.PA_LEX.link(t, seen) : t; }
     var h = '<div class="stack"><button class="back" data-act="nav" data-v="lecons">‹ Leçons</button>' +
       '<div class="small muted">Partie ' + c.part + ' · chapitre ' + c.n + ' · ' + c.minutes + ' min</div><h1>' + c.title + '</h1>' +
       '<div class="row"><button class="btn gold" data-lact="listen" data-v="' + n + '">' + (POD.n === n && POD.playing ? 'Pause' : 'Écouter la leçon') + '</button>' + (c.range ? '<button class="btn" data-lact="range" data-v="' + n + '">Voir dans ma range</button>' : '') + (c.sit ? '<button class="btn" data-act="startSit" data-v="' + c.sit + '">S’entraîner sur ce point</button>' : '') + (c.link ? '<a class="btn" href="' + c.link.href + '">' + c.link.label + '</a>' : '') + (c.links ? c.links.map(function (k) { return '<a class="btn" href="' + k.href + '">' + k.label + '</a>'; }).join('') : '') + '</div>' +
       (POD.n === n ? podControls() : '') +
-      '<div class="card stack" style="border-color:#ffd23f"><b style="color:#ffd23f">L’idée clé</b>' + c.key.map(function (k) { return '<p>' + k + '</p>'; }).join('') + '</div>' +
-      c.sections.map(function (s) { return '<div class="stack" style="gap:8px"><h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + x + '</p>'; }).join('') + '</div>'; }).join('') +
-      '<div class="card fb-err stack"><b>L’erreur fréquente</b><p>' + c.mistake + '</p></div>' +
-      '<div class="card stack"><b>À retenir</b>' + c.retain.map(function (r) { return '<div>• ' + r + '</div>'; }).join('') + '</div>' +
+      '<div class="card stack" style="border-color:#ffd23f"><b style="color:#ffd23f">L’idée clé</b>' + c.key.map(function (k) { return '<p>' + lx(k) + '</p>'; }).join('') + '</div>' +
+      c.sections.map(function (s) { return '<div class="stack" style="gap:8px"><h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + lx(x) + '</p>'; }).join('') + '</div>'; }).join('') +
+      '<div class="card fb-err stack"><b>L’erreur fréquente</b><p>' + lx(c.mistake) + '</p></div>' +
+      '<div class="card stack"><b>À retenir</b>' + c.retain.map(function (r) { return '<div>• ' + lx(r) + '</div>'; }).join('') + '</div>' +
+      '<div class="small muted">Les mots soulignés en pointillés s’ouvrent d’un appui. Tous les termes sont dans le <a href="#lexique" style="color:#ffd23f">lexique</a>.</div>' +
       quizHtml(c, st) + '</div>';
     return ui.shell('apprendre', h);
   }
@@ -239,7 +243,9 @@
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="cours">‹ Le cours</button><h1>Le cours (nouvelles leçons)</h1>' + (embed() ? '' : '<button class="btn gold" data-lact="print">Imprimer ou enregistrer en PDF</button>') +
       LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) {
         return '<div class="stack" style="page-break-before:always"><h2>' + c.n + '. ' + c.title + '</h2><p><b>L’idée clé.</b> ' + c.key.join(' ') + '</p>' + c.sections.map(function (s) { return '<h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + x + '</p>'; }).join(''); }).join('') + '<p><b>L’erreur fréquente.</b> ' + c.mistake + '</p><p><b>À retenir.</b> ' + c.retain.join(' · ') + '</p></div>';
-      }).join('') + '</div>';
+      }).join('') +
+      (window.PA_MEMO && window.PA_MEMO.body ? '<div class="stack memo" style="page-break-before:always"><h2>Annexe 1 · La fiche mémo</h2>' + window.PA_MEMO.body() + '</div>' : '') +
+      (window.PA_LEX ? '<div class="stack" style="page-break-before:always"><h2>Annexe 2 · Le lexique</h2>' + window.PA_LEX.printHtml() + '</div>' : '') + '</div>';
     return ui.shell('apprendre', body);
   }
 

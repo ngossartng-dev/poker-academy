@@ -5,8 +5,7 @@
     return '<table class="memo-t"><thead><tr>' + head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>' +
       rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td' + (i ? ' class="n"' : '') + '>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
   }
-  function view() {
-    var ui = window.PA_UI;
+  function body() {
     var sizes = tbl(['Coup', 'Taille'], [
       ['Ouverture (club)', '2 BB · petite blinde 3 BB'],
       ['Isolement d’un limper', '3 BB en position, 4 BB des blindes, +1 BB par limper'],
@@ -51,16 +50,19 @@
       'Petite blinde : 3-bet ou couche. Cold call surtout au bouton.',
       'Pas de 3-bet light contre UTG ni contre une calling station.'
     ].map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
-    var out = '<div class="stack memo"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Fiche mémo</h1>' +
-      '<div class="small muted no-print">Toutes les tailles et tous les seuils sur une page, à garder dans le portefeuille pour le club.</div>' +
-      '<button class="btn gold block no-print" data-act="print">Imprimer ou enregistrer en PDF</button>' +
-      '<div class="memo-grid"><section><h2>Les tailles</h2>' + sizes + '<h2>Avant le flop</h2>' + pre + '</section>' +
+    return '<div class="memo-grid"><section><h2>Les tailles</h2>' + sizes + '<h2>Avant le flop</h2>' + pre + '</section>' +
       '<section><h2>Les seuils</h2>' + seuils + '</section>' +
       '<section><h2>Défense minimale et bluff</h2>' + mdf + '<div class="small muted">Défense = pot ÷ (pot + mise) · bluff = mise ÷ (pot + mise)</div></section>' +
       '<section><h2>Les outs</h2>' + outs + '<div class="small muted">Règle du 4 au flop (avec deux cartes à venir), du 2 à la turn.</div></section>' +
-      '<section class="wide"><h2>Après le flop</h2>' + post + '</section></div>' +
-      '<div class="small muted">Poker Academy · profil TAG · chiffres tirés des ranges de l’appli et du solveur.</div></div>';
+      '<section class="wide"><h2>Après le flop</h2>' + post + '</section></div>';
+  }
+  function view() {
+    var ui = window.PA_UI;
+    var out = '<div class="stack memo"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Fiche mémo</h1>' +
+      '<div class="small muted no-print">Toutes les tailles et tous les seuils sur une page, à garder dans le portefeuille pour le club.</div>' +
+      '<button class="btn gold block no-print" data-act="print">Imprimer ou enregistrer en PDF</button>' + body() +
+      '<div class="small muted">Poker Academy · profil TAG · chiffres tirés des ranges de l’appli et du solveur.</div><a class="btn block no-print" href="#lexique">Le lexique : tous les termes du cours</a></div>';
     return ui.shell('apprendre', out);
   }
-  window.PA_MEMO = { view: view };
+  window.PA_MEMO = { view: view, body: body };
 })();
