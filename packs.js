@@ -15,7 +15,7 @@
   }
   function list(cb) {
     var out = [];
-    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push('audio/v2/pod' + (n < 10 ? '0' : '') + n + '.m4a'); });
+    Object.keys(window.PA_AUDIO || {}).forEach(function (n) { n = +n; out.push('audio/v3/pod' + (n < 10 ? '0' : '') + n + '.m4a'); });
     function sol() {
       var D = window.PA_SOLVER_DATA;
       if (D && D.spots) D.spots.forEach(function (s) { out.push('solver/flop/' + s.id + '.js'); (s.flops || D.flops).forEach(function (f) { out.push('solver/turn/' + s.id + '/' + f + '.js'); }); });
@@ -59,7 +59,7 @@
     else if (!IS_PC && !IS_ANDROID) out += '<div class="small muted">Sur iPhone et dans le navigateur, les fichiers déjà ouverts sont gardés par le navigateur.</div>';
     if (ST.busy) out += '<div>Téléchargement : ' + ST.done + ' / ' + ST.total + (ST.err ? ' · ' + ST.err + ' échec(s)' : '') + '</div><div class="timer"><i style="width:' + (ST.total ? Math.round(ST.done / ST.total * 100) : 0) + '%"></i></div>';
     else if (ST.total && ST.done >= ST.total) out += '<div class="small" style="color:' + (ST.err ? '#ff8080' : '#4fe08f') + '">' + (ST.err ? ST.err + ' fichier(s) n’ont pas pu être téléchargés : vérifie la connexion et recommence.' : 'Tout est téléchargé.') + '</div>';
-    out += '<div class="row"><button class="btn gold" data-pkact="all" style="flex:1"' + (ST.busy ? ' disabled' : '') + '>Tout télécharger (environ 80 Mo)</button><button class="btn" data-pkact="clear"' + (ST.busy ? ' disabled' : '') + '>Libérer la place</button></div></div>';
+    out += '<div class="row"><button class="btn gold" data-pkact="all" style="flex:1"' + (ST.busy ? ' disabled' : '') + '>Tout télécharger (environ 270 Mo)</button><button class="btn" data-pkact="clear"' + (ST.busy ? ' disabled' : '') + '>Libérer la place</button></div></div>';
     if (!I && (IS_PC || IS_ANDROID)) status(function () { if (/^#sauvegarde/.test(location.hash)) ui.render(); });
     return out;
   }
