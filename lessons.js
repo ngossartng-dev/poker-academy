@@ -9,9 +9,9 @@
   var PLAN = [
     [1, 'I', 'Fondations', 8], [2, 'I', 'Positions et formats de table', 10], [3, 'I', 'Le club', 13], [4, 'I', 'Bankroll', 17],
     [5, 'II', 'Ouvrir : ranges par profil, position et profondeur', 23], [6, 'II', 'Défendre les blindes', 32], [7, 'II', 'Face aux limpers', 55],
-    [8, 'II', 'Le 3-bet et face au 3-bet', 148], [9, 'II', 'Squeeze, 4-bet et click back', 145], [34, 'II', 'Le limp-trap et le limp-shove', 0],
+    [8, 'II', 'Le 3-bet et face au 3-bet', 148], [9, 'II', 'Squeeze, 4-bet et click back', 145], [37, 'II', 'Le vol de blindes', 0], [34, 'II', 'Le limp-trap et le limp-shove', 0],
     [10, 'III', 'Outils de calcul', 67], [11, 'III', 'Lire un board', 75], [12, 'III', 'Lecture de main', 0], [13, 'III', 'Le sizing', 77],
-    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [33, 'III', 'Jouer les paires et les as forts après le flop', 0], [35, 'III', 'La river avec le solveur', 0],
+    [14, 'III', 'Le flop : c-bet et défense', 91], [15, 'III', 'La turn', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [38, 'III', 'Cas concrets après le flop', 0], [33, 'III', 'Jouer les paires et les as forts après le flop', 0], [35, 'III', 'La river avec le solveur', 0],
     [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0], [20, 'IV', 'Tapis de 25 à 40 BB', 113], [21, 'IV', 'Tapis de 15 à 25 BB', 117], [22, 'IV', 'Tables de push/fold', 123],
     [23, 'IV', 'L’ICM complet', 134], [24, 'IV', 'Table finale et heads-up', 136], [36, 'IV', 'Le heads-up', 0], [25, 'IV', 'PKO et Space KO', 137],
     [26, 'V', 'Profils adverses', 161], [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0], [28, 'V', 'Image de table et lecture au club', 162],
@@ -2825,6 +2825,122 @@
     ['P', 5],
     ['J', 'Je paie.'],
     ['Y', 'Parfait. On résume. À deux, presque toutes les mains ont de la valeur : joue trois quarts de tes mains au bouton, défends deux tiers en grosse blinde. Relance au minimum. Sous quinze blindes, tapis ou fold avec les tables. Une top paire, même faible, est une grosse main. Mise souvent : ton adversaire rate deux fois sur trois. Et adapte-toi à lui. Bon heads-up !']
+  ];
+
+  L[37] = {
+    minutes: 14,
+    links: [{ href: '#ranges', label: 'Ma range › Vue globale' }, { href: '#solveur', label: 'Le solveur : petite blinde contre grosse blinde' }],
+    key: ['Voler les blindes, c’est ouvrir pour ramasser les blindes et les antes sans combat. Plus tu es près du bouton, moins il reste de joueurs pour te réveiller : c’est là qu’on vole.', 'Avec une ouverture à 2 BB et une ante de grosse blinde, le vol est rentable dès que tout le monde se couche 44 % du temps, sans même compter les coups gagnés après le flop.'],
+    sections: [
+      { ask: 'Qu’est-ce que voler les blindes ?', h: 'Le principe', p: ['Quand tout le monde s’est couché jusqu’à toi en fin de table (hijack, cut-off, bouton, petite blinde), tu ouvres une range plus large que ta « valeur » pure : ton but est souvent de ramasser les blindes et l’ante, pas de jouer un gros pot.', 'Avant que tu ouvres, il y a déjà 2,5 BB au milieu avec l’ante de grosse blinde (petite blinde 0,5 + grosse blinde 1 + ante 1). Tu risques 2 BB pour les gagner.'] },
+      { ask: 'Quand est-ce rentable ?', h: 'Le calcul du vol', p: ['Tu mises 2 BB pour gagner 2,5 BB : le vol est rentable dès que tout le monde se couche plus de 44 % du temps (2 ÷ (2 + 2,5)). Et c’est un minimum : quand on te paie, tu gagnes encore une partie de ces coups après le flop.', 'Contre des joueurs qui défendent comme le profil TAG, tout le monde se couche environ 47 % du temps derrière une ouverture du hijack, 51 % derrière le cut-off, 44 % derrière le bouton (les blindes défendent beaucoup contre lui) et 67 % derrière la petite blinde. Contre des joueurs serrés, c’est 56 à 72 % : le vol rapporte encore plus.'] },
+      { ask: 'Combien de mains j’ouvre pour voler ?', h: 'Les ranges de vol par position', p: ['À 40 BB et plus, profil TAG : hijack 22 %, cut-off 29 %, bouton 47 %, petite blinde 32 %. Profil serré : 18, 21, 30 et 22 %. Profil large-agressif : 30, 41, 56 et 43 %.', 'Entre 20 et 40 BB, on resserre un peu (TAG : hijack 17 %, cut-off 25 %, petite blinde 27 %) : un 3-bet adverse met vite ton tapis en jeu. Sous 20 BB, le vol se fait à tapis, avec les tables du chapitre 22.', 'Tu retrouves ces ranges dans Ma range › Vue globale : survole ou touche une main pour voir à partir d’où on l’ouvre, et quoi faire si on te relance.'] },
+      { ask: 'Et depuis la petite blinde ?', h: 'Le vol depuis la petite blinde', p: ['Il ne reste que la grosse blinde. Tu as déjà mis 0,5 BB : en ouvrant à 3 BB, tu risques 2,5 BB de plus pour gagner 2,5 BB. Il faut que la grosse blinde se couche une fois sur deux ; un joueur TAG en grosse blinde ne défend qu’un tiers de ses mains face à toi.', 'Le défaut : tu joueras hors de position après le flop. Le solveur (petite blinde contre grosse blinde) checke donc plus d’une fois sur deux au flop, même sur un flop roi sec, et ne mise souvent qu’un tiers du pot.', 'Au club, beaucoup de grosses blindes défendent trop, par principe. Contre elles, vole avec des mains qui jouent bien après le flop (as, rois, mains assorties) plutôt qu’avec les pires mains.'] },
+      { ask: 'Et le hijack, c’est encore du vol ?', h: 'Le hijack et le cut-off', p: ['Au cut-off, il reste trois joueurs : le bouton, qui joue en position contre toi, et les deux blindes. C’est la vraie position de vol avec le bouton : 29 % des mains en TAG.', 'Au hijack, il en reste quatre : le vol marche encore (47 % d’abandons contre des TAG), mais un joueur de plus peut te réveiller. On vole moins large : 22 %, surtout des mains qui jouent bien si on te paie (as assortis, connecteurs assortis, figures).', 'Plus il reste de joueurs derrière, plus ta range doit rester solide : un vol du hijack avec une main faible qui se fait 3-bet est un pli perdu à chaque fois.'] },
+      { ask: 'Et si on me relance ?', h: 'Face au 3-bet de vol (re-steal)', p: ['Les bons joueurs en blinde savent que tu voles : ils sur-relancent plus large contre le cut-off et le bouton. Prépare ta réponse avant d’ouvrir : c’est exactement ce que montre le Plan de jeu (Ma range) pour chaque main.', 'À 40 BB, un 4-bet met tout ton tapis : tu continues avec tes mains fortes et quelques mains bloquantes, tu te couches avec le reste sans regret. Ton vol a déjà rapporté sur toutes les fois où tout le monde s’est couché.'] },
+      { ask: 'Quand voler plus, quand voler moins ?', h: 'Adapter le vol', p: ['Vole plus : contre des blindes serrées (nit, survivant), à la bulle contre les tapis moyens qui ont peur, quand les blindes sont courtes et jouent tapis ou fold avec des ranges serrées.', 'Vole moins : contre une calling station en grosse blinde (elle paie tout : ouvre plutôt pour la valeur et mise gros après le flop), contre un joueur qui 3-bet très souvent, et quand tu as une image de voleur après plusieurs ouvertures de suite.'] }
+    ],
+    mistake: 'Voler avec n’importe quelles deux cartes depuis le hijack, ou continuer à voler une calling station qui paie toutes ses grosses blindes.',
+    retain: ['Vol rentable si tout le monde se couche plus de 44 % du temps (ouverture 2 BB, ante BB).', 'Ranges TAG : HJ 22 %, CO 29 %, BTN 47 %, SB 32 %.', 'Petite blinde : ouvre 3 BB, checke souvent au flop hors de position.', 'Prépare ta réponse au 3-bet avant d’ouvrir (Plan de jeu).', 'Vole plus contre les serrés et à la bulle, moins contre les stations et les 3-betteurs.'],
+    quiz: [
+      { q: 'Avec une ouverture à 2 BB et une ante de grosse blinde, le vol est rentable dès que tout le monde se couche environ…', o: ['20 % du temps', '44 % du temps', '70 % du temps', '90 % du temps'], a: 1, why: '2 ÷ (2 + 2,5) = 44 %, sans compter tes gains quand on te paie.' },
+      { q: 'Profil TAG à 40 BB : quelle part de mains ouvres-tu au cut-off ?', o: ['10 %', '29 %', '47 %', '70 %'], a: 1, why: 'Hijack 22 %, cut-off 29 %, bouton 47 %, petite blinde 32 %.' },
+      { q: 'Depuis la petite blinde, ton vol est rentable si la grosse blinde se couche…', o: ['une fois sur quatre', 'une fois sur deux', 'neuf fois sur dix', 'jamais'], a: 1, why: 'Tu risques 2,5 BB de plus pour gagner 2,5 BB.' },
+      { q: 'Contre une calling station en grosse blinde, tu…', o: ['voles encore plus large', 'voles moins et mises gros pour la valeur', 'ne joues plus jamais', 'limpes tout'], a: 1, why: 'Elle ne se couche pas : le vol perd sa raison d’être.' },
+      { q: 'Pourquoi voler moins large au hijack qu’au bouton ?', o: ['Parce que les blindes sont plus grosses', 'Parce qu’il reste plus de joueurs pour te relancer', 'Parce qu’on ne peut pas', 'Ce n’est pas vrai'], a: 1, why: 'Quatre joueurs derrière au hijack, deux au bouton.' }
+    ]
+  };
+
+  L[37].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, voler les blindes. On en parle souvent au club, mais je ne sais pas si je le fais bien.'],
+    ['Y', 'Salut ! Le vol, c’est simple : tout le monde se couche jusqu’à toi, en fin de table, et tu ouvres pour ramasser les blindes et l’ante. Pas pour jouer un gros coup.'],
+    ['J', 'Et c’est rentable ?'],
+    ['Y', 'Fais le compte. Avec l’ante de grosse blinde, il y a déjà deux blindes et demie au milieu. Tu ouvres à deux. Tu risques deux pour en gagner deux et demie.'],
+    ['J', 'Donc il faut qu’ils se couchent souvent.'],
+    ['Y', 'Plus de quarante-quatre pour cent du temps. Et c’est un minimum, parce que quand on te paie, tu gagnes encore une partie des coups après le flop.'],
+    ['J', 'Et en vrai, ils se couchent combien ?'],
+    ['Y', 'Contre des joueurs réguliers, environ une fois sur deux derrière le cut-off. Deux fois sur trois derrière la petite blinde. Et contre des joueurs serrés, jusqu’à sept fois sur dix.'],
+    ['J', 'Combien de mains j’ouvre ?'],
+    ['Y', 'Avec ton profil, à quarante blindes : hijack vingt-deux pour cent, cut-off vingt-neuf, bouton quarante-sept, petite blinde trente-deux.'],
+    ['J', 'Et depuis la petite blinde, c’est spécial ?'],
+    ['Y', 'Oui. Il ne reste que la grosse blinde. Tu ouvres à trois blindes : il faut qu’elle se couche une fois sur deux. Mais tu joueras hors de position. Alors après le flop, le solveur checke plus d’une fois sur deux, même sur un flop roi sec.'],
+    ['J', 'Et le hijack ?'],
+    ['Y', 'Encore du vol, mais plus prudent. Il reste quatre joueurs. On vole avec des mains qui jouent bien si on te paie : as assortis, connecteurs assortis, figures.'],
+    ['J', 'Et si la grosse blinde me relance ?'],
+    ['Y', 'Prépare ta réponse avant d’ouvrir. Le plan de jeu de Ma range te le dit main par main. À quarante blindes, un quatre-bet, c’est ton tapis : tu continues avec tes mains fortes, tu jettes le reste sans regret.'],
+    ['J', 'Et quand je vole plus, ou moins ?'],
+    ['Y', 'Plus contre les joueurs serrés, et à la bulle contre ceux qui ont peur. Moins contre une calling station en grosse blinde : elle paie tout. Contre elle, ouvre pour la valeur et mise gros après le flop.'],
+    ['J', 'Le quiz ?'],
+    ['Y', 'Première question. À partir de quelle fréquence d’abandons le vol est rentable ?'],
+    ['P', 5],
+    ['J', 'Quarante-quatre pour cent.'],
+    ['Y', 'Oui.'],
+    ['Y', 'Deuxième question. Depuis la petite blinde, la grosse blinde doit se coucher combien de fois ?'],
+    ['P', 5],
+    ['J', 'Une fois sur deux.'],
+    ['Y', 'Bravo. On résume. Vole en fin de table : quarante-quatre pour cent d’abandons suffisent. Cut-off et bouton sont les vraies places de vol, le hijack plus prudemment, la petite blinde avec une ouverture à trois et beaucoup de checks après le flop. Prépare ta réponse au trois-bet. Et adapte-toi : plus contre les serrés, moins contre les stations. À bientôt !']
+  ];
+
+  L[38] = {
+    minutes: 20,
+    links: [{ href: '#cas', label: 'S’entraîner : cas concrets' }, { href: '#solveur', label: 'Le solveur' }],
+    key: ['Chaque cas vient du solveur de l’appli, à 40 BB : ce qu’il fait avec une main précise, pourquoi, avec quelle mise, et la suite.', 'Une règle revient partout : on mise quand le flop favorise sa range, on checke ou on abandonne quand il favorise celle de l’adversaire.'],
+    sections: [
+      { ask: 'J’ai 3-bet avec A4 assorti en grosse blinde, le bouton a payé, je rate le flop. Je fais quoi ?', h: 'Cas 1 : A4 assorti, 3-bet en grosse blinde, flop raté', p: ['Le bouton ouvre, tu 3-bet à 8 BB en grosse blinde avec A♥4♥, il paie. Pot 17,5 BB, il te reste 32 BB, tu parles en premier.', 'K♦ 8♠ 3♣ : tu mises presque toujours, surtout la moitié du pot (75 %). Ta range de 3-bet a beaucoup de AK, KK, AA ; la sienne peu de rois forts. Tu représentes la force, et ton as bloque ses as. S’il paie, tu as encore l’as. S’il fait tapis, tu te couches.', 'Q♥ T♠ 7♠ ou J♦ T♠ 3♣ : mitigé. Tu checkes un tiers du temps, et tu mises la moitié du pot environ quatre fois sur dix.', '9♠ 7♦ 5♣ : tu checkes 91 %, et tu te couches s’il mise (98 %). Ce flop touche sa range de paye, pas la tienne : on abandonne.'] },
+      { ask: 'Et si c’est moi qui 3-bet au bouton, en position ?', h: 'Cas 2 : A4 assorti, 3-bet au bouton, flop raté', p: ['Le cut-off ouvre, tu 3-bet au bouton avec A4 assorti, il paie et checke le flop. Pot 15,5 BB.', 'K♦ 8♠ 3♣ : tu mises 88 %, surtout la moitié du pot. Q♥ T♠ 7♠ et 9♠ 7♦ 5♣ : tu checkes environ 80 %. En position, tu prends la carte gratuite : ton as peut encore gagner, et tu verras sa réaction à la turn.', 'La règle des deux cas : on bluffe quand le flop favorise celui qui a 3-bet (cartes hautes, flop sec), on renonce quand il favorise celui qui a payé (flop bas et connecté). La taille : la moitié du pot suffit, le tapis est déjà proche.'] },
+      { ask: 'J’ai relancé avec AK au bouton et je rate. Je mise toujours ?', h: 'Cas 3 : AK raté en pot simple', p: ['Tu ouvres AK dépareillé au bouton, la grosse blinde paie. 40 BB, pot 5,5 BB.', 'J♣ 5♦ 2♥ (sec, une seule carte haute) : tu mises 98 %, surtout un tiers du pot. La grosse blinde rate très souvent ce genre de flop, et AK a six outs pour une top paire.', 'K♦ 8♠ 3♣, où tu as touché la top paire : tu mises aussi, 73 %, plutôt petit.', '9♠ 7♦ 5♣ (bas et connecté) : tu checkes 55 %. Quand tu mises, toutes les tailles servent. La grosse blinde a beaucoup de paires et de tirages ici : un petit bluff ne fait pas coucher grand monde.'] },
+      { ask: 'J’ai touché la top paire en grosse blinde, il mise. Je relance ou je paie ?', h: 'Cas 4 : top paire en grosse blinde', p: ['Tu défends ta grosse blinde avec K♠T♦ contre le bouton. Flop K♦ 8♠ 3♣, tu checkes, il mise.', 'Face à un tiers du pot : tu relances 63 %, tu paies 37 %. Une petite mise laisse trop de mains continuer : tu fais payer ses paires et ses as tout de suite. Avec K9 assorti, c’est presque pareil (relance 55 %).', 'Face à trois quarts du pot : tu paies 97 %. Sa grosse mise représente plus de mains fortes, et ta top paire au kicker moyen préfère contrôler la taille du pot.'] },
+      { ask: 'J’ai une paire moyenne et il mise deux fois. Je tiens jusqu’où ?', h: 'Cas 5 : paire moyenne face à deux mises', p: ['Flop K♦ 8♠ 3♣ : tu paies un tiers du pot en grosse blinde avec une paire de 8 ou une paire sous le roi. Turn 2♦, il mise maintenant la taille du pot.', 'Le solveur paie 58 % avec les paires moyennes, se couche 34 %. Avec les petites paires, il se couche 69 %. Face à une grosse mise à la turn, la paire moyenne devient une décision serrée, et la petite paire se couche.', 'Au club, les deuxièmes grosses mises sont rarement des bluffs : penche du côté de l’abandon avec les petites paires.'] },
+      { ask: 'J’ai un tirage couleur en pot 3-bet. Je mise ?', h: 'Cas 6 : tirage couleur en pot 3-bet', p: ['Tu as 3-bet au bouton, le cut-off a payé et checke. Flop K♥ 7♠ 2♥ avec un tirage couleur à cœur.', 'Le solveur mise 86 % de ses tirages couleur, surtout la moitié du pot. En pot 3-bet, le tapis est proche : une mise maintenant prépare le tapis à la turn, et tu as deux façons de gagner, il se couche ou ta couleur rentre.', 'En grosse blinde, après avoir 3-bet le bouton, même flop : tu mises aussi presque toujours, et part parfois directement à tapis.'] },
+      { ask: 'Quand faire un check-raise en grosse blinde ?', h: 'Cas 7 : le check-raise en grosse blinde', p: ['Tu défends ta grosse blinde contre le bouton. Flop 8♥ 7♥ 4♦, tu checkes, il mise un tiers du pot.', 'Avec un tirage couleur, le solveur relance 83 % du temps, dont 25 % directement à tapis. Avec un brelan, il relance toujours. Ses paires moyennes et petites paient presque toujours, ses mains sans rien se couchent 59 %.', 'Sur un flop bas et connecté, la grosse blinde a plus de grosses mains que le bouton : c’est le meilleur moment pour relancer, avec la valeur et les gros tirages.'] },
+      { ask: 'J’ai une overpaire sur un flop bas. Je mise combien ?', h: 'Cas 8 : overpaire sur un flop bas', p: ['Tu as ouvert Q♠Q♣ au bouton, la grosse blinde paie. Flop 8♥ 7♥ 4♦, elle checke.', 'Le solveur surmise 1,25 fois le pot 75 % du temps. Ce flop donne beaucoup de tirages et de paires à la grosse blinde : une grosse mise les fait payer cher, et prépare le tapis en deux rues.', 'Sur un flop sec avec une carte haute, la même overpaire mise plutôt petit : il y a peu de tirages à faire payer.'] },
+      { ask: 'J’ai volé depuis la petite blinde et la grosse blinde paie. Je mise au flop ?', h: 'Cas 9 : après un vol de la petite blinde', p: ['Tu ouvres à 3 BB en petite blinde, la grosse blinde paie. Flop K♦ 8♠ 3♣, tu parles en premier.', 'Le solveur checke 56 %, même sur ce flop sec. Quand il mise, c’est surtout un tiers du pot. Sa top paire checke presque une fois sur deux : hors de position, il garde des mains fortes dans ses checks pour ne pas être lisible.', 'Si tu mises un tiers du pot, la grosse blinde se couche 27 %, paie 56 % et relance 17 %. Hors de position, n’espère pas gagner tous les pots au flop : choisis tes mises.'] }
+    ],
+    mistake: 'Jouer sa main sans regarder à qui le flop profite : bluffer un flop bas et connecté contre la grosse blinde, ou checker un flop roi sec qu’on devait prendre.',
+    retain: ['3-bet raté : mise sur les flops hauts et secs, abandonne sur les flops bas et connectés.', 'AK raté : mise petit sur flop sec, checke souvent sur flop bas.', 'Top paire en grosse blinde : relance une petite mise, paie une grosse.', 'Paire moyenne face à deux grosses mises : décision serrée ; petite paire : couche.', 'Overpaire sur flop bas : mise gros. Check-raise : tirages forts et brelans sur flops bas.'],
+    quiz: [
+      { q: 'Tu as 3-bet A4s en grosse blinde, le bouton a payé. Flop 9♠ 7♦ 5♣. Le plus souvent :', o: ['tu mises la moitié du pot', 'tu checkes et tu te couches s’il mise', 'tu fais tapis', 'tu mises le pot'], a: 1, why: 'Check 91 %, couche 98 % face à une mise : le flop favorise sa range.' },
+      { q: 'Même 3-bet, flop K♦ 8♠ 3♣ :', o: ['tu checkes', 'tu mises, surtout la moitié du pot', 'tu fais tapis', 'tu te couches'], a: 1, why: 'Tu mises presque toujours : ta range a beaucoup plus de rois forts que la sienne.' },
+      { q: 'AK au bouton, flop J♣ 5♦ 2♥ :', o: ['check', 'mise un tiers du pot', 'surmise', 'tapis'], a: 1, why: 'Mise 98 %, surtout un tiers du pot : flop sec que la grosse blinde rate souvent.' },
+      { q: 'K♠T♦ en grosse blinde sur K♦ 8♠ 3♣, le bouton mise un tiers du pot :', o: ['tu te couches', 'tu relances le plus souvent', 'tu paies toujours', 'tu fais tapis à chaque fois'], a: 1, why: 'Relance 63 % : tu fais payer ses paires et ses as.' },
+      { q: 'Même main, mais il mise trois quarts du pot :', o: ['tu relances', 'tu paies', 'tu te couches', 'tu fais tapis'], a: 1, why: 'Paye 97 % : face à une grosse mise, on contrôle la taille du pot.' },
+      { q: 'Q♠Q♣ au bouton, flop 8♥ 7♥ 4♦, la grosse blinde checke :', o: ['check', 'un tiers du pot', '1,25 fois le pot', 'tapis'], a: 2, why: 'Surmise 75 % : beaucoup de tirages à faire payer.' },
+      { q: 'Tu as volé de la petite blinde, la grosse blinde paie, flop K♦ 8♠ 3♣ :', o: ['tu mises toujours', 'tu checkes plus d’une fois sur deux', 'tu fais tapis', 'tu te couches'], a: 1, why: 'Hors de position, le solveur checke 56 % même sur ce flop.' }
+    ]
+  };
+
+  L[38].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, des cas concrets après le flop. Avec de vraies mains.'],
+    ['Y', 'Salut ! Oui, tout vient du solveur de l’appli, à quarante blindes. Premier cas : tu es en grosse blinde, le bouton ouvre, tu trois-bet avec as-quatre assorti. Il paie.'],
+    ['J', 'Et je rate le flop.'],
+    ['Y', 'Ça dépend du flop. Roi, huit, trois : tu mises presque toujours, la moitié du pot. Tu représentes les as-roi, les rois, les as. Lui a peu de rois forts.'],
+    ['J', 'Et s’il fait tapis ?'],
+    ['Y', 'Tu te couches. Mais il se couche très souvent avant. Maintenant, flop neuf, sept, cinq.'],
+    ['J', 'Là je continue ?'],
+    ['Y', 'Non. Tu checkes neuf fois sur dix, et tu te couches s’il mise. Ce flop touche sa range à lui, pas la tienne. On abandonne, c’est normal.'],
+    ['J', 'Et si c’est moi qui trois-bet au bouton ?'],
+    ['Y', 'En position, sur les flops qui ne t’aident pas, tu checkes souvent. Tu prends la carte gratuite. Sur roi, huit, trois, tu mises presque toujours.'],
+    ['J', 'Et as-roi qui rate en pot simple ?'],
+    ['Y', 'Sur valet, cinq, deux, tu mises presque toujours, un tiers du pot. Sur neuf, sept, cinq, tu checkes plus d’une fois sur deux.'],
+    ['J', 'Et quand j’ai la top paire en grosse blinde ?'],
+    ['Y', 'Roi-dix sur roi, huit, trois, le bouton mise un tiers du pot : tu relances deux fois sur trois. Tu fais payer ses paires tout de suite. S’il mise trois quarts du pot, tu paies, simplement.'],
+    ['J', 'Et une paire moyenne face à deux mises ?'],
+    ['Y', 'À la turn, face à une mise du pot, c’est serré : le solveur paie un peu plus d’une fois sur deux. Une petite paire se couche sept fois sur dix.'],
+    ['J', 'Et l’overpaire sur un flop bas ?'],
+    ['Y', 'Dame-dame sur huit, sept, quatre avec deux cœurs : surmise, plus gros que le pot, trois fois sur quatre. Il y a plein de tirages à faire payer.'],
+    ['J', 'Et le check-raise ?'],
+    ['Y', 'En grosse blinde, sur ce même flop bas, avec un tirage couleur : tu relances plus de huit fois sur dix. C’est le flop qui t’aide.'],
+    ['J', 'Donc toujours la même idée.'],
+    ['Y', 'Toujours. Regarde à qui le flop profite. S’il profite à ta range, mise. S’il profite à la sienne, checke ou abandonne.'],
+    ['J', 'Le quiz ?'],
+    ['Y', 'Première question. Trois-bet avec as-quatre en grosse blinde, flop neuf, sept, cinq.'],
+    ['P', 5],
+    ['J', 'Je checke, et je me couche s’il mise.'],
+    ['Y', 'Oui.'],
+    ['Y', 'Deuxième question. Dame-dame au bouton, flop huit, sept, quatre.'],
+    ['P', 5],
+    ['J', 'Je mise gros, plus que le pot.'],
+    ['Y', 'Bravo. Et pour t’entraîner, l’exercice cas concrets te pose ces situations une par une. À bientôt !']
   ];
 
   var CHAPTERS = PLAN.map(function (c) {

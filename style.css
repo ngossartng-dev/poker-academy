@@ -246,3 +246,4 @@ html[data-season=hiver] .season-tag{border-color:#9cc6ff;color:#cfe3ff}
 .hs-tip .hs{font-size:13.5px}
 .pchip{display:inline-block;padding:1px 7px;border-radius:6px;font-weight:800;font-size:.92em;line-height:1.5}
 .pchip.big{font-size:22px;padding:2px 12px;font-family:'Big Shoulders Display','Arial Narrow',Impact,sans-serif}
+.pq-card.small{width:48px;height:66px;font-size:24px}.pq-card.small small{font-size:20px}
