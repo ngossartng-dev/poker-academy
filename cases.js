@@ -19,21 +19,37 @@
     { sit: 'Bouton contre une calling station en grosse blinde. Elle checke. Pot 5,5 BB, 40 BB.', hand: 'KcJd', board: 'KhQd6s', o: ['Check', 'Mise un tiers du pot', 'Tapis'], a: 2, why: 'Contre une station, le solveur part à tapis avec sa top paire 100 % du temps : elle paiera avec pire.' },
     { sit: 'Bouton contre un nit en grosse blinde. Il checke. Pot 5,5 BB.', hand: '5c4c', board: 'KhQd6s', o: ['Check', 'Mise un tiers du pot', 'Mise 1,25 fois le pot'], a: 2, why: 'Contre un nit, le solveur mise 92 % de ses mains, presque toujours 1,25 fois le pot : il se couche trop.' }
   ];
+  var F = 'all', LOADING = false;
+  var FILT = [['all', 'Tout'], ['pos', 'Pots simples'], ['3bet', 'Pots 3-bet'], ['sb', 'Petite blinde'], ['rec', 'Contre récréatifs'], ['limp', 'Pots limpés'], ['bulle', 'Bulle']];
+  function pool() {
+    var G = window.PA_CASES_GEN || [];
+    if (F === 'all') return { hand: C, gen: G };
+    return { hand: [], gen: G.filter(function (x) { return x.g === F; }) };
+  }
+  function newSeries() {
+    var P = pool(), list = shuffle(P.hand).slice(0, P.gen.length ? 3 : N);
+    list = list.concat(shuffle(P.gen).slice(0, N - list.length));
+    return { list: shuffle(list), i: 0, ok: 0, ans: null };
+  }
   var Q = null, N = 10, SU = { s: ['♠', 0], h: ['♥', 1], d: ['♦', 1], c: ['♣', 0] };
   function cards(str) { var o = ''; for (var i = 0; i < str.length; i += 2) { var r = str[i], s = SU[str[i + 1]]; o += '<span class="pq-card small' + (s[1] ? ' red' : '') + '">' + (r === 'T' ? '10' : r) + '<small>' + s[0] + '</small></span>'; } return o; }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function view() {
     var ui = window.PA_UI;
-    if (!Q) Q = { list: shuffle(C).slice(0, N), i: 0, ok: 0, ans: null };
+    if (!window.PA_CASES_GEN && !LOADING) { LOADING = true; var sc = document.createElement('script'); sc.src = 'cases-data.js'; sc.onload = sc.onerror = function () { LOADING = false; Q = null; ui.render(); }; document.head.appendChild(sc); }
+    if (!Q) Q = newSeries();
     var head = '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Cas concrets</h1>';
     if (Q.i >= Q.list.length) return ui.shell('entrainer', head + ui.yo(Q.ok + (Q.ok > 1 ? ' bonnes réponses' : ' bonne réponse') + ' sur ' + Q.list.length + '. ' + (Q.ok >= 8 ? 'Tu lis bien à qui profite le flop.' : 'Relis le chapitre 38 « Cas concrets après le flop » : la règle revient partout, regarde à qui profite le flop.')) + '<button class="btn gold block" data-cas="again">Recommencer</button><a class="btn block" href="#lecon-38">Lire le chapitre 38</a></div>');
-    var c = Q.list[Q.i], out = head + '<div class="small muted">Cas ' + (Q.i + 1) + ' sur ' + Q.list.length + ' · ' + Q.ok + ' bonne' + (Q.ok > 1 ? 's' : '') + ' réponse' + (Q.ok > 1 ? 's' : '') + '</div>' +
+    var total = (window.PA_CASES_GEN || []).length + C.length;
+    var c = Q.list[Q.i], out = head + (Q.i === 0 && Q.ans === null ? '<div class="small muted">' + (window.PA_CASES_GEN ? total.toLocaleString('fr-FR') + ' situations tirées du solveur, 10 par série. Choisis un thème :' : 'Chargement des situations…') + '</div><div class="seg">' + FILT.map(function (f) { return '<button class="' + (F === f[0] ? 'on' : '') + '" data-casf="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' : '') + '<div class="small muted">Cas ' + (Q.i + 1) + ' sur ' + Q.list.length + ' · ' + Q.ok + ' bonne' + (Q.ok > 1 ? 's' : '') + ' réponse' + (Q.ok > 1 ? 's' : '') + '</div>' +
       '<div class="card stack"><div>' + c.sit + '</div><div class="small muted">Tableau</div><div class="pq-hand">' + cards(c.board) + '</div><div class="small muted">Ta main</div><div class="pq-hand">' + cards(c.hand) + '</div></div>';
     if (Q.ans === null) out += '<div class="stack">' + c.o.map(function (o, k) { return '<button class="btn block" data-cas="' + k + '">' + o + '</button>'; }).join('') + '</div>';
     else out += '<div class="pq-res ' + (Q.ans === c.a ? 'ok' : 'ko') + '">' + (Q.ans === c.a ? 'Oui : ' : 'Non : ') + c.o[c.a].toLowerCase() + '.</div>' + ui.yo(c.why) + '<button class="btn gold block" data-cas="next">' + (Q.i + 1 >= Q.list.length ? 'Voir mon score' : 'Cas suivant') + '</button>';
     return ui.shell('entrainer', out + '</div>');
   }
   document.addEventListener('click', function (e) {
+    var tf = e.target.closest ? e.target.closest('[data-casf]') : null;
+    if (tf) { F = tf.getAttribute('data-casf'); Q = null; window.PA_UI.render(); return; }
     var t = e.target.closest ? e.target.closest('[data-cas]') : null; if (!t || !Q && t.getAttribute('data-cas') !== 'again') return;
     var a = t.getAttribute('data-cas');
     if (a === 'again') Q = null; else if (a === 'next') { Q.i++; Q.ans = null; } else if (Q.ans === null) { Q.ans = +a; if (Q.ans === Q.list[Q.i].a) Q.ok++; }
