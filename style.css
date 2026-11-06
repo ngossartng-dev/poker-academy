@@ -383,3 +383,34 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .shortcuts a svg{color:var(--gold)}
 .me-chip{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
 .me-chip svg{width:18px;height:18px}
+
+/* championnat : chiffres clés et classement en barres */
+.lg-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:560px){.lg-kpis{grid-template-columns:repeat(2,1fr)}}
+.lg-kpis>div{background:var(--panel2);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}
+.lg-kpis span{font-size:.72em;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.lg-kpis b{font-size:1.7em;line-height:1.2}
+.lg-kpis small{color:var(--muted);font-size:.75em}
+.lg-leg{display:flex;flex-wrap:wrap;gap:12px;font-size:.8em;color:var(--muted);align-items:center}
+.lg-leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.lg-legr{margin-left:auto}
+.lg-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px}
+.lg-row:nth-child(even){background:rgba(255,255,255,.035)}
+.lg-p1,.lg-p2,.lg-p3{background:rgba(255,210,63,.10)!important}
+.lg-rk{flex:0 0 30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--line);font-size:.9em}
+.lg-p1 .lg-rk{background:#d4a72c;color:#111;border:0}.lg-p2 .lg-rk{background:#a8abb3;color:#111;border:0}.lg-p3 .lg-rk{background:#b3713a;color:#111;border:0}
+.lg-nm{flex:1;min-width:0}
+.lg-nm>b{display:inline-block;margin-right:6px}
+.lg-nm small{color:var(--muted);font-size:.75em}
+.lg-bar{display:flex;height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px}
+.lg-bar i{display:block;height:100%}
+.lg-tot{flex:0 0 64px;text-align:right;display:flex;flex-direction:column}
+.lg-tot b{font-size:1.25em;color:var(--gold)}
+.lg-tot small{color:var(--muted);font-size:.75em}
+.lg-pod{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;text-align:center}
+.lg-pod>div{display:flex;flex-direction:column;align-items:center;min-width:0}
+.lg-pod b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lg-pod span{color:var(--gold);font-weight:700;font-size:.9em;margin-bottom:4px}
+.lg-med{font-size:1.8em;line-height:1.1}
+.lg-step{width:100%;background:#111;border-top:3px solid var(--gold);border-radius:8px 8px 0 0;font-weight:800;font-size:1.6em;color:var(--gold);display:flex;align-items:center;justify-content:center}
+.lg-pod1 .lg-step{height:74px}.lg-pod2 .lg-step{height:52px;border-color:#a8abb3;color:#a8abb3}.lg-pod3 .lg-step{height:38px;border-color:#b3713a;color:#b3713a}

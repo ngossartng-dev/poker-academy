@@ -38,7 +38,7 @@
       var place = x.out ? x.place : 1, pts = placePts(n, place, type), bonus = x.bonus || 0;
       return { name: x.name, place: place, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 10) / 10, entries: x.entries || 1, koBy: x.koBy || null, koAt: x.koAt || null, koLevel: x.koLevel || null, bountyFrom: x.bountyFrom || null };
     }).sort(function (a, b) { return a.place - b.place; });
-    var rec = { id: 't' + Date.now(), date: date, type: type, n: n, re: t.re || 0, add: t.add || 0, winner: winner ? winner.name : null, holder: t.holder || null, rows: rows };
+    var rec = { id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: date, type: type, n: n, re: t.re || 0, add: t.add || 0, winner: winner ? winner.name : null, holder: t.holder || null, rows: rows };
     d.list.push(rec); d.list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); save(d);
     return rec;
   }
@@ -46,10 +46,10 @@
   function standings(list) {
     var m = {};
     list.forEach(function (tn) { if (tn.type === 'libre') return; tn.rows.forEach(function (r) {
-      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, bonus: 0, n: 0, wins: 0, best: 99, kos: 0 };
-      o.total += r.total; o.pts += r.pts; o.bonus += r.bonus; o.n++; if (r.place === 1) o.wins++; o.best = Math.min(o.best, r.place);
+      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, best: 99, kos: 0 };
+      o.total += r.total; o.pts += r.pts; if (tn.type === 'deep') o.deep += r.pts; else o.mer += r.pts; o.bonus += r.bonus; o.n++; if (r.place === 1) o.wins++; o.best = Math.min(o.best, r.place);
     }); tn.rows.forEach(function (r) { if (r.koBy && m[key(r.koBy)]) m[key(r.koBy)].kos++; }); });
-    return Object.keys(m).map(function (k) { m[k].total = Math.round(m[k].total * 10) / 10; return m[k]; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
+    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 10) / 10; o.mer = Math.round(o.mer * 10) / 10; o.deep = Math.round(o.deep * 10) / 10; o.bonus = Math.round(o.bonus * 10) / 10; o.moy = o.n ? Math.round(o.total / o.n * 10) / 10 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
   }
 
   /* ---------- Vue ---------- */
@@ -58,9 +58,18 @@
     var ui = U();
     if (!st.length) return '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>';
     var md = ['🥇', '🥈', '🥉'];
-    return '<table class="tbl" style="font-size:.95em"><tr><th>#</th><th>Joueur</th><th>Points</th><th>Tournois</th><th>Victoires</th><th>Primes (pts)</th></tr>' + st.map(function (o, i) {
-      return '<tr' + (medals && i < 3 ? ' style="color:var(--gold);font-weight:700"' : '') + '><td>' + (medals && i < 3 ? md[i] : i + 1) + '</td><td>' + ui.esc(o.name) + '</td><td><b>' + f1(o.total) + '</b></td><td>' + o.n + '</td><td>' + (o.wins || '') + '</td><td>' + (o.bonus ? '+' + f1(o.bonus) : '') + '</td></tr>';
+    return '<table class="tbl" style="font-size:.95em"><tr><th>#</th><th>Joueur</th><th>Points</th><th>Tournois</th><th>Moy.</th><th>Victoires</th><th>Primes</th></tr>' + st.map(function (o, i) {
+      return '<tr' + (medals && i < 3 ? ' style="color:var(--gold);font-weight:700"' : '') + '><td>' + (medals && i < 3 ? md[i] : i + 1) + '</td><td>' + ui.esc(o.name) + '</td><td><b>' + f1(o.total) + '</b></td><td>' + o.n + '</td><td>' + f1(o.moy || 0) + '</td><td>' + (o.wins || '') + '</td><td>' + (o.bonus ? '+' + f1(o.bonus) : '') + '</td></tr>';
     }).join('') + '</table>';
+  }
+  // classement en barres : mercredi (or), deep (bronze), primes (rouge)
+  function bars(st) {
+    var ui = U(), max = Math.max.apply(null, st.map(function (o) { return o.total; }).concat([1]));
+    return '<div class="lg-leg"><span><i style="background:var(--gold)"></i>Mercredi</span><span><i style="background:#9a6a18"></i>Deep ×1,4</span><span><i style="background:#e0464c"></i>Primes</span><span class="lg-legr">Total · moyenne</span></div><div>' +
+      st.map(function (o, i) {
+        var seg = function (v, c) { return v > 0 ? '<i style="width:' + (v / max * 100).toFixed(1) + '%;background:' + c + '"></i>' : ''; };
+        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '"><b class="lg-rk">' + (i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + o.n + ' t.' + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>moy. ' + f1(o.moy || 0) + '</small></div></div>';
+      }).join('') + '</div>';
   }
   function tnCard(tn) {
     var ui = U(), op = V.open === tn.id;
@@ -79,10 +88,11 @@
       '<div class="row" style="gap:8px;flex-wrap:wrap"><div class="seg">' + [['annuel', 'Classement annuel'], ['semaine', 'Semaine par semaine'], ['tournois', 'Les tournois']].map(function (o) { return '<button class="' + (V.tab === o[0] ? 'on' : '') + '" data-lgact="tab" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       (ys.length > 1 ? '<div class="seg">' + ys.map(function (y) { return '<button class="' + (V.year === y ? 'on' : '') + '" data-lgact="year" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' : '') + '</div>';
     if (V.tab === 'annuel') {
-      var st = standings(inY);
+      var st = standings(inY), avgP = inY.length ? inY.reduce(function (a, x) { return a + x.n; }, 0) / inY.length : 0, prim = st.reduce(function (a, o) { return a + o.bonus; }, 0);
+      if (inY.length) out += '<div class="lg-kpis"><div><span>Tournois</span><b>' + inY.length + '</b><small>' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mer. · ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep</small></div><div><span>Joueurs classés</span><b>' + st.length + '</b><small>au championnat</small></div><div><span>Moyenne de joueurs</span><b>' + f1(avgP) + '</b><small>par tournoi</small></div><div><span>Primes</span><b style="color:#e0464c">+' + f1(prim) + '</b><small>points</small></div></div>';
       out += '<div class="card stack"><b>Classement ' + V.year + '</b><div class="small muted">' + inY.filter(function (x) { return x.type !== 'libre'; }).length + ' tournois au championnat (' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mercredi(s), ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep(s)).</div>' +
-        (st.length ? '<div class="row" style="gap:8px;flex-wrap:wrap;justify-content:center">' + st.slice(0, 3).map(function (o, i) { return '<div class="card" style="flex:1;min-width:110px;text-align:center;border-color:var(--gold)"><div style="font-size:2em">' + ['🥇', '🥈', '🥉'][i] + '</div><b>' + ui.esc(o.name) + '</b><div class="disp" style="font-size:1.6em">' + f1(o.total) + '</div><div class="small muted">points · récompensé</div></div>'; }).join('') + '</div>' : '') +
-        table(st, true) + '</div>';
+        (st.length ? '<div class="lg-pod">' + [1, 0, 2].map(function (i) { var o = st[i]; if (!o) return '<div></div>'; return '<div class="lg-pod' + (i + 1) + '"><div class="lg-med">' + ['🥇', '🥈', '🥉'][i] + '</div><b>' + ui.esc(o.name) + '</b><span>' + f1(o.total) + ' pts</span><div class="lg-step">' + (i + 1) + '</div></div>'; }).join('') + '</div>' : '') +
+        (st.length ? bars(st) : '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>') + '</div>';
     } else if (V.tab === 'semaine') {
       var ws = {}; inY.forEach(function (x) { (ws[week(x.date)] = ws[week(x.date)] || []).push(x); });
       var wk = Object.keys(ws).sort().reverse();
