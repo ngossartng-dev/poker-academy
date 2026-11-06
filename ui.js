@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.11.0';
+  var VERSION = '2.12.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -256,7 +256,7 @@
       '<a class="tile" href="#lexique"><b>Lexique</b><span>Tous les termes du poker employés dans le cours, de 3-bet à VPIP, avec recherche.</span></a>' +
       '<a class="tile" href="#solveur"><b>Solveur (mode avancé)</b><span>Tous les coups calculés, flop par flop, famille par famille, jusqu’à la river.</span></a>' +
       '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a>' +
-      '<a class="tile" href="#minuteur"><b>Minuteur du club</b><span>Les niveaux de blindes en grand, avec signal sonore : pour les parties au club.</span></a></div></div>';
+      '<a class="tile" href="#minuteur"><b>Minuteur de tournoi</b><span>Ta structure (blindes de départ, ante, durée des niveaux, pauses) en grand, avec signal sonore : pour les tournois du club.</span></a></div></div>';
     return shell('apprendre', body);
   }
   function rangesView() {
