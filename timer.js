@@ -76,6 +76,7 @@
   function regulars() {
     var m = {}, LG = window.PA_LEAGUE;
     if (LG) LG.load().list.forEach(function (tn) { tn.rows.forEach(function (r) { var k = r.name.toLowerCase(); m[k] = m[k] || { name: r.name, n: 0, last: '' }; m[k].n++; if (tn.date >= m[k].last) { m[k].last = tn.date; m[k].name = r.name; } }); });
+    if (LG && LG.roster) LG.roster().forEach(function (nm) { var k = nm.toLowerCase(); if (!m[k]) m[k] = { name: nm, n: 0, last: '' }; m[k].club = true; });
     ((window.PA.player() || {}).opps || []).forEach(function (o) { var k = String(o.name || '').toLowerCase(); if (k && !m[k]) m[k] = { name: o.name, n: 0, last: '' }; });
     return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.n - a.n || (a.last < b.last ? 1 : -1) || a.name.localeCompare(b.name); });
   }
@@ -174,7 +175,7 @@
       return '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>' + ui.esc(x.name) + '</b> <span class="small muted">' + (x.out ? 'éliminé, ' + x.place + 'e' : (x.table ? 'table ' + x.table + ', siège ' + x.seat : 'pas encore placé')) + '</span></span><span class="row" style="gap:6px">' +
         (x.out ? '<button class="btn" data-tmact="reentry" data-v="' + i + '">Re-entry</button><button class="btn" data-tmact="unko" data-v="' + i + '">Annuler</button>' : '<button class="btn gold" data-tmact="ko" data-v="' + i + '">Éliminé</button>') + '</span></div>'; }).join('');
   }
-  var TAB = null;
+  var TAB = null, ROSTER = false;
   function clearSheet() { try { document.querySelectorAll('body > .tn-sheet, body > .tn-sheet-bg').forEach(function (el) { el.parentNode.removeChild(el); }); } catch (e) {} }
   window.addEventListener('hashchange', function () { if (!/^#tournoi/.test(location.hash)) { KO = null; clearSheet(); } });
   function tournoiView() {
@@ -231,7 +232,9 @@
       var regs = regulars();
       if (regs.length) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Les habitués · un toucher = présent</b><span class="small muted">' + regs.filter(function (r) { return inT(r.name); }).length + ' / ' + regs.length + '</span></div><div class="tn-regs">' + regs.map(function (r, i) {
         var on = inT(r.name); return '<button class="tn-reg' + (on ? ' on' : '') + '" data-tmact="reg" data-v="' + i + '">' + (on ? '✓ ' : '') + esc(r.name) + (r.n ? '<small>' + r.n + '</small>' : '') + '</button>';
-      }).join('') + '</div><div class="small muted">Le chiffre = tournois joués au championnat. ' + (t.drawn ? 'Tables tirées : un nouveau présent est placé à la table la moins remplie.' : 'Retouche un nom pour le retirer.') + '</div></div>';
+      }).join('') + '</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="regAll">Tout le club présent</button><button class="btn" data-tmact="rosterEdit">' + (ROSTER ? 'Fermer' : 'Modifier la liste du club') + '</button></div>' +
+        (ROSTER && window.PA_LEAGUE ? '<div class="stack" style="gap:8px"><textarea id="tnRoster" rows="8" class="tn-in" style="width:100%">' + esc(window.PA_LEAGUE.roster().join('\n')) + '</textarea><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="rosterSave" style="flex:1">Enregistrer la liste</button><label class="btn" style="flex:1;text-align:center;cursor:pointer">Importer un .txt<input id="tnRosterFile" type="file" accept=".txt,text/plain" style="display:none"></label></div><div class="small muted">Un pseudo par ligne. Les joueurs déjà venus au championnat restent proposés même s’ils ne sont plus dans la liste.</div></div>' : '') +
+        '<div class="small muted">Le chiffre = tournois joués au championnat. ' + (t.drawn ? 'Tables tirées : un nouveau présent est placé à la table la moins remplie.' : 'Retouche un nom pour le retirer.') + '</div></div>';
       var inG = t.players.filter(function (x) { return !x.out; }).sort(function (a, b) { return (a.table || 99) - (b.table || 99) || (a.seat || 0) - (b.seat || 0); });
       var outL = t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; });
       if (inG.length) out += '<div class="card stack"><b>En jeu · ' + inG.length + '</b>' + inG.map(function (x) { var i = t.players.indexOf(x); return '<div class="tn-row"><i>' + esc(x.name.charAt(0).toUpperCase()) + '</i><span><b>' + esc(x.name) + '</b><small>' + (x.table ? 'Table ' + x.table + ' · siège ' + x.seat : 'pas encore placé') + (x.entries > 1 ? ' · ' + x.entries + ' entrées' : '') + (x.bonus ? ' · prime +' + x.bonus : '') + '</small></span>' + (t.drawn ? '<button class="btn" data-tmact="ko" data-v="' + i + '">Sorti</button>' : '<button class="btn" data-tmact="delP" data-v="' + i + '" aria-label="Retirer">✕</button>') + '</div>'; }).join('') + '</div>';
@@ -416,6 +419,9 @@
       var added = 0; names.forEach(function (nm) { if (addOne(nm)) added++; });
       tt.msg = added ? added + ' joueur' + (added > 1 ? 's' : '') + ' inscrit' + (added > 1 ? 's' : '') + (tt.drawn ? ', placé' + (added > 1 ? 's' : '') + ' à la table la moins remplie.' : '.') : 'Aucun nouveau pseudo (déjà inscrits ?).';
     }
+    else if (a === 'rosterEdit') { ROSTER = !ROSTER; }
+    else if (a === 'rosterSave') { var ta = document.getElementById('tnRoster'); if (ta && window.PA_LEAGUE) { var nl = window.PA_LEAGUE.setRoster(ta.value.split(/[\n,;]+/)); T().msg = 'Liste du club enregistrée : ' + nl.length + ' joueurs.'; ROSTER = false; } }
+    else if (a === 'regAll') { var ra = regulars().filter(function (r) { return r.club; }), nA = 0; ra.forEach(function (r) { if (addOne(r.name)) nA++; }); T().msg = nA + ' joueur' + (nA > 1 ? 's' : '') + ' du club inscrit' + (nA > 1 ? 's' : '') + '. Retouche les absents pour les retirer.'; }
     else if (a === 'reg') {
       var rg = regulars()[+t.getAttribute('data-v')], tr = T();
       if (rg) { if (inT(rg.name)) { var ix = -1; tr.players.forEach(function (x, j) { if (x.name.toLowerCase() === rg.name.toLowerCase()) ix = j; }); var px = tr.players[ix]; if (!tr.drawn) { tr.players.splice(ix, 1); tr.msg = null; } else tr.msg = px.out ? px.name + ' est déjà sorti.' : px.name + ' est en jeu (table ' + px.table + ') : pour le retirer, touche « Sorti ».'; } else { addOne(rg.name); tr.msg = tr.drawn ? rg.name + ' inscrit : table ' + tr.players[tr.players.length - 1].table + ', siège ' + tr.players[tr.players.length - 1].seat + '.' : null; } }
@@ -471,6 +477,10 @@
     if (id === 'tnPrize' || id === 'tnPaid') { T()[id === 'tnPrize' ? 'prize' : 'paid'] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); return; }
     if (id === 'tnColor') { ST.cfg = cfg(); ST.cfg.colorUp = String(e.target.value || '').slice(0, 120); save(); U().render(); return; }
     var k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack', tnReEnd: 'reEnd', tnAddP: 'addPause' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.id !== 'tnRosterFile' || !e.target.files || !e.target.files[0]) return;
+    var rd = new FileReader(); rd.onload = function () { var ta = document.getElementById('tnRoster'); if (ta) ta.value = String(rd.result || '').replace(/\r/g, '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean).join('\n'); }; rd.readAsText(e.target.files[0]);
+  });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   // élimination : idx = joueur qui sort, by = index de celui qui l'élimine ('' = inconnu)
   function doKO(idx, by) {

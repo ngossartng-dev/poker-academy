@@ -5,6 +5,10 @@
   var KEY = 'pa2league';
   var TYPES = { mercredi: { name: 'Tournoi du mercredi', short: 'Mercredi', mult: 1 }, deep: { name: 'Deep du vendredi', short: 'Deep', mult: 1.5 }, libre: { name: 'Hors championnat', short: 'Hors champ.', mult: 0 } };
   var BONUS = 2;
+  // les joueurs du club depuis la rentrée (liste de départ, modifiable dans l'appli)
+  var CLUB = ["MONPIERROT", "YO", "VILVOORD", "JR", "ENFANT2GUETTO", "ENFANT2FISH", "BASTOSS", "ENFANT2COEUR", "KAKTUSSE", "BANEEST", "VINCENT", "NARUTI", "GREG", "PALLIX", "POOLSHARKS", "SIM", "UNDERTAKER", "TA_1_PB", "JOHNY", "AIGLEFOUR", "JUJU", "MACHINEGUN"];
+  function roster() { var d = load(); return (d.roster || CLUB).slice(); }
+  function setRoster(list) { var d = load(), seen = {}; d.roster = list.map(function (x) { return String(x || '').trim().slice(0, 30); }).filter(function (x) { var k = x.toLowerCase(); if (!x || seen[k]) return false; seen[k] = 1; return true; }); save(d); return d.roster; }
   // les points se recalculent à chaque lecture avec le barème en vigueur (deep passé de ×1,4 à ×1,5)
   function load() {
     try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 10) / 10; }); }); return d; } } catch (e) {}
@@ -234,5 +238,5 @@
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
