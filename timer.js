@@ -142,6 +142,14 @@
   function tournoiView() {
     var ui = U(), t = T(), s = live(), c = cfg(), out = '<div class="stack"><button class="back" data-act="nav" data-v="home">‹ Accueil</button><h1>Tournoi du club</h1>' +
       '<div class="row" style="gap:8px"><a class="btn gold" href="#minuteur" style="flex:1">⏱ Ouvrir le minuteur</a><button class="btn" data-tmact="editFromT" style="flex:1">Structure des niveaux</button></div>';
+    // le minuteur, directement sur la page du tournoi
+    if (s.L.length) {
+      var lv = s.L[s.idx], run = !!ST.since;
+      out += '<div class="card stack" style="gap:6px;text-align:center"><div class="row" style="justify-content:space-between;gap:8px"><span class="small muted">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</span><a class="small" href="#minuteur" style="color:var(--gold)">Grand écran ›</a></div>' +
+        '<div class="disp" style="font-size:clamp(28px,8vw,48px);line-height:1;color:var(--gold)">' + lvlTxt(lv).split(' · ')[0] + '</div>' + (lv.ante ? '<div class="small">' + anteTxt(lv) + '</div>' : '') +
+        '<div class="disp" id="tmClock2" style="font-size:clamp(56px,18vw,110px);line-height:1">' + mmss(s.rem) + '</div><div class="small muted">' + nextInfo(s) + '</div>' +
+        '<div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="prev">‹</button><button class="btn gold" data-tmact="toggle" style="min-width:150px;font-size:1.15em">' + (run ? 'Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? 'Reprendre' : 'Lancer le minuteur')) + '</button><button class="btn" data-tmact="next">›</button><button class="btn" data-tmact="minus">−1 min</button><button class="btn" data-tmact="plus">+1 min</button></div></div>';
+    }
     if (KO !== null) out += koPanel();
     var LG = window.PA_LEAGUE;
     if (LG) {
@@ -270,8 +278,8 @@
     return ui.shell('apprendre', body, true);
   }
   setInterval(function () {
-    if (!/^#minuteur/.test(location.hash) || EDIT) return;
-    var s = live(), c = document.getElementById('tmClock'); if (!c || !s.L.length) return;
+    if (!/^#(minuteur|tournoi)/.test(location.hash) || EDIT) return;
+    var s = live(), c = document.getElementById('tmClock') || document.getElementById('tmClock2'); if (!c || !s.L.length) return;
     if (ST.since) {
       if (s.idx !== ST.shown) { if (ST.shown !== undefined) { beep(3); } ST.shown = s.idx; U().render(); return; }
       var r = Math.ceil(s.rem); if (r === 60 && lastBeep !== s.idx) { lastBeep = s.idx; beep(1); }

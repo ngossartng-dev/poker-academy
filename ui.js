@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.15.0';
+  var VERSION = '2.15.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -83,7 +83,7 @@
     var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
-    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (noFab ? '' : fab);
+    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (noFab || /^#(tournoi|classement|minuteur)/.test(location.hash) ? '' : fab);
   }
 
   /* ---------- Accueil ---------- */
