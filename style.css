@@ -524,3 +524,4 @@ textarea.tn-in{width:100%;padding:8px 12px}
 
 .tn-newm{display:flex;gap:8px;flex-wrap:wrap}
 .tn-newm input{flex:1;min-width:160px;min-height:44px}
+@media (orientation:portrait){.ec{overflow-y:auto}.ec-main{flex:none}.ec-clockbox{padding:2vh 2vw}.ec-ctrl{flex-wrap:wrap;opacity:1}.ec-ctrl button{flex:1 1 28%;padding:4px 6px;font-size:14px}.ec-tables{max-height:none}}

@@ -278,9 +278,13 @@
   }
   function keepScroll(fn) { var y = window.scrollY || 0; fn(); try { window.scrollTo(0, y); } catch (e) {} }
   function freeze() { var s = live(); ST.idx = s.idx; ST.rem = s.rem; ST.since = ST.since ? Date.now() : null; save(); }
+  // iPhone : le son et la voix ne marchent qu'après un premier toucher ; on les « déverrouille » au premier clic
+  var ACTX = null, UNLOCK = false;
+  function actx() { try { if (!ACTX) ACTX = new (window.AudioContext || window.webkitAudioContext)(); if (ACTX.state === 'suspended') ACTX.resume(); } catch (e) {} return ACTX; }
+  document.addEventListener('click', function () { if (UNLOCK) return; UNLOCK = true; actx(); try { if (window.speechSynthesis && window.SpeechSynthesisUtterance) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch (e) {} }, true);
   function beep(n) {
     try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var ctx = actx(); if (!ctx) return;
       for (var i = 0; i < n; i++) { var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.4); o.start(ctx.currentTime + i * 0.4); o.stop(ctx.currentTime + i * 0.4 + 0.25); }
     } catch (e) {}
   }

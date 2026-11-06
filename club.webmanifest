@@ -1,0 +1,24 @@
+{
+ "name": "Poker Academy Club",
+ "short_name": "PA Club",
+ "description": "Tournois, chrono, écran télé et championnat du club.",
+ "lang": "fr",
+ "start_url": "./club.html#home",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#0b0b0d",
+ "theme_color": "#0b0b0d",
+ "icons": [
+  {
+   "src": "icons/club-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/club-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}
