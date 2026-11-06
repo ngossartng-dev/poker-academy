@@ -53,7 +53,7 @@
   }
 
   /* ---------- Vue ---------- */
-  var V = { tab: 'annuel', year: null, week: null, open: null };
+  var V = { tab: 'annuel', year: null, week: null, open: null, msg: '' };
   function table(st, medals) {
     var ui = U();
     if (!st.length) return '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>';
@@ -69,7 +69,7 @@
     return head + '<div class="card stack"><table class="tbl" style="font-size:.9em"><tr><th>Place</th><th>Joueur</th><th>Points</th><th>Sorti par</th><th>Heure · niveau</th></tr>' + tn.rows.map(function (r) {
       var h = r.koAt ? new Date(r.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
       return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus ? ' <span class="small muted">(' + f1(r.pts) + ' + ' + f1(r.bonus) + ' prime)</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
-    }).join('') + '</table><button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
+    }).join('') + '</table>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
   }
   function view() {
     var ui = U(), d = load(), ys = years(); V.year = V.year && ys.indexOf(V.year) >= 0 ? V.year : ys[0];
@@ -97,15 +97,19 @@
     } else {
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
+    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><b>Exporter ' + V.year + '</b><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
-    return ui.shell('home', out);
+    return ui.shell('club', out);
   }
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-lgact]') : null; if (!t) return;
     var a = t.getAttribute('data-lgact'), v = t.getAttribute('data-v');
-    if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;
+    function done(m) { V.msg = m; U().render(); }
+    if (a === 'xy') { V.msg = ''; window.PA_EXPORT.year(V.year, t.getAttribute('data-f'), done); return; }
+    if (a === 'xt') { V.msg = ''; window.PA_EXPORT.tournament(v, t.getAttribute('data-f'), done); return; }
+    V.msg = ''; if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, load: load, today: today, view: view };
+  window.PA_LEAGUE = { TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();

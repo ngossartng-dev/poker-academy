@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.16.0';
+  var VERSION = '2.17.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -75,15 +75,15 @@
   function go(r) { location.hash = '#' + r; }
 
   /* ---------- Coquille ---------- */
-  var NAV = [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['analyser', 'Analyser', 'chart'], ['moi', 'Moi', 'user']];
+  var NAV = [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['club', 'Club', 'clock'], ['analyser', 'Analyser', 'chart']];
   function shell(active, body, noFab) {
     var focus = !!noFab;
     var side = '<nav class="side" aria-label="Navigation principale"><div class="row" style="padding:0 8px 22px">' + logo() + '<span class="disp" style="font-size:26px">Poker<br>Academy</span></div>' +
-      NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
+      NAV.concat([['moi', 'Moi', 'user']]).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
-    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (noFab || /^#(tournoi|classement|minuteur)/.test(location.hash) ? '' : fab);
+    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (noFab || /^#(tournoi|classement|minuteur|club)/.test(location.hash) ? '' : fab);
   }
 
   /* ---------- Accueil ---------- */
@@ -96,14 +96,14 @@
     if (p.last && p.last.route === 'drill' && !ui.drill) p.last = { route: /Test de profil/.test(p.last.label || '') ? 'testmenu' : 'entrainer', label: (/Test de profil/.test(p.last.label || '') ? 'Relancer le test de profil' : 'Relancer : ' + p.last.label), redo: true };
     var last = p.last ? '<a href="#' + p.last.route + '" class="card row" style="text-decoration:none;color:#fff"><div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center">' + IC.play + '</div><div class="stack" style="gap:6px;flex:1;min-width:0"><span class="muted small">' + (p.last.redo ? 'Série interrompue' : 'Reprendre') + '</span><b>' + esc(p.last.label) + '</b></div></a>' : '';
     var body = '<div class="stack">' +
-      '<div class="row" style="justify-content:space-between"><div class="row">' + logo() + '<div><div class="disp" style="font-size:26px">Poker Academy</div><div class="muted">' + greet() + ', ' + esc(p.pseudo) + '</div></div></div><span class="chip">' + pr.short + '</span></div>' +
+      '<div class="row" style="justify-content:space-between"><div class="row">' + logo() + '<div><div class="disp" style="font-size:26px">Poker Academy</div><div class="muted">' + greet() + ', ' + esc(p.pseudo) + '</div></div></div><a class="chip me-chip" href="#moi" aria-label="Mon profil, mes réglages">' + IC.user + ' ' + pr.short + '</a></div>' +
       (window.PA_SEASON && window.PA_SEASON.current() !== 'classique' ? '<div><a class="season-tag" href="#reglages">Décor ' + window.PA_SEASON.NAMES[window.PA_SEASON.current()] + '</a></div>' : '') +
-      yo(msg) + '<a class="btn block" href="#recherche" style="justify-content:flex-start;gap:10px">🔎 Rechercher une leçon, un terme, un outil' + (window.PA_VOICE && window.PA_VOICE.ok() ? ' (ou à la voix 🎤)' : '') + '</a>' + last +
+      yo(msg) + '<a class="btn block" href="#recherche" style="justify-content:flex-start;gap:10px">🔎 Rechercher' + (window.PA_VOICE && window.PA_VOICE.ok() ? ' (ou à la voix 🎤)' : '') + '</a>' + last +
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions · environ 10 min</div></div>' + IC.arrow + '</button>' +
+      '<div class="shortcuts"><a href="#tournoi">' + IC.clock + '<span>Tournoi du club</span></a><a href="#ranges">' + IC.grid + '<span>Ma range</span></a><a href="#podcasts">' + IC.play + '<span>Podcasts</span></a></div>' +
       '<div class="grid2">' +
-      tile('apprendre', 'book', 'Apprendre', 'Leçons, ranges, cours') + tile('entrainer', 'cards', 'S’entraîner', 'Préflop, situations, test') +
-      tile('analyser', 'chart', 'Analyser', 'Winamax, club, fuites') + tile('moi', 'user', 'Moi', 'Profil, progrès, réglages') + '</div>' +
-      '<div style="display:grid">' + tile('tournoi', 'clock', 'Tournoi du club', 'Minuteur, inscriptions, tables, éliminations, championnat et classement') + '</div></div>';
+      tile('apprendre', 'book', 'Apprendre', 'Le cours, ma range, le solveur') + tile('entrainer', 'cards', 'S’entraîner', 'Avant et après le flop, calculs, parties') +
+      tile('club', 'clock', 'Club', 'Tournoi, championnat, adversaires') + tile('analyser', 'chart', 'Analyser', 'Mes mains, bankroll') + '</div></div>';
     return shell('home', body);
   }
   function tile(r, ic, t, s) { return '<a class="tile" href="#' + r + '"><span style="color:var(--gold)">' + IC[ic] + '</span><b>' + t + '</b><span>' + s + '</span></a>'; }
@@ -246,19 +246,14 @@
 
   /* ---------- Apprendre ---------- */
   function apprendreView() {
+    var n = window.PA_LESSONS ? window.PA_LESSONS.CHAPTERS.length : 47;
     var body = '<div class="stack"><h1>Apprendre</h1>' +
-      '<a class="big-cta" href="#apf" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Après le flop : que faire&nbsp;?</div><div style="font-weight:500">Ta position, le flop, ta main : la réponse du solveur, et la suite.</div></div>' + IC.arrow + '</a>' +
+      '<a class="big-cta" href="#lecons" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Le cours</div><div style="font-weight:500">' + n + ' leçons, avec quiz, podcasts, examens et le PDF.</div></div>' + IC.arrow + '</a>' +
       '<div class="grid4">' +
-      '<a class="tile" href="#lecons"><b>Leçons</b><span>Le cours en ' + (window.PA_LESSONS ? window.PA_LESSONS.CHAPTERS.length : 38) + ' chapitres, avec quiz et version à écouter.</span></a>' +
-      '<a class="tile" href="#ranges"><b>Mes ranges</b><span>Vue globale et toutes les situations, en plein écran.</span></a>' +
-      '<a class="tile" href="#examens"><b>Examens</b><span>Les quiz des leçons, par partie ou en examen général.</span></a>' +
-      '<a class="tile" href="#podcasts"><b>Podcasts</b><span>Écouter les leçons : Yo explique, le joueur questionne.</span></a>' +
-      '<a class="tile" href="#cours"><b>Le cours en PDF</b><span>Tous les chapitres en couleurs, avec encadrés, quiz et grilles de ranges.</span></a>' +
-      '<a class="tile" href="#memo"><b>Fiche mémo</b><span>Toutes les tailles et tous les seuils sur une page, à imprimer pour le club.</span></a>' +
-      '<a class="tile" href="#lexique"><b>Lexique</b><span>Tous les termes du poker employés dans le cours, de 3-bet à VPIP, avec recherche.</span></a>' +
-      '<a class="tile" href="#solveur"><b>Solveur (mode avancé)</b><span>Tous les coups calculés, flop par flop, famille par famille, jusqu’à la river.</span></a>' +
-      '<a class="tile" href="#outils"><b>Outils</b><span>Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.</span></a>' +
-      '<a class="tile" href="#tournoi"><b>Tournoi du club</b><span>Inscription des joueurs, tirage des tables et des sièges (6-max, 9-max, 10 joueurs), éliminations, équilibrage, tapis moyen.</span></a>' + '<a class="tile" href="#minuteur"><b>Minuteur de tournoi</b><span>Ta structure (blindes de départ, ante, durée des niveaux, pauses) en grand, avec signal sonore : pour les tournois du club.</span></a></div></div>';
+      '<a class="tile" href="#ranges"><b>Ma range</b><span>Vue globale et toutes les situations, en plein écran.</span></a>' +
+      '<a class="tile" href="#apf"><b>Le solveur</b><span>Après le flop : que faire ? Ta position, le flop, ta main. Et le mode avancé.</span></a>' +
+      '<a class="tile" href="#memo"><b>Fiche mémo</b><span>Tailles, seuils, outs : tout sur une page, à imprimer.</span></a>' +
+      '<a class="tile" href="#lexique"><b>Lexique</b><span>Tous les termes du cours, avec définitions et recherche.</span></a></div></div>';
     return shell('apprendre', body);
   }
   function rangesView() {
@@ -286,12 +281,57 @@
       (!p.testDone ? yo('Commence par le test de profil : il me dit ton vrai style et tes erreurs.') : '') +
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions choisies pour toi</div></div>' + IC.arrow + '</button>' +
       '<div class="grid4">' +
-      '<a class="tile" href="#preflop"><b>Préflop</b><span>Ouvrir, défendre, 3-bet, tapis ou fold. Par position et profondeur.</span></a>' +
-      '<a class="tile" href="#cartes"><b>Cartes</b><span>Je joue ou je jette ? 20 cartes rapides ; les ratées reviennent' + (window.PA_CARDS && window.PA_CARDS.due() ? ' (' + window.PA_CARDS.due() + ' à revoir aujourd’hui)' : '') + '.</span></a>' +
-      '<a class="tile" href="#situations"><b>Situations</b><span>Tapis ou fold, payer un tapis, face au 3-bet, bulle et ICM, PKO et Space KO, outs et cote.</span></a>' +
-      '<a class="tile" href="#partie"><b>Jouer une partie</b><span>Sit &amp; Go, tournoi de 100 joueurs, moments clés, PKO et Space KO, avec ou sans Yo.</span></a>' +
-      '<button class="tile" data-act="testMenu"><b>Test de profil</b><span>30, 60 ou 90 mains pour trouver ton style.</span></button></div></div>';
+      '<a class="tile" href="#avantflop"><b>Avant le flop</b><span>Ouvrir, défendre, 3-bet, squeeze, tapis ou fold, payer un tapis, cartes.</span></a>' +
+      '<a class="tile" href="#apresflophub"><b>Après le flop</b><span>Cas concrets, décisions flop-turn-river, paires et as forts, face au solveur.</span></a>' +
+      '<a class="tile" href="#calculs"><b>Calculs</b><span>Calcul rapide, outs et cote, bulle et ICM, PKO, calculateurs d’équité.</span></a>' +
+      '<a class="tile" href="#partie"><b>Jouer une partie</b><span>Sit &amp; Go, tournoi de 100 joueurs, moments clés, PKO, avec ou sans Yo.</span></a></div>' +
+      '<button class="btn block" data-act="testMenu">Test de profil : 30, 60 ou 90 mains pour trouver ton style</button></div>';
     return shell('entrainer', body);
+  }
+  function hubView(title, items) {
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>' + title + '</h1><div class="grid4">' + items.join('') + '</div></div>';
+    return shell('entrainer', body);
+  }
+  function sitT(v, t, d) { return '<button class="tile" data-act="startSit" data-v="' + v + '"><b>' + t + '</b><span>' + d + '</span></button>'; }
+  function lnkT(h, t, d) { return '<a class="tile" href="#' + h + '"><b>' + t + '</b><span>' + d + '</span></a>'; }
+  function avantFlopView() {
+    return hubView('Avant le flop', [
+      lnkT('preflop', 'Préflop', 'Ouvrir, défendre, 3-bet. Par position et profondeur.'),
+      lnkT('cartes', 'Cartes', 'Je joue ou je jette ? 20 cartes rapides' + (window.PA_CARDS && window.PA_CARDS.due() ? ' (' + window.PA_CARDS.due() + ' à revoir)' : '') + '.'),
+      lnkT('choix3b', '3-bet, squeeze ou pas ?', 'Valeur, bluff, payer ou se coucher, selon qui ouvre et qui paie.'),
+      sitT('vs3bet', 'Face au 3-bet', 'Tu as ouvert, on te relance.'),
+      lnkT('planquiz', 'Plan de jeu', 'Ouvrir, 3-bet ou payer… puis la suite si on te sur-relance.'),
+      sitT('push', 'Tapis ou fold', 'Moins de 20 BB, tout le monde s’est couché jusqu’à toi.'),
+      sitT('callshove', 'Payer un tapis', 'Un adversaire pousse : payer ou se coucher ?'),
+      sitT('hu', 'Tapis ou fold en heads-up', 'Un contre un, moins de 15 BB.')]);
+  }
+  function apresFlopHubView() {
+    return hubView('Après le flop', [
+      lnkT('cas', 'Cas concrets', 'A4 assorti en pot 3-bet, AK raté, top paire en grosse blinde… : que fait le solveur ?'),
+      lnkT('apresflop', 'Flop, turn, river', 'Miser, checker, payer, relancer : tes décisions comparées au solveur.'),
+      lnkT('apresflop?paires', 'Paires et as forts', 'Brelans, overpaires, tops paires, AK, AQ, AJ : quelle taille, quelle décision ?'),
+      lnkT('apf', 'Après le flop : que faire ?', 'Ta position, le flop, ta main : la réponse du solveur.'),
+      lnkT('solveur', 'Solveur (mode avancé)', 'Tous les coups calculés, flop par flop, jusqu’à la river.')]);
+  }
+  function calculsView() {
+    return hubView('Calculs', [
+      lnkT('calcul', 'Calcul rapide', 'Cote du pot, défense minimale, bluff, outs : 20 secondes par question.'),
+      sitT('outs', 'Outs et cote', 'Compter ses outs à la turn et comparer à la cote.'),
+      sitT('icm', 'Bulle et ICM', 'Payer un tapis à la bulle ou en table finale : jetons contre euros.'),
+      sitT('pko', 'PKO et Space KO', 'La prime change la cote : payer ou se coucher ?'),
+      lnkT('outils', 'Calculateurs', 'Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.')]);
+  }
+  function clubView() {
+    var body = '<div class="stack"><h1>Club</h1>' +
+      '<a class="big-cta" href="#tournoi" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Tournoi du club</div><div style="font-weight:500">Minuteur, inscriptions, tables, éliminations.</div></div>' + IC.arrow + '</a>' +
+      '<div class="grid4">' +
+      '<a class="tile" href="#classement"><b>Championnat</b><span>Classement annuel, semaine par semaine, détail des tournois.</span></a>' +
+      '<a class="tile" href="#analyser?adv"><b>Adversaires du club</b><span>Le carnet : profil et notes de chaque joueur.</span></a>' +
+      '<a class="tile" href="#fiche"><b>Avant la partie</b><span>Ta fiche : structure, plan par phase, fuites à surveiller, adversaires attendus.</span></a>' +
+      '<a class="tile" href="#coach"><b>Mode coach</b><span>Transformer une main du club en quiz à partager sur le groupe.</span></a>' +
+      '<a class="tile" href="#analyser?club"><b>Noter une main du club</b><span>À la voix ou en quelques touches, pour la revoir plus tard.</span></a>' +
+      '<a class="tile" href="#minuteur"><b>Minuteur seul</b><span>Les niveaux en grand écran, sans gestion des joueurs.</span></a></div></div>';
+    return shell('club', body);
   }
   var PF = { kind: 'mix', pos: 'all', depth: 'deep', n: 20, chrono: false };
   function preflopView() {
@@ -593,10 +633,8 @@
       '<button class="btn" data-act="testMenu">Refaire le test de profil</button></div>' +
       '<div class="card stack"><b>Ma progression par notion</b><table class="tbl">' + notions + '</table><div class="muted small">Mains à revoir en attente : ' + Object.keys(p.srs).length + '</div></div>' +
       '<div class="card stack"><b>Mon journal</b><table class="tbl">' + sess + '</table></div>' +
-      '<a class="tile" href="#bankroll"><b>Bankroll</b><span>Tes résultats (Winamax, club, live), ROI, repères du cours et simulateur de variance.</span></a>' +
-      '<a class="tile" href="#fiche"><b>Avant la partie</b><span>Ta fiche : structure, plan par phase, tes 3 fuites à surveiller, les adversaires attendus.</span></a>' +
       '<a class="tile" href="#reglages"><b>Réglages</b><span>Taille du texte, mode gaucher, vibration, remise à zéro, tout effacer.</span></a>' +
-      '<a class="tile" href="#coach"><b>Mode coach</b><span>Transformer une main du club en quiz à partager sur le groupe.</span></a>' +
+      '<a class="tile" href="#sauvegarde"><b>Sauvegarde et mises à jour</b><span>Google Drive, passage PC ↔ téléphone, nouvelle version.</span></a>' +
       '<a class="tile" href="#merci"><b>Remerciements</b><span>Version ' + VERSION + '</span></a>' +
       '<button class="btn" data-act="pickPlayer">Changer de joueur</button></div>';
     return shell('moi', body);
@@ -631,19 +669,22 @@
     var app = $('#root');
     var s = PA.load(), p = PA.player();
     var r = (location.hash || '#home').slice(1).split('?')[0];
+    // on ne remonte en haut que si l’on change de page : un rafraîchissement en arrière-plan (mise à jour, synchronisation, téléchargement) garde la position
+    var hk = location.hash || '#home', keepY = hk === ui.lastHash ? (window.scrollY || 0) : 0; ui.lastHash = hk;
+    function top() { window.scrollTo(0, keepY); }
     if (r === 'pick') { app.innerHTML = pickPlayerView(); return; }
-    if (r === 'quizclub' && window.PA_COACH) { app.innerHTML = window.PA_COACH.quiz(); window.scrollTo(0, 0); return; }
+    if (r === 'quizclub' && window.PA_COACH) { app.innerHTML = window.PA_COACH.quiz(); top(); return; }
     if (!p) { app.innerHTML = Object.keys(s.players).length && !ui.forceNew ? pickPlayerView() : onbView(); return; }
     if (!p.profile || ui.onbActive) { if (!p.profile) ui.onb.step = Math.max(2, ui.onb.step); app.innerHTML = onbView(); return; }
     if (!ui.welcomed && /[?&]q=/.test(location.hash)) ui.welcomed = true; // ouverture depuis le widget
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
-    if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); window.scrollTo(0, 0); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, calcul: function () { return window.PA_CALC ? window.PA_CALC.view() : homeView(); }, coach: function () { return window.PA_COACH ? window.PA_COACH.compose() : homeView(); }, memo: function () { return window.PA_MEMO ? window.PA_MEMO.view() : homeView(); }, lexique: function () { return window.PA_LEX ? window.PA_LEX.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); }, classement: function () { return window.PA_LEAGUE ? window.PA_LEAGUE.view() : homeView(); }, recherche: function () { return window.PA_VOICE ? window.PA_VOICE.search() : homeView(); }, tournoi: function () { return window.PA_TIMER ? window.PA_TIMER.tournoi() : homeView(); } };
+    if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); top(); return; }
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, calcul: function () { return window.PA_CALC ? window.PA_CALC.view() : homeView(); }, coach: function () { return window.PA_COACH ? window.PA_COACH.compose() : homeView(); }, memo: function () { return window.PA_MEMO ? window.PA_MEMO.view() : homeView(); }, lexique: function () { return window.PA_LEX ? window.PA_LEX.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); }, club: clubView, avantflop: avantFlopView, apresflophub: apresFlopHubView, calculs: calculsView, classement: function () { return window.PA_LEAGUE ? window.PA_LEAGUE.view() : homeView(); }, recherche: function () { return window.PA_VOICE ? window.PA_VOICE.search() : homeView(); }, tournoi: function () { return window.PA_TIMER ? window.PA_TIMER.tournoi() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
-    window.scrollTo(0, r === 'drill' ? window.scrollY : 0);
+    window.scrollTo(0, r === 'drill' ? window.scrollY : keepY);
   }
 
   /* ---------- Événements ---------- */

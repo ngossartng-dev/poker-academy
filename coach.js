@@ -17,7 +17,7 @@
     var ui = U();
     if (window.PA_SOLVER && !window.PA_SOLVER.data()) window.PA_SOLVER.loadData(function () { ui.render(); });
     if (!C.by) { var p = window.PA.player(); C.by = p && /lionel|yo/i.test(p.pseudo || '') ? 'Yo' : (p ? p.pseudo : ''); }
-    var out = '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Mode coach</h1>' +
+    var out = '<div class="stack"><button class="back" data-act="nav" data-v="club">‹ Club</button><h1>Mode coach</h1>' +
       ui.yo('Une main du club devient un quiz : tu la décris, tu donnes ta réponse, et l’appli fabrique un lien à partager sur le groupe du club. Chacun répond, puis voit ta réponse et celle du solveur.') +
       '<div class="card stack"><b>1. Position du joueur et avant le flop</b><div class="seg">' + (window.PA_APF ? window.PA_APF.positions : []).map(function (p) { return '<button class="' + (C.pos === p[0] ? 'on' : '') + '" data-co="pos" data-v="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>' +
       (C.pos ? '<div class="apf-list">' + scens().map(function (s, i) { return '<button class="btn' + (C.sc && C.sc[0] === s[0] && C.sc[1] === s[1] ? ' gold' : '') + '" data-co="sc" data-v="' + i + '">' + s[2] + '</button>'; }).join('') + '</div>' : '') + '</div>';
@@ -36,7 +36,7 @@
         '<button class="btn gold block" data-co="make">Créer le lien du quiz</button>' +
         (C.link ? '<div class="small" style="word-break:break-all;background:#101014;border-radius:8px;padding:8px">' + esc(C.link) + '</div><div class="row"><button class="btn gold" data-co="share">Partager</button><button class="btn" data-co="copy">Copier le lien</button><a class="btn" href="' + C.link.replace(BASE, '') + '">Voir le quiz</a></div>' : '') + '</div>';
     }
-    return ui.shell('moi', out + '</div>');
+    return ui.shell('club', out + '</div>');
   }
   function quizData() {
     var o = C.o.filter(function (x) { return x && x.trim(); });

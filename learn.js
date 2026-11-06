@@ -10,7 +10,8 @@
   function listView() {
     var ui = U(), p = PA.player(), pr = prog(p);
     var ready = LS.CHAPTERS.filter(function (c) { return c.ready; }).length, done = Object.keys(pr).filter(function (k) { return pr[k].done; }).length;
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Leçons</h1>' +
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Le cours</h1>' +
+      '<div class="shortcuts"><a href="#podcasts">🎧<span>Podcasts</span></a><a href="#examens">📝<span>Examens</span></a><a href="#cours">📄<span>Le PDF</span></a></div>' +
       ui.yo((ready === LS.CHAPTERS.length ? 'Les ' + ready + ' chapitres du cours sont en leçons, avec quiz et version à écouter.' : 'Le nouveau cours compte ' + LS.CHAPTERS.length + ' chapitres. ' + ready + ' sont déjà en leçons ; les autres s’ouvrent dans le PDF actuel, à la bonne page.') + ' Leçons acquises : ' + done + ' sur ' + ready + '.') +
       LS.PARTS.map(function (part) {
         return '<div class="card stack"><h3>Partie ' + part.id + ' · ' + part.title + '</h3>' + LS.CHAPTERS.filter(function (c) { return c.part === part.id; }).map(function (c) {

@@ -120,7 +120,7 @@
 
   function view() {
     var tabs = [['journal', 'Journal'], ['reperes', 'Repères'], ['sim', 'Variance']];
-    return U().shell('moi', '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Bankroll</h1><div class="seg">' + tabs.map(function (t) { return '<button class="' + (B.tab === t[0] ? 'on' : '') + '" data-bact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+    return U().shell('analyser', '<div class="stack"><button class="back" data-act="nav" data-v="analyser">‹ Analyser</button><h1>Bankroll</h1><div class="seg">' + tabs.map(function (t) { return '<button class="' + (B.tab === t[0] ? 'on' : '') + '" data-bact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
       (B.tab === 'journal' ? journalTab() : B.tab === 'reperes' ? reperesTab() : simTab()) + '</div>');
   }
   function g(id) { var e = document.getElementById(id); return e ? e.value : null; }

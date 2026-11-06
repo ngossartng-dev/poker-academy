@@ -211,13 +211,13 @@
       (opps.length ? '<div class="card stack"><b>Adversaires attendus</b>' + opps.map(function (o) { var P = OPPI[o.prof] || ['', '?', '', '']; return '<div><b>' + U().esc(o.name) + '</b> · ' + P[1] + '<br><span class="small">' + P[3] + (o.note ? ' — ' + U().esc(o.note) : '') + '</span></div>'; }).join('') + '</div>' : '') +
       U().yo('Relis cette fiche juste avant de t’asseoir, puis oublie-la et joue. Après la partie, note deux ou trois mains pour la revue.') +
       (embed() ? '' : '<button class="btn gold" data-act="print">Imprimer ou enregistrer en PDF</button>') + '</div>';
-    return U().shell('moi', body);
+    return U().shell('club', body);
   }
-  function ficheRoute() { return F.show ? ficheView() : U().shell('moi', '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Avant la partie</h1>' + U().yo('Deux minutes avant de jouer : ta structure, ton plan par phase, tes trois fuites à surveiller et les adversaires que tu vas croiser.') + ficheForm() + '</div>'); }
+  function ficheRoute() { return F.show ? ficheView() : U().shell('club', '<div class="stack"><button class="back" data-act="nav" data-v="club">‹ Club</button><h1>Avant la partie</h1>' + U().yo('Deux minutes avant de jouer : ta structure, ton plan par phase, tes trois fuites à surveiller et les adversaires que tu vas croiser.') + ficheForm() + '</div>'); }
 
   function view() {
     var tabs = [['eq', 'Équité'], ['icm', 'ICM'], ['pko', 'Prime PKO'], ['m', 'Compteur de M']];
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Outils</h1>' +
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="calculs">‹ Calculs</button><h1>Outils</h1>' +
       '<div class="seg">' + tabs.map(function (t) { return '<button class="' + (T.tab === t[0] ? 'on' : '') + '" data-tact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
       (T.tab === 'eq' ? eqTab() : T.tab === 'icm' ? icmTab() : T.tab === 'pko' ? pkoTab() : mTab()) + '</div>';
     return U().shell('apprendre', body);

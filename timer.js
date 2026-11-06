@@ -239,7 +239,7 @@
     clearSheet();
     var sheet = KO !== null ? koPanel() : (MSHEET && (t.pending || []).length ? movesHtml(true) : '');
     if (sheet) setTimeout(function () { clearSheet(); var bg = document.createElement('div'); bg.className = 'tn-sheet-bg'; bg.setAttribute('data-tmact', KO !== null ? 'koCancel' : 'movesLater'); var sh = document.createElement('div'); sh.className = 'tn-sheet'; sh.innerHTML = sheet; document.body.appendChild(bg); document.body.appendChild(sh); }, 0);
-    return ui.shell('home', out);
+    return ui.shell('club', out);
   }
   function schedule(L) { var t = 0; return L.map(function (l) { var st = t; t += l.min; return st; }); }
   function hm(m) { var h = Math.floor(m / 60), r = m % 60; return h + ' h ' + (r < 10 ? '0' : '') + r; }

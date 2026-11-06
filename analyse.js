@@ -718,8 +718,10 @@
   }
   function view() {
     if (window.PA_STORE && !window.PA_STORE.ready()) { window.PA_STORE.whenReady(function () { U().render(); }); return U().shell('analyser', '<div class="stack"><h1>Analyser</h1><p class="muted">Chargement de tes mains…</p></div>'); }
+    var qm = /[?&](club|adv)\b/.exec(location.hash); if (qm && AV._q !== location.hash) { AV.tab = qm[1]; } AV._q = location.hash;
     var ui = U(), db = loadDB(), p = window.PA.player(), prof = p.profile || 'tag';
     var body = '<div class="stack"><h1>Analyser</h1>';
+    body += '<a class="card row" href="#bankroll" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>Bankroll</b><span class="small muted"> · résultats, ROI, variance</span></span><span style="color:var(--gold)">›</span></a>';
     if (!db.hands.length) {
       if (AV.tab === 'club') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button>' + clubTab(db) + '</div>');
       if (AV.tab === 'adv') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button><h2>Adversaires du club</h2>' + carnetTab() + '</div>');
