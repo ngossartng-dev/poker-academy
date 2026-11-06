@@ -107,7 +107,7 @@
     } else {
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
-    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><b>Exporter ' + V.year + '</b><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
+    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><b>Exporter ' + V.year + '</b><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
     return ui.shell('club', out);
   }
@@ -115,6 +115,7 @@
     var t = e.target.closest ? e.target.closest('[data-lgact]') : null; if (!t) return;
     var a = t.getAttribute('data-lgact'), v = t.getAttribute('data-v');
     function done(m) { V.msg = m; U().render(); }
+    if (a === 'img') { V.msg = ''; window.PA_EXPORT.image(V.year, done); return; }
     if (a === 'xy') { V.msg = ''; window.PA_EXPORT.year(V.year, t.getAttribute('data-f'), done); return; }
     if (a === 'xt') { V.msg = ''; window.PA_EXPORT.tournament(v, t.getAttribute('data-f'), done); return; }
     V.msg = ''; if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;

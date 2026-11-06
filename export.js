@@ -386,9 +386,78 @@
     doc.tourney(tn, true);
     return doc.bytes();
   }
+  /* ---------- Image du classement pour le groupe WhatsApp (1080 × 1350) ---------- */
+  function rankCanvas(year) {
+    var lg = L(), D = yearData(year), list = D.list.filter(function (x) { return x.type !== 'libre'; });
+    var last = D.list[D.list.length - 1], lastW = last ? lg.week(last.date) : null;
+    var prev = lg.standings(D.list.filter(function (x) { return lg.week(x.date) !== lastW; })), pr = {};
+    prev.forEach(function (o, i) { pr[o.name.toLowerCase()] = i + 1; });
+    var st = D.st, W = 1080, Hh = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;
+    var c = cv.getContext('2d'), G = '#ffd23f', GD = '#b8901f', BR = '#9a6a18', RD = '#e0464c', DISP = '800 {s}px "Big Shoulders Display", Impact, "Arial Narrow", sans-serif', TXT = '{w} {s}px "IBM Plex Sans", system-ui, sans-serif';
+    function F(t, s, w) { return t.replace('{s}', s).replace('{w}', w || 400); }
+    function txt(s, x, y, font, col, al) { c.font = font; c.fillStyle = col; c.textAlign = al || 'left'; c.fillText(s, x, y); }
+    function fitTxt(s, w, font) { c.font = font; s = String(s); while (s.length > 1 && c.measureText(s).width > w) s = s.slice(0, -2) + '…'; return s; }
+    function rr(x, y, w, h, r, col) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fillStyle = col; c.fill(); }
+    function circ(x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = col; c.fill(); }
+    // fond
+    var g = c.createRadialGradient(300, 200, 50, 540, 600, 1100); g.addColorStop(0, '#231c09'); g.addColorStop(1, '#0b0b0d'); c.fillStyle = g; c.fillRect(0, 0, W, Hh);
+    c.fillStyle = G; c.fillRect(0, 0, W, 10);
+    txt('POKER ACADEMY', 60, 74, F(DISP, 30), G); c.letterSpacing = '0px';
+    [['♣', '#999'], ['♦', RD], ['♥', RD], ['♠', '#999']].forEach(function (q, i) { txt(q[0], W - 60 - i * 40, 74, F(TXT, 32, 700), q[1], 'right'); });
+    txt('CHAMPIONNAT', 60, 170, F(DISP, 100), '#fff'); txt('DU CLUB ' + year, 60, 262, F(DISP, 100), G);
+    if (last) {
+      rr(60, 292, W - 120, 74, 16, 'rgba(255,255,255,.06)');
+      var lab = lg.TYPES[last.type].short + ' du ' + dfr(last.date).slice(0, 5) + ' · ' + last.n + ' joueurs';
+      txt(lab, 84, 340, F(TXT, 28, 400), '#ccc'); c.font = F(TXT, 28, 400); var lw = c.measureText(lab + '   ').width;
+      txt('🏆 ' + (last.winner || '—'), 84 + lw, 340, F(TXT, 30, 700), G);
+    }
+    // podium
+    var pw = 290, gap = 30, x0 = (W - 3 * pw - 2 * gap) / 2, base = 770, HS = [165, 120, 90], MC = [G, '#c3c6cc', '#c8814a'];
+    [1, 0, 2].forEach(function (k, j) {
+      var o = st[k]; if (!o) return; var x = x0 + j * (pw + gap), h = HS[k];
+      var gg = c.createLinearGradient(0, base - h, 0, base); gg.addColorStop(0, k === 0 ? '#2a2210' : '#202024'); gg.addColorStop(1, '#141416'); c.fillStyle = gg; c.fillRect(x, base - h, pw, h);
+      c.fillStyle = MC[k]; c.fillRect(x, base - h, pw, 8);
+      txt(String(k + 1), x + pw / 2, base - h / 2 + 30, F(DISP, k === 0 ? 92 : 72), MC[k], 'center');
+      var cy = base - h - 62; circ(x + pw / 2, cy, 44, MC[k]); circ(x + pw / 2, cy, 36, '#111'); circ(x + pw / 2, cy, 31, MC[k]);
+      txt(['1er', '2e', '3e'][k], x + pw / 2, cy + 12, F(DISP, 34), '#111', 'center');
+      txt(fitTxt(o.name, pw - 10, F(DISP, 52)), x + pw / 2, cy - 98, F(DISP, 52), '#fff', 'center');
+      txt(f1(o.total) + ' pts', x + pw / 2, cy - 56, F(TXT, 30, 700), MC[k], 'center');
+      var ev = pr[o.name.toLowerCase()], d = ev ? ev - (k + 1) : 0;
+      if (d) txt((d > 0 ? '▲ ' : '▼ ') + Math.abs(d), x + pw - 16, base - h + 46, F(TXT, 26, 700), d > 0 ? '#3ddc84' : RD, 'right');
+    });
+    // classement 4 à 12
+    var rows = st.slice(3, 12), y = 792, rh = Math.min(56, (1255 - y) / Math.max(rows.length, 1)), max = st.length ? st[0].total : 1;
+    rows.forEach(function (o, i) {
+      var r = i + 4, yy = y + i * rh, yc = yy + rh / 2;
+      if (i % 2 === 0) rr(50, yy + 3, W - 100, rh - 6, 12, 'rgba(255,255,255,.04)');
+      circ(92, yc, 22, '#26262c'); txt(String(r), 92, yc + 9, F(DISP, 28), '#ddd', 'center');
+      txt(fitTxt(o.name, 230, F(TXT, 30, 700)), 130, yc + 10, F(TXT, 30, 700), '#fff');
+      var bx = 380, bw = 420, sc = bw / max; rr(bx, yc - 9, bw, 18, 9, 'rgba(255,255,255,.08)');
+      var xx = bx; [[o.mer, G], [o.deep, BR], [o.bonus, RD]].forEach(function (sg) { if (sg[0] > 0) { c.fillStyle = sg[1]; c.fillRect(xx, yc - 9, sg[0] * sc, 18); xx += sg[0] * sc; } });
+      txt(f1(o.total), 900, yc + 12, F(DISP, 40), G, 'right');
+      var ev = pr[o.name.toLowerCase()], d = ev ? ev - r : null;
+      txt(d === null ? 'nouveau' : d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + (-d) : '=', 1020, yc + 9, F(TXT, d === null ? 20 : 26, 700), d === null ? G : d > 0 ? '#3ddc84' : d < 0 ? RD : '#888', 'right');
+    });
+    // pied
+    c.fillStyle = '#2e2e35'; c.fillRect(60, 1268, W - 120, 2);
+    var lx = 60; [['Mercredi', G], ['Deep ×1,4', BR], ['Prime', RD]].forEach(function (it) { c.fillStyle = it[1]; c.fillRect(lx, 1291, 22, 22); txt(it[0], lx + 32, 1310, F(TXT, 24, 400), '#bbb'); c.font = F(TXT, 24, 400); lx += 60 + c.measureText(it[0]).width; });
+    txt(list.length + ' tournois · moyenne ' + f1(D.avgPlayers) + ' joueurs', W - 60, 1310, F(TXT, 24, 400), '#bbb', 'right');
+    txt('Merci à Lionel et au club', W / 2 - 12, 1340, F(TXT, 20, 400), '#777', 'center'); c.font = F(TXT, 20, 400); txt('♥', W / 2 + c.measureText('Merci à Lionel et au club').width / 2 - 4, 1340, F(TXT, 20, 700), RD, 'left');
+    return cv;
+  }
+  function rankImage(year, done) {
+    var go = function () {
+      var cv = rankCanvas(year), d = cv.toDataURL('image/png'), bin = atob(d.split(',')[1]), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      deliver(u8, 'Classement-' + year + '-' + L().week(L().today()).slice(5) + '.png', done);
+    };
+    try { if (document.fonts && document.fonts.load) { Promise.all([document.fonts.load('800 60px "Big Shoulders Display"'), document.fonts.load('700 30px "IBM Plex Sans"'), document.fonts.load('400 30px "IBM Plex Sans"')]).then(go, go); return; } } catch (e) {}
+    go();
+  }
+
   /* ---------- Envoi du fichier ---------- */
   function b64(u8) { var s = ''; for (var i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
-  var MIME = { xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', pdf: 'application/pdf' };
+  var MIME = { png: 'image/png', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', pdf: 'application/pdf' };
   function deliver(bytes, name, done) {
     var ext = name.split('.').pop(), mime = MIME[ext];
     if (window.PAAndroid && window.PAAndroid.shareFile) { window.PAAndroid.shareFile(b64(bytes), name, mime); done('Fichier prêt : choisis l’appli pour l’ouvrir ou l’envoyer.'); return; }
@@ -397,7 +466,7 @@
         .then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) { done('Fichier enregistré et ouvert : ' + j.path); }).catch(function () { done('Enregistrement impossible.'); });
       return;
     }
-    try { var f = new File([bytes], name, { type: mime }); if (window.PA_SYNC && window.PA_SYNC.isIOS && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: name }).catch(function () {}); done('Fichier prêt.'); return; } } catch (e) {}
+    try { var f = new File([bytes], name, { type: mime }); if (window.PA_SYNC && (window.PA_SYNC.isIOS || ext === 'png') && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: name }).catch(function () {}); done('Fichier prêt.'); return; } } catch (e) {}
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 30000);
     done('Fichier créé : ' + name);
@@ -408,5 +477,5 @@
     var tn = L().load().list.filter(function (x) { return x.id === id; })[0]; if (!tn) { done('Tournoi introuvable.'); return; }
     deliver(fmt === 'pdf' ? tnPdf(tn) : tnXlsx(tn), slug(L().TYPES[tn.type].short + '-' + tn.date) + '.' + fmt, done);
   }
-  window.PA_EXPORT = { year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
+  window.PA_EXPORT = { year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, image: rankImage, _canvas: rankCanvas, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
 })();

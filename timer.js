@@ -183,7 +183,7 @@
       out += '<div class="tn-lvl">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</div><div class="tn-blinds">' + (lv.pause ? 'Pause' : fmt(lv.sb) + ' / ' + fmt(lv.bb)) + '</div>' + (lv.ante ? '<div class="tn-ante">' + anteTxt(lv) + '</div>' : '') +
         '<div class="tn-clock" id="tmClock2">' + mmss(s.rem) + '</div><div class="tn-next">' + nextInfo(s) + '</div>' +
         '<div class="tn-ctrl"><button data-tmact="prev" aria-label="Niveau précédent">⏮</button><button data-tmact="minus">−1</button><button class="tn-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? '▶ Reprendre' : '▶ Lancer')) + '</button><button data-tmact="plus">+1</button><button data-tmact="next" aria-label="Niveau suivant">⏭</button></div>' +
-        '<a class="tn-big" href="#minuteur">Grand écran ›</a>';
+        '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a><a class="tn-big" href="#minuteur">Minuteur ›</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button></div>';
     }
     out += '</div>';
     // ---- chiffres clés ----
@@ -195,7 +195,7 @@
     }
     if (t.msg) out += '<div class="tn-msg">' + t.msg + '</div>';
     out += movesHtml(false);
-    if (t.drawn && alivePl().length === 1 && t.players.length > 1 && LG) out += t.saved ? '<div class="tn-done">🏆 ' + esc(alivePl()[0].name) + ' gagne · tournoi enregistré</div>' : '<button class="btn gold block" data-tmact="saveLeague">🏆 ' + esc(alivePl()[0].name) + ' gagne · enregistrer au classement</button>';
+    if (t.drawn && alivePl().length === 1 && t.players.length > 1 && LG) out += t.saved ? '<div class="tn-done">🏆 ' + esc(alivePl()[0].name) + ' gagne · tournoi enregistré</div>' + (window.PA_EXPORT ? '<button class="btn gold block" data-tmact="shareImg">🖼️ Partager le classement (image WhatsApp)</button>' : '') : '<button class="btn gold block" data-tmact="saveLeague">🏆 ' + esc(alivePl()[0].name) + ' gagne · enregistrer au classement</button>';
     // ---- onglets ----
     out += '<div class="tn-tabs">' + [['tables', 'Tables'], ['joueurs', 'Joueurs'], ['reglages', 'Réglages']].map(function (o) { return '<button class="' + (tab === o[0] ? 'on' : '') + '" data-tmact="tab" data-v="' + o[0] + '">' + o[1] + (o[0] === 'joueurs' && t.players.length ? ' <small>' + t.players.length + '</small>' : '') + '</button>'; }).join('') + '</div>';
     if (tab === 'tables') {
@@ -230,6 +230,7 @@
         '<div class="small muted">Format des tables</div><div class="seg">' + [[6, '6-max'], [9, '9-max'], [10, '10 joueurs']].map(function (o) { return '<button class="' + (t.size === o[0] ? 'on' : '') + '" data-tmact="size" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
         (t.drawn ? '<button class="btn block" data-tmact="draw">Refaire le tirage des tables</button>' : '') + '</div>' +
         '<div class="card stack"><b>Les jetons</b>' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Re-entry (0 = départ)') + cin('tnAdd', c.addStack, 'Add-on (0 = départ)') + '</div>' +
+        '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
         '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">Structure : blindes, ante, durée, pauses</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
         '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>';
     }
@@ -266,6 +267,23 @@
     try { if (window.PAAndroid) PAAndroid.keepAwake(on); } catch (e) {}
     try { if (on && navigator.wakeLock && !lock) navigator.wakeLock.request('screen').then(function (l) { lock = l; }).catch(function () {}); if (!on && lock) { lock.release(); lock = null; } } catch (e) {}
   }
+  // annonces vocales : voix du téléphone (Android) ou du navigateur / PC
+  var sayN = 0;
+  function vOn() { return ST.voice !== false; }
+  function say(txt, force) {
+    if (!vOn() && !force) return;
+    try {
+      if (window.PAAndroid && window.PAAndroid.ttsOk && window.PAAndroid.ttsOk()) { window.PAAndroid.speak(txt, 0.95, 1, 7700 + (sayN++ % 100)); return; }
+      if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
+        var u = new SpeechSynthesisUtterance(txt), vs = speechSynthesis.getVoices().filter(function (x) { return /^fr/i.test(x.lang); });
+        u.lang = 'fr-FR'; if (vs.length) u.voice = vs.filter(function (x) { return /fr-FR/i.test(x.lang); })[0] || vs[0]; u.rate = 0.95;
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      }
+    } catch (e) {}
+  }
+  function lvlSay(l) { return l.pause ? 'Pause de ' + l.min + ' minutes.' : 'Niveau ' + l.n + '. Blindes ' + l.sb + ', ' + l.bb + (l.ante ? (l.bbAnte ? '. Ante grosse blinde ' + l.ante : '. Ante ' + l.ante + ' par joueur') : '') + '.'; }
+  function ordSay(n) { return n === 1 ? 'première' : n + 'e'; }
+  function voiceBtn() { return '<button class="btn" data-tmact="voice">' + (vOn() ? '🔊 Annonces vocales : oui' : '🔇 Annonces vocales : non') + '</button>'; }
   function anteTxt(l) { return l.ante ? (l.bbAnte ? 'ante grosse blinde ' + fmt(l.ante) : 'ante ' + fmt(l.ante) + ' par joueur') : ''; }
   function lvlTxt(l) { return l.pause ? 'Pause' : fmt(l.sb) + ' / ' + fmt(l.bb) + (l.ante ? ' · ' + anteTxt(l) : ''); }
   function mmss(s) { s = Math.ceil(s); var m = Math.floor(s / 60); return (m < 10 ? '0' : '') + m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60); }
@@ -316,17 +334,21 @@
       '<div class="disp" id="tmClock" style="font-size:clamp(70px,24vw,260px);line-height:1;margin-top:8px">' + mmss(s.rem) + '</div>' +
       '<div class="muted" id="tmNext" style="font-size:clamp(15px,3vw,26px)">' + nextInfo(s) + '</div></div>' +
       '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="prev">‹ Niveau</button><button class="btn gold" data-tmact="toggle" style="min-width:160px;font-size:1.2em">' + (run ? 'Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? 'Reprendre' : 'Démarrer')) + '</button><button class="btn" data-tmact="next">Niveau ›</button></div>' +
-      '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="minus">− 1 min</button><button class="btn" data-tmact="plus">+ 1 min</button><button class="btn" data-tmact="full">Plein écran</button><button class="btn" data-tmact="edit">Structure</button><button class="btn" data-tmact="reset">Remettre à zéro</button></div>' +
+      '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="minus">− 1 min</button><button class="btn" data-tmact="plus">+ 1 min</button><a class="btn" href="#ecran">📺 Écran télé</a>' + voiceBtn() + '<button class="btn" data-tmact="full">Plein écran</button><button class="btn" data-tmact="edit">Structure</button><button class="btn" data-tmact="reset">Remettre à zéro</button></div>' +
       statsHtml(s) + '<a class="btn block" href="#tournoi">Le tournoi : joueurs, tables, éliminations ›</a>' +
-      '<p class="small muted">Un signal sonore annonce la dernière minute et le changement de niveau. L’écran reste allumé pendant que le minuteur tourne.</p></div>';
+      '<p class="small muted">Un signal sonore et une voix annoncent la dernière minute et chaque nouveau niveau (les blindes et l’ante), la pause et la reprise. L’écran reste allumé pendant que le minuteur tourne.</p></div>';
     return ui.shell('apprendre', body, true);
   }
   setInterval(function () {
-    if (!/^#(minuteur|tournoi)/.test(location.hash) || EDIT) return;
-    var s = live(), c = document.getElementById('tmClock') || document.getElementById('tmClock2'); if (!c || !s.L.length) return;
+    if (!/^#(minuteur|tournoi|ecran)/.test(location.hash) || EDIT) return;
+    var s = live(), c = document.getElementById('tmClock') || document.getElementById('tmClock2') || document.getElementById('ecClock'); if (!c || !s.L.length) return;
+    var eb = document.getElementById('ecBar'); if (eb) { var lv0 = s.L[s.idx]; eb.style.width = Math.max(0, Math.min(100, 100 - s.rem / (lv0.min * 60) * 100)).toFixed(1) + '%'; var en = document.getElementById('ecNext'); if (en) en.textContent = nextInfo(s); var ew = document.getElementById('ecNow'); if (ew) ew.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); c.classList.toggle('ec-hot', s.rem <= 60 && !!ST.since); }
     if (ST.since) {
-      if (s.idx !== ST.shown) { if (ST.shown !== undefined) { beep(3); } ST.shown = s.idx; U().render(); return; }
-      var r = Math.ceil(s.rem); if (r === 60 && lastBeep !== s.idx) { lastBeep = s.idx; beep(1); }
+      if (s.idx !== ST.shown) {
+        if (ST.shown !== undefined) { beep(3); var was = s.L[ST.shown], now = s.L[s.idx]; setTimeout(function () { say((was && was.pause && !now.pause ? 'Fin de la pause, on reprend. ' : '') + lvlSay(now)); }, 1300); }
+        ST.shown = s.idx; U().render(); return;
+      }
+      var r = Math.ceil(s.rem); if (r === 60 && lastBeep !== s.idx) { lastBeep = s.idx; beep(1); var cl = s.L[s.idx], nx = s.L[s.idx + 1]; setTimeout(function () { say(cl.pause ? 'Fin de la pause dans une minute. Retour aux tables.' : 'Plus qu’une minute' + (nx ? (nx.pause ? ' avant la pause.' : ' avant le niveau ' + nx.n + ' : ' + nx.sb + ', ' + nx.bb + '.') : '.')); }, 600); }
     }
     c.textContent = mmss(s.rem);
   }, 500);
@@ -334,7 +356,7 @@
     var t = e.target.closest ? e.target.closest('[data-tmact]') : null; if (!t) return;
     var a = t.getAttribute('data-tmact'), s = live(), L = s.L;
     if (a === 'toggle') { if (ST.since) { freeze(); ST.since = null; awake(false); } else { ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
-    else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); }
+    else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); if (k !== s.idx) say(lvlSay(L[k])); }
     else if (a === 'plus' || a === 'minus') { freeze(); ST.rem = Math.max(1, ST.rem + (a === 'plus' ? 60 : -60)); }
     else if (a === 'size') { T().size = +t.getAttribute('data-v'); T().msg = T().drawn ? 'Format changé : refais le tirage des tables.' : null; }
     else if (a === 'addNames' || a === 'addOpps') {
@@ -349,6 +371,7 @@
     else if (a === 'movesLater') { MSHEET = false; }
     else if (a === 'ttype') { T().type = t.getAttribute('data-v'); }
     else if (a === 'saveLeague') { var ts = T(); if (!ts.saved && window.PA_LEAGUE) { var rec = window.PA_LEAGUE.record(ts); ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
+    else if (a === 'shareImg') { window.PA_EXPORT.image((T().date || '').slice(0, 4) || String(new Date().getFullYear()), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }
     else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
     else if (a === 'ko') { var pk0 = T().players[+t.getAttribute('data-v')]; if (pk0 && !pk0.out) { KO = +t.getAttribute('data-v'); FIND.q = ''; } }
@@ -363,6 +386,9 @@
         if (killer && tk.holder && pk.name.toLowerCase() === tk.holder.toLowerCase()) { killer.bonus = (killer.bonus || 0) + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2); killer.bountyFrom = pk.name; pk.bountyTakenBy = killer.name; bmsg = '<br><b>Prime : ' + killer.name + ' élimine le dernier vainqueur et gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points !</b>'; }
         var snap0 = snap(), mv = rebalance(), nmv = noteMoves(snap0);
         mv = mv.filter(function (x) { return /Table finale/.test(x); });
+        var newMv = nmv ? (tk.pending || []).slice(-nmv) : [];
+        say(pk.name + ' sort à la ' + ordSay(lft) + ' place' + (killer ? ', éliminé par ' + killer.name : '') + '.' + (bmsg ? ' Prime de ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points pour ' + killer.name + ' !' : '') +
+          (alivePl().length === 1 ? ' ' + alivePl()[0].name + ' remporte le tournoi ! Bravo !' : (mv.length ? ' Table finale !' : '') + (newMv.length ? (newMv.length <= 4 ? ' Changement de place : ' + newMv.map(function (m) { return m.name + ', table ' + m.tt + ', siège ' + m.ts; }).join(' ; ') + '.' : ' ' + newMv.length + ' joueurs changent de place, regardez l’écran.') : '')));
         tk.msg = pk.name + ' sort à la ' + lft + 'e place' + (killer ? ', éliminé par ' + killer.name : '') + ' (' + new Date(pk.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ', ' + pk.koLevel + ').' + bmsg + (nmv ? '<br>' + nmv + ' joueur' + (nmv > 1 ? 's changent' : ' change') + ' de place : voir la liste.' : '') + (mv.length ? '<br><b>Table finale !</b>' : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : '');
       }
       KO = null;
@@ -381,6 +407,8 @@
     else if (a === 'reset') { if (typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
     else if (a === 'full') { try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
     else if (a === 'edit') EDIT = true;
+    else if (a === 'voice') { ST.voice = !vOn(); if (ST.voice) say('Annonces vocales activées. ' + (L[s.idx] ? lvlSay(L[s.idx]) : ''), true); else { try { if (window.speechSynthesis) speechSynthesis.cancel(); if (window.PAAndroid && window.PAAndroid.stop) window.PAAndroid.stop(); } catch (e4) {} } }
+    else if (a === 'ecranOut') { location.hash = T().players.length ? '#tournoi' : '#minuteur'; return; }
     else if (a === 'done') EDIT = false;
     else if (a === 'gen' || a === 'preview' || a === 'savestruct') {
       var v = function (id, d) { var el = document.getElementById(id); var x = el ? parseInt(el.value, 10) : NaN; return isNaN(x) ? d : x; };
@@ -397,5 +425,47 @@
   document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tnDate') { T().date = e.target.value; save(); U().render(); return; } });
   document.addEventListener('change', function (e) { var id = e.target && e.target.id, k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
-  window.PA_TIMER = { view: view, tournoi: tournoiView, _levels: levels, _generate: generate };
+  /* ---------- Écran pour la télé du club ---------- */
+  function ecranView() {
+    var ui = U(), esc = ui.esc, s = live(), t = T(), LG = window.PA_LEAGUE;
+    if (!s.L.length) return view();
+    var l = s.L[s.idx], run = !!ST.since, chips = chipsInPlay(), avg = t.left > 0 ? chips / t.left : 0, bb = curBB(s);
+    var typeName = LG && t.players.length ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Tournoi' }[t.type || 'mercredi'] : 'Tournoi du club';
+    var pz = -1, secs = s.rem; for (var k = s.idx + 1; k < s.L.length; k++) { if (s.L[k].pause) { pz = k; break; } secs += s.L[k].min * 60; }
+    var stat = function (lab, val, sub) { return '<div class="ec-stat"><span>' + lab + '</span><b>' + val + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; };
+    var h = '<div class="ec' + (l.pause ? ' ec-pause' : '') + '">' +
+      '<div class="ec-top"><span class="ec-brand">POKER ACADEMY</span><span class="ec-title">' + esc(typeName) + (t.date ? ' · ' + t.date.split('-').reverse().slice(0, 2).join('/') : '') + '</span><span id="ecNow">' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</span></div>' +
+      '<div class="ec-main"><div class="ec-clockbox">' +
+      '<div class="ec-lvl">' + (l.pause ? 'Pause' : 'Niveau ' + l.n) + (run ? '' : ' · <em>en attente</em>') + '</div>' +
+      '<div class="ec-bl">' + (l.pause ? 'Pause' : fmt(l.sb) + ' / ' + fmt(l.bb)) + '</div>' +
+      '<div class="ec-ante">' + (l.ante ? anteTxt(l) : (l.pause ? 'Bonne pause !' : '&nbsp;')) + '</div>' +
+      '<div class="ec-clock" id="ecClock">' + mmss(s.rem) + '</div>' +
+      '<div class="ec-bar"><i id="ecBar" style="width:' + Math.max(0, 100 - s.rem / (l.min * 60) * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="ec-next" id="ecNext">' + nextInfo(s) + '</div></div>' +
+      '<div class="ec-side">' +
+      (t.entrants || t.players.length ? stat('Joueurs', t.left + '<small> / ' + (t.entrants + t.re) + '</small>', t.re || t.add ? (t.re ? t.re + ' re-entry' : '') + (t.re && t.add ? ' · ' : '') + (t.add ? t.add + ' add-on' : '') : '') : '') +
+      (avg ? stat('Tapis moyen', fmt(Math.round(avg)), bb ? Math.round(avg / bb) + ' grosses blindes' : '') : '') +
+      (chips ? stat('Jetons en jeu', fmt(chips), '') : '') +
+      (pz > 0 && !l.pause ? stat('Prochaine pause', Math.ceil(secs / 60) >= 60 ? hm(Math.ceil(secs / 60)) : Math.ceil(secs / 60) + ' min', '') : '') +
+      (LG && t.type !== 'libre' && t.holder ? '<div class="ec-wanted"><span>Tête mise à prix</span><b>' + esc(t.holder) + '</b><small>+' + LG.BONUS + ' points pour qui l’élimine</small></div>' : '') +
+      '</div></div>';
+    // bas : changements de place, puis dernières sorties, puis les tables
+    var P = t.pending || [], outs = t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; }).slice(0, 4);
+    if (P.length) h += '<div class="ec-moves"><b>Changements de place</b>' + P.slice(-12).map(function (m) { return '<span><em>' + esc(m.name) + '</em> → table ' + m.tt + ' · siège ' + m.ts + '</span>'; }).join('') + '</div>';
+    else if (outs.length) h += '<div class="ec-outs"><b>Dernières sorties</b>' + outs.map(function (x) { return '<span>' + x.place + 'e <em>' + esc(x.name) + '</em>' + (x.koBy ? ' par ' + esc(x.koBy) : '') + '</span>'; }).join('') + '</div>';
+    if (t.drawn && alivePl().length > 1) {
+      var tb = tablesOf(), ids = Object.keys(tb).map(Number).sort(function (a, b) { return a - b; });
+      h += '<div class="ec-tables">' + ids.map(function (id) { return '<div><b>Table ' + id + '</b><span>' + tb[id].slice().sort(function (a, b) { return a.seat - b.seat; }).map(function (q) { return q.seat + '. ' + esc(q.name); }).join(' · ') + '</span></div>'; }).join('') + '</div>';
+    }
+    if (t.drawn && alivePl().length === 1 && t.players.length > 1) h += '<div class="ec-win">🏆 ' + esc(alivePl()[0].name) + ' remporte le tournoi !</div>';
+    h += '<div class="ec-ctrl"><button data-tmact="ecranOut" aria-label="Quitter">‹ Quitter</button><button data-tmact="prev">⏮</button><button class="ec-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : '▶ Lancer') + '</button><button data-tmact="next">⏭</button><button data-tmact="voice">' + (vOn() ? '🔊' : '🔇') + '</button><button data-tmact="full">⛶ Plein écran</button></div></div>';
+    return h;
+  }
+  // clavier sur l’écran télé et le minuteur : espace = lancer / pause, flèches = niveau
+  document.addEventListener('keydown', function (e) {
+    if (!/^#(ecran|minuteur)/.test(location.hash) || EDIT || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return;
+    var m = { ' ': 'toggle', ArrowRight: 'next', ArrowLeft: 'prev', f: 'full', v: 'voice' }[e.key]; if (!m) return;
+    var b = document.querySelector('[data-tmact="' + m + '"]'); if (b) { e.preventDefault(); b.click(); }
+  });
+  window.PA_TIMER = { view: view, tournoi: tournoiView, ecran: ecranView, _levels: levels, _generate: generate };
 })();
