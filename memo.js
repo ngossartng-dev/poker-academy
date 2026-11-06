@@ -38,7 +38,7 @@
       'Avantage de range (A72, K83 secs) : mise souvent et petit.',
       'Avantage de nuts (overpaire sur flop bas) : mise moins souvent, mais gros.',
       'Aucun avantage (874 à deux couleurs pour l’ouvreur) : checke beaucoup.',
-      'C-bet retardé : flop checké, il checke la turn → mise (2 fois sur 3).',
+      'C-bet retardé : flop checké, il checke la turn → mise (2 à 3 fois sur 4).',
       'Mise sonde (hors position, ex. grosse blinde contre le bouton) : l’ouvreur a checké le flop → mise la turn en premier.',
       'Float : en position (bouton, cut-off), contre un c-bet qui abandonne à la turn ; jamais contre une station.',
       'Slowplay : seulement sur tableau sec quand tu bloques tout.',

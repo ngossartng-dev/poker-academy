@@ -542,7 +542,7 @@
     if (M.xrO >= 20 && xr < 6) com.push('Tu ne check-raises presque jamais (' + fmtPct(xr) + ') : tes brelans et tes gros tirages devraient relancer plus souvent (chapitre 44).');
     if (M.xrO >= 20 && xr > 30) com.push('Tu check-raises beaucoup (' + fmtPct(xr) + ') : garde-le pour les mains fortes et les tirages avec des outs (chapitre 44).');
     var dc = line('C-bet retardé', M.dc, M.dcO, 'repère 55-70 %', 43);
-    if (M.dcO >= 15 && dc < 35) com.push('Quand tu as checké le flop et qu’il checke la turn, tu ne mises que ' + fmtPct(dc) + ' : le solveur mise 63 à 71 % du temps (c-bet retardé, chapitre 43).');
+    if (M.dcO >= 15 && dc < 35) com.push('Quand tu as checké le flop et qu’il checke la turn, tu ne mises que ' + fmtPct(dc) + ' : le solveur mise 65 à 75 % du temps (c-bet retardé, chapitre 43).');
     var pr = line('Mise sonde', M.pr, M.prO, 'repère 35-50 %', 43);
     if (M.prO >= 15 && pr < 20) com.push('Quand l’ouvreur checke le flop, tu ne sondes la turn que ' + fmtPct(pr) + ' du temps (repère 35-50 %, chapitre 43).');
     line('Float (mise à la turn après avoir payé)', M.fl, M.flO, 'repère 45-55 %', 43);
