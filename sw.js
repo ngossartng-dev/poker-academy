@@ -1,6 +1,6 @@
 /* Poker Academy : fonctionnement hors connexion (web app) */
-var CACHE = 'pa-2.18.0';
-var FILES = ['./', './index.html', './style.css', './fonts/fonts.css', './data.js', './core.js', './store.js', './game.js', './situations.js', './lessons.js', './audio/index.js', './learn.js', './analyse.js', './tools.js', './bank.js', './cards.js', './packs.js', './river.js', './solver.js', './solver/data.js', './keys.js', './timer.js', './sync.js', './season.js', './perso.js', './cases.js', './choix.js', './calcul.js', './memo.js', './lexique.js', './voice.js', './league.js', './export.js', './coach.js', './cases-data.js', './apf.js', './plan.js', './ui.js', './manifest.webmanifest',
+var CACHE = 'pa-2.19.0';
+var FILES = ['./', './index.html', './style.css', './fonts/fonts.css', './data.js', './core.js', './store.js', './game.js', './situations.js', './lessons.js', './audio/index.js', './learn.js', './analyse.js', './tools.js', './bank.js', './cards.js', './packs.js', './river.js', './solver.js', './solver/data.js', './keys.js', './timer.js', './sync.js', './season.js', './perso.js', './cases.js', './choix.js', './calcul.js', './memo.js', './lexique.js', './voice.js', './league.js', './export.js', './semaine.js', './coach.js', './cases-data.js', './apf.js', './plan.js', './ui.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
   './fonts/big-shoulders-display-latin-700-normal.woff2', './fonts/big-shoulders-display-latin-800-normal.woff2',
   './fonts/ibm-plex-sans-latin-400-normal.woff2', './fonts/ibm-plex-sans-latin-500-normal.woff2', './fonts/ibm-plex-sans-latin-600-normal.woff2', './fonts/ibm-plex-sans-latin-700-normal.woff2'];

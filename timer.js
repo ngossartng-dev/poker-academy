@@ -25,7 +25,7 @@
   var NICE = series(20, [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8]);
   var ANTES = series(5, [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8]);
   var SPEED = { lente: [1.25, 'Lente (+25 % par niveau)'], normale: [1.33, 'Normale (+33 %)'], rapide: [1.5, 'Rapide (+50 %)'] };
-  var CFG0 = { sb: 50, bb: 100, n: 18, mins: 20, speed: 'normale', ante: 'bb', anteFrom: 4, pauseEvery: 5, pauseMin: 10, chips: 20000, reStack: 0, addStack: 0 };
+  var CFG0 = { sb: 50, bb: 100, n: 18, mins: 20, speed: 'normale', ante: 'bb', anteFrom: 4, pauseEvery: 5, pauseMin: 10, chips: 20000, reStack: 0, addStack: 0, reEnd: 0, addPause: 0, colorUp: '' };
   function cfg() { return Object.assign({}, CFG0, ST.cfg || {}); }
   function nearest(list, x) { var b = list[0]; list.forEach(function (v) { if (Math.abs(v - x) < Math.abs(b - x)) b = v; }); return b; }
   function generate(c) {
@@ -72,6 +72,15 @@
   }
   /* ---------- Tirage des tables ---------- */
   function shuffle(a) { for (var j = a.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)), x = a[j]; a[j] = a[k]; a[k] = x; } return a; }
+  // habitués : joueurs déjà passés au championnat (les plus fidèles d'abord) et adversaires notés
+  function regulars() {
+    var m = {}, LG = window.PA_LEAGUE;
+    if (LG) LG.load().list.forEach(function (tn) { tn.rows.forEach(function (r) { var k = r.name.toLowerCase(); m[k] = m[k] || { name: r.name, n: 0, last: '' }; m[k].n++; if (tn.date >= m[k].last) { m[k].last = tn.date; m[k].name = r.name; } }); });
+    ((window.PA.player() || {}).opps || []).forEach(function (o) { var k = String(o.name || '').toLowerCase(); if (k && !m[k]) m[k] = { name: o.name, n: 0, last: '' }; });
+    return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.n - a.n || (a.last < b.last ? 1 : -1) || a.name.localeCompare(b.name); });
+  }
+  function inT(nm) { return T().players.some(function (x) { return x.name.toLowerCase() === String(nm).toLowerCase(); }); }
+  function addOne(nm) { var tt = T(); nm = String(nm || '').trim(); if (!nm || inT(nm)) return false; var pl = { name: nm.slice(0, 30), out: false, entries: 1 }; var sn2 = tt.drawn ? snap() : null; tt.players.push(pl); if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); } return true; }
   function alivePl() { return T().players.filter(function (x) { return !x.out; }); }
   function tablesOf() { var o = {}; alivePl().forEach(function (x) { if (x.table) (o[x.table] = o[x.table] || []).push(x); }); return o; }
   function draw() {
@@ -178,14 +187,16 @@
     // ---- en-tête : la table de jeu, le minuteur ----
     var lv = s.L[s.idx], run = !!ST.since, chips = chipsInPlay(), avg = t.left > 0 ? chips / t.left : 0, bb = curBB(s);
     out += '<div class="tn-hero">' +
-      '<div class="tn-top"><button class="tn-ghost" data-act="nav" data-v="home" aria-label="Accueil">‹</button><div class="tn-title"><span class="tn-badge tn-' + (t.type || 'mercredi') + '">' + (t.type === 'deep' ? 'Deep ×1,4' : t.type === 'libre' ? 'Hors championnat' : 'Championnat') + '</span><b>' + typeName + '</b><span>' + dateTxt + '</span></div><a class="tn-ghost" href="#classement" aria-label="Classement">🏆</a></div>';
+      '<div class="tn-top"><button class="tn-ghost" data-act="nav" data-v="home" aria-label="Accueil">‹</button><div class="tn-title"><span class="tn-badge tn-' + (t.type || 'mercredi') + '">' + (t.type === 'deep' ? 'Deep ×1,5' : t.type === 'libre' ? 'Hors championnat' : 'Championnat') + '</span><b>' + typeName + '</b><span>' + dateTxt + '</span></div><a class="tn-ghost" href="#classement" aria-label="Classement">🏆</a></div>';
     if (lv) {
       out += '<div class="tn-lvl">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</div><div class="tn-blinds">' + (lv.pause ? 'Pause' : fmt(lv.sb) + ' / ' + fmt(lv.bb)) + '</div>' + (lv.ante ? '<div class="tn-ante">' + anteTxt(lv) + '</div>' : '') +
         '<div class="tn-clock" id="tmClock2">' + mmss(s.rem) + '</div><div class="tn-next">' + nextInfo(s) + '</div>' +
         '<div class="tn-ctrl"><button data-tmact="prev" aria-label="Niveau précédent">⏮</button><button data-tmact="minus">−1</button><button class="tn-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? '▶ Reprendre' : '▶ Lancer')) + '</button><button data-tmact="plus">+1</button><button data-tmact="next" aria-label="Niveau suivant">⏭</button></div>' +
-        '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a><a class="tn-big" href="#minuteur">Minuteur ›</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button></div>';
+        '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a><a class="tn-big" href="#minuteur">Minuteur ›</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button>' + (RM.on ? '<button class="tn-big tn-vb" data-tmact="tab" data-v="reglages">📱 Télécommande ' + RM.code + '</button>' : '') + '</div>';
     }
     out += '</div>';
+    var bdg = lv ? rulesBadges(s) : [], pzl = prizeLine(t);
+    if (bdg.length || pzl) out += '<div class="tn-rules">' + bdg.map(function (b) { return '<span class="' + (/fermées/.test(b) ? 'off' : '') + '">' + b + '</span>'; }).join('') + (pzl ? '<span class="pz">🎁 ' + pzl + '</span>' : '') + '</div>';
     // ---- chiffres clés ----
     out += '<div class="tn-stats"><div><span>Joueurs</span><b>' + t.left + '<small> / ' + (t.entrants + t.re) + '</small></b></div><div><span>Jetons en jeu</span><b>' + fmt(chips) + '</b></div><div><span>Tapis moyen</span><b>' + (avg ? fmt(Math.round(avg)) : '—') + '</b>' + (avg && bb ? '<small>' + Math.round(avg / bb) + ' BB</small>' : '') + '</div></div>';
     // ---- tête mise à prix ----
@@ -195,7 +206,7 @@
     }
     if (t.msg) out += '<div class="tn-msg">' + t.msg + '</div>';
     out += movesHtml(false);
-    if (t.drawn && alivePl().length === 1 && t.players.length > 1 && LG) out += t.saved ? '<div class="tn-done">🏆 ' + esc(alivePl()[0].name) + ' gagne · tournoi enregistré</div>' + (window.PA_EXPORT ? '<button class="btn gold block" data-tmact="shareImg">🖼️ Partager le classement (image WhatsApp)</button>' : '') : '<button class="btn gold block" data-tmact="saveLeague">🏆 ' + esc(alivePl()[0].name) + ' gagne · enregistrer au classement</button>';
+    if (t.drawn && alivePl().length === 1 && t.players.length > 1 && LG) out += t.saved ? '<div class="tn-done">🏆 ' + esc(alivePl()[0].name) + ' gagne · tournoi enregistré</div>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="shareImg" style="flex:1">🖼️ Image du classement</button><button class="btn gold" data-tmact="shareSum" style="flex:1">📝 Résumé texte</button></div>' : '') : '<button class="btn gold block" data-tmact="saveLeague">🏆 ' + esc(alivePl()[0].name) + ' gagne · enregistrer au classement</button>';
     // ---- onglets ----
     out += '<div class="tn-tabs">' + [['tables', 'Tables'], ['joueurs', 'Joueurs'], ['reglages', 'Réglages']].map(function (o) { return '<button class="' + (tab === o[0] ? 'on' : '') + '" data-tmact="tab" data-v="' + o[0] + '">' + o[1] + (o[0] === 'joueurs' && t.players.length ? ' <small>' + t.players.length + '</small>' : '') + '</button>'; }).join('') + '</div>';
     if (tab === 'tables') {
@@ -217,6 +228,10 @@
     } else if (tab === 'joueurs') {
       out += '<div class="card stack"><b>Inscrire</b><textarea id="tnNames" rows="3" class="tn-in" placeholder="Un pseudo par ligne (ou séparés par des virgules)"></textarea><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="addNames" style="flex:1">Inscrire</button>' + ((window.PA.player() || {}).opps && window.PA.player().opps.length ? '<button class="btn" data-tmact="addOpps">Mes adversaires du club</button>' : '') + '</div>' +
         (t.players.length && !t.drawn ? '<button class="btn gold block" data-tmact="draw">Tirer les tables et les sièges</button>' : '') + '</div>';
+      var regs = regulars();
+      if (regs.length) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Les habitués · un toucher = présent</b><span class="small muted">' + regs.filter(function (r) { return inT(r.name); }).length + ' / ' + regs.length + '</span></div><div class="tn-regs">' + regs.map(function (r, i) {
+        var on = inT(r.name); return '<button class="tn-reg' + (on ? ' on' : '') + '" data-tmact="reg" data-v="' + i + '">' + (on ? '✓ ' : '') + esc(r.name) + (r.n ? '<small>' + r.n + '</small>' : '') + '</button>';
+      }).join('') + '</div><div class="small muted">Le chiffre = tournois joués au championnat. ' + (t.drawn ? 'Tables tirées : un nouveau présent est placé à la table la moins remplie.' : 'Retouche un nom pour le retirer.') + '</div></div>';
       var inG = t.players.filter(function (x) { return !x.out; }).sort(function (a, b) { return (a.table || 99) - (b.table || 99) || (a.seat || 0) - (b.seat || 0); });
       var outL = t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; });
       if (inG.length) out += '<div class="card stack"><b>En jeu · ' + inG.length + '</b>' + inG.map(function (x) { var i = t.players.indexOf(x); return '<div class="tn-row"><i>' + esc(x.name.charAt(0).toUpperCase()) + '</i><span><b>' + esc(x.name) + '</b><small>' + (x.table ? 'Table ' + x.table + ' · siège ' + x.seat : 'pas encore placé') + (x.entries > 1 ? ' · ' + x.entries + ' entrées' : '') + (x.bonus ? ' · prime +' + x.bonus : '') + '</small></span>' + (t.drawn ? '<button class="btn" data-tmact="ko" data-v="' + i + '">Sorti</button>' : '<button class="btn" data-tmact="delP" data-v="' + i + '" aria-label="Retirer">✕</button>') + '</div>'; }).join('') + '</div>';
@@ -226,11 +241,14 @@
       out += countersHtml();
     } else {
       var cin = function (id, v, lab) { return '<div class="tn-set"><span>' + lab + '</span><input id="' + id + '" type="number" inputmode="numeric" min="0" value="' + v + '" class="tn-in" style="width:130px"></div>'; };
-      out += '<div class="card stack"><b>Le tournoi</b>' + (LG ? '<div class="seg">' + Object.keys(LG.TYPES).map(function (k) { return '<button class="' + (t.type === k ? 'on' : '') + '" data-tmact="ttype" data-v="' + k + '">' + LG.TYPES[k].short + (k === 'deep' ? ' ×1,4' : '') + '</button>'; }).join('') + '</div><div class="tn-set"><span>Date</span><input id="tnDate" type="date" value="' + t.date + '" class="tn-in"></div>' : '') +
+      out += '<div class="card stack"><b>Le tournoi</b>' + (LG ? '<div class="seg">' + Object.keys(LG.TYPES).map(function (k) { return '<button class="' + (t.type === k ? 'on' : '') + '" data-tmact="ttype" data-v="' + k + '">' + LG.TYPES[k].short + (k === 'deep' ? ' ×1,5' : '') + '</button>'; }).join('') + '</div><div class="tn-set"><span>Date</span><input id="tnDate" type="date" value="' + t.date + '" class="tn-in"></div>' : '') +
         '<div class="small muted">Format des tables</div><div class="seg">' + [[6, '6-max'], [9, '9-max'], [10, '10 joueurs']].map(function (o) { return '<button class="' + (t.size === o[0] ? 'on' : '') + '" data-tmact="size" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
         (t.drawn ? '<button class="btn block" data-tmact="draw">Refaire le tirage des tables</button>' : '') + '</div>' +
+        '<div class="card stack"><b>La dotation</b><div class="small muted">Valeur totale des lots (bons, lots…). Laisse 0 s’il n’y en a pas.</div>' + cin('tnPrize', t.prize || 0, 'Dotation (€)') + cin('tnPaid', t.paid || 0, 'Places récompensées (0 = auto : ' + paidAuto(t.players.length || t.entrants || 0) + ')') + (payout(t).length ? '<div class="tn-pay">' + payout(t).map(function (p) { return '<span><b>' + p.place + (p.place === 1 ? 'er' : 'e') + '</b>' + eur(p.amt) + '</span>'; }).join('') + '</div>' : '') + '</div>' +
+        '<div class="card stack"><b>Re-entry, add-on, jetons</b><div class="small muted">Annoncés à la voix et affichés sur l’écran télé. 0 = pas de règle.</div>' + cin('tnReEnd', c.reEnd || 0, 'Re-entry jusqu’à la fin du niveau') + cin('tnAddP', c.addPause || 0, 'Add-on à la pause n°') +
+        '<div class="tn-set"><span>Retrait des petits jetons</span><input id="tnColor" type="text" value="' + esc(c.colorUp || '') + '" placeholder="25 au niveau 8, 100 au niveau 14" class="tn-in" style="width:230px"></div></div>' +
         '<div class="card stack"><b>Les jetons</b>' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Re-entry (0 = départ)') + cin('tnAdd', c.addStack, 'Add-on (0 = départ)') + '</div>' +
-        '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
+        rmCard() + '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
         '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">Structure : blindes, ante, durée, pauses</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
         '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>';
     }
@@ -266,6 +284,40 @@
   function awake(on) {
     try { if (window.PAAndroid) PAAndroid.keepAwake(on); } catch (e) {}
     try { if (on && navigator.wakeLock && !lock) navigator.wakeLock.request('screen').then(function (l) { lock = l; }).catch(function () {}); if (!on && lock) { lock.release(); lock = null; } } catch (e) {}
+  }
+  /* ---------- Lots et règles du tournoi ---------- */
+  var PCT = { 1: [100], 2: [65, 35], 3: [50, 30, 20], 4: [45, 27, 17, 11], 5: [40, 25, 16, 11, 8], 6: [37, 23, 15, 11, 8, 6], 7: [35, 22, 14, 10, 8, 6, 5], 8: [33, 21, 13, 10, 8, 6, 5, 4], 9: [32, 20, 13, 9, 7, 6, 5, 4, 4] };
+  function paidAuto(n) { return n < 4 ? 1 : Math.max(1, Math.min(9, Math.ceil(n * 0.15))); }
+  // répartition : [{ place, amt }] ; arrondi à l'euro (au 5 € au-delà de 200 €), le reste va au 1er
+  function payout(t) {
+    t = t || T(); var prize = +t.prize || 0, n = t.players.length || t.entrants || 0; if (!prize || !n) return [];
+    var k = Math.min(n, +t.paid || paidAuto(n)), pc = PCT[Math.min(9, k)], sum = pc.reduce(function (a, b) { return a + b; }, 0), step = prize >= 200 ? 5 : 1;
+    var out = pc.slice(0, k).map(function (x, i) { return { place: i + 1, amt: Math.max(step, Math.floor(prize * x / sum / step) * step) }; });
+    out[0].amt += prize - out.reduce(function (a, b) { return a + b.amt; }, 0);
+    return out;
+  }
+  function eur(x) { return fmt(x) + ' €'; }
+  function prizeLine(t) { var P = payout(t); return P.length ? 'Dotation ' + eur(t.prize) + ' · ' + P.length + ' place' + (P.length > 1 ? 's' : '') + ' : ' + P.map(function (p) { return eur(p.amt); }).join(' / ') : ''; }
+  function colorUps() { var out = [], re = /(\d[\d\s]*)\s*(?:au\s+niveau|au\s+niv\.?|@|niv\.?|niveau)\s*(\d+)/gi, m; while ((m = re.exec(cfg().colorUp || ''))) out.push({ chip: +m[1].replace(/\s/g, ''), lvl: +m[2] }); return out; }
+  function pauseNo(L, idx) { var k = 0; for (var i = 0; i <= idx; i++) if (L[i] && L[i].pause) k++; return k; }
+  function nextPlay(L, idx) { for (var i = idx; i < L.length; i++) if (!L[i].pause) return L[i]; return null; }
+  function reOpen(s) { var c = cfg(); if (!c.reEnd) return true; var l = s.L[s.idx]; if (!l) return true; var np = l.pause ? nextPlay(s.L, s.idx) : l; return !!np && np.n <= c.reEnd && !(l.pause && np.n > c.reEnd); }
+  // texte à ajouter aux annonces quand on arrive sur le niveau idx (venant de prev)
+  function rulesSay(L, prev, idx) {
+    var c = cfg(), l = L[idx], pl = L[prev], out = [];
+    if (c.reEnd && pl && !pl.pause && pl.n === c.reEnd) out.push('Fin des re-entry.');
+    if (c.reEnd && pl && pl.pause && l && !l.pause && l.n === c.reEnd + 1 && !(L[prev - 1] && !L[prev - 1].pause && L[prev - 1].n === c.reEnd)) out.push('Fin des re-entry.');
+    if (l && l.pause && c.addPause && pauseNo(L, idx) === c.addPause) out.push('C’est le moment de l’add-on : prenez-le maintenant.');
+    var np = l && l.pause ? nextPlay(L, idx + 1) : l;
+    colorUps().forEach(function (cu) { if (np && np.n === cu.lvl && (l.pause || !(pl && pl.pause))) out.push('Retrait des jetons de ' + cu.chip + ' : échangez-les maintenant.'); });
+    return out.join(' ');
+  }
+  function rulesBadges(s) {
+    var c = cfg(), l = s.L[s.idx], b = [];
+    if (c.reEnd) b.push(reOpen(s) ? 'Re-entry jusqu’à la fin du niveau ' + c.reEnd : 'Re-entry fermées');
+    if (l && l.pause && c.addPause && pauseNo(s.L, s.idx) === c.addPause) b.push('Add-on ouverts');
+    var np = l && l.pause ? nextPlay(s.L, s.idx + 1) : l; colorUps().forEach(function (cu) { if (np && np.n === cu.lvl) b.push('Retrait des jetons de ' + fmt(cu.chip)); });
+    return b;
   }
   // annonces vocales : voix du téléphone (Android) ou du navigateur / PC
   var sayN = 0;
@@ -345,10 +397,10 @@
     var eb = document.getElementById('ecBar'); if (eb) { var lv0 = s.L[s.idx]; eb.style.width = Math.max(0, Math.min(100, 100 - s.rem / (lv0.min * 60) * 100)).toFixed(1) + '%'; var en = document.getElementById('ecNext'); if (en) en.textContent = nextInfo(s); var ew = document.getElementById('ecNow'); if (ew) ew.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); c.classList.toggle('ec-hot', s.rem <= 60 && !!ST.since); }
     if (ST.since) {
       if (s.idx !== ST.shown) {
-        if (ST.shown !== undefined) { beep(3); var was = s.L[ST.shown], now = s.L[s.idx]; setTimeout(function () { say((was && was.pause && !now.pause ? 'Fin de la pause, on reprend. ' : '') + lvlSay(now)); }, 1300); }
+        if (ST.shown !== undefined) { beep(3); var was = s.L[ST.shown], now = s.L[s.idx], extra = rulesSay(s.L, ST.shown, s.idx); setTimeout(function () { say((was && was.pause && !now.pause ? 'Fin de la pause, on reprend. ' : '') + lvlSay(now) + (extra ? ' ' + extra : '')); }, 1300); }
         ST.shown = s.idx; U().render(); return;
       }
-      var r = Math.ceil(s.rem); if (r === 60 && lastBeep !== s.idx) { lastBeep = s.idx; beep(1); var cl = s.L[s.idx], nx = s.L[s.idx + 1]; setTimeout(function () { say(cl.pause ? 'Fin de la pause dans une minute. Retour aux tables.' : 'Plus qu’une minute' + (nx ? (nx.pause ? ' avant la pause.' : ' avant le niveau ' + nx.n + ' : ' + nx.sb + ', ' + nx.bb + '.') : '.')); }, 600); }
+      var r = Math.ceil(s.rem); if (r === 60 && lastBeep !== s.idx) { lastBeep = s.idx; beep(1); var cl = s.L[s.idx], nx = s.L[s.idx + 1]; setTimeout(function () { say(cl.pause ? 'Fin de la pause dans une minute. Retour aux tables.' : 'Plus qu’une minute' + (nx ? (nx.pause ? ' avant la pause.' : ' avant le niveau ' + nx.n + ' : ' + nx.sb + ', ' + nx.bb + '.') : '.') + (!cl.pause && cfg().reEnd === cl.n ? ' Dernière minute pour les re-entry.' : '')); }, 600); }
     }
     c.textContent = mmss(s.rem);
   }, 500);
@@ -356,13 +408,17 @@
     var t = e.target.closest ? e.target.closest('[data-tmact]') : null; if (!t) return;
     var a = t.getAttribute('data-tmact'), s = live(), L = s.L;
     if (a === 'toggle') { if (ST.since) { freeze(); ST.since = null; awake(false); } else { ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
-    else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); if (k !== s.idx) say(lvlSay(L[k])); }
+    else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); if (k !== s.idx) { var ex = rulesSay(L, s.idx, k); say(lvlSay(L[k]) + (ex ? ' ' + ex : '')); } }
     else if (a === 'plus' || a === 'minus') { freeze(); ST.rem = Math.max(1, ST.rem + (a === 'plus' ? 60 : -60)); }
     else if (a === 'size') { T().size = +t.getAttribute('data-v'); T().msg = T().drawn ? 'Format changé : refais le tirage des tables.' : null; }
     else if (a === 'addNames' || a === 'addOpps') {
       var tt = T(), names = a === 'addOpps' ? (window.PA.player().opps || []).map(function (o) { return o.name; }) : (document.getElementById('tnNames').value || '').split(/[\n,;]+/);
-      var added = 0; names.map(function (x) { return String(x || '').trim(); }).filter(Boolean).forEach(function (nm) { if (tt.players.some(function (x) { return x.name.toLowerCase() === nm.toLowerCase(); })) return; var pl = { name: nm.slice(0, 30), out: false, entries: 1 }; var sn2 = tt.drawn ? snap() : null; tt.players.push(pl); added++; if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); } });
+      var added = 0; names.forEach(function (nm) { if (addOne(nm)) added++; });
       tt.msg = added ? added + ' joueur' + (added > 1 ? 's' : '') + ' inscrit' + (added > 1 ? 's' : '') + (tt.drawn ? ', placé' + (added > 1 ? 's' : '') + ' à la table la moins remplie.' : '.') : 'Aucun nouveau pseudo (déjà inscrits ?).';
+    }
+    else if (a === 'reg') {
+      var rg = regulars()[+t.getAttribute('data-v')], tr = T();
+      if (rg) { if (inT(rg.name)) { var ix = -1; tr.players.forEach(function (x, j) { if (x.name.toLowerCase() === rg.name.toLowerCase()) ix = j; }); var px = tr.players[ix]; if (!tr.drawn) { tr.players.splice(ix, 1); tr.msg = null; } else tr.msg = px.out ? px.name + ' est déjà sorti.' : px.name + ' est en jeu (table ' + px.table + ') : pour le retirer, touche « Sorti ».'; } else { addOne(rg.name); tr.msg = tr.drawn ? rg.name + ' inscrit : table ' + tr.players[tr.players.length - 1].table + ', siège ' + tr.players[tr.players.length - 1].seat + '.' : null; } }
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { draw(); TAB = 'tables'; }
@@ -370,30 +426,15 @@
     else if (a === 'movesDone') { T().pending = []; T().closed = []; MSHEET = false; }
     else if (a === 'movesLater') { MSHEET = false; }
     else if (a === 'ttype') { T().type = t.getAttribute('data-v'); }
-    else if (a === 'saveLeague') { var ts = T(); if (!ts.saved && window.PA_LEAGUE) { var rec = window.PA_LEAGUE.record(ts); ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
+    else if (a === 'saveLeague') { var ts = T(); if (!ts.saved && window.PA_LEAGUE) { ts.payout = payout(ts); var rec = window.PA_LEAGUE.record(ts); ts.recId = rec.id; ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
+    else if (a === 'shareSum') { var tz = T(); if (tz.recId && window.PA_LEAGUE) window.PA_LEAGUE.shareText(window.PA_LEAGUE.summary(tz.recId), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'shareImg') { window.PA_EXPORT.image((T().date || '').slice(0, 4) || String(new Date().getFullYear()), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }
     else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
     else if (a === 'ko') { var pk0 = T().players[+t.getAttribute('data-v')]; if (pk0 && !pk0.out) { KO = +t.getAttribute('data-v'); FIND.q = ''; } }
     else if (a === 'koCancel') { KO = null; }
-    else if (a === 'koOk') {
-      var tk = T(), pk = tk.players[KO], sel = document.getElementById('koBy'), by = sel ? sel.value : '';
-      if (pk && !pk.out) {
-        var lft = alivePl().length, killer = by !== '' ? tk.players[+by] : null;
-        pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null;
-        pk.koAt = Date.now(); pk.koLevel = lvlNow(); pk.koBy = killer ? killer.name : null;
-        var bmsg = '';
-        if (killer && tk.holder && pk.name.toLowerCase() === tk.holder.toLowerCase()) { killer.bonus = (killer.bonus || 0) + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2); killer.bountyFrom = pk.name; pk.bountyTakenBy = killer.name; bmsg = '<br><b>Prime : ' + killer.name + ' élimine le dernier vainqueur et gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points !</b>'; }
-        var snap0 = snap(), mv = rebalance(), nmv = noteMoves(snap0);
-        mv = mv.filter(function (x) { return /Table finale/.test(x); });
-        var newMv = nmv ? (tk.pending || []).slice(-nmv) : [];
-        say(pk.name + ' sort à la ' + ordSay(lft) + ' place' + (killer ? ', éliminé par ' + killer.name : '') + '.' + (bmsg ? ' Prime de ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points pour ' + killer.name + ' !' : '') +
-          (alivePl().length === 1 ? ' ' + alivePl()[0].name + ' remporte le tournoi ! Bravo !' : (mv.length ? ' Table finale !' : '') + (newMv.length ? (newMv.length <= 4 ? ' Changement de place : ' + newMv.map(function (m) { return m.name + ', table ' + m.tt + ', siège ' + m.ts; }).join(' ; ') + '.' : ' ' + newMv.length + ' joueurs changent de place, regardez l’écran.') : '')));
-        tk.msg = pk.name + ' sort à la ' + lft + 'e place' + (killer ? ', éliminé par ' + killer.name : '') + ' (' + new Date(pk.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ', ' + pk.koLevel + ').' + bmsg + (nmv ? '<br>' + nmv + ' joueur' + (nmv > 1 ? 's changent' : ' change') + ' de place : voir la liste.' : '') + (mv.length ? '<br><b>Table finale !</b>' : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : '');
-      }
-      KO = null;
-    }
-    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } pu.out = false; pu.place = null; pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } var sn1 = snap(); delete sn1[pu.name]; seatSomewhere(pu); noteMoves(sn1, 'retour en jeu'); tu.msg = pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
+    else if (a === 'koOk') { var sel = document.getElementById('koBy'); doKO(KO, sel ? sel.value : ''); KO = null; }
+    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } pu.out = false; pu.place = null; pu.prize = null; pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } var sn1 = snap(); delete sn1[pu.name]; seatSomewhere(pu); noteMoves(sn1, 'retour en jeu'); tu.msg = (a === 'reentry' && !reOpen(live()) ? '⚠️ Les re-entry sont fermées (fin du niveau ' + cfg().reEnd + '), enregistrée quand même. ' : '') + pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
     else if (a === 'newT') { if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
     else if (a === 'print') { try { window.print(); } catch (e3) {} return; }
     else if (a === 'entPlus') { T().entrants++; T().left++; }
@@ -408,13 +449,16 @@
     else if (a === 'full') { try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
     else if (a === 'edit') EDIT = true;
     else if (a === 'voice') { ST.voice = !vOn(); if (ST.voice) say('Annonces vocales activées. ' + (L[s.idx] ? lvlSay(L[s.idx]) : ''), true); else { try { if (window.speechSynthesis) speechSynthesis.cancel(); if (window.PAAndroid && window.PAAndroid.stop) window.PAAndroid.stop(); } catch (e4) {} } }
+    else if (a === 'rmOn') { rmStart(true); return; }
+    else if (a === 'rmOff') { rmStart(false); return; }
+    else if (a === 'rmNew') { RM.code = String(1000 + Math.floor(Math.random() * 9000)); rmStart(true); return; }
     else if (a === 'ecranOut') { location.hash = T().players.length ? '#tournoi' : '#minuteur'; return; }
     else if (a === 'done') EDIT = false;
     else if (a === 'gen' || a === 'preview' || a === 'savestruct') {
       var v = function (id, d) { var el = document.getElementById(id); var x = el ? parseInt(el.value, 10) : NaN; return isNaN(x) ? d : x; };
       var g = function (id, d) { var el = document.getElementById(id); return el ? el.value : d; };
       var c0 = cfg();
-      ST.cfg = { sb: Math.max(1, v('tmSb', c0.sb)), bb: Math.max(1, v('tmBb', c0.bb)), n: Math.max(1, Math.min(90, v('tmN', c0.n))), mins: Math.max(1, Math.min(120, v('tmMins', c0.mins))), speed: g('tmSpeed', c0.speed), ante: g('tmAnte', c0.ante), anteFrom: Math.max(1, v('tmAnteFrom', c0.anteFrom)), pauseEvery: Math.max(0, v('tmPEvery', c0.pauseEvery)), pauseMin: Math.max(1, v('tmPMin', c0.pauseMin)), chips: Math.max(0, v('tmChips', c0.chips)), reStack: Math.max(0, v('tmRe', c0.reStack)), addStack: Math.max(0, v('tmAdd', c0.addStack)) };
+      ST.cfg = Object.assign(cfg(), { sb: Math.max(1, v('tmSb', c0.sb)), bb: Math.max(1, v('tmBb', c0.bb)), n: Math.max(1, Math.min(90, v('tmN', c0.n))), mins: Math.max(1, Math.min(120, v('tmMins', c0.mins))), speed: g('tmSpeed', c0.speed), ante: g('tmAnte', c0.ante), anteFrom: Math.max(1, v('tmAnteFrom', c0.anteFrom)), pauseEvery: Math.max(0, v('tmPEvery', c0.pauseEvery)), pauseMin: Math.max(1, v('tmPMin', c0.pauseMin)), chips: Math.max(0, v('tmChips', c0.chips)), reStack: Math.max(0, v('tmRe', c0.reStack)), addStack: Math.max(0, v('tmAdd', c0.addStack)) });
       if (ST.cfg.sb > ST.cfg.bb) ST.cfg.sb = Math.round(ST.cfg.bb / 2);
       ST.mins = ST.cfg.mins;
       ST.text = a === 'gen' ? generate(ST.cfg) : document.getElementById('tmText').value;
@@ -423,8 +467,75 @@
     save(); keepScroll(function () { U().render(); });
   });
   document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tnDate') { T().date = e.target.value; save(); U().render(); return; } });
-  document.addEventListener('change', function (e) { var id = e.target && e.target.id, k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
+  document.addEventListener('change', function (e) { var id = e.target && e.target.id;
+    if (id === 'tnPrize' || id === 'tnPaid') { T()[id === 'tnPrize' ? 'prize' : 'paid'] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); return; }
+    if (id === 'tnColor') { ST.cfg = cfg(); ST.cfg.colorUp = String(e.target.value || '').slice(0, 120); save(); U().render(); return; }
+    var k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack', tnReEnd: 'reEnd', tnAddP: 'addPause' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
+  // élimination : idx = joueur qui sort, by = index de celui qui l'élimine ('' = inconnu)
+  function doKO(idx, by) {
+    if (by === null || by === undefined || by === -1) by = '';
+    var tk = T(), pk = tk.players[idx];
+      if (pk && !pk.out) {
+        var lft = alivePl().length, killer = by !== '' ? tk.players[+by] : null;
+        pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null;
+        pk.koAt = Date.now(); pk.koLevel = lvlNow(); pk.koBy = killer ? killer.name : null;
+        var bmsg = '';
+        if (killer && tk.holder && pk.name.toLowerCase() === tk.holder.toLowerCase()) { killer.bonus = (killer.bonus || 0) + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2); killer.bountyFrom = pk.name; pk.bountyTakenBy = killer.name; bmsg = '<br><b>Prime : ' + killer.name + ' élimine le dernier vainqueur et gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points !</b>'; }
+        var snap0 = snap(), mv = rebalance(), nmv = noteMoves(snap0);
+        mv = mv.filter(function (x) { return /Table finale/.test(x); });
+        var newMv = nmv ? (tk.pending || []).slice(-nmv) : [], pay = payout(tk), lot = pay[lft - 1], wlot = pay[0];
+        if (lot) pk.prize = lot.amt;
+        var win1 = alivePl().length === 1 ? alivePl()[0] : null; if (win1 && wlot) win1.prize = wlot.amt;
+        say(pk.name + ' sort à la ' + ordSay(lft) + ' place' + (killer ? ', éliminé par ' + killer.name : '') + (lot ? ', et remporte ' + lot.amt + ' euros' : '') + '.' + (bmsg ? ' Prime de ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points pour ' + killer.name + ' !' : '') +
+          (alivePl().length === 1 ? ' ' + alivePl()[0].name + ' remporte le tournoi' + (wlot ? ' et ' + wlot.amt + ' euros' : '') + ' ! Bravo !' : (mv.length ? ' Table finale !' : '') + (newMv.length ? (newMv.length <= 4 ? ' Changement de place : ' + newMv.map(function (m) { return m.name + ', table ' + m.tt + ', siège ' + m.ts; }).join(' ; ') + '.' : ' ' + newMv.length + ' joueurs changent de place, regardez l’écran.') : '')));
+        tk.msg = pk.name + ' sort à la ' + lft + 'e place' + (killer ? ', éliminé par ' + killer.name : '') + (lot ? ' — lot : ' + eur(lot.amt) : '') + ' (' + new Date(pk.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ', ' + pk.koLevel + ').' + bmsg + (nmv ? '<br>' + nmv + ' joueur' + (nmv > 1 ? 's changent' : ' change') + ' de place : voir la liste.' : '') + (mv.length ? '<br><b>Table finale !</b>' : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : '');
+      }
+  }
+  /* ---------- Télécommande : le téléphone pilote le tournoi, le PC sert de relais sur le wifi ---------- */
+  var RM = { on: false, code: '', urls: [], seen: -1, err: '', h: null };
+  function isPC() { return !!(window.PA_SYNC && window.PA_SYNC.isPC); }
+  function rmSave() { try { localStorage.setItem('pa2remote', JSON.stringify({ on: RM.on, code: RM.code })); } catch (e) {} }
+  function rmStart(on) {
+    if (!isPC()) return;
+    if (!RM.code) RM.code = String(1000 + Math.floor(Math.random() * 9000));
+    fetch('/api/remote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on: on, code: RM.code }) }).then(function (r) { return r.json(); }).then(function (j) {
+      RM.on = !!j.on; RM.urls = j.urls || []; RM.err = j.err || ''; RM.seen = j.seen; rmSave(); clearInterval(RM.h); if (RM.on) { RM.h = setInterval(rmPush, 1000); rmPush(); } U().render();
+    }).catch(function () { RM.err = 'Télécommande indisponible : mets l’appli PC à jour.'; U().render(); });
+  }
+  function rmPush() {
+    if (!RM.on) return;
+    fetch('/api/remote/state', { method: 'POST', body: JSON.stringify(remoteState()) }).then(function (r) { return r.json(); }).then(function (j) {
+      var was = RM.seen >= 0 && RM.seen < 6; RM.seen = j.seen; var now = RM.seen >= 0 && RM.seen < 6;
+      if (j.cmds && j.cmds.length) { j.cmds.forEach(remoteDo); save(); keepScroll(function () { U().render(); }); }
+      else if (was !== now) { var el = document.getElementById('rmStat'); if (el) el.innerHTML = rmStatus(); }
+    }).catch(function () {});
+  }
+  function rmStatus() { return RM.seen >= 0 && RM.seen < 6 ? '<span style="color:#3ddc84">● Téléphone connecté</span>' : '<span class="muted">○ En attente du téléphone…</span>'; }
+  function rmCard() {
+    var h = '<div class="card stack"><b>📱 Télécommande</b>';
+    if (!isPC()) return h + '<div class="small muted">Pilote le tournoi depuis ton téléphone (lancer, pause, sorties, re-entry, changements de place) pendant que le PC affiche l’écran télé. Elle s’active depuis l’appli PC, qui sert de relais sur le wifi du club.</div></div>';
+    if (!RM.on) return h + '<div class="small muted">Le PC affiche l’écran télé, toi tu gères tout depuis ton téléphone à la table. Le téléphone et le PC doivent être sur le même wifi.</div>' + (RM.err ? '<div class="small" style="color:#ff8a8f">' + RM.err + '</div>' : '') + '<button class="btn gold block" data-tmact="rmOn">Activer la télécommande</button></div>';
+    return h + '<div class="small muted">Sur ton téléphone, connecté au même wifi, ouvre :</div>' + (RM.urls.length ? RM.urls.map(function (u) { return '<div class="rm-url">' + u + '</div>'; }).join('') : '<div class="small" style="color:#ff8a8f">Pas de réseau local trouvé : connecte le PC au wifi.</div>') +
+      '<div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span>Code : <b class="rm-code">' + RM.code + '</b></span><span id="rmStat">' + rmStatus() + '</span></div>' +
+      '<div class="small muted">Si Windows demande d’autoriser Poker Academy sur le pare-feu, accepte pour les réseaux privés.</div><div class="row" style="gap:8px"><button class="btn" data-tmact="rmNew" style="flex:1">Nouveau code</button><button class="btn" data-tmact="rmOff" style="flex:1">Arrêter</button></div></div>';
+  }
+  function remoteState() {
+    var s = live(), t = T(), l = s.L[s.idx] || {}, chips = chipsInPlay(), bb = curBB(s), avg = t.left > 0 ? chips / t.left : 0, LG = window.PA_LEAGUE;
+    var al = alivePl();
+    return { at: Date.now(), lvl: l.pause ? 'Pause' : 'Niveau ' + l.n, bl: l.pause ? 'Pause' : fmt(l.sb) + ' / ' + fmt(l.bb), ante: l.ante ? anteTxt(l) : '', rem: s.rem, run: !!ST.since, next: nextInfo(s),
+      left: t.left, total: t.entrants + t.re, avg: avg ? fmt(Math.round(avg)) : '', avgBB: avg && bb ? Math.round(avg / bb) : 0, voice: vOn(), name: LG && t.players.length ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Tournoi' }[t.type || 'mercredi'] : 'Tournoi du club',
+      holder: t.holder || '', drawn: !!t.drawn, msg: String(t.msg || '').replace(/<br>/g, ' · ').replace(/<[^>]+>/g, ''), badges: s.L.length ? rulesBadges(s) : [], prize: prizeLine(t),
+      players: t.players.map(function (x, i) { return { i: i, n: x.name, t: x.table || 0, s: x.seat || 0, o: x.out ? 1 : 0, p: x.place || 0, by: x.koBy || '', e: x.entries || 1 }; }),
+      pend: (t.pending || []).map(function (m) { return { n: m.name, tt: m.tt, ts: m.ts, ft: m.ft || 0, fs: m.fs || 0 }; }), win: al.length === 1 && t.players.length > 1 ? al[0].name : '', saved: !!t.saved, canLeague: !!LG };
+  }
+  function remoteDo(c) {
+    if (!c || !c.a) return;
+    if (c.a === 'ko') { doKO(+c.i, c.by === '' || c.by === null || c.by === undefined ? '' : +c.by); return; }
+    if (['toggle', 'next', 'prev', 'plus', 'minus', 'voice', 'movesDone', 'reentry', 'unko', 'addPlus', 'saveLeague'].indexOf(c.a) < 0) return;
+    var b = document.createElement('button'); b.setAttribute('data-tmact', c.a); if (c.i !== undefined) b.setAttribute('data-v', String(c.i)); b.style.display = 'none'; document.body.appendChild(b); b.click(); b.remove();
+  }
+  setTimeout(function () { try { var r = JSON.parse(localStorage.getItem('pa2remote') || 'null'); if (r) { RM.code = r.code || ''; if (r.on) rmStart(true); } } catch (e) {} }, 1500);
   /* ---------- Écran pour la télé du club ---------- */
   function ecranView() {
     var ui = U(), esc = ui.esc, s = live(), t = T(), LG = window.PA_LEAGUE;
@@ -441,12 +552,13 @@
       '<div class="ec-ante">' + (l.ante ? anteTxt(l) : (l.pause ? 'Bonne pause !' : '&nbsp;')) + '</div>' +
       '<div class="ec-clock" id="ecClock">' + mmss(s.rem) + '</div>' +
       '<div class="ec-bar"><i id="ecBar" style="width:' + Math.max(0, 100 - s.rem / (l.min * 60) * 100).toFixed(1) + '%"></i></div>' +
-      '<div class="ec-next" id="ecNext">' + nextInfo(s) + '</div></div>' +
+      '<div class="ec-next" id="ecNext">' + nextInfo(s) + '</div>' + (rulesBadges(s).length ? '<div class="ec-rules">' + rulesBadges(s).map(function (b) { return '<span class="' + (/fermées/.test(b) ? 'off' : '') + '">' + b + '</span>'; }).join('') + '</div>' : '') + '</div>' +
       '<div class="ec-side">' +
       (t.entrants || t.players.length ? stat('Joueurs', t.left + '<small> / ' + (t.entrants + t.re) + '</small>', t.re || t.add ? (t.re ? t.re + ' re-entry' : '') + (t.re && t.add ? ' · ' : '') + (t.add ? t.add + ' add-on' : '') : '') : '') +
       (avg ? stat('Tapis moyen', fmt(Math.round(avg)), bb ? Math.round(avg / bb) + ' grosses blindes' : '') : '') +
       (chips ? stat('Jetons en jeu', fmt(chips), '') : '') +
       (pz > 0 && !l.pause ? stat('Prochaine pause', Math.ceil(secs / 60) >= 60 ? hm(Math.ceil(secs / 60)) : Math.ceil(secs / 60) + ' min', '') : '') +
+      (prizeLine(t) ? '<div class="ec-stat ec-prize"><span>Dotation ' + eur(t.prize) + '</span><b class="ec-pz">' + payout(t).map(function (p) { return '<i>' + p.place + (p.place === 1 ? 'er' : 'e') + ' <em>' + eur(p.amt) + '</em></i>'; }).join('') + '</b></div>' : '') +
       (LG && t.type !== 'libre' && t.holder ? '<div class="ec-wanted"><span>Tête mise à prix</span><b>' + esc(t.holder) + '</b><small>+' + LG.BONUS + ' points pour qui l’élimine</small></div>' : '') +
       '</div></div>';
     // bas : changements de place, puis dernières sorties, puis les tables
@@ -467,5 +579,5 @@
     var m = { ' ': 'toggle', ArrowRight: 'next', ArrowLeft: 'prev', f: 'full', v: 'voice' }[e.key]; if (!m) return;
     var b = document.querySelector('[data-tmact="' + m + '"]'); if (b) { e.preventDefault(); b.click(); }
   });
-  window.PA_TIMER = { view: view, tournoi: tournoiView, ecran: ecranView, _levels: levels, _generate: generate };
+  window.PA_TIMER = { view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
 })();

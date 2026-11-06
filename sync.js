@@ -189,7 +189,7 @@
     ST.updErr = ''; if (manual) { ST.upd = null; U().render(); }
     fetch(REPO_RAW + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
       ST.upd = j; ST.checked = Date.now();
-      if (U() && cmpV(j.version, U().version) > 0 && !manual && !IS_WEB) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Voir', '#sauvegarde');
+      if (U() && cmpV(j.version, U().version) > 0 && !manual && !IS_WEB) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Mettre à jour', '#sauvegarde');
       if (manual) U().render();
     }).catch(function () { ST.updErr = 'Vérification impossible : pas de connexion, ou dépôt GitHub privé.'; if (manual) U().render(); });
   }
@@ -243,7 +243,15 @@
     var v = ui.version, u = ST.upd;
     out += '<div class="card stack"><b>Mises à jour</b><div>Version installée : <b>' + v + '</b>' + (u ? ' · dernière version : <b>' + ui.esc(u.version) + '</b>' : '') + '</div>';
     if (IS_WEB) out += '<div class="small muted">Version web : elle se met à jour toute seule à chaque ouverture avec une connexion. Si une ancienne version reste affichée, ferme l’appli et rouvre-la.</div>';
-    else if (u && cmpV(u.version, v) > 0) out += '<div>' + ui.esc(u.notes || '') + '</div><button class="btn gold" data-syact="dl">' + (IS_ANDROID ? 'Télécharger le nouvel APK' : IS_PC ? 'Télécharger le nouvel installateur' : 'Ouvrir la page de téléchargement') + '</button><div class="small muted">' + (IS_PC ? 'Le téléchargement s’ouvre dans ton navigateur (connecté à GitHub) ; lance ensuite l’installateur, tes données sont conservées.' : IS_ANDROID ? 'Le téléchargement s’ouvre dans ton navigateur ; installe l’APK par-dessus, tes données sont conservées.' : '') + '</div>';
+    else if (u && cmpV(u.version, v) > 0) {
+      var G = ST.updProg, oneClick = (IS_PC || (IS_ANDROID && PAAndroid.updateApk));
+      out += '<div>' + ui.esc(u.notes || '') + '</div>';
+      if (G && G.st === 'dl') out += '<div class="wk-prog"><i style="width:' + Math.round(G.pct) + '%"></i></div><div class="small muted">Téléchargement… ' + Math.round(G.pct) + ' %</div>';
+      else if (G && G.st === 'ready' && IS_PC) out += '<div class="small" style="color:#4fe08f">Nouvelle version prête. L’appli va se fermer quelques secondes puis se rouvrir toute seule ; tes données sont gardées.</div><button class="btn gold" data-syact="updApply">Installer et redémarrer</button>';
+      else if (G && G.st === 'ready') out += '<div class="small" style="color:#4fe08f">Téléchargée. Android te demande de confirmer l’installation ; tes données sont gardées.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
+      else if (G && G.st === 'perm') out += '<div class="small">Android demande d’autoriser l’installation pour Poker Academy (une seule fois) : active l’autorisation, reviens ici, puis touche Installer.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
+      else out += (G && G.st === 'err' ? '<div class="small" style="color:#ff8a8f">' + ui.esc(G.err) + '</div>' : '') + (oneClick ? '<button class="btn gold" data-syact="upd">Mettre à jour maintenant (' + ui.esc(u.version) + ')</button>' : '') + '<button class="btn' + (oneClick ? '' : ' gold') + '" data-syact="dl">' + (IS_ANDROID ? 'Télécharger le nouvel APK' : IS_PC ? 'Télécharger l’installateur' : 'Ouvrir la page de téléchargement') + '</button>';
+    }
     else if (u) out += '<div class="small" style="color:#4fe08f">Tu as la dernière version.</div>';
     if (ST.updErr) out += '<div class="small muted">' + ST.updErr + '</div>';
     out += '<button class="btn" data-syact="check">Vérifier maintenant</button></div>';
@@ -269,6 +277,18 @@
     if (a === 'pcload') { pcLoad(v, function (snap) { if (snap && snap.data) { ST.pending = snap; ST.msg = ''; } else ST.msg = 'Lecture de la sauvegarde impossible.'; U().render(); }); return; }
     if (a === 'check') { checkUpdate(true); return; }
     if (a === 'remind') { var hm = v ? v.split(':') : ['-1', '0']; PAAndroid.setReminder(parseInt(hm[0], 10), parseInt(hm[1], 10)); }
+    if (a === 'upd') {
+      var uu = ST.upd; ST.updProg = { pct: 0, st: 'dl', err: '' };
+      if (IS_ANDROID && PAAndroid.updateApk) { window.__paUpd = function (pct, st, err) { ST.updProg = { pct: pct, st: st, err: err }; U().render(); }; PAAndroid.updateApk(uu.apk); U().render(); return; }
+      if (IS_PC) {
+        fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: uu.exe }) }).then(function (r) { if (!r.ok) throw 0; }).then(function () {
+          var h = setInterval(function () { fetch('/api/update').then(function (r) { return r.json(); }).then(function (j) { ST.updProg = { pct: j.pct || 0, st: j.state || 'dl', err: j.err || '' }; if (j.state !== 'dl') clearInterval(h); U().render(); }).catch(function () { clearInterval(h); }); }, 700);
+        }).catch(function () { ST.updProg = { pct: 0, st: 'err', err: 'Mise à jour en un clic indisponible : télécharge l’installateur.' }; U().render(); });
+        U().render(); return;
+      }
+    }
+    if (a === 'updApply') { fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apply: true }) }).catch(function () {}); ST.updProg = { pct: 100, st: 'dl', err: '' }; ST.msg = 'Installation en cours… l’appli se rouvre toute seule.'; U().render(); return; }
+    if (a === 'updInstall') { if (PAAndroid.installApk) PAAndroid.installApk(ST.upd.apk); return; }
     if (a === 'dl') { var u = ST.upd; openUrl(REPO_WEB + (IS_ANDROID ? u.apk : u.exe)); return; }
     if (a === 'copyerr') { var txt = JSON.stringify(errs(), null, 1); try { navigator.clipboard.writeText(txt); ST.msg = 'Détail copié.'; } catch (e) { ST.msg = txt; } }
     if (a === 'clearerr') { localStorage.removeItem('pa2err'); }
