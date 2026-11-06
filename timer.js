@@ -115,7 +115,20 @@
     if (left > 1 && left <= t.size && Object.keys(tablesOf()).length === 1 && !t.finalSaid) { t.finalSaid = true; moves.push('Table finale !'); }
     return moves;
   }
-  var FIND = { q: '', listening: false, msg: '' };
+  var FIND = { q: '', listening: false, msg: '' }, KO = null;
+  function lvlNow() { var s = live(), l = s.L[s.idx]; if (!l) return ''; return l.pause ? 'pendant la pause' : 'niveau ' + l.n + ' (' + fmt(l.sb) + ' / ' + fmt(l.bb) + ')'; }
+  function koPanel() {
+    var ui = U(), t = T(), pk = t.players[KO]; if (!pk || pk.out) return '';
+    var others = alivePl().filter(function (x) { return x !== pk; }).sort(function (a, b) { return (a.table || 0) - (b.table || 0) || a.name.localeCompare(b.name, 'fr'); });
+    var same = others.filter(function (x) { return x.table === pk.table; });
+    return '<div class="card stack" style="border-color:var(--gold)"><b style="font-size:1.2em">Élimination de ' + ui.esc(pk.name) + '</b>' +
+      (t.holder && pk.name.toLowerCase() === t.holder.toLowerCase() ? '<div style="color:var(--gold)">C’est la tête mise à prix : son éliminateur gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points.</div>' : '') +
+      '<div class="small muted">Table ' + pk.table + ', siège ' + pk.seat + ' · ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · ' + lvlNow() + '</div>' +
+      '<label class="small muted" for="koBy">Qui l’a éliminé ?</label><select id="koBy" style="min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit;font-size:1.1em">' +
+      (same.length ? '<optgroup label="Sa table">' + same.map(function (x) { return '<option value="' + t.players.indexOf(x) + '">' + ui.esc(x.name) + '</option>'; }).join('') + '</optgroup>' : '') +
+      '<optgroup label="Les autres tables">' + others.filter(function (x) { return x.table !== pk.table; }).map(function (x) { return '<option value="' + t.players.indexOf(x) + '">' + ui.esc(x.name) + ' (table ' + x.table + ')</option>'; }).join('') + '</optgroup><option value="">Je ne sais pas</option></select>' +
+      '<div class="row" style="gap:8px"><button class="btn gold" data-tmact="koOk" style="flex:1">Valider l’élimination</button><button class="btn" data-tmact="koCancel">Annuler</button></div></div>';
+  }
   function findHtml() {
     var ui = U(), t = T(), V = window.PA_VOICE, n = V ? V.norm(FIND.q) : FIND.q.toLowerCase();
     if (!t.players.length) return '<div class="small muted">Inscris d’abord les joueurs.</div>';
@@ -129,6 +142,16 @@
   function tournoiView() {
     var ui = U(), t = T(), s = live(), c = cfg(), out = '<div class="stack"><button class="back" data-act="nav" data-v="home">‹ Accueil</button><h1>Tournoi du club</h1>' +
       '<div class="row" style="gap:8px"><a class="btn gold" href="#minuteur" style="flex:1">⏱ Ouvrir le minuteur</a><button class="btn" data-tmact="editFromT" style="flex:1">Structure des niveaux</button></div>';
+    if (KO !== null) out += koPanel();
+    var LG = window.PA_LEAGUE;
+    if (LG) {
+      t.type = t.type || 'mercredi'; t.date = t.date || LG.today(); t.holder = LG.holder(t.type, t.date);
+      var hIn = t.holder && t.players.some(function (x) { return x.name.toLowerCase() === t.holder.toLowerCase(); });
+      out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Championnat</b><a class="btn" href="#classement">🏆 Classement</a></div><div class="seg">' + Object.keys(LG.TYPES).map(function (k) { return '<button class="' + (t.type === k ? 'on' : '') + '" data-tmact="ttype" data-v="' + k + '">' + LG.TYPES[k].short + (k === 'deep' ? ' ×1,4' : '') + '</button>'; }).join('') + '</div>' +
+        '<div class="row" style="gap:8px;align-items:center"><span class="small muted">Date</span><input id="tnDate" type="date" value="' + t.date + '" style="min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"></div>' +
+        (t.type === 'libre' ? '<div class="small muted">Ce tournoi ne compte pas au championnat.</div>' : (t.holder ? '<div style="color:var(--gold)">Tête mise à prix : <b>' + ui.esc(t.holder) + '</b> (vainqueur du dernier ' + (t.type === 'deep' ? 'deep' : 'mercredi') + ')' + (hIn ? ' : qui l’élimine gagne ' + LG.BONUS + ' points.' : ' : pas inscrit ce soir.') + '</div>' : '<div class="small muted">Pas encore de vainqueur précédent : pas de prime ce soir.</div>')) +
+        (t.drawn && alivePl().length === 1 && t.players.length > 1 ? (t.saved ? '<div class="small" style="color:#4fe08f">Tournoi enregistré au classement.</div>' : '<button class="btn gold block" data-tmact="saveLeague">Enregistrer le tournoi au classement</button>') : '') + '</div>';
+    }
     out += statsHtml(s);
     var cin = function (id, v, lab) { return '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span>' + lab + '</span><input id="' + id + '" type="number" inputmode="numeric" min="0" value="' + v + '" style="width:130px;min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"></div>'; };
     out += '<details class="card"' + (t.players.length ? '' : ' open') + '><summary style="cursor:pointer"><b>Les jetons</b> <span class="small muted">départ ' + fmt(c.chips) + ' · re-entry ' + fmt(c.reStack || c.chips) + ' · add-on ' + fmt(c.addStack || c.chips) + '</span></summary><div class="stack" style="margin-top:10px">' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Tapis d’une re-entry (0 = comme le départ)') + cin('tnAdd', c.addStack, 'Tapis d’un add-on (0 = comme le départ)') + '<div class="small muted">Les jetons en jeu et le tapis moyen se recalculent dès que tu changes une case.</div></div></details>';
@@ -269,10 +292,26 @@
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { draw(); }
+    else if (a === 'ttype') { T().type = t.getAttribute('data-v'); }
+    else if (a === 'saveLeague') { var ts = T(); if (!ts.saved && window.PA_LEAGUE) { var rec = window.PA_LEAGUE.record(ts); ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
     else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }
     else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
-    else if (a === 'ko') { var tk = T(), pk = tk.players[+t.getAttribute('data-v')]; if (pk && !pk.out && (typeof confirm !== 'function' || confirm(pk.name + ' est éliminé(e) ?'))) { FIND.q = ''; var lft = alivePl().length; pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null; var mv = rebalance(); tk.msg = pk.name + ' sort à la ' + lft + 'e place.' + (mv.length ? '<br>' + mv.join('<br>') : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : ''); } }
-    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { pu.out = false; pu.place = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } seatSomewhere(pu); tu.msg = pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
+    else if (a === 'ko') { var pk0 = T().players[+t.getAttribute('data-v')]; if (pk0 && !pk0.out) { KO = +t.getAttribute('data-v'); FIND.q = ''; try { window.scrollTo(0, 0); } catch (e4) {} } }
+    else if (a === 'koCancel') { KO = null; }
+    else if (a === 'koOk') {
+      var tk = T(), pk = tk.players[KO], sel = document.getElementById('koBy'), by = sel ? sel.value : '';
+      if (pk && !pk.out) {
+        var lft = alivePl().length, killer = by !== '' ? tk.players[+by] : null;
+        pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null;
+        pk.koAt = Date.now(); pk.koLevel = lvlNow(); pk.koBy = killer ? killer.name : null;
+        var bmsg = '';
+        if (killer && tk.holder && pk.name.toLowerCase() === tk.holder.toLowerCase()) { killer.bonus = (killer.bonus || 0) + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2); killer.bountyFrom = pk.name; pk.bountyTakenBy = killer.name; bmsg = '<br><b>Prime : ' + killer.name + ' élimine le dernier vainqueur et gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points !</b>'; }
+        var mv = rebalance();
+        tk.msg = pk.name + ' sort à la ' + lft + 'e place' + (killer ? ', éliminé par ' + killer.name : '') + ' (' + new Date(pk.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ', ' + pk.koLevel + ').' + bmsg + (mv.length ? '<br>' + mv.join('<br>') : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : '');
+      }
+      KO = null;
+    }
+    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } pu.out = false; pu.place = null; pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } seatSomewhere(pu); tu.msg = pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
     else if (a === 'newT') { if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
     else if (a === 'print') { try { window.print(); } catch (e3) {} return; }
     else if (a === 'entPlus') { T().entrants++; T().left++; }
@@ -299,6 +338,7 @@
     }
     save(); keepScroll(function () { U().render(); });
   });
+  document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tnDate') { T().date = e.target.value; save(); U().render(); return; } });
   document.addEventListener('change', function (e) { var id = e.target && e.target.id, k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   window.PA_TIMER = { view: view, tournoi: tournoiView, _levels: levels, _generate: generate };

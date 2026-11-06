@@ -27,6 +27,7 @@
 
   /* ---------- Recherche générale ---------- */
   var PAGES = [
+    ['classement', 'Championnat du club', 'classement championnat points mercredi deep prime bounty podium annuel semaine'],
     ['minuteur', 'Minuteur de tournoi', 'minuteur blindes niveaux pause horloge structure ante'],
     ['tournoi', 'Tournoi du club', 'tournoi inscription joueurs tables tirage sieges elimination re-entry add-on tapis moyen'],
     ['lecons', 'Les leçons', 'cours chapitres lecons'], ['podcasts', 'Les podcasts', 'podcast ecouter audio'],
