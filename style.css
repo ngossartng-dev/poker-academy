@@ -521,3 +521,6 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .wk-spark i{flex:1;border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;font-style:normal}
 .wk-spark i b{font-size:.75em;color:#111;padding-top:2px}
 .wk-tip{background:rgba(255,210,63,.07);border:1px solid rgba(255,210,63,.3);border-radius:10px;padding:10px}
+
+.tn-newm{display:flex;gap:8px;flex-wrap:wrap}
+.tn-newm input{flex:1;min-width:160px;min-height:44px}

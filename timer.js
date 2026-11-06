@@ -78,7 +78,7 @@
     if (LG) LG.load().list.forEach(function (tn) { tn.rows.forEach(function (r) { var k = r.name.toLowerCase(); m[k] = m[k] || { name: r.name, n: 0, last: '' }; m[k].n++; if (tn.date >= m[k].last) { m[k].last = tn.date; m[k].name = r.name; } }); });
     if (LG && LG.roster) LG.roster().forEach(function (nm) { var k = nm.toLowerCase(); if (!m[k]) m[k] = { name: nm, n: 0, last: '' }; m[k].club = true; });
     ((window.PA.player() || {}).opps || []).forEach(function (o) { var k = String(o.name || '').toLowerCase(); if (k && !m[k]) m[k] = { name: o.name, n: 0, last: '' }; });
-    return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.n - a.n || (a.last < b.last ? 1 : -1) || a.name.localeCompare(b.name); });
+    return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.n - a.n || (a.last === b.last ? 0 : a.last < b.last ? 1 : -1) || a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }); });
   }
   function inT(nm) { return T().players.some(function (x) { return x.name.toLowerCase() === String(nm).toLowerCase(); }); }
   function addOne(nm) { var tt = T(); nm = String(nm || '').trim(); if (!nm || inT(nm)) return false; var pl = { name: nm.slice(0, 30), out: false, entries: 1 }; var sn2 = tt.drawn ? snap() : null; tt.players.push(pl); if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); } return true; }
@@ -232,7 +232,7 @@
       var regs = regulars();
       if (regs.length) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Les habitués · un toucher = présent</b><span class="small muted">' + regs.filter(function (r) { return inT(r.name); }).length + ' / ' + regs.length + '</span></div><div class="tn-regs">' + regs.map(function (r, i) {
         var on = inT(r.name); return '<button class="tn-reg' + (on ? ' on' : '') + '" data-tmact="reg" data-v="' + i + '">' + (on ? '✓ ' : '') + esc(r.name) + (r.n ? '<small>' + r.n + '</small>' : '') + '</button>';
-      }).join('') + '</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="regAll">Tout le club présent</button><button class="btn" data-tmact="rosterEdit">' + (ROSTER ? 'Fermer' : 'Modifier la liste du club') + '</button></div>' +
+      }).join('') + '</div><div class="tn-newm"><input id="tnNewM" type="text" class="tn-in" maxlength="30" placeholder="Pseudo du nouveau membre" autocomplete="off"><button class="btn gold" data-tmact="addMember">＋ Ajouter au club</button></div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="regAll">Tout le club présent</button><button class="btn" data-tmact="rosterEdit">' + (ROSTER ? 'Fermer' : 'Modifier la liste du club') + '</button></div>' +
         (ROSTER && window.PA_LEAGUE ? '<div class="stack" style="gap:8px"><textarea id="tnRoster" rows="8" class="tn-in" style="width:100%">' + esc(window.PA_LEAGUE.roster().join('\n')) + '</textarea><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="rosterSave" style="flex:1">Enregistrer la liste</button><label class="btn" style="flex:1;text-align:center;cursor:pointer">Importer un .txt<input id="tnRosterFile" type="file" accept=".txt,text/plain" style="display:none"></label></div><div class="small muted">Un pseudo par ligne. Les joueurs déjà venus au championnat restent proposés même s’ils ne sont plus dans la liste.</div></div>' : '') +
         '<div class="small muted">Le chiffre = tournois joués au championnat. ' + (t.drawn ? 'Tables tirées : un nouveau présent est placé à la table la moins remplie.' : 'Retouche un nom pour le retirer.') + '</div></div>';
       var inG = t.players.filter(function (x) { return !x.out; }).sort(function (a, b) { return (a.table || 99) - (b.table || 99) || (a.seat || 0) - (b.seat || 0); });
@@ -419,6 +419,15 @@
       var added = 0; names.forEach(function (nm) { if (addOne(nm)) added++; });
       tt.msg = added ? added + ' joueur' + (added > 1 ? 's' : '') + ' inscrit' + (added > 1 ? 's' : '') + (tt.drawn ? ', placé' + (added > 1 ? 's' : '') + ' à la table la moins remplie.' : '.') : 'Aucun nouveau pseudo (déjà inscrits ?).';
     }
+    else if (a === 'addMember') {
+      var im = document.getElementById('tnNewM'), nm2 = im ? im.value.trim().slice(0, 30) : '';
+      if (nm2 && window.PA_LEAGUE) {
+        var rl = window.PA_LEAGUE.roster(), exists = rl.some(function (x) { return x.toLowerCase() === nm2.toLowerCase(); });
+        if (!exists) window.PA_LEAGUE.setRoster(rl.concat([nm2]));
+        var added2 = addOne(nm2), tm = T();
+        tm.msg = (exists ? nm2 + ' est déjà membre du club' : nm2 + ' ajouté au club') + (added2 ? ' et inscrit au tournoi' + (tm.drawn ? ' : table ' + tm.players[tm.players.length - 1].table + ', siège ' + tm.players[tm.players.length - 1].seat : '') : '') + '.';
+      }
+    }
     else if (a === 'rosterEdit') { ROSTER = !ROSTER; }
     else if (a === 'rosterSave') { var ta = document.getElementById('tnRoster'); if (ta && window.PA_LEAGUE) { var nl = window.PA_LEAGUE.setRoster(ta.value.split(/[\n,;]+/)); T().msg = 'Liste du club enregistrée : ' + nl.length + ' joueurs.'; ROSTER = false; } }
     else if (a === 'regAll') { var ra = regulars().filter(function (r) { return r.club; }), nA = 0; ra.forEach(function (r) { if (addOne(r.name)) nA++; }); T().msg = nA + ' joueur' + (nA > 1 ? 's' : '') + ' du club inscrit' + (nA > 1 ? 's' : '') + '. Retouche les absents pour les retirer.'; }
@@ -481,6 +490,7 @@
     if (!e.target || e.target.id !== 'tnRosterFile' || !e.target.files || !e.target.files[0]) return;
     var rd = new FileReader(); rd.onload = function () { var ta = document.getElementById('tnRoster'); if (ta) ta.value = String(rd.result || '').replace(/\r/g, '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean).join('\n'); }; rd.readAsText(e.target.files[0]);
   });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'tnNewM') { var bt = document.querySelector('[data-tmact="addMember"]'); if (bt) { e.preventDefault(); bt.click(); } } });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   // élimination : idx = joueur qui sort, by = index de celui qui l'élimine ('' = inconnu)
   function doKO(idx, by) {
