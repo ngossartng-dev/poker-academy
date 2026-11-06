@@ -83,7 +83,7 @@
       seats.forEach(function (st) { live[k].table = tb; live[k].seat = st; k++; });
       t.buttons[tb] = seats[Math.floor(Math.random() * seats.length)];
     }
-    t.drawn = true; t.msg = 'Tirage fait : ' + n + ' joueurs sur ' + nt + ' table' + (nt > 1 ? 's' : '') + ' de ' + t.size + ' places maximum.';
+    t.drawn = true; t.finalSaid = nt === 1; t.msg = 'Tirage fait : ' + n + ' joueurs sur ' + nt + ' table' + (nt > 1 ? 's' : '') + ' de ' + t.size + ' places maximum.';
   }
   function freeSeat(tb) { var t = T(), used = {}; alivePl().forEach(function (x) { if (x.table === tb) used[x.seat] = 1; }); var fr = []; for (var i = 1; i <= t.size; i++) if (!used[i]) fr.push(i); return fr.length ? fr[Math.floor(Math.random() * fr.length)] : null; }
   function seatSomewhere(pl) { // la table la moins remplie
@@ -115,16 +115,28 @@
     if (left > 1 && left <= t.size && Object.keys(tablesOf()).length === 1 && !t.finalSaid) { t.finalSaid = true; moves.push('Table finale !'); }
     return moves;
   }
+  var FIND = { q: '', listening: false, msg: '' };
+  function findHtml() {
+    var ui = U(), t = T(), V = window.PA_VOICE, n = V ? V.norm(FIND.q) : FIND.q.toLowerCase();
+    if (!t.players.length) return '<div class="small muted">Inscris d’abord les joueurs.</div>';
+    if (!n) return '<div class="small muted">Tape le début d’un pseudo' + (V && V.ok() ? ' ou touche le micro et dis-le' : '') + '.</div>';
+    var hit = t.players.filter(function (x) { return (V ? V.norm(x.name) : x.name.toLowerCase()).indexOf(n) >= 0; }).slice(0, 8);
+    if (!hit.length) return '<div class="small muted">Aucun inscrit ne correspond à « ' + ui.esc(FIND.q) + ' ».</div>';
+    return hit.map(function (x) { var i = t.players.indexOf(x);
+      return '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>' + ui.esc(x.name) + '</b> <span class="small muted">' + (x.out ? 'éliminé, ' + x.place + 'e' : (x.table ? 'table ' + x.table + ', siège ' + x.seat : 'pas encore placé')) + '</span></span><span class="row" style="gap:6px">' +
+        (x.out ? '<button class="btn" data-tmact="reentry" data-v="' + i + '">Re-entry</button><button class="btn" data-tmact="unko" data-v="' + i + '">Annuler</button>' : '<button class="btn gold" data-tmact="ko" data-v="' + i + '">Éliminé</button>') + '</span></div>'; }).join('');
+  }
   function tournoiView() {
     var ui = U(), t = T(), s = live(), out = '<div class="stack"><a class="back" href="#minuteur">‹ Minuteur</a><h1>Le tournoi</h1>';
     out += statsHtml(s);
     if (t.msg) out += ui.yo(t.msg);
+    if (t.players.length) out += '<div class="card stack"><b>Trouver un joueur</b><div class="row" style="gap:8px"><input id="tnFind" type="search" autocomplete="off" placeholder="Pseudo…" value="' + ui.esc(FIND.q) + '" style="flex:1;min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:6px 12px;font:inherit;font-size:1.1em">' + (window.PA_VOICE ? window.PA_VOICE.mic('data-tmact="findMic"', FIND.listening) : '') + '</div>' + (FIND.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(FIND.msg) + '</div>' : '') + '<div id="tnFound" class="stack" style="gap:8px">' + findHtml() + '</div></div>';
     var IN = 'min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit';
     // 1. format et inscriptions
     out += '<div class="card stack"><b>1. Les inscriptions</b><div class="small muted">Format des tables</div><div class="seg">' + [[6, '6-max'], [9, '9-max'], [10, 'Full ring (10)']].map(function (o) { return '<button class="' + (t.size === o[0] ? 'on' : '') + '" data-tmact="size" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       '<div class="small muted">Un pseudo par ligne (ou séparés par des virgules)</div><textarea id="tnNames" rows="4" style="width:100%;' + IN + ';padding:8px" placeholder="Lionel&#10;Gégé&#10;Nadia"></textarea>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="addNames" style="flex:1">Inscrire</button>' + ((window.PA.player() || {}).opps && window.PA.player().opps.length ? '<button class="btn" data-tmact="addOpps">Mes adversaires du club</button>' : '') + '</div>' +
-      (t.players.length ? '<div class="small">' + t.players.length + ' inscrit' + (t.players.length > 1 ? 's' : '') + ' : ' + t.players.map(function (x, i) { return '<span class="chip" style="margin:2px">' + ui.esc(x.name) + (t.drawn ? '' : ' <button data-tmact="delP" data-v="' + i + '" aria-label="Retirer" style="background:none;border:0;color:var(--muted);cursor:pointer">✕</button>') + '</span>'; }).join('') + '</div>' : '') +
+      (t.players.length ? '<details' + (t.players.length <= 20 ? ' open' : '') + '><summary class="small" style="cursor:pointer">' + t.players.length + ' inscrit' + (t.players.length > 1 ? 's' : '') + ' (toucher pour afficher ou replier)</summary><div class="small">' + t.players.map(function (x, i) { return '<span class="chip" style="margin:2px">' + ui.esc(x.name) + (t.drawn ? '' : ' <button data-tmact="delP" data-v="' + i + '" aria-label="Retirer" style="background:none;border:0;color:var(--muted);cursor:pointer">✕</button>') + '</span>'; }).join('') + '</div></details>' : '') +
       '<button class="btn block' + (t.players.length ? ' gold' : '') + '" data-tmact="draw"' + (alivePl().length ? '' : ' disabled') + '>' + (t.drawn ? 'Refaire le tirage des tables' : 'Tirer les tables et les sièges au sort') + '</button></div>';
     // 2. tables
     if (t.drawn) {
@@ -254,7 +266,8 @@
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { draw(); }
-    else if (a === 'ko') { var tk = T(), pk = tk.players[+t.getAttribute('data-v')]; if (pk && !pk.out && (typeof confirm !== 'function' || confirm(pk.name + ' est éliminé(e) ?'))) { var lft = alivePl().length; pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null; var mv = rebalance(); tk.msg = pk.name + ' sort à la ' + lft + 'e place.' + (mv.length ? '<br>' + mv.join('<br>') : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : ''); } }
+    else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
+    else if (a === 'ko') { var tk = T(), pk = tk.players[+t.getAttribute('data-v')]; if (pk && !pk.out && (typeof confirm !== 'function' || confirm(pk.name + ' est éliminé(e) ?'))) { FIND.q = ''; var lft = alivePl().length; pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null; var mv = rebalance(); tk.msg = pk.name + ' sort à la ' + lft + 'e place.' + (mv.length ? '<br>' + mv.join('<br>') : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : ''); } }
     else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { pu.out = false; pu.place = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } seatSomewhere(pu); tu.msg = pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
     else if (a === 'newT') { if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
     else if (a === 'print') { try { window.print(); } catch (e3) {} return; }
@@ -282,5 +295,6 @@
     }
     save(); keepScroll(function () { U().render(); });
   });
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   window.PA_TIMER = { view: view, tournoi: tournoiView, _levels: levels, _generate: generate };
 })();

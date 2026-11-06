@@ -1027,7 +1027,7 @@
     CF.fb = 'J’ai compris : « ' + U().esc(t) + ' ». ' + (got.length ? 'Rempli : ' + got.join(', ') + '. Vérifie les cases, puis enregistre.' : 'Je n’ai rien pu ranger dans les cases : c’est dans la note. Remplis les cases à la main.');
     U().render();
   }
-  window.__paVoice = onVoice;
+  window.__paVoice = function (t) { if (window.__paVoiceCb) { var f = window.__paVoiceCb; window.__paVoiceCb = null; f(t); return; } onVoice(t); };
   function voiceAvailable() { return (window.PAAndroid && window.PAAndroid.voiceOk && (function () { try { return window.PAAndroid.voiceOk(); } catch (e) { return false; } })()) || !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
   function dictate() {
     var nEl = document.getElementById('cfNote'); if (nEl) CF.note = nEl.value;
