@@ -8,13 +8,14 @@
   // les joueurs du club depuis la rentrée (liste de départ, modifiable dans l'appli)
   var CLUB = ["MONPIERROT", "YO", "VILVOORD", "JR", "ENFANT2GUETTO", "ENFANT2FISH", "BASTOSS", "ENFANT2COEUR", "KAKTUSSE", "BANEEST", "VINCENT", "NARUTI", "GREG", "PALLIX", "POOLSHARKS", "SIM", "UNDERTAKER", "TA_1_PB", "JOHNY", "AIGLEFOUR", "JUJU", "MACHINEGUN"];
   function roster() { var d = load(); return (d.roster || CLUB).slice(); }
-  function setRoster(list) { var d = load(), seen = {}; d.roster = list.map(function (x) { return String(x || '').trim().slice(0, 30); }).filter(function (x) { var k = x.toLowerCase(); if (!x || seen[k]) return false; seen[k] = 1; return true; }); save(d); return d.roster; }
+  function setRoster(list) { var d = load(), seen = {}; d.roster = list.map(function (x) { return String(x || '').trim().slice(0, 30); }).filter(function (x) { var k = x.toLowerCase(); if (!x || seen[k]) return false; seen[k] = 1; return true; }); d.rosterAt = Date.now(); save(d); return d.roster; }
   // les points se recalculent à chaque lecture avec le barème en vigueur (deep passé de ×1,4 à ×1,5)
   function load() {
     try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 10) / 10; }); }); return d; } } catch (e) {}
     return { list: [] };
   }
-  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  function saveRaw(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  function save(d) { saveRaw(d); if (window.PA_CLUBSYNC) window.PA_CLUBSYNC.dirty(); }
   function key(n) { return String(n || '').trim().toLowerCase(); }
   function f1(x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); }
   function dfr(iso) { var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
@@ -82,7 +83,7 @@
     }
     return out;
   }
-  function closedInfo(year) { var d = load(); return (d.closed || {})[year] || null; }
+  function closedInfo(year) { var d = load(), c = (d.closed || {})[year]; return c && !c.open ? c : null; }
   function closeSeason(year) {
     var d = load(), list = d.list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list);
     d.closed = d.closed || {}; d.closed[year] = { at: Date.now(), podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }), trophies: trophies(list).map(function (t) { return { title: t.title, icon: t.icon, who: t.who, val: t.val }; }), n: list.length };
@@ -90,7 +91,7 @@
   }
   function palmares() {
     var d = load(), ys = years(), cur = String(new Date().getFullYear());
-    return ys.map(function (y) { var c = (d.closed || {})[y]; if (c) return { year: y, closed: true, podium: c.podium }; var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === y; })); return { year: y, closed: false, current: y === cur, podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }) }; }).filter(function (p) { return p.podium.length; });
+    return ys.map(function (y) { var c = (d.closed || {})[y]; if (c && !c.open) return { year: y, closed: true, podium: c.podium }; var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === y; })); return { year: y, closed: false, current: y === cur, podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }) }; }).filter(function (p) { return p.podium.length; });
   }
 
   /* ---------- Fiche d'un joueur ---------- */
@@ -219,6 +220,7 @@
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
     if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><b>Exporter ' + V.year + '</b><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
+    if (window.PA_CLUBSYNC) out += window.PA_CLUBSYNC.card();
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
     return ui.shell('club', out);
   }
@@ -230,13 +232,13 @@
     if (a === 'pl') { V.pl = v || null; U().render(); window.scrollTo(0, 0); return; }
     if (a === 'awards') { V.msg = ''; window.PA_EXPORT.awards(V.year, done); return; }
     if (a === 'close') { if (typeof confirm === 'function' && !confirm('Clôturer la saison ' + V.year + ' ? Le podium et les trophées entrent au palmarès.')) return; closeSeason(V.year); U().render(); return; }
-    if (a === 'reopen') { var dd = load(); if (dd.closed) delete dd.closed[V.year]; save(dd); U().render(); return; }
+    if (a === 'reopen') { var dd = load(); dd.closed = dd.closed || {}; dd.closed[V.year] = { open: true, at: Date.now() }; save(dd); U().render(); return; }
     if (a === 'img') { V.msg = ''; window.PA_EXPORT.image(V.year, done); return; }
     if (a === 'xy') { V.msg = ''; window.PA_EXPORT.year(V.year, t.getAttribute('data-f'), done); return; }
     if (a === 'xt') { V.msg = ''; window.PA_EXPORT.tournament(v, t.getAttribute('data-f'), done); return; }
     V.msg = ''; if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;
-    else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); save(d); V.open = null; }
+    else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();

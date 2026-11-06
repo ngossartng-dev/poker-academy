@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var BASE = 'https://ngossartng-dev.github.io/poker-academy/';
-  var IS_PC = location.hostname === '127.0.0.1' && location.port === '47816';
+  var IS_PC = location.hostname === '127.0.0.1' && (location.port === '47816' || location.port === '47826');
   var IS_ANDROID = !!window.PAAndroid && !!window.PAAndroid.packUrl;
   var ST = { busy: false, done: 0, total: 0, err: 0, info: null };
   function U() { return window.PA_UI; }

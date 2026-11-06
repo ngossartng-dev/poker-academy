@@ -417,7 +417,7 @@
 
   /* ---------- Import automatique (appli PC) ---------- */
   var SY = { avail: null, busy: false, last: 0, info: null, msg: null };
-  function pcApp() { return location.hostname === '127.0.0.1' && location.port === '47816'; }
+  function pcApp() { return location.hostname === '127.0.0.1' && (location.port === '47816' || location.port === '47826'); }
   function autoSync(force) {
     if (!pcApp() || SY.busy || !window.PA.player()) return;
     if (window.PA_STORE && !window.PA_STORE.ready()) { window.PA_STORE.whenReady(function () { autoSync(force); }); return; }

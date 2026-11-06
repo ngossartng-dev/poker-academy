@@ -41,6 +41,10 @@ ol{padding-left:22px;margin:8px 0;font-size:16px;color:#d6d6dc}
 <p>Télécharge l’installateur et lance-le. Windows peut afficher « Windows a protégé votre ordinateur » : clique sur « Informations complémentaires », puis « Exécuter quand même ».</p>
 <a class="btn" id="exe" href="#">Télécharger pour Windows</a></div>
 
+<div class="card"><h2>Poker Academy Club (version légère)</h2>
+<p>Juste la gestion du club : tournoi, chrono, écran télé, télécommande et championnat. Le championnat se synchronise avec l’appli complète par Google Drive.</p>
+<a class="btn" id="apkc" href="#">Club pour Android</a> <a class="btn" id="exec" href="#">Club pour Windows</a> <a class="btn alt" href="../club.html">Club dans le navigateur</a></div>
+
 <div class="card"><h2>Dans le navigateur</h2>
 <p>Sur n’importe quel ordinateur ou téléphone, sans rien installer.</p>
 <a class="btn alt" href="../">Ouvrir l’appli dans le navigateur</a></div>
@@ -51,6 +55,7 @@ ol{padding-left:22px;margin:8px 0;font-size:16px;color:#d6d6dc}
 fetch('version.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
   document.getElementById('v').textContent = 'Version ' + j.version + (j.notes ? ' · ' + j.notes : '');
   document.getElementById('apk').href = j.apk; document.getElementById('exe').href = j.exe;
+  if (j.apkClub) { document.getElementById('apkc').href = j.apkClub; document.getElementById('exec').href = j.exeClub; }
 }).catch(function () { document.getElementById('v').textContent = ''; });
 </script>
 </body>

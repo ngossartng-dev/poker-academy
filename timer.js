@@ -477,6 +477,7 @@
       if (ST.cfg.sb > ST.cfg.bb) ST.cfg.sb = Math.round(ST.cfg.bb / 2);
       ST.mins = ST.cfg.mins;
       ST.text = a === 'gen' ? generate(ST.cfg) : document.getElementById('tmText').value;
+      ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0);
       if (a === 'savestruct') { var L2 = levels(); ST.idx = 0; ST.rem = L2.length ? L2[0].min * 60 : 0; ST.since = null; EDIT = false; awake(false); }
     }
     save(); keepScroll(function () { U().render(); });
@@ -484,8 +485,8 @@
   document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tnDate') { T().date = e.target.value; save(); U().render(); return; } });
   document.addEventListener('change', function (e) { var id = e.target && e.target.id;
     if (id === 'tnPrize' || id === 'tnPaid') { T()[id === 'tnPrize' ? 'prize' : 'paid'] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); return; }
-    if (id === 'tnColor') { ST.cfg = cfg(); ST.cfg.colorUp = String(e.target.value || '').slice(0, 120); save(); U().render(); return; }
-    var k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack', tnReEnd: 'reEnd', tnAddP: 'addPause' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
+    if (id === 'tnColor') { ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); ST.cfg = cfg(); ST.cfg.colorUp = String(e.target.value || '').slice(0, 120); save(); U().render(); return; }
+    var k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack', tnReEnd: 'reEnd', tnAddP: 'addPause' }[id]; if (!k) return; ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
   document.addEventListener('change', function (e) {
     if (!e.target || e.target.id !== 'tnRosterFile' || !e.target.files || !e.target.files[0]) return;
     var rd = new FileReader(); rd.onload = function () { var ta = document.getElementById('tnRoster'); if (ta) ta.value = String(rd.result || '').replace(/\r/g, '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean).join('\n'); }; rd.readAsText(e.target.files[0]);
@@ -599,5 +600,14 @@
     var m = { ' ': 'toggle', ArrowRight: 'next', ArrowLeft: 'prev', f: 'full', v: 'voice' }[e.key]; if (!m) return;
     var b = document.querySelector('[data-tmact="' + m + '"]'); if (b) { e.preventDefault(); b.click(); }
   });
-  window.PA_TIMER = { view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
+  // structure partagée avec l'autre appli (jamais pendant qu'un tournoi tourne)
+  function getStruct() { return { text: ST.text, cfg: ST.cfg || null, at: ST.structAt || 0 }; }
+  function setStruct(o) {
+    if (!o || !o.text || (o.at || 0) <= (ST.structAt || 0) || ST.since) return false;
+    var running = ST.idx || (ST.rem && levels()[0] && ST.rem !== levels()[0].min * 60);
+    ST.text = o.text; if (o.cfg) ST.cfg = o.cfg; ST.structAt = o.at;
+    if (!running) { var L0 = levels(); ST.idx = 0; ST.rem = L0.length ? L0[0].min * 60 : 0; }
+    save(); return true;
+  }
+  window.PA_TIMER = { tab: function (v) { TAB = v; }, getStruct: getStruct, setStruct: setStruct, view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
 })();

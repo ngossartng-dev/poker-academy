@@ -5,7 +5,8 @@
   function U() { return window.PA_UI; }
   var REPO_RAW = 'https://raw.githubusercontent.com/ngossartng-dev/poker-academy/main/telechargements/version.json';
   var REPO_WEB = 'https://ngossartng-dev.github.io/poker-academy/telechargements/';
-  var IS_PC = location.hostname === '127.0.0.1' && location.port === '47816';
+  var IS_PC = location.hostname === '127.0.0.1' && (location.port === '47816' || location.port === '47826');
+  var CLUB = !!window.PA_CLUB;
   var IS_ANDROID = !!window.PAAndroid;
   var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   var IS_STANDALONE = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
@@ -98,8 +99,8 @@
 
   /* ---------- Synchronisation automatique PC ↔ téléphone : un fichier partagé dans Google Drive ---------- */
   var SY2 = { busy: false, conflict: null, info: null, last: 0 };
-  function hasAndroidSync() { return IS_ANDROID && !!window.PAAndroid.syncRead; }
-  function syncConfigured() { return IS_PC || (hasAndroidSync() && !!PAAndroid.syncInfo()); }
+  function hasAndroidSync() { return !CLUB && IS_ANDROID && !!window.PAAndroid.syncRead; }
+  function syncConfigured() { if (CLUB) return false; return IS_PC || (hasAndroidSync() && !!PAAndroid.syncInfo()); }
   function rRead(cb) {
     if (IS_PC) { fetch('/api/sync', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { cb(j); }).catch(function () { cb(null); }); return; }
     if (!syncConfigured()) { cb(null); return; }
@@ -131,7 +132,7 @@
       done();
     });
   }
-  if (IS_PC || hasAndroidSync()) {
+  if (!CLUB && (IS_PC || hasAndroidSync())) {
     setTimeout(function () {
       try { var msg = sessionStorage.getItem('pa2syncMsg'); if (msg) { sessionStorage.removeItem('pa2syncMsg'); var p = msg.split('|'); banner('Progression reprise depuis ' + (p[0] === 'PC' ? 'le PC' : 'le téléphone') + ' (' + dt(+p[1]) + ').'); } } catch (e) {}
       syncNow(true);
@@ -232,10 +233,10 @@
         '<button class="btn gold" data-syact="export">Envoyer une sauvegarde</button>';
     } else out += '<button class="btn gold" data-syact="export">Exporter un fichier de sauvegarde</button>';
     out += '<label class="btn" style="text-align:center">Importer un fichier de sauvegarde<input type="file" accept=".json,application/json" data-syimport="1" style="display:none"></label></div>';
-    out += syncCard();
-    if (window.PA_PACK) out += window.PA_PACK.card();
+    out += CLUB ? (window.PA_CLUBSYNC ? window.PA_CLUBSYNC.card() : '') : syncCard();
+    if (window.PA_PACK && !CLUB) out += window.PA_PACK.card();
     // rappel quotidien (Android)
-    if (IS_ANDROID && PAAndroid.setReminder) {
+    if (IS_ANDROID && PAAndroid.setReminder && !CLUB) {
       var cur = PAAndroid.getReminder();
       out += '<div class="card stack"><b>Rappel quotidien</b><div class="small muted">Une notification à l’heure choisie pour faire tes cartes du jour.</div><div class="seg" style="flex-wrap:wrap">' + [['', 'Aucun'], ['08:00', '8 h'], ['12:30', '12 h 30'], ['18:00', '18 h'], ['20:00', '20 h'], ['21:30', '21 h 30']].map(function (o) { return '<button class="' + (cur === o[0] ? 'on' : '') + '" data-syact="remind" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
     }
@@ -279,17 +280,17 @@
     if (a === 'remind') { var hm = v ? v.split(':') : ['-1', '0']; PAAndroid.setReminder(parseInt(hm[0], 10), parseInt(hm[1], 10)); }
     if (a === 'upd') {
       var uu = ST.upd; ST.updProg = { pct: 0, st: 'dl', err: '' };
-      if (IS_ANDROID && PAAndroid.updateApk) { window.__paUpd = function (pct, st, err) { ST.updProg = { pct: pct, st: st, err: err }; U().render(); }; PAAndroid.updateApk(uu.apk); U().render(); return; }
+      if (IS_ANDROID && PAAndroid.updateApk) { window.__paUpd = function (pct, st, err) { ST.updProg = { pct: pct, st: st, err: err }; U().render(); }; PAAndroid.updateApk(CLUB ? uu.apkClub : uu.apk); U().render(); return; }
       if (IS_PC) {
-        fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: uu.exe }) }).then(function (r) { if (!r.ok) throw 0; }).then(function () {
+        fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: CLUB ? uu.exeClub : uu.exe }) }).then(function (r) { if (!r.ok) throw 0; }).then(function () {
           var h = setInterval(function () { fetch('/api/update').then(function (r) { return r.json(); }).then(function (j) { ST.updProg = { pct: j.pct || 0, st: j.state || 'dl', err: j.err || '' }; if (j.state !== 'dl') clearInterval(h); U().render(); }).catch(function () { clearInterval(h); }); }, 700);
         }).catch(function () { ST.updProg = { pct: 0, st: 'err', err: 'Mise à jour en un clic indisponible : télécharge l’installateur.' }; U().render(); });
         U().render(); return;
       }
     }
     if (a === 'updApply') { fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apply: true }) }).catch(function () {}); ST.updProg = { pct: 100, st: 'dl', err: '' }; ST.msg = 'Installation en cours… l’appli se rouvre toute seule.'; U().render(); return; }
-    if (a === 'updInstall') { if (PAAndroid.installApk) PAAndroid.installApk(ST.upd.apk); return; }
-    if (a === 'dl') { var u = ST.upd; openUrl(REPO_WEB + (IS_ANDROID ? u.apk : u.exe)); return; }
+    if (a === 'updInstall') { if (PAAndroid.installApk) PAAndroid.installApk(CLUB ? ST.upd.apkClub : ST.upd.apk); return; }
+    if (a === 'dl') { var u = ST.upd; openUrl(REPO_WEB + (IS_ANDROID ? (CLUB ? u.apkClub : u.apk) : (CLUB ? u.exeClub : u.exe))); return; }
     if (a === 'copyerr') { var txt = JSON.stringify(errs(), null, 1); try { navigator.clipboard.writeText(txt); ST.msg = 'Détail copié.'; } catch (e) { ST.msg = txt; } }
     if (a === 'clearerr') { localStorage.removeItem('pa2err'); }
     U().render();

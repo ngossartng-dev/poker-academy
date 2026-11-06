@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.19.2';
+  var VERSION = '2.20.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -75,19 +75,39 @@
   function go(r) { location.hash = '#' + r; }
 
   /* ---------- Coquille ---------- */
-  var NAV = [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['club', 'Club', 'clock'], ['analyser', 'Analyser', 'chart']];
+  var CLUB = !!window.PA_CLUB;
+  var NAV = CLUB ? [['home', 'Accueil', 'home'], ['tournoi', 'Tournoi', 'cards'], ['minuteur', 'Chrono', 'clock'], ['classement', 'Championnat', 'chart'], ['reglages', 'Réglages', 'user']]
+    : [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['club', 'Club', 'clock'], ['analyser', 'Analyser', 'chart']];
   function shell(active, body, noFab) {
+    if (CLUB) { active = (location.hash || '#home').slice(1).split('?')[0] || 'home'; if (active === 'sauvegarde' || active === 'merci') active = 'reglages'; noFab = noFab || false; }
     var focus = !!noFab;
     var side = '<nav class="side" aria-label="Navigation principale"><div class="row" style="padding:0 8px 22px">' + logo() + '<span class="disp" style="font-size:26px">Poker<br>Academy</span></div>' +
-      NAV.concat([['moi', 'Moi', 'user']]).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
+      (CLUB ? NAV : NAV.concat([['moi', 'Moi', 'user']])).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
-    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (noFab || /^#(tournoi|classement|minuteur|club|ecran)/.test(location.hash) ? '' : fab);
+    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (CLUB || noFab || /^#(tournoi|classement|minuteur|club|ecran)/.test(location.hash) ? '' : fab);
   }
 
   /* ---------- Accueil ---------- */
   function greet() { var h = new Date().getHours(); return h < 18 && h >= 5 ? 'Bonjour' : 'Bonsoir'; }
+  /* ---------- Accueil de l'appli Club (version légère : tournoi, chrono, championnat) ---------- */
+  function clubHomeView() {
+    var LG = window.PA_LEAGUE, TM = window.PA_TIMER, t = null;
+    try { t = JSON.parse(localStorage.getItem('pa2timer') || '{}').t; } catch (e) {}
+    var live = t && t.players && t.players.length ? t.players.filter(function (x) { return !x.out; }).length + ' joueurs en jeu sur ' + t.players.length : 'Inscrire les joueurs, tirer les tables, lancer le chrono';
+    var st = null, yr = String(new Date().getFullYear()); if (LG) { var list = LG.load().list.filter(function (x) { return x.date.slice(0, 4) === yr; }); st = { n: list.length, top: LG.standings(list)[0] }; }
+    var body = '<div class="stack"><div class="row" style="gap:12px;align-items:center">' + logo() + '<div><div class="disp" style="font-size:30px">Poker Academy</div><div class="disp" style="font-size:20px;color:var(--gold);letter-spacing:.2em">Club</div></div></div>' +
+      '<a class="big-cta" href="#tournoi" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Tournoi du club</div><div style="font-weight:500">' + esc(live) + '</div></div>' + IC.arrow + '</a>' +
+      '<div class="grid4"><a class="tile" href="#ecran"><b>📺 Écran télé</b><span>Blindes, chrono, joueurs, changements de place, en grand.</span></a>' +
+      '<a class="tile" href="#minuteur"><b>⏱ Chrono</b><span>Les niveaux seuls, la structure du tournoi, les pauses.</span></a>' +
+      '<a class="tile" href="#classement"><b>🏆 Championnat</b><span>' + (st && st.n ? st.n + ' tournois en ' + yr + (st.top ? ' · en tête : ' + esc(st.top.name) : '') : 'Classement, trophées, exports Excel et PDF.') + '</span></a>' +
+      '<a class="tile" href="#tournoi" data-act="clubJoueurs"><b>👥 Joueurs du club</b><span>' + (LG ? LG.roster().length + ' membres' : '') + ' · ajouter un membre, tout le club présent.</span></a></div>' +
+      (window.PA_CLUBSYNC ? window.PA_CLUBSYNC.card() : '') +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn" href="#sauvegarde" style="flex:1">Sauvegarde et mises à jour</a><a class="btn" href="#reglages" style="flex:1">Taille du texte</a><a class="btn" href="#merci" style="flex:1">Remerciements</a></div>' +
+      '<div class="small muted" style="text-align:center">Poker Academy Club · version ' + VERSION + ' · la version légère pour gérer les tournois et le championnat. L’entraînement est dans l’appli complète.</div></div>';
+    return shell('home', body);
+  }
   function homeView() {
     var p = PA.player(), pr = PA.PROFILES[p.profile] || PA.PROFILES.tag;
     var due = PA.srsDue(p).length;
@@ -674,6 +694,14 @@
     // on ne remonte en haut que si l’on change de page : un rafraîchissement en arrière-plan (mise à jour, synchronisation, téléchargement) garde la position
     var hk = location.hash || '#home', keepY = hk === ui.lastHash ? (window.scrollY || 0) : 0; ui.lastHash = hk;
     function top() { window.scrollTo(0, keepY); }
+    if (CLUB) {
+      if (!p) { p = PA.newPlayer('Club', 0); }
+      if (!p.profile) { p.profile = 'tag'; p.testDone = true; PA.save(); }
+      ui.welcomed = true;
+      var ALLOW = { home: 1, tournoi: 1, minuteur: 1, classement: 1, ecran: 1, reglages: 1, sauvegarde: 1, merci: 1, recherche: 0 };
+      if (!ALLOW[r]) r = 'home';
+      if (r === 'home') { app.innerHTML = clubHomeView(); top(); return; }
+    }
     if (r === 'pick') { app.innerHTML = pickPlayerView(); return; }
     if (r === 'quizclub' && window.PA_COACH) { app.innerHTML = window.PA_COACH.quiz(); top(); return; }
     if (!p) { app.innerHTML = Object.keys(s.players).length && !ui.forceNew ? pickPlayerView() : onbView(); return; }
@@ -696,6 +724,7 @@
     if (act === 'closeSheet' && e.target.closest('[data-stop]') && t.classList.contains('sheet-bg')) return;
     switch (act) {
       case 'nav': go(v); break;
+      case 'clubJoueurs': try { window.PA_TIMER && window.PA_TIMER.tab && window.PA_TIMER.tab('joueurs'); } catch (e2) {} break;
       case 'onb1': {
         var ps = $('#ps').value.trim(), bd = $('#ag').value.trim(), m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(bd);
         ui.onb.pseudo = ps; ui.onb.birth = bd;
