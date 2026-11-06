@@ -127,8 +127,11 @@
         (x.out ? '<button class="btn" data-tmact="reentry" data-v="' + i + '">Re-entry</button><button class="btn" data-tmact="unko" data-v="' + i + '">Annuler</button>' : '<button class="btn gold" data-tmact="ko" data-v="' + i + '">Éliminé</button>') + '</span></div>'; }).join('');
   }
   function tournoiView() {
-    var ui = U(), t = T(), s = live(), out = '<div class="stack"><a class="back" href="#minuteur">‹ Minuteur</a><h1>Le tournoi</h1>';
+    var ui = U(), t = T(), s = live(), c = cfg(), out = '<div class="stack"><button class="back" data-act="nav" data-v="home">‹ Accueil</button><h1>Tournoi du club</h1>' +
+      '<div class="row" style="gap:8px"><a class="btn gold" href="#minuteur" style="flex:1">⏱ Ouvrir le minuteur</a><button class="btn" data-tmact="editFromT" style="flex:1">Structure des niveaux</button></div>';
     out += statsHtml(s);
+    var cin = function (id, v, lab) { return '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span>' + lab + '</span><input id="' + id + '" type="number" inputmode="numeric" min="0" value="' + v + '" style="width:130px;min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit"></div>'; };
+    out += '<details class="card"' + (t.players.length ? '' : ' open') + '><summary style="cursor:pointer"><b>Les jetons</b> <span class="small muted">départ ' + fmt(c.chips) + ' · re-entry ' + fmt(c.reStack || c.chips) + ' · add-on ' + fmt(c.addStack || c.chips) + '</span></summary><div class="stack" style="margin-top:10px">' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Tapis d’une re-entry (0 = comme le départ)') + cin('tnAdd', c.addStack, 'Tapis d’un add-on (0 = comme le départ)') + '<div class="small muted">Les jetons en jeu et le tapis moyen se recalculent dès que tu changes une case.</div></div></details>';
     if (t.msg) out += ui.yo(t.msg);
     if (t.players.length) out += '<div class="card stack"><b>Trouver un joueur</b><div class="row" style="gap:8px"><input id="tnFind" type="search" autocomplete="off" placeholder="Pseudo…" value="' + ui.esc(FIND.q) + '" style="flex:1;min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:6px 12px;font:inherit;font-size:1.1em">' + (window.PA_VOICE ? window.PA_VOICE.mic('data-tmact="findMic"', FIND.listening) : '') + '</div>' + (FIND.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(FIND.msg) + '</div>' : '') + '<div id="tnFound" class="stack" style="gap:8px">' + findHtml() + '</div></div>';
     var IN = 'min-height:44px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit';
@@ -161,7 +164,7 @@
     // 4. compteurs (re-entries, add-ons ; inscrits sans pseudo)
     out += countersHtml();
     out += '<button class="btn" data-tmact="newT">Nouveau tournoi (tout effacer)</button></div>';
-    return ui.shell('apprendre', out);
+    return ui.shell('home', out);
   }
   function schedule(L) { var t = 0; return L.map(function (l) { var st = t; t += l.min; return st; }); }
   function hm(m) { var h = Math.floor(m / 60), r = m % 60; return h + ' h ' + (r < 10 ? '0' : '') + r; }
@@ -231,7 +234,7 @@
     }
     var l = s.L[s.idx], run = !!ST.since;
     var body = '<div class="stack" style="text-align:center;align-items:stretch;max-width:900px;margin:0 auto">' +
-      '<div class="row" style="justify-content:space-between"><a class="back" href="#outils">‹ Outils</a><span class="small muted">' + (l.pause ? 'Pause' : 'Niveau ' + l.n) + ' sur ' + s.L.filter(function (x) { return !x.pause; }).length + '</span></div>' +
+      '<div class="row" style="justify-content:space-between"><a class="back" href="#tournoi">‹ Tournoi du club</a><span class="small muted">' + (l.pause ? 'Pause' : 'Niveau ' + l.n) + ' sur ' + s.L.filter(function (x) { return !x.pause; }).length + '</span></div>' +
       '<div class="card stack" style="align-items:center;gap:6px;padding:24px 12px">' +
       '<div class="disp" id="tmLvl" style="font-size:clamp(40px,11vw,120px);line-height:1;color:var(--gold)">' + lvlTxt(l).split(' · ')[0] + '</div>' +
       '<div id="tmAnte" style="font-size:clamp(20px,5vw,44px)">' + (l.ante ? anteTxt(l) : (l.pause ? 'Bonne pause !' : '&nbsp;')) + '</div>' +
@@ -266,6 +269,7 @@
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { draw(); }
+    else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }
     else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
     else if (a === 'ko') { var tk = T(), pk = tk.players[+t.getAttribute('data-v')]; if (pk && !pk.out && (typeof confirm !== 'function' || confirm(pk.name + ' est éliminé(e) ?'))) { FIND.q = ''; var lft = alivePl().length; pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null; var mv = rebalance(); tk.msg = pk.name + ' sort à la ' + lft + 'e place.' + (mv.length ? '<br>' + mv.join('<br>') : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : ''); } }
     else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { pu.out = false; pu.place = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } seatSomewhere(pu); tu.msg = pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
@@ -295,6 +299,7 @@
     }
     save(); keepScroll(function () { U().render(); });
   });
+  document.addEventListener('change', function (e) { var id = e.target && e.target.id, k = { tnChips: 'chips', tnRe: 'reStack', tnAdd: 'addStack' }[id]; if (!k) return; ST.cfg = cfg(); ST.cfg[k] = Math.max(0, parseInt(e.target.value, 10) || 0); save(); U().render(); });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   window.PA_TIMER = { view: view, tournoi: tournoiView, _levels: levels, _generate: generate };
 })();

@@ -2,12 +2,13 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.14.0';
+  var VERSION = '2.14.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   /* ---------- Icônes ---------- */
   var IC = {
+    clock: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>',
     home: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11L12 4L21 11V20H15V14H9V20H3Z" fill="currentColor"/></svg>',
     book: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 8.5 4.5 12 6.5C15.5 4.5 18.5 4.5 21 5.5V19C18.5 18 15.5 18 12 20C8.5 18 5.5 18 3 19Z M12 6.5V20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>',
     cards: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="11" height="15" rx="2" transform="rotate(-10 8.5 12.5)" stroke="currentColor" stroke-width="1.8" fill="none"/><rect x="10" y="4" width="11" height="15" rx="2" transform="rotate(8 15.5 11.5)" stroke="currentColor" stroke-width="1.8" fill="#131316"/></svg>',
@@ -101,7 +102,8 @@
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions · environ 10 min</div></div>' + IC.arrow + '</button>' +
       '<div class="grid2">' +
       tile('apprendre', 'book', 'Apprendre', 'Leçons, ranges, cours') + tile('entrainer', 'cards', 'S’entraîner', 'Préflop, situations, test') +
-      tile('analyser', 'chart', 'Analyser', 'Winamax, club, fuites') + tile('moi', 'user', 'Moi', 'Profil, progrès, réglages') + '</div></div>';
+      tile('analyser', 'chart', 'Analyser', 'Winamax, club, fuites') + tile('moi', 'user', 'Moi', 'Profil, progrès, réglages') + '</div>' +
+      '<div style="display:grid">' + tile('tournoi', 'clock', 'Tournoi du club', 'Minuteur, inscriptions, tables, éliminations, jetons et tapis moyen') + '</div></div>';
     return shell('home', body);
   }
   function tile(r, ic, t, s) { return '<a class="tile" href="#' + r + '"><span style="color:var(--gold)">' + IC[ic] + '</span><b>' + t + '</b><span>' + s + '</span></a>'; }
