@@ -85,7 +85,7 @@
   }
 
   function card() {
-    var esc = U().esc, h = '<div class="card stack"><b>🔄 Appli complète ↔ appli Club</b>';
+    var esc = U().esc, h = '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>🔄 Appli complète ↔ appli Club</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('synchro') : '') + '</div>';
     h += '<div class="small muted">Le championnat, la liste du club et la structure des niveaux sont partagés entre l’appli complète et l’appli Club, sur le PC et les téléphones, par un fichier dans ton Google Drive. Rien n’est jamais perdu : les tournois s’additionnent.</div>';
     if (IS_PC) h += '<div class="small">Fichier partagé : <b>' + esc(CS.path || 'Mon Drive › Poker Academy › Club › championnat-club.json') + '</b></div>';
     else if (IS_ANDROID) {

@@ -190,6 +190,7 @@
     var inY = d.list.filter(function (x) { return x.date.slice(0, 4) === V.year; });
     if (V.pl) return ui.shell('club', playerView(V.pl));
     var out = '<div class="stack"><a class="back" href="#tournoi">‹ Tournoi du club</a><h1>Championnat du club</h1>' +
+      (window.PA_GUIDE ? '<div style="text-align:right">' + window.PA_GUIDE.link('championnat') + '</div>' : '') +
       ui.yo('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5. Prime : celui qui élimine le vainqueur du tournoi précédent du même type (mercredi ou deep) gagne ' + BONUS + ' points. Les 3 premiers du classement annuel sont récompensés.') +
       '<div class="row" style="gap:8px;flex-wrap:wrap"><div class="seg">' + [['annuel', 'Classement'], ['semaine', 'Semaines'], ['tournois', 'Tournois'], ['trophees', 'Trophées']].map(function (o) { return '<button class="' + (V.tab === o[0] ? 'on' : '') + '" data-lgact="tab" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       (ys.length > 1 ? '<div class="seg">' + ys.map(function (y) { return '<button class="' + (V.year === y ? 'on' : '') + '" data-lgact="year" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' : '') + '</div>';
@@ -219,7 +220,7 @@
     } else {
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
-    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><b>Exporter ' + V.year + '</b><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
+    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>Exporter ' + V.year + '</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('exports') : '') + '</div><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
     if (window.PA_CLUBSYNC) out += window.PA_CLUBSYNC.card();
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
     return ui.shell('club', out);

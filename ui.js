@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.20.1';
+  var VERSION = '2.21.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -79,14 +79,14 @@
   var NAV = CLUB ? [['home', 'Accueil', 'home'], ['tournoi', 'Tournoi', 'cards'], ['minuteur', 'Chrono', 'clock'], ['classement', 'Championnat', 'chart'], ['reglages', 'Réglages', 'user']]
     : [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['club', 'Club', 'clock'], ['analyser', 'Analyser', 'chart']];
   function shell(active, body, noFab) {
-    if (CLUB) { active = (location.hash || '#home').slice(1).split('?')[0] || 'home'; if (active === 'sauvegarde' || active === 'merci') active = 'reglages'; noFab = noFab || false; }
+    if (CLUB) { active = (location.hash || '#home').slice(1).split('?')[0] || 'home'; if (active === 'sauvegarde' || active === 'merci' || active === 'guide') active = 'reglages'; noFab = noFab || false; }
     var focus = !!noFab;
     var side = '<nav class="side" aria-label="Navigation principale"><div class="row" style="padding:0 8px 22px">' + logo() + '<span class="disp" style="font-size:26px">Poker<br>Academy</span></div>' +
       (CLUB ? NAV : NAV.concat([['moi', 'Moi', 'user']])).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
-    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (CLUB || noFab || /^#(tournoi|classement|minuteur|club|ecran)/.test(location.hash) ? '' : fab);
+    return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (CLUB || noFab || /^#(tournoi|classement|minuteur|club|ecran|guide)/.test(location.hash) ? '' : fab);
   }
 
   /* ---------- Accueil ---------- */
@@ -104,7 +104,7 @@
       '<a class="tile" href="#classement"><b>🏆 Championnat</b><span>' + (st && st.n ? st.n + ' tournois en ' + yr + (st.top ? ' · en tête : ' + esc(st.top.name) : '') : 'Classement, trophées, exports Excel et PDF.') + '</span></a>' +
       '<a class="tile" href="#tournoi" data-act="clubJoueurs"><b>👥 Joueurs du club</b><span>' + (LG ? LG.roster().length + ' membres' : '') + ' · ajouter un membre, tout le club présent.</span></a></div>' +
       (window.PA_CLUBSYNC ? window.PA_CLUBSYNC.card() : '') +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn" href="#sauvegarde" style="flex:1">Sauvegarde et mises à jour</a><a class="btn" href="#reglages" style="flex:1">Taille du texte</a><a class="btn" href="#merci" style="flex:1">Remerciements</a></div>' +
+      '<a class="btn gold block" href="#guide">❓ Mode d’emploi</a><div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn" href="#sauvegarde" style="flex:1">Sauvegarde et mises à jour</a><a class="btn" href="#reglages" style="flex:1">Taille du texte</a><a class="btn" href="#merci" style="flex:1">Remerciements</a></div>' +
       '<div class="small muted" style="text-align:center">Poker Academy Club · version ' + VERSION + ' · la version légère pour gérer les tournois et le championnat. L’entraînement est dans l’appli complète.</div></div>';
     return shell('home', body);
   }
@@ -655,6 +655,7 @@
       (window.PA_WEEK ? window.PA_WEEK.bilanCard(p, true) : '') +
       '<div class="card stack"><b>Ma progression par notion</b><table class="tbl">' + notions + '</table><div class="muted small">Mains à revoir en attente : ' + Object.keys(p.srs).length + '</div></div>' +
       '<div class="card stack"><b>Mon journal</b><table class="tbl">' + sess + '</table></div>' +
+      '<a class="tile" href="#guide"><b>Mode d’emploi</b><span>Les guides pas à pas : tournoi, télécommande, écran télé, championnat, synchronisation, mises à jour.</span></a>' +
       '<a class="tile" href="#reglages"><b>Réglages</b><span>Taille du texte, mode gaucher, vibration, remise à zéro, tout effacer.</span></a>' +
       '<a class="tile" href="#sauvegarde"><b>Sauvegarde et mises à jour</b><span>Google Drive, passage PC ↔ téléphone, nouvelle version.</span></a>' +
       '<a class="tile" href="#merci"><b>Remerciements</b><span>Version ' + VERSION + '</span></a>' +
@@ -664,7 +665,7 @@
   function reglagesView() {
     var p = PA.player(), s = p.settings;
     function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="moi">‹ Moi</button><h1>Réglages</h1>' +
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="' + (CLUB ? 'home' : 'moi') + '">‹ ' + (CLUB ? 'Accueil' : 'Moi') + '</button><h1>Réglages</h1>' + '<a class="btn gold block" href="#guide">❓ Mode d’emploi</a>' +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
@@ -698,7 +699,7 @@
       if (!p) { p = PA.newPlayer('Club', 0); }
       if (!p.profile) { p.profile = 'tag'; p.testDone = true; PA.save(); }
       ui.welcomed = true;
-      var ALLOW = { home: 1, tournoi: 1, minuteur: 1, classement: 1, ecran: 1, reglages: 1, sauvegarde: 1, merci: 1, recherche: 0 };
+      var ALLOW = { home: 1, tournoi: 1, minuteur: 1, classement: 1, ecran: 1, reglages: 1, sauvegarde: 1, merci: 1, guide: 1, recherche: 0 };
       if (!ALLOW[r]) r = 'home';
       if (r === 'home') { app.innerHTML = clubHomeView(); top(); return; }
     }
@@ -710,7 +711,7 @@
     if (!ui.welcomed) { app.innerHTML = welcomeView(); return; }
     var GV = (window.PA_GAME && window.PA_GAME.views) || {}, LV = (window.PA_LEARN && window.PA_LEARN.views) || {};
     if (/^lecon-\d+$/.test(r) && window.PA_LEARN) { app.innerHTML = window.PA_LEARN.lesson(parseInt(r.slice(6), 10)); top(); return; }
-    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, calcul: function () { return window.PA_CALC ? window.PA_CALC.view() : homeView(); }, coach: function () { return window.PA_COACH ? window.PA_COACH.compose() : homeView(); }, memo: function () { return window.PA_MEMO ? window.PA_MEMO.view() : homeView(); }, lexique: function () { return window.PA_LEX ? window.PA_LEX.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); }, club: clubView, avantflop: avantFlopView, apresflophub: apresFlopHubView, calculs: calculsView, classement: function () { return window.PA_LEAGUE ? window.PA_LEAGUE.view() : homeView(); }, recherche: function () { return window.PA_VOICE ? window.PA_VOICE.search() : homeView(); }, tournoi: function () { return window.PA_TIMER ? window.PA_TIMER.tournoi() : homeView(); }, ecran: function () { return window.PA_TIMER ? window.PA_TIMER.ecran() : homeView(); }, semaine: function () { return window.PA_WEEK ? window.PA_WEEK.view() : homeView(); } };
+    var views = { lecons: LV.lecons, podcasts: LV.podcasts, examens: LV.examens, 'cours-imprimable': LV['cours-imprimable'], partie: GV.partie, jeu: GV.jeu, home: homeView, apprendre: apprendreView, ranges: rangesView, cours: coursView, entrainer: entrainerView, preflop: preflopView, situations: situationsView, testmenu: testMenuView, drill: drillView, analyser: analyserView, moi: moiView, reglages: reglagesView, merci: merciView, outils: function () { return window.PA_TOOLS ? window.PA_TOOLS.view() : homeView(); }, fiche: function () { return window.PA_TOOLS ? window.PA_TOOLS.fiche() : homeView(); }, bankroll: function () { return window.PA_BANK ? window.PA_BANK.view() : homeView(); }, cartes: function () { return window.PA_CARDS ? window.PA_CARDS.view() : homeView(); }, solveur: function () { return window.PA_SOLVER ? window.PA_SOLVER.explorer() : homeView(); }, planquiz: function () { return window.PA_PLAN ? window.PA_PLAN.quiz() : homeView(); }, cas: function () { return window.PA_CASES ? window.PA_CASES.view() : homeView(); }, choix3b: function () { return window.PA_CHOIX ? window.PA_CHOIX.view() : homeView(); }, calcul: function () { return window.PA_CALC ? window.PA_CALC.view() : homeView(); }, coach: function () { return window.PA_COACH ? window.PA_COACH.compose() : homeView(); }, memo: function () { return window.PA_MEMO ? window.PA_MEMO.view() : homeView(); }, lexique: function () { return window.PA_LEX ? window.PA_LEX.view() : homeView(); }, apf: function () { return window.PA_APF ? window.PA_APF.view() : homeView(); }, 'plan-imprimable': function () { return window.PA_PLAN ? window.PA_PLAN.sheet() : homeView(); }, apresflop: function () { return window.PA_SOLVER ? window.PA_SOLVER.quiz() : homeView(); }, sauvegarde: function () { return window.PA_SYNC ? window.PA_SYNC.view() : homeView(); }, minuteur: function () { return window.PA_TIMER ? window.PA_TIMER.view() : homeView(); }, club: clubView, avantflop: avantFlopView, apresflophub: apresFlopHubView, calculs: calculsView, classement: function () { return window.PA_LEAGUE ? window.PA_LEAGUE.view() : homeView(); }, recherche: function () { return window.PA_VOICE ? window.PA_VOICE.search() : homeView(); }, tournoi: function () { return window.PA_TIMER ? window.PA_TIMER.tournoi() : homeView(); }, ecran: function () { return window.PA_TIMER ? window.PA_TIMER.ecran() : homeView(); }, semaine: function () { return window.PA_WEEK ? window.PA_WEEK.view() : homeView(); }, guide: function () { return window.PA_GUIDE ? window.PA_GUIDE.view() : homeView(); } };
     app.innerHTML = (views[r] || homeView)();
     if (r === 'drill') startTimer(); else clearInterval(timerH);
     if (r === 'jeu' && window.PA_GAME) { var pl = PA.player(); }
