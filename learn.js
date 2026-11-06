@@ -26,6 +26,9 @@
 
   /* ---------- Une leçon ---------- */
   var QZ = null; // quiz en cours {n, i, score, answered}
+  // ordre des réponses mélangé à chaque quiz ou examen (la bonne réponse ne tombe plus toujours au même endroit)
+  var ORD = new Map();
+  function ord(q) { if (!ORD.has(q)) { var a = q.o.map(function (x, k) { return k; }); for (var j = a.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = a[j]; a[j] = a[r]; a[r] = t; } ORD.set(q, a); } return ORD.get(q); }
   function lessonView(n) {
     var ui = U(), c = LS.get(n); if (!c || !c.ready) { location.hash = '#lecons'; return ''; }
     var p = PA.player(), st = prog(p)[n], seen = {};
@@ -50,8 +53,8 @@
     }
     var q = c.quiz[QZ.i];
     var out = '<div class="card stack"><div class="small muted">Question ' + (QZ.i + 1) + ' / ' + c.quiz.length + '</div><b>' + q.q + '</b><div class="stack" style="gap:8px">';
-    q.o.forEach(function (o, k) {
-      var cls = 'btn block', st2 = '';
+    ord(q).forEach(function (k) {
+      var o = q.o[k], cls = 'btn block', st2 = '';
       if (QZ.answered !== null) { if (k === q.a) st2 = 'background:#2f9e44;border-color:#2f9e44;color:#fff'; else if (k === QZ.answered) st2 = 'background:#e03131;border-color:#e03131;color:#fff'; }
       out += '<button class="' + cls + '" style="justify-content:flex-start;text-align:left;' + st2 + '" data-lact="ans" data-v="' + k + '"' + (QZ.answered !== null ? ' disabled' : '') + '>' + o + '</button>';
     });
@@ -231,7 +234,7 @@
     }
     var it = EX.qs[EX.i], q = it.q;
     var out = '<div class="stack"><div class="drill-top"><button class="back" data-lact="exitExam">‹ Quitter</button><span class="muted small">Examen · ' + (EX.i + 1) + '/' + EX.qs.length + '</span><span></span></div><div class="small muted">Chapitre ' + it.c.n + ' · ' + it.c.title + '</div><h3 style="text-transform:none">' + q.q + '</h3><div class="stack" style="gap:8px">';
-    q.o.forEach(function (o, k) { var st = ''; if (EX.answered !== null) { if (k === q.a) st = 'background:#2f9e44;border-color:#2f9e44;color:#fff'; else if (k === EX.answered) st = 'background:#e03131;border-color:#e03131;color:#fff'; } out += '<button class="btn block" style="justify-content:flex-start;text-align:left;' + st + '" data-lact="exans" data-v="' + k + '"' + (EX.answered !== null ? ' disabled' : '') + '>' + o + '</button>'; });
+    ord(q).forEach(function (k) { var o = q.o[k], st = ''; if (EX.answered !== null) { if (k === q.a) st = 'background:#2f9e44;border-color:#2f9e44;color:#fff'; else if (k === EX.answered) st = 'background:#e03131;border-color:#e03131;color:#fff'; } out += '<button class="btn block" style="justify-content:flex-start;text-align:left;' + st + '" data-lact="exans" data-v="' + k + '"' + (EX.answered !== null ? ' disabled' : '') + '>' + o + '</button>'; });
     out += '</div>';
     if (EX.answered !== null) out += ui.yo(q.why) + '<button class="btn gold block" data-lact="exnext">Suivante</button>';
     return ui.shell('apprendre', out + '</div>', true);
@@ -253,7 +256,7 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-lact]'); if (!t) return;
     var a = t.getAttribute('data-lact'), v = t.getAttribute('data-v'), p = PA.player();
-    if (a === 'quiz') { QZ = { n: parseInt(v, 10), i: 0, score: 0, answered: null }; U().render(); var el = document.querySelector('[data-lact=ans]'); if (el) el.scrollIntoView({ block: 'center' }); }
+    if (a === 'quiz') { ORD = new Map(); QZ = { n: parseInt(v, 10), i: 0, score: 0, answered: null }; U().render(); var el = document.querySelector('[data-lact=ans]'); if (el) el.scrollIntoView({ block: 'center' }); }
     else if (a === 'ans') { var c = LS.get(QZ.n), k = parseInt(v, 10); QZ.answered = k; if (k === c.quiz[QZ.i].a) QZ.score++; U().render(); var y = document.querySelector('[data-lact=qnext]'); if (y) y.scrollIntoView({ block: 'center' }); }
     else if (a === 'qnext') {
       var c2 = LS.get(QZ.n); QZ.i++; QZ.answered = null;
@@ -275,7 +278,7 @@
     else if (a === 'back10') { POD.i = Math.max(0, POD.i - 1); if (POD.playing) { POD.playing = false; speechSynthesis.cancel(); POD.playing = true; setTimeout(speakNext, 50); } refreshPod(); }
     else if (a === 'stop') { POD.playing = false; speechSynthesis.cancel(); POD.n = null; msState(); U().render(); }
     else if (a === 'range') { var c3 = LS.get(parseInt(v, 10)); if (window.PA_UI_openRange) window.PA_UI_openRange({ sit: c3.range, hand: null }); }
-    else if (a === 'exam') { var pl = pool(v).sort(function () { return Math.random() - 0.5; }).slice(0, 15); EX = { qs: pl, i: 0, score: 0, answered: null, miss: [] }; U().render(); }
+    else if (a === 'exam') { ORD = new Map(); var pl = pool(v).sort(function () { return Math.random() - 0.5; }).slice(0, 15); EX = { qs: pl, i: 0, score: 0, answered: null, miss: [] }; U().render(); }
     else if (a === 'exans') { var it = EX.qs[EX.i], k2 = parseInt(v, 10); EX.answered = k2; if (k2 === it.q.a) EX.score++; else EX.miss.push(it); U().render(); }
     else if (a === 'exnext') { EX.i++; EX.answered = null; U().render(); }
     else if (a === 'exitExam') { EX = null; location.hash = '#examens'; U().render(); }

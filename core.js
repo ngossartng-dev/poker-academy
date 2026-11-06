@@ -77,7 +77,7 @@
           callL = callL.slice(0, Math.round(callL.length * 0.8));
         }
         callL.forEach(function (h) { out[h] = 'call'; });
-        raiseL.forEach(function (h) { out[h] = dk === 'mid' ? 'allin' : 'raise'; });
+        raiseL.forEach(function (h) { out[h] = dk === 'mid' && s.bb <= 30 ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 41)
       }
     } else if (s.type === 'vs3bet') {
       var v = P.vs3bet[s.scen || 'ip'];
@@ -235,6 +235,8 @@
   // classement d'une erreur : écart de style ou erreur que tous les profils évitent
   function judge(profileId, q, given) {
     if (given === q.answer) return { ok: true };
+    // 16 à 19 BB : ouvrir petit puis tapis ou fold est aussi le plan du cours (chapitre 21)
+    if (q.sit.type === 'open' && q.sit.bb >= 16 && q.sit.bb < 20 && q.answer === 'allin' && given === 'raise') return { ok: true, note: 'Entre 16 et 20 BB, ouvrir petit puis tapis ou fold est aussi une bonne ligne (chapitre 21).' };
     var others = BASE_PROFILES.map(function (id) { return { id: id, a: actionFor(id, q.sit, q.hand) }; });
     var same = others.filter(function (o) { return o.a === given; });
     if (same.length) return { ok: false, kind: 'style', profiles: same.map(function (o) { return o.id; }) };
@@ -261,7 +263,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 6: 2, 7: 2, 14: 2, 15: 2, 33: 2, 35: 2, 38: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 6: 2, 7: 2, 14: 2, 15: 2, 33: 3, 35: 2, 38: 2, 39: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,

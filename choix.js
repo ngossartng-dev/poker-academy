@@ -41,7 +41,26 @@
   }
 
   // ---- le moteur de décision ----
+  // garde-fou : une main ne se joue jamais moins bien qu’une main qu’elle domine évidemment
+  // (paire inférieure, même hauteur avec un kicker plus faible, version dépareillée) ; les bluffs (light) n’entraînent rien
+  function weaker(h) {
+    var a = rk(h[0]), b = rk(h[1]), out = [];
+    if (h.length === 2) { if (a < 12) out.push(R[a + 1] + R[a + 1]); return out; }
+    if (b + 1 <= 12 && b + 1 !== a) out.push(h[0] + R[b + 1] + h[2]);
+    if (h[2] === 's') out.push(h[0] + h[1] + 'o');
+    return out;
+  }
+  var RANKA = { jam: 3, value: 3, call: 1 };
   function decide(q) {
+    var r = decideRaw(q);
+    if (r.a !== 'fold' || /^A[2-5]s$/.test(q.hand)) return r;
+    var best = null;
+    weaker(q.hand).forEach(function (w) { var x = decide(Object.assign({}, q, { hand: w })); if (RANKA[x.a] && (!best || RANKA[x.a] > RANKA[best.a])) best = x; });
+    if (!best) return r;
+    if (best.a === 'call' && q.hero === 'SB' && q.kind === 'sq') return r;
+    return { a: best.a, why: (q.kind === 'sq' ? best.why : best.a === 'call' ? callWhy(q) : best.a === 'jam' ? jamWhy(q) : valueWhy(q)) + ' Elle domine ' + weaker(q.hand).join(' et ') + ', qui se jouent déjà ainsi.' };
+  }
+  function decideRaw(q) {
     var h = q.hand, prof = q.prof, hero = q.hero, deep = q.stack === 100;
     var canCall = true, extra = hero !== 'SB';
     if (q.kind === '3b') {

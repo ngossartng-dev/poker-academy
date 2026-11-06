@@ -167,9 +167,10 @@
 
   function posNames(order) {
     // order : sièges depuis le bouton, dans le sens du jeu (bouton, SB, BB, …)
-    var n = order.length, labels = {};
-    var map = { 2: ['BTN', 'BB'], 3: ['BTN', 'SB', 'BB'], 4: ['BTN', 'SB', 'BB', 'CO'], 5: ['BTN', 'SB', 'BB', 'UTG', 'CO'], 6: ['BTN', 'SB', 'BB', 'UTG', 'HJ', 'CO'], 7: ['BTN', 'SB', 'BB', 'UTG', 'LJ', 'HJ', 'CO'], 8: ['BTN', 'SB', 'BB', 'UTG', 'MP', 'LJ', 'HJ', 'CO'], 9: ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO'] };
-    var m = map[n]; order.forEach(function (s, i) { labels[s] = m[i]; }); return labels;
+    // à table incomplète, chaque place prend le nom de sa place à 9 joueurs comptée depuis le bouton
+    // (à 6 joueurs : LJ, HJ, CO, BTN, SB, BB), pour coller aux ranges de « Ma range »
+    var n = order.length, labels = {}, BACK = ['CO', 'HJ', 'LJ', 'MP', 'UTG+1', 'UTG'];
+    order.forEach(function (s, i) { labels[s] = n === 2 ? ['BTN', 'BB'][i] : (i < 3 ? ['BTN', 'SB', 'BB'][i] : BACK[n - 1 - i]); }); return labels;
   }
 
   function startHand() {
@@ -195,7 +196,7 @@
     var order = []; var s = G.button; for (var k = 0; k < n; k++) { if (G.players[s].stack > 0) order.push(s); s = (s + 1) % n; }
     var heads = order.length === 2;
     var sbSeat = heads ? order[0] : order[1], bbSeat = heads ? order[1] : order[2];
-    var H = { deck: d, board: [], pot: 0, bets: {}, total: {}, inHand: {}, folded: {}, allin: {}, acted: {}, street: 0, cur: 0, lastRaise: L.bb, sb: sbSeat, bbSeat: bbSeat, L: L, pos: posNames(order), order: order, hole: {}, actions: [], heroPre: null, preRaises: 0, opener: null, limpers: 0, showdown: null, winners: null };
+    var H = { deck: d, board: [], pot: 0, bets: {}, total: {}, inHand: {}, folded: {}, allin: {}, acted: {}, noRaise: {}, street: 0, cur: 0, lastRaise: L.bb, sb: sbSeat, bbSeat: bbSeat, L: L, pos: posNames(order), order: order, hole: {}, actions: [], heroPre: null, preRaises: 0, opener: null, limpers: 0, showdown: null, winners: null };
     G.hand = H;
     order.forEach(function (i) { H.inHand[i] = true; H.bets[i] = 0; H.total[i] = 0; H.hole[i] = [d.pop(), d.pop()]; });
     // ante (BB ante, payée par la grosse blinde)
@@ -212,6 +213,8 @@
   function activeCount() { var H = G.hand; return Object.keys(H.inHand).filter(function (i) { return !H.folded[i]; }).length; }
   function canActCount() { var H = G.hand; return Object.keys(H.inHand).filter(function (i) { return !H.folded[i] && !H.allin[i]; }).length; }
   function toCall(i) { var H = G.hand; return Math.min(H.cur - H.bets[i], G.players[i].stack); }
+  // peut-on encore relancer ? il faut un adversaire qui ne soit pas à tapis, et une relance complète depuis notre dernière parole
+  function canRaise(i) { var H = G.hand; if (H.noRaise && H.noRaise[i]) return false; return Object.keys(H.inHand).some(function (k) { k = +k; return k !== i && !H.folded[k] && !H.allin[k]; }); }
   function potTotal() { var H = G.hand, t = H.pot; Object.keys(H.bets).forEach(function (k) { t += H.bets[k]; }); return t; }
 
   function roundDone() {
@@ -232,7 +235,8 @@
     else if (type === 'raise') {
       var to = Math.min(amount, H.bets[i] + p.stack);
       var add = to - H.bets[i]; p.stack -= add; H.total[i] += add;
-      var raiseBy = to - H.cur; if (raiseBy >= H.lastRaise) { H.lastRaise = raiseBy; H.acted = {}; }
+      var raiseBy = to - H.cur; if (raiseBy >= H.lastRaise) { H.lastRaise = raiseBy; H.acted = {}; H.noRaise = {}; }
+      else Object.keys(H.acted).forEach(function (k) { if (+k !== i && H.acted[k]) H.noRaise[k] = true; }); // tapis incomplet : pas de nouvelle relance pour ceux qui ont déjà parlé
       if (to > H.cur) H.cur = to;
       H.bets[i] = to; rec.amount = to; if (p.stack === 0) H.allin[i] = true;
       if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; }
@@ -245,7 +249,7 @@
   function nextStreet() {
     var H = G.hand;
     Object.keys(H.bets).forEach(function (k) { H.pot += H.bets[k]; H.bets[k] = 0; });
-    H.prevChecked = H.street > 0 && H.cur === 0; H.cur = 0; H.lastRaise = H.L.bb; H.acted = {}; H.street++;
+    H.prevChecked = H.street > 0 && H.cur === 0; H.cur = 0; H.lastRaise = H.L.bb; H.acted = {}; H.noRaise = {}; H.street++;
     if (H.street === 1) { H.deck.pop(); H.board.push(H.deck.pop(), H.deck.pop(), H.deck.pop()); }
     else if (H.street <= 3) { H.deck.pop(); H.board.push(H.deck.pop()); }
     H.toAct = nextIn(G.button);
@@ -308,7 +312,7 @@
       var hs = heroSit(), prof = PA.player().profile || 'tag';
       if (hs) {
         var a = PA.actionFor(prof, hs.sit, hs.hand);
-        if (a === 'raise') return hs.sit.type === 'def' ? ['raise', H.cur * 3] : ['raise', H.L.bb * 2.5];
+        if (a === 'raise') return hs.sit.type === 'def' ? ['raise', H.cur * (hs.sit.pos === 'SB' || hs.sit.pos === 'BB' ? 4 : 3)] : ['raise', H.L.bb * (G.opts.table === 'club' || G.opts.table === 'monclub' ? 2 : 2.5)];
         if (a === 'allin') return ['raise', G.players[0].stack + H.bets[0]];
         if (a === 'call') return ['call'];
         return tc === 0 ? ['check'] : ['fold'];
@@ -324,6 +328,7 @@
   }
   function applyDecision(i, d) {
     var H = G.hand;
+    if (d[0] === 'raise' && !canRaise(i)) d = ['call'];
     if (d[0] === 'raise') { var minTo = H.cur + H.lastRaise, maxTo = G.players[i].stack + H.bets[i]; var to = Math.max(minTo, d[1]); if (to >= maxTo || maxTo - to < H.L.bb) to = maxTo; if (to <= H.cur) d = ['call']; else { act(i, 'raise', to); H.lastAggressor = i; } }
     if (d[0] === 'call') { if (toCall(i) === 0) act(i, 'check'); else act(i, 'call'); }
     else if (d[0] === 'check') { if (toCall(i) > 0) act(i, 'fold'); else act(i, 'check'); }
@@ -444,6 +449,7 @@
     setTimeout(function () {
       if (!G || G.hand !== HH || HH.done || HH.toAct !== i) return;
       var d = botDecide(i);
+      if (d[0] === 'raise' && !canRaise(i)) d = ['call'];
       if (d[0] === 'raise') {
         var minTo = H.cur + H.lastRaise, maxTo = G.players[i].stack + H.bets[i];
         var to = Math.max(minTo, d[1]); if (to >= maxTo || maxTo - to < H.L.bb) to = maxTo;
@@ -472,14 +478,16 @@
     }
     if (H.preRaises === 0 && H.limpers === 0 && p !== 'BB') return { sit: { type: 'open', pos: p, bb: eff > 40 ? 100 : (eff >= 20 ? 30 : eff) }, hand: code };
     if (H.preRaises === 1 && H.opener !== null) {
-      var op = map9[H.pos[H.opener]];
+      var op = map9[H.pos[H.opener]], others = 0;
+      Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] > 0 && k !== H.sb && k !== H.bbSeat) others++; });
+      if (H.limpers > 0 || others > 0) return null;
       var tc = toCall(0), shove = G.players[H.opener].stack === 0;
       if (shove && (p === 'BB' || p === 'SB' || p === 'BTN')) {
         var key = p + ' vs shove ' + op, d = PA.nearestPush(Math.min(15, eff));
         if ((PA.D.pushfold[String(d)].call[key])) return { sit: { type: 'callshove', pos: p, opener: op, bb: d }, hand: code };
         return null;
       }
-      if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) return { sit: { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : 30 }, hand: code };
+      if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) return { sit: { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : (eff > 30 ? Math.round(eff) : 30) }, hand: code };
     }
     return null;
   }
@@ -526,7 +534,7 @@
     }
     if (type === 'fold') act(0, toCall(0) === 0 ? 'check' : 'fold');
     else if (type === 'check') act(0, 'check');
-    else if (type === 'call') act(0, toCall(0) === 0 ? 'check' : 'call');
+    else if (type === 'call' || !canRaise(0)) act(0, toCall(0) === 0 ? 'check' : 'call');
     else {
       var maxTo = G.players[0].stack + H.bets[0], minTo = H.cur + H.lastRaise;
       var to = type === 'allin' ? maxTo : Math.max(minTo, Math.round(amt)); if (to >= maxTo) to = maxTo;
@@ -634,19 +642,23 @@
       var tc = toCall(0), pot = potTotal(), maxTo = me.stack + H.bets[0], minTo = H.cur + H.lastRaise;
       var btns = [];
       btns.push(['fold', tc === 0 ? 'Parole' : 'Se coucher', 'a-fold', tc === 0 ? 'check' : 'fold']);
-      if (tc > 0) btns.push(['call', 'Payer ' + PA.fmt(tc), 'a-call', 'call']);
-      else if (btns[0][0] === 'fold') { }
-      var sizes = [];
+      if (tc > 0) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
+      var sizes = [], blind = H.pos[0] === 'SB' || H.pos[0] === 'BB';
       if (H.street === 0) {
-        if (H.cur <= L.bb && H.limpers > 0) sizes = [[(3 + H.limpers) * L.bb, String(3 + H.limpers) + ' BB'], [(4 + H.limpers) * L.bb, String(4 + H.limpers) + ' BB']];
-        else if (H.cur <= L.bb) sizes = [[2 * L.bb, '2 BB'], [2.2 * L.bb, '2,2 BB'], [2.5 * L.bb, '2,5 BB'], [3 * L.bb, '3 BB']];
-        else sizes = [[H.cur * 3, '×3'], [H.cur * 2.5, '×2,5']];
+        // tailles du cours : isolement 3 BB en position, 4 BB des blindes, +1 par limper ; 3-bet ×3 en position, ×4 hors position (+1 ouverture par payeur) ; 4-bet ×2,2 à ×2,5
+        var nCall = 0; if (H.preRaises === 1) Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] === H.cur) nCall++; });
+        var iso = blind ? 4 : 3;
+        if (H.cur <= L.bb && H.limpers > 0) sizes = [[(iso + H.limpers) * L.bb, String(iso + H.limpers) + ' BB'], [(iso + 1 + H.limpers) * L.bb, String(iso + 1 + H.limpers) + ' BB']];
+        else if (H.cur <= L.bb) sizes = H.pos[0] === 'SB' ? [[2.5 * L.bb, '2,5 BB'], [3 * L.bb, '3 BB']] : [[2 * L.bb, '2 BB'], [2.2 * L.bb, '2,2 BB'], [2.5 * L.bb, '2,5 BB'], [3 * L.bb, '3 BB']];
+        else if (H.preRaises === 1) sizes = [3, 4].map(function (m) { var v = H.cur * m + nCall * H.cur; return [v, (nCall ? 'Squeeze ' : '3-bet ') + bbTxt(v) + ' BB']; });
+        else sizes = [2.2, 2.5].map(function (m) { var v = H.cur * m; return [v, (H.preRaises === 2 ? '4-bet ' : 'Relancer ') + bbTxt(v) + ' BB']; });
       } else {
         if (H.cur === 0) sizes = [[pot / 3, '1/3 pot'], [pot / 2, '1/2 pot'], [pot * 2 / 3, '2/3 pot'], [pot, 'Pot']];
         else sizes = [[H.cur * 2.5, '×2,5'], [H.cur * 3, '×3']];
       }
-      var raiseBtns = sizes.filter(function (s) { return s[0] >= minTo && s[0] < maxTo; }).map(function (s) { return '<button class="a-raise" data-gact="raise" data-v="' + Math.round(s[0]) + '">' + (H.cur > 0 && H.street > 0 ? 'Relancer ' : (H.street === 0 && H.cur > L.bb ? 'Relancer ' : (H.street === 0 ? (H.limpers > 0 ? 'Isoler ' : 'Ouvrir ') : 'Miser '))) + s[1] + '</button>'; });
-      if (maxTo > H.cur) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + PA.fmt(me.stack) + ')</button>');
+      if (!canRaise(0)) sizes = [];
+      var raiseBtns = sizes.filter(function (s) { return s[0] >= minTo && s[0] < maxTo; }).map(function (s) { return '<button class="a-raise" data-gact="raise" data-v="' + Math.round(s[0]) + '">' + (H.cur > 0 && H.street > 0 ? 'Relancer ' : (H.street === 0 && H.cur > L.bb ? '' : (H.street === 0 ? (H.limpers > 0 ? 'Isoler ' : 'Ouvrir ') : 'Miser '))) + s[1] + '</button>'; });
+      if (maxTo > H.cur && canRaise(0)) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + PA.fmt(me.stack) + ')</button>');
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>';
     } else {
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="banner muted" style="text-align:center">' + (H.inHand[0] && !H.folded[0] ? 'Au tour de ' + ui.esc(G.players[H.toAct] ? G.players[H.toAct].name : '…') + '…' : 'Tu t’es couché. La main continue…') + '</div>' + (H.folded[0] || !H.inHand[0] ? '<button class="btn block" data-gact="skip">Passer à la main suivante</button>' : '');
@@ -699,6 +711,7 @@
       if (roundDone()) { if (canActCount() <= 1 && activeCount() > 1) { while (H.board.length < 5) { if (H.street < 3) nextStreet(); else break; } showdown(); break; } if (H.street === 3) { showdown(); break; } nextStreet(); continue; }
       var i = H.toAct; if (i < 0) { if (H.street === 3) { showdown(); break; } nextStreet(); continue; }
       var d = botDecide(i);
+      if (d[0] === 'raise' && !canRaise(i)) d = ['call'];
       if (d[0] === 'raise') { var minTo = H.cur + H.lastRaise, maxTo = G.players[i].stack + H.bets[i]; var to = Math.max(minTo, d[1]); if (to >= maxTo || maxTo - to < H.L.bb) to = maxTo; if (to <= H.cur) d = ['call']; else { act(i, 'raise', to); H.lastAggressor = i; } }
       if (d[0] === 'call') { if (toCall(i) === 0) act(i, 'check'); else act(i, 'call'); }
       else if (d[0] === 'check') { if (toCall(i) > 0) act(i, 'fold'); else act(i, 'check'); }
@@ -711,6 +724,6 @@
   window.PA_GAME = {
     views: { partie: setupView, jeu: tableView },
     heroRangeCtx: function () { if (!G || !G.hand) return null; var hs = heroSit(); if (G.stats) G.stats.consult++; return hs; },
-    _test: { evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }
+    _test: { canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }
   };
 })();
