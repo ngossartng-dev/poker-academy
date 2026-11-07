@@ -339,7 +339,7 @@
     Object.keys(h.shown).forEach(function (n) { if (n !== h.hero) out.push((names[n] || n) + ' montre ' + h.shown[n]); });
     return out;
   }
-  function importTexts(texts) {
+  function importTexts(texts, src) {
     var db = loadDB(), have = {}, added = 0, read = 0, heroes = {};
     var byId = {}; db.hands.forEach(function (x) { have[x.id] = true; byId[x.id] = x; });
     db.sum = db.sum || {};
@@ -365,8 +365,27 @@
     var best = null; Object.keys(heroes).forEach(function (k) { if (!best || heroes[k] > heroes[best]) best = k; });
     if (best) db.hero = best;
     db.hands.sort(function (a, b) { return a.d < b.d ? -1 : (a.d > b.d ? 1 : 0); });
+    // journal des récupérations (gardé avec les mains, donc aussi reçu par le téléphone via la synchronisation)
+    if (added) { db.imp = [{ at: Date.now(), added: added, read: read, src: src || 'fichier', dev: pcApp() ? 'PC' : window.PAAndroid ? 'téléphone' : 'navigateur', total: db.hands.length }].concat(db.imp || []).slice(0, 30); }
     var ok = saveDB(db);
     return { read: read, added: added, total: db.hands.length, hero: db.hero, full: !ok };
+  }
+
+  /* ---------- Dernières récupérations ---------- */
+  function dtf(t) { var d = new Date(t); return d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  function ago(t) { var m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'à l’instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'il y a ' + Math.round(m / 1440) + ' j'; }
+  function lastHandDate(db) { var W = db.hands.filter(function (x) { return x.src !== 'club'; }); var d = W.length ? W[W.length - 1].d : null; return d ? new Date(d.replace(' ', 'T').slice(0, 19)) : null; }
+  function importInfo(db) {
+    var ui = U(), I = db.imp || [], L = I[0], chk = null; try { chk = JSON.parse(localStorage.getItem('pa2impchk') || 'null'); } catch (e) {}
+    var lh = lastHandDate(db), srcTxt = function (x) { return (x.src === 'winamax' ? 'Winamax, automatique' : 'fichiers importés') + ' · sur le ' + (x.dev || 'PC'); };
+    var h = '<div class="card stack imp-card"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>📥 Dernière récupération</b>' + (L ? '<span class="imp-ago">' + ago(L.at) + '</span>' : '') + '</div>';
+    if (L) h += '<div class="imp-main"><b>+' + L.added + '</b><span>main' + (L.added > 1 ? 's' : '') + ' le ' + dtf(L.at) + '</span></div><div class="small muted">' + srcTxt(L) + '</div>';
+    else h += '<div class="small muted">Pas encore de récupération enregistrée depuis cette mise à jour : la prochaine s’affichera ici.</div>';
+    h += '<div class="imp-grid"><div><span>Mains en tout</span><b>' + db.hands.filter(function (x) { return x.src !== 'club'; }).length + '</b></div><div><span>Dernière main jouée</span><b>' + (lh && !isNaN(lh) ? lh.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + lh.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—') + '</b></div>' +
+      (chk ? '<div><span>Dernière vérification</span><b>' + ago(chk.at) + '</b></div>' : '') + '</div>';
+    if (I.length > 1) h += '<details><summary class="small" style="cursor:pointer">Historique des récupérations (' + I.length + ')</summary><table class="tbl" style="font-size:.9em;margin-top:6px"><tr><th>Quand</th><th>Mains</th><th>Source</th></tr>' + I.slice(0, 15).map(function (x) { return '<tr><td>' + dtf(x.at) + '</td><td>+' + x.added + '</td><td class="small">' + srcTxt(x) + '</td></tr>'; }).join('') + '</table></details>';
+    if (!pcApp() && window.PAAndroid) h += '<div class="small muted">Sur le téléphone, les mains arrivent du PC par la synchronisation (Moi › Sauvegarde).</div>';
+    return h + '</div>';
   }
 
   /* ---------- Statistiques ---------- */
@@ -427,11 +446,12 @@
       SY.avail = L.found; SY.info = L;
       if (!L.found) { SY.busy = false; return; }
       var db = loadDB(), seen = db.flv === 3 ? (db.files || {}) : {}, todo = L.files.filter(function (f) { return seen[f.p] !== f.s + '-' + f.m; });
+      try { localStorage.setItem('pa2impchk', JSON.stringify({ at: Date.now(), dev: 'PC' })); } catch (e0) {}
       if (!todo.length) { SY.busy = false; SY.msg = force ? 'Tout est à jour : aucune nouvelle main Winamax.' : SY.msg; if (force) U().render(); return; }
       var texts = [], i = 0;
       (function next() {
         if (i >= todo.length) {
-          var res = importTexts(texts), db2 = loadDB(); db2.files = db2.files || {};
+          var res = importTexts(texts, 'winamax'), db2 = loadDB(); db2.files = db2.files || {};
           todo.forEach(function (f) { db2.files[f.p] = f.s + '-' + f.m; }); db2.flv = 3; saveDB(db2);
           SY.busy = false; SY.msg = res.added ? res.added + ' nouvelles mains Winamax importées automatiquement.' : 'Tout est à jour : aucune nouvelle main Winamax.';
           if (/^#analyser/.test(location.hash)) U().render();
@@ -733,7 +753,7 @@
     var H = filtered(db), S = stats(H, prof);
     var nc = db.hands.filter(function (x) { return x.src === 'club'; }).length;
     body += '<div class="muted small">' + (db.hands.length - nc) + ' mains Winamax' + (db.hero ? ' (<b>' + ui.esc(db.hero) + '</b>)' : '') + ' · ' + nc + ' mains du club</div>' + tabs();
-    if (AV.tab === 'resume') body += resume(H, S, prof);
+    if (AV.tab === 'resume') body += importInfo(db) + resume(H, S, prof);
     else if (AV.tab === 'positions') body += positionsTab(S);
     else if (AV.tab === 'progres') body += progresTab(db.hands, prof);
     else if (AV.tab === 'fuites') { AV.S = S; body += fuitesTab(S); }
@@ -742,7 +762,7 @@
     else if (AV.tab === 'tournois') body += tournoisTab(S);
     else if (AV.tab === 'club') body += clubTab(db);
     else if (AV.tab === 'adv') body += carnetTab();
-    else body += syncPanel() + importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
+    else body += importInfo(db) + syncPanel() + importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
     return ui.shell('analyser', body + '</div>');
   }
   function readFiles(list) {
@@ -757,7 +777,7 @@
     });
     function done() {
       if (--left > 0) return;
-      var res = importTexts(texts);
+      var res = importTexts(texts, 'fichier');
       AV.busy = false;
       AV.msg = res.read ? res.added + ' nouvelles mains importées (' + res.read + ' lues, ' + files.length + ' fichiers). Total : ' + res.total + '.' + (res.full ? ' La mémoire de l’appareil est pleine : seules les mains les plus récentes sont gardées.' : '') : 'Je n’ai reconnu aucune main Winamax dans ces fichiers.';
       if (res.added) AV.tab = 'resume';
