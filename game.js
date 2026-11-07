@@ -83,6 +83,8 @@
     3000: [[10, 20], [15, 30], [20, 40], [25, 50], [30, 60], [40, 80], [50, 100], [60, 120], [80, 160], [100, 200], [125, 250], [150, 300], [200, 400], [250, 500], [300, 600], [400, 800], [500, 1000], [600, 1200], [800, 1600], [1000, 2000]]
   };
   var PACE = { normal: 12, semi: 8, turbo: 5 };
+  var PACE_MIN = { normal: 5, semi: 3, turbo: 2 }; // les blindes montent avec le temps de jeu, comme en vrai
+  function lvlMs() { return (PACE_MIN[G.opts.pace] || 3) * 60000; }
   var PAYOUT = { 9: [0.5, 0.3, 0.2], 6: [0.65, 0.35], 2: [1] };
 
   /* ---------- État de partie ---------- */
@@ -121,21 +123,27 @@
   function totalChips() { return (G.players.length + (G.field ? G.field.length : 0)) * G.opts.chips; }
   function clockTxt(ms) { var t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60; return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (sec < 10 ? '0' : '') + sec; }
   function hud() {
-    var L = levelInfo(), per = PACE[G.opts.pace] || 12, inLvl = G.handNo > 0 ? (G.handNo - 1) % per : 0, left = per - inLvl;
+    var L = levelInfo(), nx = nextLvlInfo();
     var rem = G.opts.mtt ? remaining() : alive().length, start = G.opts.mtt ? MTT_FIELD : G.players.length, avg = totalChips() / Math.max(1, rem), me = G.players[0];
     var cell = function (ic, lab, val, sub, id) { return '<div class="gh-c"><span>' + ic + ' ' + lab + '</span><b' + (id ? ' id="' + id + '"' : '') + '>' + val + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; };
     return '<div class="gh">' +
       cell('⏱', 'Temps', clockTxt(G.played || 0), 'niveau ' + L.n, 'ghClock') +
-      cell('🔺', 'Blindes', PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb), (L.ante ? 'ante ' + PA.fmt(L.ante) + ' · ' : '') + '↑ dans ' + left + ' main' + (left > 1 ? 's' : '')) +
+      cell('🔺', 'Blindes', PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb), (L.ante ? 'ante ' + PA.fmt(L.ante) + ' · ' : '') + '<span id="ghNext">' + nx.txt + '</span>') +
       cell('👥', 'Joueurs', rem + '<small> / ' + start + '</small>', G.opts.mtt ? MTT_PAID + ' payés' : (paidPlaces() + ' payé' + (paidPlaces() > 1 ? 's' : ''))) +
       cell('🪙', 'Moyen', PA.fmt(Math.round(avg)), Math.round(avg / L.bb) + ' BB (toi ' + Math.round(me.stack / L.bb) + ')') +
-      '<div class="gh-bar"><i style="width:' + Math.round(inLvl / per * 100) + '%"></i></div></div>';
+      '<div class="gh-bar"><i id="ghBar" style="width:' + nx.pct + '%"></i></div></div>';
+  }
+  function nextLvlInfo() {
+    var ms = lvlMs(), left = (G.level + 1) * ms - (G.played || 0);
+    if (left <= 0) return { txt: '↑ main suivante', pct: 100 };
+    var sec = Math.ceil(left / 1000); return { txt: '↑ dans ' + Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2), pct: Math.round(Math.min(100, Math.max(0, 100 - left / ms * 100))) };
   }
   // le temps de jeu avance seulement quand la table est à l'écran
   setInterval(function () {
     if (!G || G.over || document.hidden || !/^#jeu/.test(location.hash)) return;
     G.played = (G.played || 0) + 1000;
     var el = document.getElementById('ghClock'); if (el) el.textContent = clockTxt(G.played);
+    var nx = nextLvlInfo(), e2 = document.getElementById('ghNext'), e3 = document.getElementById('ghBar'); if (e2) e2.textContent = nx.txt; if (e3) e3.style.width = nx.pct + '%';
   }, 1000);
   function remaining() { return alive().length + (G.field ? G.field.filter(function (f) { return f.stack > 0; }).length : 0); }
   function paidPlaces() { return G.opts.mtt ? MTT_PAID : PAYOUT[G.opts.seats].length; }
@@ -210,7 +218,7 @@
     loop();
   }
   function dealHand(auto) {
-    G.handNo++; if (G.handNo > 1 && (G.handNo - 1) % PACE[G.opts.pace] === 0) G.level++;
+    G.handNo++; var wantLvl = Math.floor((G.played || 0) / lvlMs()); if (wantLvl > G.level) G.level = wantLvl;
     G.button = nextAlive(G.button);
     var L = levelInfo(), d = deck(), n = G.players.length;
     var order = []; var s = G.button; for (var k = 0; k < n; k++) { if (G.players[s].stack > 0) order.push(s); s = (s + 1) % n; }
@@ -603,7 +611,7 @@
       (SETUP.format === 'moments' ? '<div class="small muted">Tournoi de 100 joueurs : les mains sans enjeu sont jouées automatiquement selon ta range, tu ne joues que la bulle, les tapis courts, la table finale et le heads-up.</div>' : '') +
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
-      '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal'], ['semi', 'Semi-turbo'], ['turbo', 'Turbo']]) +
+      '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
       '<b>Mises des adversaires</b>' + seg('sizing', [['club', 'Petites (comme au club)'], ['standard', 'Moyennes'], ['grosses', 'Grosses']]) + '<div class="small muted">Petites : ouvertures à 2 BB, mises d’environ 1/3 à 1/2 du pot, relances à 2,5 fois. Grosses : mises aux 2/3 ou au pot, relances à 3 fois.</div>' +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
