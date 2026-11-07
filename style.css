@@ -574,3 +574,9 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .ec-seats em{font-style:normal;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ec-seatmode .ec-bl{font-size:clamp(36px,9vh,130px)}
 .ec-seatmode .ec-clock{font-size:clamp(56px,15vh,220px)}
+
+/* mises à jour bien visibles */
+.upd-card{border:2px solid var(--line)}
+.upd-card.upd-new{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,210,63,.18)}
+.upd-alert{background:var(--gold)!important;color:var(--gold-ink)!important;border-color:var(--gold)!important;font-weight:800;animation:ecpulse 1.6s ease-in-out infinite}
+.upd-alert span{color:var(--gold-ink)!important}

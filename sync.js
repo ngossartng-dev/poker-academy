@@ -189,10 +189,12 @@
   function checkUpdate(manual) {
     ST.updErr = ''; if (manual) { ST.upd = null; U().render(); }
     fetch(REPO_RAW + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
-      ST.upd = j; ST.checked = Date.now();
-      if (U() && cmpV(j.version, U().version) > 0 && !manual && !IS_WEB) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Mettre à jour', '#sauvegarde');
+      ST.upd = j; ST.checked = Date.now(); ST.checking = false;
+      var hh = (location.hash || '').split('?')[0];
+      if (U() && (/^#(maj|sauvegarde)$/.test(hh) || (/^(#home|#moi|#reglages|)$/.test(hh) && cmpV(j.version, U().version) > 0))) setTimeout(function () { U().render(); }, 0);
+      if (U() && cmpV(j.version, U().version) > 0 && !manual && !IS_WEB) banner('Nouvelle version ' + j.version + ' disponible : ' + (j.notes || '') , 'Mettre à jour', '#maj');
       if (manual) U().render();
-    }).catch(function () { ST.updErr = 'Vérification impossible : pas de connexion, ou dépôt GitHub privé.'; if (manual) U().render(); });
+    }).catch(function () { ST.checking = false; ST.updErr = 'Vérification impossible : pas de connexion, ou dépôt GitHub privé.'; if (/^#(maj|sauvegarde)$/.test((location.hash || '').split('?')[0]) && U()) setTimeout(function () { U().render(); }, 0); if (manual) U().render(); });
   }
   function openUrl(u) {
     if (IS_PC) { fetch('/api/open?u=' + encodeURIComponent(u)); return; }
@@ -206,6 +208,34 @@
   }, 2500);
 
   /* ---------- Écran « Sauvegarde et mises à jour » ---------- */
+  function updCard(big) {
+    var ui = U(), out = '', v = ui.version, u = ST.upd, avail = u && cmpV(u.version, v) > 0;
+    if (!u && !ST.updErr && !ST.checking) { ST.checking = true; checkUpdate(false); }
+    out += '<div class="card stack upd-card' + (avail ? ' upd-new' : '') + '"><b>' + (avail ? '🔄 Nouvelle version disponible : ' + ui.esc(u.version) : '🔄 Mises à jour') + '</b><div>Version installée : <b>' + v + '</b>' + (u ? ' · dernière version : <b>' + ui.esc(u.version) + '</b>' : '') + '</div>';
+    if (!u && !ST.updErr && !IS_WEB) out += '<div class="small muted">Vérification de la dernière version…</div>';
+    if (IS_WEB) out += '<div class="small muted">Version web : elle se met à jour toute seule à chaque ouverture avec une connexion. Si une ancienne version reste affichée, ferme l’appli et rouvre-la.</div>';
+    else if (u && cmpV(u.version, v) > 0) {
+      var G = ST.updProg, oneClick = IS_PC;
+      out += '<div>' + ui.esc(u.notes || '') + '</div>';
+      if (G && G.st === 'dl') out += '<div class="wk-prog"><i style="width:' + Math.round(G.pct) + '%"></i></div><div class="small muted">Téléchargement… ' + Math.round(G.pct) + ' %</div>';
+      else if (G && G.st === 'ready' && IS_PC) out += '<div class="small" style="color:#4fe08f">Nouvelle version prête. L’appli va se fermer quelques secondes puis se rouvrir toute seule ; tes données sont gardées.</div><button class="btn gold" data-syact="updApply">Installer et redémarrer</button>';
+      else if (G && G.st === 'ready') out += '<div class="small" style="color:#4fe08f">Téléchargée. Android te demande de confirmer l’installation ; tes données sont gardées.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
+      else if (G && G.st === 'perm') out += '<div class="small">Android demande d’autoriser l’installation pour Poker Academy (une seule fois) : active l’autorisation, reviens ici, puis touche Installer.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
+      else out += (G && G.st === 'err' ? '<div class="small" style="color:#ff8a8f">' + ui.esc(G.err) + '</div>' : '') + (oneClick ? '<button class="btn gold" data-syact="upd">Mettre à jour maintenant (' + ui.esc(u.version) + ')</button>' : '') + '<button class="btn' + (oneClick ? '' : ' gold') + '" data-syact="dl">' + (IS_ANDROID ? 'Télécharger la nouvelle version' : IS_PC ? 'Télécharger l’installateur' : 'Ouvrir la page de téléchargement') + '</button>';
+    }
+    else if (u) out += '<div class="small" style="color:#4fe08f">Tu as la dernière version.</div>';
+    if (ST.updErr) out += '<div class="small muted">' + ST.updErr + '</div>';
+    out += '<button class="btn" data-syact="check">Vérifier maintenant</button></div>';
+    return out;
+  }
+  function updAvail() { var u = ST.upd; return u && U() && cmpV(u.version, U().version) > 0 && !IS_WEB ? u.version : null; }
+  function majView() {
+    var out = '<div class="stack"><button class="back" data-act="nav" data-v="' + (CLUB ? 'reglages' : 'moi') + '">‹ ' + (CLUB ? 'Réglages' : 'Moi') + '</button><h1>Mettre à jour l’appli</h1>';
+    closeBanner();
+    if (ST.msg) out += U().yo(ST.msg);
+    out += updCard(true) + '<div class="small muted">' + (IS_PC ? 'Sur PC, la mise à jour se fait en un clic : l’appli se ferme quelques secondes puis se rouvre, tes données sont gardées.' : IS_ANDROID ? 'Sur Android, le bouton télécharge la nouvelle version dans le navigateur : ouvre le fichier téléchargé et touche Installer (tes données sont gardées).' : 'Sur iPhone et dans le navigateur, l’appli se met à jour toute seule à l’ouverture.') + '</div>' + (window.PA_GUIDE ? window.PA_GUIDE.link('maj') : '') + '</div>';
+    return U().shell(CLUB ? 'reglages' : 'moi', out);
+  }
   function view() {
     var ui = U(), m = meta(), out = '<div class="stack"><button class="back" data-act="nav" data-v="reglages">‹ Réglages</button><h1>Sauvegarde et mises à jour</h1>';
     if (ST.msg) out += ui.yo(ST.msg);
@@ -214,6 +244,7 @@
         '<div class="small muted">Tes données actuelles sur cet appareil (dernière modification le ' + dt(m.changedAt) + ') seront remplacées.</div>' +
         '<div class="row"><button class="btn gold" data-syact="restore" style="flex:1">Restaurer</button><button class="btn" data-syact="cancel">Annuler</button></div></div>';
     }
+    out += updCard(false);
     // sauvegarde
     out += '<div class="card stack"><b>Ta progression</b><div class="small muted">Dernière modification : ' + dt(m.changedAt) + '. Dernière sauvegarde : ' + dt(m.savedDisk || m.savedAt) + '.</div>';
     if (IS_PC) {
@@ -240,22 +271,7 @@
       var cur = PAAndroid.getReminder();
       out += '<div class="card stack"><b>Rappel quotidien</b><div class="small muted">Une notification à l’heure choisie pour faire tes cartes du jour.</div><div class="seg" style="flex-wrap:wrap">' + [['', 'Aucun'], ['08:00', '8 h'], ['12:30', '12 h 30'], ['18:00', '18 h'], ['20:00', '20 h'], ['21:30', '21 h 30']].map(function (o) { return '<button class="' + (cur === o[0] ? 'on' : '') + '" data-syact="remind" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
     }
-    // mises à jour
-    var v = ui.version, u = ST.upd;
-    out += '<div class="card stack"><b>Mises à jour</b><div>Version installée : <b>' + v + '</b>' + (u ? ' · dernière version : <b>' + ui.esc(u.version) + '</b>' : '') + '</div>';
-    if (IS_WEB) out += '<div class="small muted">Version web : elle se met à jour toute seule à chaque ouverture avec une connexion. Si une ancienne version reste affichée, ferme l’appli et rouvre-la.</div>';
-    else if (u && cmpV(u.version, v) > 0) {
-      var G = ST.updProg, oneClick = IS_PC;
-      out += '<div>' + ui.esc(u.notes || '') + '</div>';
-      if (G && G.st === 'dl') out += '<div class="wk-prog"><i style="width:' + Math.round(G.pct) + '%"></i></div><div class="small muted">Téléchargement… ' + Math.round(G.pct) + ' %</div>';
-      else if (G && G.st === 'ready' && IS_PC) out += '<div class="small" style="color:#4fe08f">Nouvelle version prête. L’appli va se fermer quelques secondes puis se rouvrir toute seule ; tes données sont gardées.</div><button class="btn gold" data-syact="updApply">Installer et redémarrer</button>';
-      else if (G && G.st === 'ready') out += '<div class="small" style="color:#4fe08f">Téléchargée. Android te demande de confirmer l’installation ; tes données sont gardées.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
-      else if (G && G.st === 'perm') out += '<div class="small">Android demande d’autoriser l’installation pour Poker Academy (une seule fois) : active l’autorisation, reviens ici, puis touche Installer.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
-      else out += (G && G.st === 'err' ? '<div class="small" style="color:#ff8a8f">' + ui.esc(G.err) + '</div>' : '') + (oneClick ? '<button class="btn gold" data-syact="upd">Mettre à jour maintenant (' + ui.esc(u.version) + ')</button>' : '') + '<button class="btn' + (oneClick ? '' : ' gold') + '" data-syact="dl">' + (IS_ANDROID ? 'Télécharger la nouvelle version' : IS_PC ? 'Télécharger l’installateur' : 'Ouvrir la page de téléchargement') + '</button>';
-    }
-    else if (u) out += '<div class="small" style="color:#4fe08f">Tu as la dernière version.</div>';
-    if (ST.updErr) out += '<div class="small muted">' + ST.updErr + '</div>';
-    out += '<button class="btn" data-syact="check">Vérifier maintenant</button></div>';
+
     // erreurs
     var e = errs();
     out += '<div class="card stack"><b>Journal des erreurs</b>' + (e.length ? e.slice(0, 10).map(function (x) { return '<div class="small" style="border-bottom:1px solid var(--line);padding:4px 0">' + dt(x.at) + ' · ' + ui.esc(x.msg) + ' <span class="muted">(' + ui.esc(x.where) + ', ' + ui.esc(x.page || '') + ', v' + ui.esc(x.v || '') + ')</span></div>'; }).join('') +
@@ -297,5 +313,5 @@
   });
   document.addEventListener('change', function (ev) { var t = ev.target; if (t && t.getAttribute && t.getAttribute('data-syimport') && t.files && t.files[0]) importFile(t.files[0]); });
 
-  window.PA_SYNC = { shareFile: shareFile, isIOS: IS_IOS, view: view, snapshot: snapshot, restore: restore, logErr: logErr, isPC: IS_PC, isAndroid: IS_ANDROID };
+  window.PA_SYNC = { updAvail: updAvail, majView: majView, updLink: function (cls) { var nv = updAvail(); return '<a class="' + (cls || 'btn block') + (nv ? ' upd-alert' : '') + '" href="#maj">' + (nv ? '🔄 Nouvelle version ' + nv + ' : mettre à jour' : '🔄 Mettre à jour l’appli') + '</a>'; }, shareFile: shareFile, isIOS: IS_IOS, view: view, snapshot: snapshot, restore: restore, logErr: logErr, isPC: IS_PC, isAndroid: IS_ANDROID };
 })();
