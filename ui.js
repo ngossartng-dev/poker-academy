@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.21.4';
+  var VERSION = '2.21.5';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -169,6 +169,7 @@
 
   /* ---------- Ma range (panneau) ---------- */
   var RS = { tab: 'sit', type: 'open', pos: 'UTG', opener: 'UTG', depth: 'deep', bb: 10, scen: 'ip', hero: null, profile: null, edit: false };
+  try { if (localStorage.getItem('pa2pips') === '0') RS.pips = false; } catch (e) {}
   function openRange(ctx) {
     var p = PA.player(); RS.profile = p.profile || 'tag'; RS.edit = false;
     if (ctx && ctx.sit) {
@@ -191,7 +192,8 @@
       var a = map[x];
       var cls = typeof a === 'string' ? actColor(a, type) : '';
       var style = typeof a === 'string' ? '' : ' style="background:' + a.bg + ';color:' + a.fg + '"';
-      h += '<button class="' + cls + (x === hero ? ' hero' : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + '">' + x + '</button>';
+      var pips = typeof a === 'object' && a.pips && a.pips.length ? '<span class="pips">' + a.pips.map(function (k) { return '<i class="pip-' + k + '"></i>'; }).join('') + '</span>' : '';
+      h += '<button class="' + cls + (x === hero ? ' hero' : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + (a && a.lbl ? ', ' + a.lbl : '') + '">' + x + pips + '</button>';
     });
     return h + '</div>';
   }
@@ -204,9 +206,29 @@
     if (RS.tab === 'glob') {
       var f = PA.firstOpenPos(prof), map = {};
       PA.HANDS.forEach(function (h) { var i = f[h]; map[h] = i < 0 ? { bg: '#2a2a30', fg: '#77777f' } : { bg: GLOBAL_COLORS[i][0], fg: GLOBAL_COLORS[i][1] }; });
+      // petits indices en bas des cases : 3-bet (face à une relance), et ce que je fais face à un 3-bet
+      var pipOn = RS.pips !== false, gbb = window.PA_PLAN && window.PA_PLAN.state.stack || 100;
+      if (pipOn) {
+        var DEF = [], heroes = ['BB', 'SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1'];
+        heroes.forEach(function (p) { var ops = PA.validOpeners(p); if (p !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; }); ops.forEach(function (o) { DEF.push(PA.chart(prof, { type: 'def', pos: p, opener: o, bb: gbb })); }); });
+        var V3 = gbb >= 40 ? ['ip', 'oop', 'early'].map(function (sc) { return PA.chart(prof, { type: 'vs3bet', scen: sc, bb: 100 }); }) : [];
+        PA.HANDS.forEach(function (h) {
+          var pp = [], lb = [], t3 = DEF.some(function (c) { return c[h] === 'raise' || c[h] === 'allin'; });
+          if (t3) { pp.push('3b'); lb.push('3-bet face à une relance'); }
+          if (V3.length && (f[h] >= 0 || t3)) {
+            if (V3.some(function (c) { return c[h] === 'fourbet' || c[h] === 'allin'; })) { pp.push('4b'); lb.push('4-bet face à un 3-bet'); }
+            else if (V3.some(function (c) { return c[h] === 'call'; })) { pp.push('call'); lb.push('paye un 3-bet'); }
+            else if (f[h] >= 0) { pp.push('fold'); lb.push('se couche face à un 3-bet'); }
+          }
+          map[h].pips = pp; map[h].lbl = lb.join(', ');
+        });
+      }
       out += '<p class="muted">À partir de quelle position j’ouvre chaque main (40 BB et plus). Plus c’est foncé, plus la main s’ouvre tôt.</p>';
       out += '<div class="legend">' + PA.POS.slice(0, 8).map(function (p, i) { return '<span><i style="background:' + GLOBAL_COLORS[i][0] + '"></i>' + p + '</span>'; }).join('') + '<span><i style="background:#2a2a30"></i>Jamais</span></div>';
       if (window.PA_PLAN) out += '<div class="small muted">' + (window.matchMedia && window.matchMedia('(hover: hover)').matches ? 'Survole' : 'Touche') + ' une main pour voir son plan dans toutes les positions : ouvrir, 3-bet, et la suite si on te sur-relance.</div><div class="row plan-stack"><span class="small muted">Tapis</span>' + [[25, '20-40'], [40, '40'], [60, '60'], [100, '100 BB']].map(function (o) { return '<button class="btn' + (window.PA_PLAN.state.stack === o[0] ? ' gold' : '') + '" data-act="plan" data-k="stack" data-v="' + o[0] + '" style="min-height:40px;padding:4px 12px">' + o[1] + '</button>'; }).join('') + '</div>';
+      out += '<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px">' + (pipOn ? '<div class="legend pip-legend"><span><i class="pip-3b"></i>3-bet</span>' + (gbb >= 40 ? '<span><i class="pip-4b"></i>4-bet</span><span><i class="pip-call"></i>Paye le 3-bet</span><span><i class="pip-fold"></i>Se couche au 3-bet</span>' : '') + '</div>' : '<span></span>') +
+        '<button class="btn" data-act="rsPips" style="min-height:36px;padding:4px 12px">' + (pipOn ? 'Masquer les indices' : 'Afficher les indices 3-bet / 4-bet') + '</button></div>';
+      if (pipOn) out += '<div class="small muted">Point rouge : tu 3-bets cette main face à une relance, dans au moins une position. Second point : ce que tu fais si on te 3-bet' + (gbb >= 40 ? '' : ' (indiqué à partir de 40 BB)') + '. Touche la main pour le détail.</div>';
       out += '<div class="glob-wrap">' + rangeGrid(map, 'open', RS.hero, false) + '</div>';
       return out;
     }
@@ -751,6 +773,7 @@
         if (ui.drill && location.hash === '#drill' && ui.drill.i < ui.drill.qs.length) { ui.drill.consult++; var q = ui.drill.qs[ui.drill.i]; openRange({ sit: q.sit, hand: ui.drill.fb ? q.hand : null }); } else openRange(); break;
       case 'rangeCtx': { var q2 = ui.drill.qs[ui.drill.i]; openRange({ sit: q2.sit, hand: q2.hand }); break; }
       case 'closeSheet': ui.sheet = null; renderSheet(); break;
+      case 'rsPips': RS.pips = RS.pips === false; try { localStorage.setItem('pa2pips', RS.pips ? '1' : '0'); } catch (e) {} rerenderRange(); break;
       case 'rsTab': if (v === 'plan' && RS.tab === 'sit' && window.PA_PLAN) window.PA_PLAN.fromSit(rsSit()); RS.tab = v; rerenderRange(); break;
       case 'plan': window.PA_PLAN.set(t.getAttribute('data-k'), v); rerenderRange(); break;
       case 'planCell': {

@@ -39,13 +39,23 @@
       function next() {
         while (run < MAX && i < L.length) {
           var rel = L[i++]; run++;
-          fetch(IS_PC ? rel : rel, { cache: IS_PC ? 'no-store' : 'default' }).then(function (r) { if (!r.ok) ST.err++; return r.blob(); }).catch(function () { ST.err++; }).then(function () { run--; ST.done++; onprog && onprog(); if (ST.done >= ST.total) { ST.busy = false; status(function () { onprog && onprog(); }); } else next(); });
+          fetch(IS_PC ? rel : rel, { cache: IS_PC ? 'no-store' : 'default' }).then(function (r) { if (!r.ok) ST.err++; return r.blob(); }).catch(function () { ST.err++; }).then(function () { run--; ST.done++; if (ST.done >= ST.total) { ST.busy = false; status(function () { onprog && onprog(); }); } else { onprog && onprog(); next(); } });
         }
       }
       next();
     });
   }
-  window.__paPackProg = function (done, total, err, finished) { ST.done = done; ST.total = total; ST.err = err; if (finished) { ST.busy = false; status(); } if (U() && /^#sauvegarde/.test(location.hash)) U().render(); };
+  function paint() {
+    var t = document.getElementById('pk-txt'), b = document.getElementById('pk-bar');
+    if (t && b && ST.busy) { t.textContent = 'Téléchargement : ' + ST.done + ' / ' + ST.total + (ST.err ? ' · ' + ST.err + ' échec(s)' : ''); b.style.width = (ST.total ? Math.round(ST.done / ST.total * 100) : 0) + '%'; return; }
+    if (U() && /^#sauvegarde/.test(location.hash)) U().render();
+  }
+  window.__paPackProg = function (done, total, err, finished) {
+    ST.done = done; ST.total = total; ST.err = err; ST.busy = !finished;
+    if (finished) status(function () { paint(); }); else paint();
+  };
+  // Android : un téléchargement lancé avant une réouverture de la page continue en arrière-plan
+  if (IS_ANDROID && PAAndroid.packProgress) { try { var P0 = JSON.parse(PAAndroid.packProgress()); if (P0.running) { ST.busy = true; ST.done = P0.done; ST.total = P0.total; ST.err = P0.err; } } catch (e) {} }
   function clear(cb) {
     if (IS_PC) { fetch('/api/packs', { method: 'DELETE' }).then(function () { status(cb); }); return; }
     if (IS_ANDROID) { PAAndroid.packClear(); status(cb); return; }
@@ -57,7 +67,7 @@
     var ui = U(), I = ST.info, out = '<div class="card stack"><b>Contenu hors connexion</b><div class="small muted">Les podcasts et les solutions du solveur se téléchargent la première fois que tu les ouvres, puis restent sur l’appareil. Avant une soirée sans connexion, télécharge tout d’un coup.</div>';
     if (I && I.bytes !== undefined) out += '<div>Sur cet appareil : <b>' + I.files + '</b> fichiers, ' + mo(I.bytes) + '.</div>';
     else if (!IS_PC && !IS_ANDROID) out += '<div class="small muted">Sur iPhone et dans le navigateur, les fichiers déjà ouverts sont gardés par le navigateur.</div>';
-    if (ST.busy) out += '<div>Téléchargement : ' + ST.done + ' / ' + ST.total + (ST.err ? ' · ' + ST.err + ' échec(s)' : '') + '</div><div class="timer"><i style="width:' + (ST.total ? Math.round(ST.done / ST.total * 100) : 0) + '%"></i></div>';
+    if (ST.busy) out += '<div id="pk-txt">Téléchargement : ' + ST.done + ' / ' + ST.total + (ST.err ? ' · ' + ST.err + ' échec(s)' : '') + '</div><div class="small muted">Tu peux continuer à utiliser l’appli pendant ce temps.</div><div class="timer"><i id="pk-bar" style="width:' + (ST.total ? Math.round(ST.done / ST.total * 100) : 0) + '%"></i></div>';
     else if (ST.total && ST.done >= ST.total) out += '<div class="small" style="color:' + (ST.err ? '#ff8080' : '#4fe08f') + '">' + (ST.err ? ST.err + ' fichier(s) n’ont pas pu être téléchargés : vérifie la connexion et recommence.' : 'Tout est téléchargé.') + '</div>';
     out += '<div class="row"><button class="btn gold" data-pkact="all" style="flex:1"' + (ST.busy ? ' disabled' : '') + '>Tout télécharger (environ 270 Mo)</button><button class="btn" data-pkact="clear"' + (ST.busy ? ' disabled' : '') + '>Libérer la place</button></div></div>';
     if (!I && (IS_PC || IS_ANDROID)) status(function () { if (/^#sauvegarde/.test(location.hash)) ui.render(); });
@@ -66,7 +76,7 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-pkact]') : null; if (!t || t.disabled) return;
     var a = t.getAttribute('data-pkact');
-    if (a === 'all') prefetchAll(function () { if (/^#sauvegarde/.test(location.hash)) U().render(); });
+    if (a === 'all') prefetchAll(paint);
     else if (a === 'clear') { ST.total = 0; clear(function () { U().render(); }); }
     U().render();
   });
