@@ -245,13 +245,13 @@
     out += '<div class="card stack"><b>Mises à jour</b><div>Version installée : <b>' + v + '</b>' + (u ? ' · dernière version : <b>' + ui.esc(u.version) + '</b>' : '') + '</div>';
     if (IS_WEB) out += '<div class="small muted">Version web : elle se met à jour toute seule à chaque ouverture avec une connexion. Si une ancienne version reste affichée, ferme l’appli et rouvre-la.</div>';
     else if (u && cmpV(u.version, v) > 0) {
-      var G = ST.updProg, oneClick = (IS_PC || (IS_ANDROID && PAAndroid.updateApk));
+      var G = ST.updProg, oneClick = IS_PC;
       out += '<div>' + ui.esc(u.notes || '') + '</div>';
       if (G && G.st === 'dl') out += '<div class="wk-prog"><i style="width:' + Math.round(G.pct) + '%"></i></div><div class="small muted">Téléchargement… ' + Math.round(G.pct) + ' %</div>';
       else if (G && G.st === 'ready' && IS_PC) out += '<div class="small" style="color:#4fe08f">Nouvelle version prête. L’appli va se fermer quelques secondes puis se rouvrir toute seule ; tes données sont gardées.</div><button class="btn gold" data-syact="updApply">Installer et redémarrer</button>';
       else if (G && G.st === 'ready') out += '<div class="small" style="color:#4fe08f">Téléchargée. Android te demande de confirmer l’installation ; tes données sont gardées.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
       else if (G && G.st === 'perm') out += '<div class="small">Android demande d’autoriser l’installation pour Poker Academy (une seule fois) : active l’autorisation, reviens ici, puis touche Installer.</div><button class="btn gold" data-syact="updInstall">Installer</button>';
-      else out += (G && G.st === 'err' ? '<div class="small" style="color:#ff8a8f">' + ui.esc(G.err) + '</div>' : '') + (oneClick ? '<button class="btn gold" data-syact="upd">Mettre à jour maintenant (' + ui.esc(u.version) + ')</button>' : '') + '<button class="btn' + (oneClick ? '' : ' gold') + '" data-syact="dl">' + (IS_ANDROID ? 'Télécharger le nouvel APK' : IS_PC ? 'Télécharger l’installateur' : 'Ouvrir la page de téléchargement') + '</button>';
+      else out += (G && G.st === 'err' ? '<div class="small" style="color:#ff8a8f">' + ui.esc(G.err) + '</div>' : '') + (oneClick ? '<button class="btn gold" data-syact="upd">Mettre à jour maintenant (' + ui.esc(u.version) + ')</button>' : '') + '<button class="btn' + (oneClick ? '' : ' gold') + '" data-syact="dl">' + (IS_ANDROID ? 'Télécharger la nouvelle version' : IS_PC ? 'Télécharger l’installateur' : 'Ouvrir la page de téléchargement') + '</button>';
     }
     else if (u) out += '<div class="small" style="color:#4fe08f">Tu as la dernière version.</div>';
     if (ST.updErr) out += '<div class="small muted">' + ST.updErr + '</div>';
