@@ -177,7 +177,7 @@
   }
   var TAB = null, ROSTER = false;
   function clearSheet() { try { document.querySelectorAll('body > .tn-sheet, body > .tn-sheet-bg').forEach(function (el) { el.parentNode.removeChild(el); }); } catch (e) {} }
-  window.addEventListener('hashchange', function () { if (!/^#tournoi/.test(location.hash)) { KO = null; clearSheet(); } });
+  window.addEventListener('hashchange', function () { if (!/^#tournoi/.test(location.hash)) { KO = null; clearSheet(); } if (!/^#minuteur/.test(location.hash)) EDIT = false; });
   function tournoiView() {
     var ui = U(), t = T(), s = live(), c = cfg(), LG = window.PA_LEAGUE, esc = ui.esc;
     if (LG) { t.type = t.type || 'mercredi'; t.date = t.date || LG.today(); t.holder = LG.holder(t.type, t.date); }
@@ -399,7 +399,7 @@
     return ui.shell('apprendre', body, true);
   }
   setInterval(function () {
-    if (!/^#(minuteur|tournoi|ecran)/.test(location.hash) || EDIT) return;
+    if (!/^#(minuteur|tournoi|ecran)/.test(location.hash) || (EDIT && /^#minuteur/.test(location.hash))) return;
     var s = live(), c = document.getElementById('tmClock') || document.getElementById('tmClock2') || document.getElementById('ecClock'); if (!c || !s.L.length) return;
     var eb = document.getElementById('ecBar'); if (eb) { var lv0 = s.L[s.idx]; eb.style.width = Math.max(0, Math.min(100, 100 - s.rem / (lv0.min * 60) * 100)).toFixed(1) + '%'; var en = document.getElementById('ecNext'); if (en) en.textContent = nextInfo(s); var ew = document.getElementById('ecNow'); if (ew) ew.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); c.classList.toggle('ec-hot', s.rem <= 60 && !!ST.since); }
     if (ST.since) {
