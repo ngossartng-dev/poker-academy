@@ -549,3 +549,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .pip-legend i{width:10px;height:10px;margin-right:4px;vertical-align:middle}
 .pip-3b{background:#ff3b3b}.pip-4b{background:#fff}.pip-call{background:#3d9bff}.pip-fold{background:#8a8a94}
 .rg button:has(.pips){padding-bottom:4px}
+
+.fab{touch-action:none;user-select:none;-webkit-user-select:none}
+.fab.dragging{opacity:.85;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:none;cursor:grabbing}
+.fab{white-space:nowrap}

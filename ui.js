@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.21.5';
+  var VERSION = '2.21.6';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -84,7 +84,7 @@
     var side = '<nav class="side" aria-label="Navigation principale"><div class="row" style="padding:0 8px 22px">' + logo() + '<span class="disp" style="font-size:26px">Poker<br>Academy</span></div>' +
       (CLUB ? NAV : NAV.concat([['moi', 'Moi', 'user']])).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
     var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
-    var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button>';
+    var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range (fais-le glisser pour le déplacer)"' + fabStyle() + '>' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
     return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (CLUB || noFab || /^#(tournoi|classement|minuteur|club|ecran|guide)/.test(location.hash) ? '' : fab);
   }
@@ -684,12 +684,49 @@
       '<button class="btn" data-act="pickPlayer">Changer de joueur</button></div>';
     return shell('moi', body);
   }
+  /* ---------- Bouton « Ma range » déplaçable ---------- */
+  // position gardée en proportions de l'écran (0 = gauche/haut, 1 = droite/bas) : elle reste valable si l'écran tourne
+  function fabPos() { try { var o = JSON.parse(localStorage.getItem('pa2fab') || 'null'); return o && isFinite(o.x) && isFinite(o.y) ? o : null; } catch (e) { return null; } }
+  function fabCss(o) { return 'left:calc(' + (o.x * 100).toFixed(2) + '% + ' + ((0.5 - o.x) * 24).toFixed(1) + 'px);top:calc(' + (o.y * 100).toFixed(2) + '% + ' + ((0.5 - o.y) * 24).toFixed(1) + 'px);right:auto;bottom:auto;transform:translate(' + (-o.x * 100).toFixed(2) + '%,' + (-o.y * 100).toFixed(2) + '%)'; }
+  function fabStyle() { var o = fabPos(); return o ? ' style="' + fabCss(o) + '"' : ''; }
+  (function () {
+    var D = null, moved = false;
+    document.addEventListener('pointerdown', function (e) {
+      var b = e.target.closest ? e.target.closest('.fab') : null; if (!b) return;
+      if (e.pointerType === 'mouse') e.preventDefault(); var r = b.getBoundingClientRect(); D = { b: b, id: e.pointerId, sx: e.clientX, sy: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height }; moved = false;
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!D || e.pointerId !== D.id) return;
+      if (!moved && Math.abs(e.clientX - D.sx) + Math.abs(e.clientY - D.sy) < 10) return;
+      if (!moved) { moved = true; D.b.classList.add('dragging'); try { D.b.setPointerCapture(D.id); } catch (e2) {} }
+      e.preventDefault();
+      var W = window.innerWidth, H = window.innerHeight, l = Math.max(4, Math.min(W - D.w - 4, e.clientX - D.dx)), t = Math.max(4, Math.min(H - D.h - 4, e.clientY - D.dy));
+      D.b.style.cssText = 'left:' + l + 'px;top:' + t + 'px;right:auto;bottom:auto;transform:none';
+      D.x = (l - 12) / Math.max(1, W - D.w - 24); D.y = (t - 12) / Math.max(1, H - D.h - 24);
+    }, { passive: false });
+    function end() {
+      if (!D) return; var d = D; D = null;
+      if (!moved) return;
+      d.b.classList.remove('dragging');
+      var o = { x: Math.max(0, Math.min(1, d.x)), y: Math.max(0, Math.min(1, d.y)) };
+      try { localStorage.setItem('pa2fab', JSON.stringify(o)); } catch (e) {}
+      d.b.style.cssText = fabCss(o);
+      setTimeout(function () { moved = false; }, 0);
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) {}
+    }
+    document.addEventListener('dragstart', function (e) { if (e.target.closest && e.target.closest('.fab')) e.preventDefault(); });
+    document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+    // après un glisser, le relâchement ne doit pas ouvrir la range
+    document.addEventListener('click', function (e) { if (moved && e.target.closest && e.target.closest('.fab')) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  })();
+
   function reglagesView() {
     var p = PA.player(), s = p.settings;
     function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="' + (CLUB ? 'home' : 'moi') + '">‹ ' + (CLUB ? 'Accueil' : 'Moi') + '</button><h1>Réglages</h1>' + '<a class="btn gold block" href="#guide">❓ Mode d’emploi</a>' +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
+      (CLUB ? '' : '<b>Bouton « Ma range »</b><div class="small muted">Fais-le glisser du doigt (ou à la souris) où il te gêne le moins : il reste à cet endroit.</div>' + (fabPos() ? '<button class="btn" data-act="fabReset">Le remettre à sa place d’origine</button>' : '')) +
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
       '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique'], ['noir', 'Noir et or'], ['sombre', 'Sombre et rouge']]) +
@@ -769,6 +806,7 @@
       case 'usePlayer': PA.load().current = v; PA.save(); ui.welcomed = true; try { sessionStorage.setItem('pa2w', '1'); } catch (x) {} go('home'); render(); break;
       case 'newPlayer': PA.load().current = null; PA.save(); ui.forceNew = true; ui.onb = { step: 1 }; go('home'); render(); break;
       case 'continue': ui.welcomed = true; try { sessionStorage.setItem('pa2w', '1'); } catch (x) {} render(); break;
+      case 'fabReset': try { localStorage.removeItem('pa2fab'); } catch (e) {} render(); break;
       case 'range': if (location.hash === '#jeu' && window.PA_GAME) { var hc = window.PA_GAME.heroRangeCtx(); openRange(hc ? { sit: hc.sit, hand: hc.hand } : null); break; }
         if (ui.drill && location.hash === '#drill' && ui.drill.i < ui.drill.qs.length) { ui.drill.consult++; var q = ui.drill.qs[ui.drill.i]; openRange({ sit: q.sit, hand: ui.drill.fb ? q.hand : null }); } else openRange(); break;
       case 'rangeCtx': { var q2 = ui.drill.qs[ui.drill.i]; openRange({ sit: q2.sit, hand: q2.hand }); break; }
