@@ -7,6 +7,66 @@
   var ST = load(), EDIT = false, lock = null, lastBeep = -1;
   function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.text) return s; } catch (e) {} return { text: DEF, mins: 20, idx: 0, rem: 20 * 60, since: null }; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
+  /* ---------- Sauvegarde automatique du tournoi en cours (toutes les 3 minutes) ----------
+     Copies horodatées gardées à part (clé pa2tbak, 20 dernières) : en cas de plantage, de fausse manœuvre
+     (« Nouveau tournoi », remise à zéro…) ou de données abîmées, on repart de la dernière copie.
+     Sur PC, la dernière copie est aussi écrite dans le dossier Sauvegardes du Drive. */
+  var BKEY = 'pa2tbak', BEVERY = 3 * 60 * 1000, BMAX = 20, lastSig = null;
+  function baks() { try { var a = JSON.parse(localStorage.getItem(BKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function hasT(st) { var t = st && st.t; return !!(t && ((t.players && t.players.length) || t.entrants)); }
+  function bakNow(force) {
+    if (!hasT(ST)) return false;
+    var s = live(), snap = JSON.parse(JSON.stringify(ST));
+    snap.idx = s.idx; snap.rem = Math.round(s.rem); snap.wasRunning = !!ST.since; snap.since = null; // horloge figée à l'instant de la copie
+    var sig = JSON.stringify(ST.t) + '|' + s.idx;
+    if (!force && sig === lastSig) { touchBak(); return false; }
+    lastSig = sig;
+    var t = T(), a = baks();
+    a.unshift({ at: Date.now(), left: t.left, entrants: t.entrants, lvl: s.idx, st: snap });
+    a = a.slice(0, BMAX);
+    for (var k = 0; k < 3; k++) { try { localStorage.setItem(BKEY, JSON.stringify(a)); break; } catch (e) { a = a.slice(0, Math.max(3, a.length >> 1)); } }
+    if (IS_PC_APP()) try { fetch('/api/tournoibak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ app: 'Poker Academy', kind: 'tournoi', savedAt: Date.now(), st: snap }) }).catch(function () {}); } catch (e) {}
+    return true;
+  }
+  function touchBak() { try { localStorage.setItem(BKEY + 'chk', String(Date.now())); } catch (e) {} }
+  function IS_PC_APP() { return location.hostname === '127.0.0.1' && (location.port === '47816' || location.port === '47826'); }
+  // PC : si l'appli a été réinstallée ou ses données effacées, on récupère la copie du Drive
+  setTimeout(function () {
+    if (!IS_PC_APP() || hasT(ST) || baks().length) return;
+    fetch('/api/tournoibak', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.st || !j.savedAt || Date.now() - j.savedAt > 24 * 3600e3 || hasT(ST) || baks().length) return;
+      var t = j.st.t || {}, pl = t.players || [];
+      try { localStorage.setItem(BKEY, JSON.stringify([{ at: j.savedAt, left: pl.length ? pl.filter(function (x) { return !x.out; }).length : t.left, entrants: pl.length || t.entrants, lvl: j.st.idx || 0, st: j.st }])); } catch (e) {}
+      if (U() && /^#tournoi/.test(location.hash)) U().render();
+    }).catch(function () {});
+  }, 2000);
+  setInterval(function () { var a = baks(); if (!a.length || Date.now() - a[0].at >= BEVERY) bakNow(false); }, 30000);
+  // copie aussi quand l'appli passe en arrière-plan (écran éteint, autre appli ouverte) : c'est souvent là qu'Android ferme une appli
+  document.addEventListener('visibilitychange', function () { if (document.hidden) bakNow(false); });
+  function restoreBak(i) {
+    var b = baks()[i]; if (!b) return false;
+    bakNow(true); // l'état actuel est gardé avant d'être remplacé
+    ST = JSON.parse(JSON.stringify(b.st)); delete ST.wasRunning; ST.since = null; save(); lastSig = null; return true;
+  }
+  function ago(ms) { var m = Math.round((Date.now() - ms) / 60000); return m < 1 ? 'à l’instant' : m < 60 ? 'il y a ' + m + ' min' : 'il y a ' + Math.floor(m / 60) + ' h ' + (m % 60 < 10 ? '0' : '') + (m % 60); }
+  function hhmm(ms) { var d = new Date(ms); return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  function bakCard() {
+    var a = baks(), t = T(), esc = U().esc, out = '';
+    var chk = 0; try { chk = +localStorage.getItem(BKEY + 'chk') || 0; } catch (e) {}
+    // tournoi vide alors qu'une copie récente existe : on propose de le reprendre
+    if (!hasT(ST) && a.length && Date.now() - a[0].at < 24 * 3600e3) {
+      var b0 = a[0], L0 = levels()[b0.lvl];
+      out += '<div class="card stack tn-bak tn-bak-alert"><b>💾 Un tournoi interrompu a été sauvegardé</b><div>' + hhmm(b0.at) + ' (' + ago(b0.at) + ') · ' + b0.left + ' joueur' + (b0.left > 1 ? 's' : '') + ' en jeu sur ' + b0.entrants + (L0 ? ' · ' + (L0.pause ? 'pause' : 'niveau ' + L0.n) : '') + '</div><button class="btn gold" data-tmact="bakRestore" data-v="0">Reprendre ce tournoi</button><div class="small muted">Le chrono repart en pause, au temps qu’il restait au moment de la copie.</div></div>';
+      return out;
+    }
+    if (!hasT(ST)) return '';
+    var last = a.length ? Math.max(a[0].at, chk) : 0;
+    out += '<details class="card tn-bak"><summary style="cursor:pointer"><b>💾 Sauvegarde automatique</b> <span class="small muted">· ' + (last ? ago(last) : 'bientôt') + ' · toutes les 3 min</span></summary><div class="stack" style="gap:8px;margin-top:8px">' +
+      '<div class="small muted">Joueurs en jeu et éliminés, places, tables, re-entries, add-ons, jetons en jeu, niveau et temps restant : tout est copié toutes les 3 minutes' + (IS_PC_APP() ? ', et la dernière copie est aussi écrite dans ton Drive (Poker Academy › Sauvegardes › tournoi-en-cours.json)' : '') + '. Si l’appli plante, rouvre-la : le tournoi est là. En cas de fausse manœuvre, reprends une copie ci-dessous.</div>' +
+      '<button class="btn" data-tmact="bakNow">Sauvegarder maintenant</button>';
+    if (a.length) out += '<div class="stack" style="gap:6px">' + a.map(function (b, i) { var Lb = levels()[b.lvl]; return '<div class="tn-row"><span style="flex:1">' + hhmm(b.at) + ' · <b>' + b.left + '</b>/' + b.entrants + ' en jeu' + (Lb ? ' · ' + (Lb.pause ? 'pause' : 'niv. ' + Lb.n) : '') + '</span><button class="btn" data-tmact="bakRestore" data-v="' + i + '" style="min-height:36px;padding:4px 12px">Reprendre</button></div>'; }).join('') + '</div>';
+    return out + '</div></details>';
+  }
   function levels() {
     var out = [], n = 0;
     ST.text.split(/\n/).forEach(function (l) {
@@ -255,6 +315,7 @@
         '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">Structure : blindes, ante, durée, pauses</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
         '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>';
     }
+    out += bakCard();
     out += '</div>';
     // ---- élimination : panneau du bas ----
     // le panneau d’élimination est placé hors de la page (au-dessus de la barre de navigation)
@@ -414,6 +475,8 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-tmact]') : null; if (!t) return;
     var a = t.getAttribute('data-tmact'), s = live(), L = s.L;
+    if (a === 'bakNow') { bakNow(true); T().msg = 'Tournoi sauvegardé.'; save(); keepScroll(function () { U().render(); }); return; }
+    if (a === 'bakRestore') { var bi = +t.getAttribute('data-v'), bb0 = baks()[bi]; if (bb0 && (typeof confirm !== 'function' || !hasT(ST) || confirm('Reprendre la copie de ' + hhmm(bb0.at) + ' ? L’état actuel est gardé dans les copies.'))) { restoreBak(bi); T().msg = 'Tournoi repris tel qu’il était le ' + hhmm(bb0.at) + '. Le chrono est en pause : relance-le.'; save(); } U().render(); return; }
     if (a === 'toggle') { if (ST.since) { freeze(); ST.since = null; awake(false); } else { ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
     else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); if (k !== s.idx) { var ex = rulesSay(L, s.idx, k); say(lvlSay(L[k]) + (ex ? ' ' + ex : '')); } }
     else if (a === 'plus' || a === 'minus') { freeze(); ST.rem = Math.max(1, ST.rem + (a === 'plus' ? 60 : -60)); }
@@ -454,7 +517,7 @@
     else if (a === 'koCancel') { KO = null; }
     else if (a === 'koOk') { var sel = document.getElementById('koBy'); doKO(KO, sel ? sel.value : ''); KO = null; }
     else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } pu.out = false; pu.place = null; pu.prize = null; pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } var sn1 = snap(); delete sn1[pu.name]; seatSomewhere(pu); noteMoves(sn1, 'retour en jeu'); tu.msg = (a === 'reentry' && !reOpen(live()) ? '⚠️ Les re-entry sont fermées (fin du niveau ' + cfg().reEnd + '), enregistrée quand même. ' : '') + pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
-    else if (a === 'newT') { if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
+    else if (a === 'newT') { bakNow(true); if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
     else if (a === 'print') { try { window.print(); } catch (e3) {} return; }
     else if (a === 'entPlus') { T().entrants++; T().left++; }
     else if (a === 'entMinus') { if (T().entrants > 0) { T().entrants--; T().left = Math.max(0, T().left - 1); } }
@@ -464,7 +527,7 @@
     else if (a === 'reMinus') { if (T().re > 0) { T().re--; if (!T().players.length) T().left = Math.max(0, T().left - 1); } }
     else if (a === 'addPlus') T().add++;
     else if (a === 'addMinus') { if (T().add > 0) T().add--; }
-    else if (a === 'reset') { if (typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
+    else if (a === 'reset') { bakNow(true); if (typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
     else if (a === 'full') { try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
     else if (a === 'edit') EDIT = true;
     else if (a === 'voice') { ST.voice = !vOn(); if (ST.voice) say('Annonces vocales activées. ' + (L[s.idx] ? lvlSay(L[s.idx]) : ''), true); else { try { if (window.speechSynthesis) speechSynthesis.cancel(); if (window.PAAndroid && window.PAAndroid.stop) window.PAAndroid.stop(); } catch (e4) {} } }
