@@ -553,3 +553,24 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .fab{touch-action:none;user-select:none;-webkit-user-select:none}
 .fab.dragging{opacity:.85;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:none;cursor:grabbing}
 .fab{white-space:nowrap}
+
+/* blindes modifiables */
+.tn-bl-btn{background:none;border:0;cursor:pointer;padding:0 8px;border-radius:12px;display:inline-flex;align-items:center;gap:8px;margin:0 auto}
+.tn-bl-btn:hover,.tn-bl-btn:focus-visible{background:rgba(255,210,63,.12)}
+.tn-bl-pen{font-size:.35em;opacity:.75}
+.tn-bl-ed{background:var(--panel2);border:2px solid var(--gold);border-radius:14px;padding:12px;margin:8px 0;display:flex;flex-direction:column;gap:10px;text-align:left}
+.tn-bl-t{font-weight:800;color:var(--gold);text-align:center}
+.tn-bl-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tn-bl-f{display:flex;flex-direction:column;gap:4px;font-size:.85em;color:var(--muted)}
+.tn-bl-f input{font-size:1.4em;font-weight:800;width:100%;box-sizing:border-box}
+/* liste des places */
+.tn-seatlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-top:10px}
+.tn-seatlist>div{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel2);border-radius:10px;padding:8px 12px;font-size:1.15em}
+.tn-seatlist b{color:var(--gold);white-space:nowrap}
+.ec-seats{flex:none;padding:0 .4vw}
+.ec-seats>b{display:block;color:var(--gold);font-size:clamp(14px,2.8vh,34px);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6vh}
+.ec-seats>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,18vw),1fr));gap:.3vh 2vw}
+.ec-seats span{font-size:clamp(12px,2.6vh,32px);display:flex;justify-content:space-between;gap:1vw;border-bottom:1px solid rgba(255,255,255,.12);padding:.2vh 0;color:var(--gold);font-weight:700}
+.ec-seats em{font-style:normal;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ec-seatmode .ec-bl{font-size:clamp(36px,9vh,130px)}
+.ec-seatmode .ec-clock{font-size:clamp(56px,15vh,220px)}

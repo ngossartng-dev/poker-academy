@@ -143,6 +143,42 @@
   function inT(nm) { return T().players.some(function (x) { return x.name.toLowerCase() === String(nm).toLowerCase(); }); }
   function addOne(nm) { var tt = T(); nm = String(nm || '').trim(); if (!nm || inT(nm)) return false; var pl = { name: nm.slice(0, 30), out: false, entries: 1 }; var sn2 = tt.drawn ? snap() : null; tt.players.push(pl); if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); } return true; }
   function alivePl() { return T().players.filter(function (x) { return !x.out; }); }
+  /* ---------- Modifier les blindes du niveau en cours (toucher les blindes sur la page du tournoi) ---------- */
+  var BLED = false, BL_KIND = null;
+  function lineOfLevel(idx) {
+    var lines = ST.text.split(/\n/), n = -1;
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i].trim().toLowerCase(); if (!l) continue;
+      if (/^pause\s*(\d+)?/.test(l) || /^(\d[\d\s.]*?)\s*\/\s*(\d[\d\s.]*?)(?:\s*(bbante|bb ante|ante|a)\s*(\d[\d\s.]*?))?(?:\s+(\d+)\s*min)?\s*$/.test(l)) { n++; if (n === idx) return i; }
+    }
+    return -1;
+  }
+  function setLevel(idx, sb, bb, ante, bbAnte, min) {
+    var lines = ST.text.split(/\n/), i = lineOfLevel(idx); if (i < 0) return false;
+    var L = levels()[idx]; if (!L || L.pause) return false;
+    lines[i] = sb + '/' + bb + (ante > 0 ? (bbAnte ? ' bbante ' : ' ante ') + ante : '') + (min && min !== ST.mins ? ' ' + min + ' min' : '');
+    ST.text = lines.join('\n'); ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0);
+    return true;
+  }
+  function blEditor(s) {
+    var l = s.L[s.idx], inp = function (id, v, lab) { return '<label class="tn-bl-f"><span>' + lab + '</span><input id="' + id + '" type="number" inputmode="numeric" min="0" value="' + v + '" class="tn-in"></label>'; };
+    return '<div class="tn-bl-ed"><div class="tn-bl-t">Niveau ' + l.n + ' : modifier les blindes</div><div class="tn-bl-g">' + inp('blSb', l.sb, 'Petite blinde') + inp('blBb', l.bb, 'Grosse blinde') + inp('blAn', l.ante || 0, 'Ante (0 = aucune)') + inp('blMin', l.min, 'Durée (min)') + '</div>' +
+      '<div class="seg"><button class="' + (l.bbAnte || !l.ante ? 'on' : '') + '" data-tmact="blAnteKind" data-v="bb">Ante de grosse blinde</button><button class="' + (!l.bbAnte && l.ante ? 'on' : '') + '" data-tmact="blAnteKind" data-v="cl">Ante classique</button></div>' +
+      '<div class="row" style="gap:8px;justify-content:center"><button class="btn gold" data-tmact="blSave">Valider</button><button class="btn" data-tmact="blCancel">Annuler</button></div><div class="small muted">Seul ce niveau change ; le chrono continue. Pour toute la structure : Réglages › Structure.</div></div>';
+  }
+  /* ---------- Diffuser sur la télé ---------- */
+  function canCast() { return !!(window.PAAndroid && window.PAAndroid.cast) || IS_PC_APP(); }
+  function doCast() {
+    if (window.PAAndroid && window.PAAndroid.cast) { try { window.PAAndroid.cast(); } catch (e) {} return; }
+    if (IS_PC_APP()) fetch('/api/cast', { method: 'POST' }).catch(function () {});
+  }
+  /* ---------- Liste des places (sans imprimante) ---------- */
+  var SEATS = false;
+  function seatList() { return alivePl().filter(function (x) { return x.table; }).slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }); }); }
+  function seatText() {
+    var t = T(), L = seatList();
+    return '🃏 Placement' + (t.date ? ' du ' + t.date.split('-').reverse().join('/') : '') + '\n' + L.map(function (x) { return x.name + ' : table ' + x.table + ', siège ' + x.seat; }).join('\n');
+  }
   function tablesOf() { var o = {}; alivePl().forEach(function (x) { if (x.table) (o[x.table] = o[x.table] || []).push(x); }); return o; }
   function draw() {
     var t = T(), live = shuffle(alivePl().slice()), n = live.length; if (!n) return;
@@ -250,10 +286,10 @@
     out += '<div class="tn-hero">' +
       '<div class="tn-top"><button class="tn-ghost" data-act="nav" data-v="home" aria-label="Accueil">‹</button><div class="tn-title"><span class="tn-badge tn-' + (t.type || 'mercredi') + '">' + (t.type === 'deep' ? 'Deep ×1,5' : t.type === 'libre' ? 'Hors championnat' : 'Championnat') + '</span><b>' + typeName + '</b><span>' + dateTxt + '</span></div><a class="tn-ghost" href="#classement" aria-label="Classement">🏆</a></div>';
     if (lv) {
-      out += '<div class="tn-lvl">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</div><div class="tn-blinds">' + (lv.pause ? 'Pause' : fmt(lv.sb) + ' / ' + fmt(lv.bb)) + '</div>' + (lv.ante ? '<div class="tn-ante">' + anteTxt(lv) + '</div>' : '') +
+      out += '<div class="tn-lvl">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</div>' + (BLED && !lv.pause ? blEditor(s) : (lv.pause ? '<div class="tn-blinds">Pause</div>' : '<button class="tn-blinds tn-bl-btn" data-tmact="blEdit" title="Toucher pour modifier les blindes">' + fmt(lv.sb) + ' / ' + fmt(lv.bb) + '<span class="tn-bl-pen">✏️</span></button>') + (lv.ante ? '<div class="tn-ante">' + anteTxt(lv) + '</div>' : '')) +
         '<div class="tn-clock" id="tmClock2">' + mmss(s.rem) + '</div><div class="tn-next">' + nextInfo(s) + '</div>' +
         '<div class="tn-ctrl"><button data-tmact="prev" aria-label="Niveau précédent">⏮</button><button data-tmact="minus">−1</button><button class="tn-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? '▶ Reprendre' : '▶ Lancer')) + '</button><button data-tmact="plus">+1</button><button data-tmact="next" aria-label="Niveau suivant">⏭</button></div>' +
-        '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a><a class="tn-big" href="#minuteur">Minuteur ›</a><a class="tn-big" href="#guide?g=soiree">❓ Aide</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button>' + (RM.on ? '<button class="tn-big tn-vb" data-tmact="tab" data-v="reglages">📱 Télécommande ' + RM.code + '</button>' : '') + '</div>';
+        '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a>' + (canCast() ? '<button class="tn-big tn-vb" data-tmact="cast">📡 Diffuser sur la télé</button>' : '') + '<a class="tn-big" href="#minuteur">Minuteur ›</a><a class="tn-big" href="#guide?g=soiree">❓ Aide</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button>' + (RM.on ? '<button class="tn-big tn-vb" data-tmact="tab" data-v="reglages">📱 Télécommande ' + RM.code + '</button>' : '') + '</div>';
     }
     out += '</div>';
     var bdg = lv ? rulesBadges(s) : [], pzl = prizeLine(t);
@@ -284,7 +320,12 @@
             h += '<div class="tn-seat" style="left:' + x + '%;top:' + y + '%">' + (pl ? '<button class="tn-p' + (isH ? ' tn-h' : '') + (isM ? ' tn-moved' : '') + '" data-tmact="ko" data-v="' + t.players.indexOf(pl) + '"><i>' + esc(pl.name.charAt(0).toUpperCase()) + '</i><span>' + esc(pl.name) + '</span></button>' : '<span class="tn-free">' + st + '</span>') + (dB && pl ? '<em class="tn-d">D</em>' : '') + '</div>';
           }
           return h + '</div>';
-        }).join('') + '</div><button class="btn block" data-tmact="print">Imprimer le plan des tables</button>';
+        }).join('') + '</div>';
+        var SL = seatList();
+        out += '<details class="card tn-seats"' + (SEATS ? ' open' : '') + '><summary data-tmact="seatsToggle" style="cursor:pointer"><b>📋 Liste des places</b> <span class="small muted">· ' + SL.length + ' joueurs, par ordre alphabétique</span></summary>' +
+          '<div class="tn-seatlist">' + SL.map(function (x) { return '<div><span>' + esc(x.name) + '</span><b>Table ' + x.table + ' · siège ' + x.seat + '</b></div>'; }).join('') + '</div>' +
+          '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn gold" data-tmact="seatsShare" style="flex:1">📤 Envoyer la liste (WhatsApp…)</button><button class="btn" data-tmact="seatsTv" style="flex:1">' + (t.seatsTv ? '📺 Retirer de l’écran télé' : '📺 Afficher sur l’écran télé') + '</button></div></details>' +
+          '<button class="btn block" data-tmact="print">Imprimer le plan des tables</button>';
       }
     } else if (tab === 'joueurs') {
       out += '<div class="card stack"><b>Inscrire</b><textarea id="tnNames" rows="3" class="tn-in" placeholder="Un pseudo par ligne (ou séparés par des virgules)"></textarea><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="addNames" style="flex:1">Inscrire</button>' + ((window.PA.player() || {}).opps && window.PA.player().opps.length ? '<button class="btn" data-tmact="addOpps">Mes adversaires du club</button>' : '') + '</div>' +
@@ -475,6 +516,25 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-tmact]') : null; if (!t) return;
     var a = t.getAttribute('data-tmact'), s = live(), L = s.L;
+    if (a === 'cast') { doCast(); return; }
+    if (a === 'blEdit') { BLED = true; BL_KIND = null; keepScroll(function () { U().render(); }); setTimeout(function () { var i = document.getElementById('blBb'); if (i) i.select(); }, 50); return; }
+    if (a === 'blCancel') { BLED = false; keepScroll(function () { U().render(); }); return; }
+    if (a === 'blAnteKind') { BL_KIND = t.getAttribute('data-v'); document.querySelectorAll('[data-tmact="blAnteKind"]').forEach(function (b) { b.classList.toggle('on', b === t); }); return; }
+    if (a === 'blSave') {
+      var gv = function (id) { var el = document.getElementById(id); return Math.max(0, parseInt(el && el.value, 10) || 0); };
+      var nsb = gv('blSb'), nbb = gv('blBb'), nan = gv('blAn'), nmin = gv('blMin'), lv0 = s.L[s.idx];
+      if (!nbb || !nsb) { T().msg = 'Indique une petite et une grosse blinde.'; U().render(); return; }
+      var kind = BL_KIND || (lv0.bbAnte || !lv0.ante ? 'bb' : 'cl'), oldMin = lv0.min;
+      freeze();
+      if (setLevel(s.idx, nsb, nbb, nan, kind === 'bb', nmin || oldMin)) {
+        if (nmin && nmin !== oldMin) ST.rem = Math.max(1, ST.rem + (nmin - oldMin) * 60);
+        T().msg = 'Niveau ' + lv0.n + ' : ' + fmt(nsb) + ' / ' + fmt(nbb) + (nan ? ', ante ' + fmt(nan) : '') + '.';
+      }
+      BLED = false; save(); keepScroll(function () { U().render(); }); return;
+    }
+    if (a === 'seatsToggle') { SEATS = !SEATS; return; }
+    if (a === 'seatsShare') { var txt = seatText(), dn = function (m) { T().msg = m; save(); U().render(); }; if (window.PA_LEAGUE && window.PA_LEAGUE.shareText) window.PA_LEAGUE.shareText(txt, dn); else { try { navigator.clipboard.writeText(txt).then(function () { dn('Liste copiée : colle-la dans WhatsApp.'); }); } catch (e) {} } return; }
+    if (a === 'seatsTv') { T().seatsTv = !T().seatsTv; T().msg = T().seatsTv ? 'La liste des places s’affiche en grand sur l’écran télé.' : null; save(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakNow') { bakNow(true); T().msg = 'Tournoi sauvegardé.'; save(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakRestore') { var bi = +t.getAttribute('data-v'), bb0 = baks()[bi]; if (bb0 && (typeof confirm !== 'function' || !hasT(ST) || confirm('Reprendre la copie de ' + hhmm(bb0.at) + ' ? L’état actuel est gardé dans les copies.'))) { restoreBak(bi); T().msg = 'Tournoi repris tel qu’il était le ' + hhmm(bb0.at) + '. Le chrono est en pause : relance-le.'; save(); } U().render(); return; }
     if (a === 'toggle') { if (ST.since) { freeze(); ST.since = null; awake(false); } else { ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
@@ -632,7 +692,8 @@
     var typeName = LG && t.players.length ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Tournoi' }[t.type || 'mercredi'] : 'Tournoi du club';
     var pz = -1, secs = s.rem; for (var k = s.idx + 1; k < s.L.length; k++) { if (s.L[k].pause) { pz = k; break; } secs += s.L[k].min * 60; }
     var stat = function (lab, val, sub) { return '<div class="ec-stat"><span>' + lab + '</span><b>' + val + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; };
-    var h = '<div class="ec' + (l.pause ? ' ec-pause' : '') + '">' +
+    var seatMode = !!(t.seatsTv && t.drawn && alivePl().length > 1);
+    var h = '<div class="ec' + (l.pause ? ' ec-pause' : '') + (seatMode ? ' ec-seatmode' : '') + '">' +
       '<div class="ec-top"><span class="ec-brand">POKER ACADEMY</span><span class="ec-title">' + esc(typeName) + (t.date ? ' · ' + t.date.split('-').reverse().slice(0, 2).join('/') : '') + '</span><span id="ecNow">' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</span></div>' +
       '<div class="ec-main"><div class="ec-clockbox">' +
       '<div class="ec-lvl">' + (l.pause ? 'Pause' : 'Niveau ' + l.n) + (run ? '' : ' · <em>en attente</em>') + '</div>' +
@@ -651,14 +712,15 @@
       '</div></div>';
     // bas : changements de place, puis dernières sorties, puis les tables
     var P = t.pending || [], outs = t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; }).slice(0, 4);
-    if (P.length) h += '<div class="ec-moves"><b>Changements de place</b>' + P.slice(-12).map(function (m) { return '<span><em>' + esc(m.name) + '</em> → table ' + m.tt + ' · siège ' + m.ts + '</span>'; }).join('') + '</div>';
+    if (seatMode) h += '<div class="ec-seats"><b>Placement des joueurs</b><div>' + seatList().map(function (x) { return '<span><em>' + esc(x.name) + '</em> T' + x.table + ' · S' + x.seat + '</span>'; }).join('') + '</div></div>';
+    else if (P.length) h += '<div class="ec-moves"><b>Changements de place</b>' + P.slice(-12).map(function (m) { return '<span><em>' + esc(m.name) + '</em> → table ' + m.tt + ' · siège ' + m.ts + '</span>'; }).join('') + '</div>';
     else if (outs.length) h += '<div class="ec-outs"><b>Dernières sorties</b>' + outs.map(function (x) { return '<span>' + x.place + 'e <em>' + esc(x.name) + '</em>' + (x.koBy ? ' par ' + esc(x.koBy) : '') + '</span>'; }).join('') + '</div>';
-    if (t.drawn && alivePl().length > 1) {
+    if (t.drawn && alivePl().length > 1 && !seatMode) {
       var tb = tablesOf(), ids = Object.keys(tb).map(Number).sort(function (a, b) { return a - b; });
       h += '<div class="ec-tables">' + ids.map(function (id) { return '<div><b>Table ' + id + '</b><span>' + tb[id].slice().sort(function (a, b) { return a.seat - b.seat; }).map(function (q) { return q.seat + '. ' + esc(q.name); }).join(' · ') + '</span></div>'; }).join('') + '</div>';
     }
     if (t.drawn && alivePl().length === 1 && t.players.length > 1) h += '<div class="ec-win">🏆 ' + esc(alivePl()[0].name) + ' remporte le tournoi !</div>';
-    h += '<div class="ec-ctrl"><button data-tmact="ecranOut" aria-label="Quitter">‹ Quitter</button><button data-tmact="prev">⏮</button><button class="ec-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : '▶ Lancer') + '</button><button data-tmact="next">⏭</button><button data-tmact="voice">' + (vOn() ? '🔊' : '🔇') + '</button><button data-tmact="full">⛶ Plein écran</button></div></div>';
+    h += '<div class="ec-ctrl"><button data-tmact="ecranOut" aria-label="Quitter">‹ Quitter</button><button data-tmact="prev">⏮</button><button class="ec-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : '▶ Lancer') + '</button><button data-tmact="next">⏭</button><button data-tmact="voice">' + (vOn() ? '🔊' : '🔇') + '</button><button data-tmact="full">⛶ Plein écran</button>' + (canCast() ? '<button data-tmact="cast">📡 Diffuser</button>' : '') + '</div></div>';
     return h;
   }
   // clavier sur l’écran télé et le minuteur : espace = lancer / pause, flèches = niveau
