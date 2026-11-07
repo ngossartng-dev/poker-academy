@@ -87,7 +87,7 @@
 
   /* ---------- État de partie ---------- */
   var G = null; // partie en cours
-  var SETUP = { format: 'sng9', chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique', huChips: 8000 };
+  var SETUP = { format: 'sng9', chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique', huChips: 8000, sizing: 'club' };
   var MTT_FIELD = 100, MTT_PAID = 15;
   var MTT_PAY = [25, 16, 11.5, 8.5, 6.5, 5, 4, 3.2, 2.6, 2.95, 2.95, 2.95, 2.95, 2.95, 2.95];
   var BUYIN = 10;
@@ -259,7 +259,7 @@
       else Object.keys(H.acted).forEach(function (k) { if (+k !== i && H.acted[k]) H.noRaise[k] = true; }); // tapis incomplet : pas de nouvelle relance pour ceux qui ont déjà parlé
       if (to > H.cur) H.cur = to;
       H.bets[i] = to; rec.amount = to; if (p.stack === 0) H.allin[i] = true;
-      if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; }
+      if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; } else H.sRaises = (H.sRaises || 0) + 1;
     }
     if (H.street === 0 && type === 'call' && H.preRaises === 0 && i !== H.bbSeat) H.limpers++;
     H.acted[i] = true; H.actions.push(rec);
@@ -269,7 +269,7 @@
   function nextStreet() {
     var H = G.hand;
     Object.keys(H.bets).forEach(function (k) { H.pot += H.bets[k]; H.bets[k] = 0; });
-    H.prevChecked = H.street > 0 && H.cur === 0; H.cur = 0; H.lastRaise = H.L.bb; H.acted = {}; H.noRaise = {}; H.street++;
+    H.prevChecked = H.street > 0 && H.cur === 0; H.cur = 0; H.lastRaise = H.L.bb; H.acted = {}; H.noRaise = {}; H.sRaises = 0; H.street++;
     if (H.street === 1) { H.deck.pop(); H.board.push(H.deck.pop(), H.deck.pop(), H.deck.pop()); }
     else if (H.street <= 3) { H.deck.pop(); H.board.push(H.deck.pop()); }
     H.toAct = nextIn(G.button);
@@ -372,6 +372,13 @@
 
   /* ---------- Décisions des adversaires ---------- */
   var LIGHT = { A5s: 2, A4s: 2, A3s: 2, A2s: 2, A9s: 1, A8s: 1, A7s: 1, A6s: 1, K9s: 1, K8s: 1, K7s: 1, K6s: 1, Q9s: 1, J9s: 1, T9s: 1, '98s': 1, '87s': 1, '76s': 1, '65s': 1 };
+  /* tailles de mise des adversaires selon le réglage de la partie */
+  var SIZING = {
+    club: { open: 2, bet: [0.33, 0.5], strong: 0.5, raise: 2.5, wildMax: 0.75, threeIP: 2.7, threeOOP: 3.2, four: 2.1 },
+    standard: { open: null, bet: [0.5, 0.66], strong: 0.66, raise: 2.8, wildMax: 1, threeIP: 3, threeOOP: 3.6, four: 2.2 },
+    grosses: { open: null, bet: [0.66, 1], strong: 1, raise: 3.2, wildMax: 1.25, threeIP: 3.3, threeOOP: 4, four: 2.3 }
+  };
+  function SZ() { return SIZING[G.opts.sizing] || SIZING.club; }
   function botDecide(i) {
     var H = G.hand, p = G.players[i], P = OPP[p.prof], L = H.L, tc = toCall(i), bbs = p.stack / L.bb, pot = potTotal();
     var code = handCode(H.hole[i][0], H.hole[i][1]), hp = PCT[code];
@@ -390,8 +397,9 @@
       }
       if (H.preRaises === 0) {
         var openP = Math.min(hu ? 0.85 : 0.6, P.pfr * late + wild);
-        if (hp < openP) { var std = (G.opts.table === 'club' || G.opts.table === 'monclub') ? 2 : (L.ante ? 2.2 : 2.5); var sz = L.bb * (P.wild ? [2, 2, 2.5, 3, 4, 5][Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= 1.4; return ['raise', Math.round(sz)]; }
-        if (hp < Math.min(hu ? 0.95 : 0.7, P.vpip * late + wild) && (P.limp > 0 || i === H.bbSeat)) return tc === 0 ? ['check'] : ['call'];
+        if (hp < openP) { var std = SZ().open || ((G.opts.table === 'club' || G.opts.table === 'monclub') ? 2 : (L.ante ? 2.2 : 2.5)); var sz = L.bb * (P.wild ? (G.opts.sizing === 'club' ? [2, 2, 2, 2.5, 3, 3] : [2, 2, 2.5, 3, 4, 5])[Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= G.opts.sizing === 'club' ? 1.2 : 1.4; return ['raise', Math.round(sz)]; }
+        var limpR = P.limp > 0 ? P.limp : (P.name === 'Maniac' ? 0 : (G.opts.sizing === 'club' ? 0.3 : G.opts.sizing === 'grosses' ? 0.05 : 0.15));
+        if (hp < Math.min(hu ? 0.95 : 0.7, P.vpip * late + wild) && (i === H.bbSeat || Math.random() < (P.limp > 0 ? 1 : limpR))) return tc === 0 ? ['check'] : ['call'];
         return tc === 0 ? ['check'] : ['fold'];
       }
       // face à une relance
@@ -401,7 +409,8 @@
       if (i === H.bbSeat) callP *= 1.3;
       if (hu) { callP = Math.min(0.75, callP * 2.2); threeP = Math.min(0.25, threeP * 2); }
       if (bubble && P.surv) { threeP *= 0.4; callP *= 0.4; }
-      if (allInFacing || tc >= p.stack * 0.5) { var need = Math.max(0.03, 0.12 - 0.002 * Math.min(40, tc / L.bb) + P.sticky * 0.04); if (P.name === 'Maniac') need += 0.06;
+      if (allInFacing || tc >= p.stack * 0.5) { var tcBB = tc / L.bb, need = tcBB >= 60 ? 0.025 : tcBB >= 40 ? 0.035 : tcBB >= 25 ? 0.06 : Math.max(0.03, 0.12 - 0.002 * Math.min(40, tcBB)); need += P.sticky * (tcBB >= 40 ? 0.01 : 0.04); if (P.name === 'Maniac') need += tcBB >= 40 ? 0.03 : 0.06;
+        if (tcBB >= 25 && H.preRaises >= 2) need *= 0.8; // déjà un 3-bet et un tapis : il faut le haut du haut
         if (G.opts.bounty !== 'classique' && H.opener !== null && G.players[H.opener] && G.players[H.opener].bounty > 0 && p.stack >= G.players[H.opener].stack) need += 0.07;
         if (bubble && rem > 2) need *= 0.6; return hp < need + (price < 0.35 ? 0.05 : 0) ? ['call'] : ['fold']; }
       // chapitres 39 à 41 : squeeze, 3-bet light des positions tardives, « 3-bet ou couche » en petite blinde, moins de cold calls
@@ -414,7 +423,8 @@
       if (bubble && P.surv) lightOK = false;
       var light = lightOK && Math.random() < P.light * (callers > 0 ? 1.15 : 1);
       if (hp < threeP || light) {
-        var to = H.preRaises >= 2 ? H.cur * 2.3 : (H.cur * (pos === 'BTN' || pos === 'CO' ? 3 : 4) + callers * H.cur + (i === H.bbSeat || pos === 'SB' ? L.bb : 0));
+        if (H.preRaises >= 3 && hp > 0.02) return hp < callP * 0.3 ? ['call'] : (tc === 0 ? ['check'] : ['fold']); // 5-bet : seulement les monstres
+        var to = H.preRaises >= 2 ? H.cur * SZ().four : (H.cur * (pos === 'BTN' || pos === 'CO' ? SZ().threeIP : SZ().threeOOP) + callers * H.cur + (i === H.bbSeat || pos === 'SB' ? L.bb : 0));
         if (effBB <= 30 && H.preRaises === 1) to = p.stack + H.bets[i]; // 20-30 BB : 3-bet et squeeze à tapis
         if (to > (p.stack + H.bets[i]) * 0.4) to = p.stack + H.bets[i]; return ['raise', Math.round(to)];
       }
@@ -425,22 +435,25 @@
     var opp = activeCount() - 1, eq = equity(H.hole[i], H.board, Math.max(1, opp), 180);
     var spr = p.stack / Math.max(1, pot);
     if (tc > 0) {
-      var po = tc / (pot + tc);
-      if (eq > 0.8 && Math.random() < P.agg) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * 2.8))];
-      if (spr < 0.6 && eq > 0.38) return ['call'];
-      if (eq + P.sticky * 0.18 > po + 0.03) return ['call'];
-      if (Math.random() < P.bluff * 0.25 && tc < pot * 0.5) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * 3))];
+      var po = tc / (pot + tc), sr = H.sRaises || 0, big = tc > (pot - tc) * 0.8, multi = opp >= 2;
+      var betR = Math.min(1.5, tc / Math.max(1, pot - tc)); eq = eq - 0.1 - 0.12 * betR - (sr ? 0.08 : 0) + P.sticky * 0.06; // range de mise adverse plus forte qu'une main au hasard
+      // une relance au plus par tour, une sur-relance seulement avec une main énorme
+      if (sr <= 1 && eq > (sr ? 0.8 : 0.68) && Math.random() < P.agg * (sr ? 0.5 : 1)) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * SZ().raise))];
+      if (spr < 0.6 && eq > 0.3) return ['call'];
+      var stick = P.sticky * (multi ? 0.08 : 0.15) * (big ? 0.5 : 1) * (sr ? 0.5 : 1);
+      if (eq + stick > po + (big ? 0.07 : 0.03) + (sr ? 0.06 : 0)) return ['call'];
+      if (sr === 0 && Math.random() < P.bluff * 0.2 && tc < pot * 0.4 && !multi) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * SZ().raise))];
       return ['fold'];
     }
-    var betFrac = P.name === 'Maniac' ? (Math.random() < 0.3 ? 1.3 : 0.8) : (P.wild ? [0.25, 0.5, 1, 1.5][Math.floor(Math.random() * 4)] : (eq > 0.75 ? 0.66 : 0.5));
+    var Z = SZ(), betFrac = P.name === 'Maniac' ? Math.min(Z.wildMax * 1.2, Math.random() < 0.3 ? 1.1 : 0.75) : (P.wild ? Math.min(Z.wildMax, [0.25, 0.5, 0.75, 1][Math.floor(Math.random() * 4)]) : (eq > 0.75 ? Z.strong : Z.bet[Math.random() < 0.5 ? 0 : 1]));
     var size = Math.max(L.bb, Math.round(pot * betFrac));
-    if (eq > 0.62 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack] : ['raise', size];
+    if (eq > 0.62 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack + H.bets[i]] : ['raise', size];
     var isAggressor = H.lastAggressor === i;
     // chapitre 43 : après un tour checké, le relanceur fait son c-bet retardé, l’autre sonde
     if (opp === 1 && H.street >= 2 && H.prevChecked) {
       var pfaMe = H.pfa === i, firstToAct = Object.keys(H.acted).length === 0;
-      if (pfaMe && !firstToAct && Math.random() < 0.25 + P.agg * 0.45) return ['raise', Math.min(p.stack, Math.max(L.bb, Math.round(pot * 0.5)))];
-      if (!pfaMe && firstToAct && (eq > 0.45 || Math.random() < P.agg * 0.4)) return ['raise', Math.min(p.stack, Math.max(L.bb, Math.round(pot * 0.6)))];
+      if (pfaMe && !firstToAct && Math.random() < 0.25 + P.agg * 0.45) return ['raise', Math.min(p.stack, Math.max(L.bb, Math.round(pot * Z.bet[0] * 1.2)))];
+      if (!pfaMe && firstToAct && (eq > 0.45 || Math.random() < P.agg * 0.4)) return ['raise', Math.min(p.stack, Math.max(L.bb, Math.round(pot * Z.bet[1])))];
     }
     if (Math.random() < P.bluff * (opp === 1 ? 1.6 : 0.6) * (isAggressor ? 1.6 : 1)) return ['raise', Math.min(p.stack, size)];
     return ['check'];
@@ -591,6 +604,7 @@
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal'], ['semi', 'Semi-turbo'], ['turbo', 'Turbo']]) +
+      '<b>Mises des adversaires</b>' + seg('sizing', [['club', 'Petites (comme au club)'], ['standard', 'Moyennes'], ['grosses', 'Grosses']]) + '<div class="small muted">Petites : ouvertures à 2 BB, mises d’environ 1/3 à 1/2 du pot, relances à 2,5 fois. Grosses : mises aux 2/3 ou au pot, relances à 3 fois.</div>' +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
       '<b>Coach</b>' + seg('coach', [[true, 'Avec Yo'], [false, 'Sans coach (bilan à la fin)']]) +
@@ -710,7 +724,8 @@
       var tc = toCall(0), pot = potTotal(), maxTo = me.stack + H.bets[0], minTo = H.cur + H.lastRaise;
       var btns = [];
       btns.push(['fold', tc === 0 ? 'Parole' : 'Se coucher', 'a-fold', tc === 0 ? 'check' : 'fold']);
-      if (tc > 0) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
+      var limpNow = H.street === 0 && H.preRaises === 0 && H.pos[0] !== 'BB';
+      if (tc > 0) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : limpNow ? (H.pos[0] === 'SB' ? 'Compléter (limp) ' : 'Limper ') : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
       var sizes = [], blind = H.pos[0] === 'SB' || H.pos[0] === 'BB';
       if (H.street === 0) {
         // tailles du cours : isolement 3 BB en position, 4 BB des blindes, +1 par limper ; 3-bet ×3 en position, ×4 hors position (+1 ouverture par payeur) ; 4-bet ×2,2 à ×2,5
