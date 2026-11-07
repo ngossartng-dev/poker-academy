@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.23.0';
+  var VERSION = '2.24.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -723,7 +723,7 @@
 
   function reglagesView() {
     var p = PA.player(), s = p.settings;
-    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k] === undefined && (k === 'tableFx' || k === 'tableSnd') ? true : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="' + (CLUB ? 'home' : 'moi') + '">‹ ' + (CLUB ? 'Accueil' : 'Moi') + '</button><h1>Réglages</h1>' + '<a class="btn gold block" href="#guide">❓ Mode d’emploi</a>' + (window.PA_SYNC ? window.PA_SYNC.updLink('btn block') : '') +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
@@ -731,6 +731,8 @@
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
       '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique'], ['noir', 'Noir et or'], ['sombre', 'Sombre et rouge']]) +
+      '<b>Animations de la table</b>' + seg('tableFx', [[true, 'Oui'], [false, 'Non']]) + '<div class="small muted">Cartes distribuées, flop, turn et river qui se retournent, jetons qui glissent vers le pot.</div>' +
+      '<b>Sons de la table</b>' + seg('tableSnd', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Décor de saison</b>' + seg('season', [['auto', 'Selon la date'], ['classique', 'Toujours classique'], ['halloween', 'Halloween'], ['noel', 'Noël'], ['hiver', 'Hiver']]) + '<div class="small muted">« Selon la date » : Halloween fin octobre, Noël en décembre, Hiver en janvier et février, classique le reste de l’année.</div>' +
       '<b>Taille d’ouverture</b>' + seg('openSize', [['club', '2 BB (habitude du club)'], ['std', '2,2 à 2,5 BB']]) + '<div class="small muted">Utilisée dans les exercices et proposée en premier à la table. Depuis la SB : 3 BB.</div></div>' +
       '<a class="card stack" href="#sauvegarde" style="text-decoration:none;color:inherit"><b>Sauvegarde, synchronisation et mises à jour ›</b><span class="small muted">Sauvegarde automatique (Google Drive sur PC), passage PC ↔ téléphone, nouvelle version, journal des erreurs.</span></a>' +

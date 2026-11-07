@@ -591,3 +591,19 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .gh-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .gh-bar i{display:block;height:100%;background:var(--gold)}
 @media(min-width:700px){.gh-c span{font-size:.72em}.gh-c b{font-size:1.6em}.gh-c>small{font-size:.75em}}
+
+/* animations de la table d'entraînement */
+@keyframes fxDealMe{0%{opacity:0;transform:translate(0,-38vh) scale(.45) rotate(-12deg)}70%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes fxDealO{0%{opacity:0;transform:scale(.2) rotate(30deg)}100%{opacity:1;transform:none}}
+@keyframes fxFlip{0%{opacity:0;transform:translateY(-26px) rotateY(90deg) scale(.85)}55%{opacity:1;transform:translateY(0) rotateY(90deg)}100%{opacity:1;transform:rotateY(0)}}
+@keyframes fxChip{0%{left:var(--sx);top:var(--sy);opacity:.15;transform:translate(-50%,-50%) scale(.6)}100%{left:var(--bx);top:var(--by);opacity:1}}
+@keyframes fxPot{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.14);box-shadow:0 0 0 6px rgba(255,210,63,.35)}100%{transform:translate(-50%,-50%) scale(1)}}
+.fx-dealme .pcm{animation:fxDealMe .45s cubic-bezier(.2,.8,.25,1) both}
+.fx-dealme .pcm:nth-child(1){animation-delay:var(--d1)}.fx-dealme .pcm:nth-child(2){animation-delay:var(--d2)}
+.fx-dealo .pcs{animation:fxDealO .3s ease-out both}
+.fx-dealo .pcs:nth-child(1){animation-delay:var(--d1)}.fx-dealo .pcs:nth-child(2){animation-delay:var(--d2)}
+.fx-board{display:contents}
+.fx-board>.pcm{animation:fxFlip .5s ease-out both;animation-delay:var(--d)}
+.board2{perspective:600px}
+.bet2.fx-chip{animation:fxChip .38s cubic-bezier(.2,.8,.3,1) both;animation-delay:var(--cd)}
+.pot2.fx-pot{animation:fxPot .55s ease-out both;animation-delay:var(--pd)}

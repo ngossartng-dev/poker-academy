@@ -617,6 +617,44 @@
   function pileHtml(L) { return '<span class="cpile" style="height:' + (13 + L.length * 3.2) + 'px">' + L.map(function (c, i) { return '<i style="--i:' + i + ';--k:' + c[1] + ';--e:' + c[2] + '"></i>'; }).join('') + '</span>'; }
   function chipPiles(x, max, per) { var L = chipList(x).slice(0, max), P = []; for (var i = 0; i < L.length; i += per) P.push(pileHtml(L.slice(i, i + per))); return '<span class="cpiles">' + P.join('') + '</span>'; }
   function bbTxt(x) { var H = G.hand; return String(Math.round(x / H.L.bb * 10) / 10).replace('.', ','); }
+  /* ---------- Animations et sons de la table (distribution, mises, pot) ---------- */
+  var FX = { hand: -1, board: 0, bets: {}, pot: 0, done: false };
+  var ACX = null;
+  function fxOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableFx !== false && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function sndOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableSnd !== false; }
+  function ac() { try { if (!ACX) ACX = new (window.AudioContext || window.webkitAudioContext)(); if (ACX.state === 'suspended') ACX.resume(); return ACX; } catch (e) { return null; } }
+  // carte qui glisse : petit souffle de bruit filtré
+  function sCard(at) {
+    var c = ac(); if (!c) return; var t = c.currentTime + (at || 0), len = 0.07, b = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.2);
+    var src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; f.type = 'bandpass'; f.frequency.value = 2600 + Math.random() * 900; f.Q.value = 0.9; g.gain.value = 0.55;
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start(t);
+  }
+  // jeton : deux petits « clic » métalliques
+  function sChip(at, n) {
+    var c = ac(); if (!c) return; n = n || 2;
+    for (var k = 0; k < n; k++) {
+      var t = c.currentTime + (at || 0) + k * (0.045 + Math.random() * 0.03), o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.value = 3200 + Math.random() * 1400; o2.type = 'sine'; o2.frequency.value = 5400 + Math.random() * 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      o.connect(g); o2.connect(g); g.connect(c.destination); o.start(t); o2.start(t); o.stop(t + 0.08); o2.stop(t + 0.08);
+    }
+  }
+  // repère ce qui vient d'apparaître et garde l'heure de départ de chaque animation :
+  // un nouvel affichage (action d'un adversaire) continue l'animation au lieu de la couper
+  function fxDiff(H, n) {
+    var now = Date.now(), out = { newHand: false, board: [], bets: {}, collect: false, win: false };
+    if (FX.hand !== G.handNo) { out.newHand = true; FX = { hand: G.handNo, board: 0, bets: {}, pot: 0, done: false, t: { deal: now } }; }
+    for (var i = FX.board; i < H.board.length; i++) { out.board.push(i); FX.t['b' + i] = now + (i - FX.board) * 160; }
+    var hadBets = Object.keys(FX.bets).some(function (k) { return FX.bets[k] > 0; }), nowBets = false;
+    for (var k = 0; k < n; k++) { var b = H.bets[k] || 0; if (b > 0) nowBets = true; if (b > (FX.bets[k] || 0)) { out.bets[k] = true; FX.t['c' + k] = now; } }
+    if (hadBets && !nowBets && H.pot > FX.pot) { out.collect = true; FX.t.pot = now; }
+    if (H.done && !FX.done) { out.win = true; FX.t.pot = now; }
+    FX.board = H.board.length; FX.bets = {}; for (var j = 0; j < n; j++) FX.bets[j] = H.bets[j] || 0; FX.pot = H.pot; FX.done = !!H.done;
+    return out;
+  }
+  // délai CSS (en secondes, négatif si l'animation est déjà commencée) ; null quand elle est finie
+  function fxDelay(key, base, dur) { var t0 = FX.t && FX.t[key]; if (!t0) return null; var el = (Date.now() - t0) / 1000 - (base || 0); return el > dur ? null : (-el).toFixed(3) + 's'; }
   function tableView() {
     var ui = U();
     if (!G) { location.hash = '#partie'; return ''; }
@@ -624,6 +662,7 @@
     var H = G.hand, n = G.players.length, L = H.L;
     var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 40 : 44, RY = narrow ? 41 : 42;
     var theme = (window.PA.player().settings || {}).tableTheme || 'sombre';
+    var D = fxDiff(H, n), FXV = fxOn(), dealD = function (k, r) { return fxDelay('deal', (r * n + k) * 0.06, 0.45); }, dealing = FXV && fxDelay('deal', 0, (2 * n) * 0.06 + 0.45) !== null;
     var h = '<div class="felt2 t-' + theme + '"><div class="rail"></div>';
     for (var k = 0; k < n; k++) {
       var p = G.players[k], a = SEATPOS9(k, n), x = 50 + RX * Math.cos(a), y = 50 + RY * Math.sin(a);
@@ -631,16 +670,24 @@
       var showCards = k === 0 || (H.done && H.showdown && inH && !fold);
       var nm = k === 0 ? 'Toi' : p.name;
       h += '<button class="seat2' + (k === 0 ? ' hero' : '') + ((fold || out) ? ' out' : '') + (H.toAct === k && !H.done ? ' turn' : '') + '" data-gact="seat" data-v="' + k + '" style="left:' + x + '%;top:' + y + '%">';
-      if (inH && !fold && k !== 0) h += '<span class="mc">' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</span>';
+      if (inH && !fold && k !== 0) h += '<span class="mc' + (dealing ? ' fx-dealo' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(k, 0) || '-9s') + ';--d2:' + (dealD(k, 1) || '-9s') + '"' : '') + '>' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</span>';
       h += '<span class="av">' + ui.esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm2">' + ui.esc(nm) + '</span><span class="ps' + (k === G.button ? ' btn-d' : '') + '">' + (H.pos[k] || '') + '</span>' +
         '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>';
       if (G.opts.bounty !== 'classique' && !out) h += '<span class="bty">' + (G.opts.bounty === 'space' && k !== 0 ? '?' : p.bounty.toFixed(0) + ' €') + '</span>';
       h += '</button>';
-      if (H.bets[k]) { var bx = 50 + RX * 0.62 * Math.cos(a), by = 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2" style="left:' + bx + '%;top:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + PA.fmt(H.bets[k]) + '</div>'; }
+      if (H.bets[k]) { var bx = 50 + RX * 0.62 * Math.cos(a), by = 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2' + (FXV && fxDelay('c' + k, 0, 0.38) ? ' fx-chip' : '') + '" style="--cd:' + (fxDelay('c' + k, 0, 0.38) || '0s') + ';left:' + bx + '%;top:' + by + '%;--sx:' + x + '%;--sy:' + y + '%;--bx:' + bx + '%;--by:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + PA.fmt(H.bets[k]) + '</div>'; }
     }
-    h += '<div class="pot2">' + (potTotal() > 0 ? chipPiles(potTotal(), 12, 4) : '') + 'Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
-    h += '<div class="board2">' + [0, 1, 2, 3, 4].map(function (i) { return H.board[i] !== undefined ? cardMid(H.board[i]) : '<div class="slot"></div>'; }).join('') + '</div>';
-    if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2">' + H.hole[0].map(cardMid).join('') + '</div>';
+    h += '<div class="pot2' + (FXV && fxDelay('pot', 0, 0.55) ? ' fx-pot' : '') + '" style="--pd:' + (fxDelay('pot', 0, 0.55) || '0s') + '">' + (potTotal() > 0 ? chipPiles(potTotal(), 12, 4) : '') + 'Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
+    h += '<div class="board2">' + [0, 1, 2, 3, 4].map(function (i) { var bd = FXV ? fxDelay('b' + i, 0, 0.5) : null; return H.board[i] !== undefined ? (bd ? '<div class="fx-board" style="--d:' + bd + '">' + cardMid(H.board[i]) + '</div>' : cardMid(H.board[i])) : '<div class="slot"></div>'; }).join('') + '</div>';
+    if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2' + (dealing ? ' fx-dealme' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(0, 0) || '-9s') + ';--d2:' + (dealD(0, 1) || '-9s') + '"' : '') + '>' + H.hole[0].map(cardMid).join('') + '</div>';
+    // les sons suivent les animations
+    if (sndOn()) {
+      if (D.newHand) { var nn = 0; for (var q2 = 0; q2 < 2; q2++) for (var q1 = 0; q1 < n; q1++) if (H.inHand[q1]) sCard(nn++ * 0.06); }
+      D.board.forEach(function (bi2, j) { sCard(0.05 + j * 0.16); });
+      var nb = Object.keys(D.bets).length; if (nb) sChip(D.newHand ? 0.05 : 0.08, Math.min(4, 1 + nb));
+      if (D.collect) sChip(0.02, 5);
+      if (D.win) sChip(0.15, 6);
+    }
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
       var q = G.players[G.pop];
       h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' +
