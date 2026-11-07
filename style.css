@@ -580,3 +580,14 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .upd-card.upd-new{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,210,63,.18)}
 .upd-alert{background:var(--gold)!important;color:var(--gold-ink)!important;border-color:var(--gold)!important;font-weight:800;animation:ecpulse 1.6s ease-in-out infinite}
 .upd-alert span{color:var(--gold-ink)!important}
+
+/* tableau de bord des tournois d'entraînement */
+.gh{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;position:relative;padding-bottom:5px}
+.gh-c{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 6px;display:flex;flex-direction:column;min-width:0;text-align:center}
+.gh-c span{font-size:.6em;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh-c b{font-family:'Big Shoulders Display',Impact,sans-serif;font-size:1.2em;color:var(--gold);line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gh-c b small{font-size:.65em;color:var(--muted)}
+.gh-c>small{font-size:.62em;color:var(--muted);line-height:1.15}
+.gh-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.gh-bar i{display:block;height:100%;background:var(--gold)}
+@media(min-width:700px){.gh-c span{font-size:.72em}.gh-c b{font-size:1.6em}.gh-c>small{font-size:.75em}}

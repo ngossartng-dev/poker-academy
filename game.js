@@ -111,12 +111,32 @@
     }
     var field = [];
     if (opts.mtt) for (var f = 0; f < MTT_FIELD - n; f++) field.push({ stack: opts.chips, bounty: startBounty(opts) });
-    G = { opts: opts, players: players, button: Math.floor(Math.random() * n), level: 0, handNo: 0, hand: null, log: [], stats: { hands: 0, vpip: 0, pfr: 0, pre: { ok: 0, style: 0, err: 0, n: 0 }, post: { ok: 0, n: 0 }, big: [], consult: 0, notes: [], bountyCash: 0, kos: 0, phase: {}, autoHands: 0 }, over: false, place: null, coachMsg: null, busy: false, field: field, mix: mix, nameIdx: n, names: names, keyMsg: null };
+    G = { opts: opts, players: players, button: Math.floor(Math.random() * n), level: 0, handNo: 0, hand: null, log: [], stats: { hands: 0, vpip: 0, pfr: 0, pre: { ok: 0, style: 0, err: 0, n: 0 }, post: { ok: 0, n: 0 }, big: [], consult: 0, notes: [], bountyCash: 0, kos: 0, phase: {}, autoHands: 0 }, over: false, place: null, coachMsg: null, busy: false, field: field, mix: mix, nameIdx: n, names: names, keyMsg: null, played: 0 };
     var pl = PA.player(); pl.last = { route: 'jeu', label: 'Partie en cours' }; PA.save();
     startHand();
   }
   function alive() { return G.players.filter(function (p) { return p.stack > 0; }); }
   function startBounty(opts) { return opts.bounty === 'classique' ? 0 : BUYIN / 2; }
+  /* ---------- Tableau de bord du tournoi : temps de jeu, niveau, joueurs restants, tapis moyen ---------- */
+  function totalChips() { return (G.players.length + (G.field ? G.field.length : 0)) * G.opts.chips; }
+  function clockTxt(ms) { var t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60; return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (sec < 10 ? '0' : '') + sec; }
+  function hud() {
+    var L = levelInfo(), per = PACE[G.opts.pace] || 12, inLvl = G.handNo > 0 ? (G.handNo - 1) % per : 0, left = per - inLvl;
+    var rem = G.opts.mtt ? remaining() : alive().length, start = G.opts.mtt ? MTT_FIELD : G.players.length, avg = totalChips() / Math.max(1, rem), me = G.players[0];
+    var cell = function (ic, lab, val, sub, id) { return '<div class="gh-c"><span>' + ic + ' ' + lab + '</span><b' + (id ? ' id="' + id + '"' : '') + '>' + val + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; };
+    return '<div class="gh">' +
+      cell('⏱', 'Temps', clockTxt(G.played || 0), 'niveau ' + L.n, 'ghClock') +
+      cell('🔺', 'Blindes', PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb), (L.ante ? 'ante ' + PA.fmt(L.ante) + ' · ' : '') + '↑ dans ' + left + ' main' + (left > 1 ? 's' : '')) +
+      cell('👥', 'Joueurs', rem + '<small> / ' + start + '</small>', G.opts.mtt ? MTT_PAID + ' payés' : (paidPlaces() + ' payé' + (paidPlaces() > 1 ? 's' : ''))) +
+      cell('🪙', 'Moyen', PA.fmt(Math.round(avg)), Math.round(avg / L.bb) + ' BB (toi ' + Math.round(me.stack / L.bb) + ')') +
+      '<div class="gh-bar"><i style="width:' + Math.round(inLvl / per * 100) + '%"></i></div></div>';
+  }
+  // le temps de jeu avance seulement quand la table est à l'écran
+  setInterval(function () {
+    if (!G || G.over || document.hidden || !/^#jeu/.test(location.hash)) return;
+    G.played = (G.played || 0) + 1000;
+    var el = document.getElementById('ghClock'); if (el) el.textContent = clockTxt(G.played);
+  }, 1000);
   function remaining() { return alive().length + (G.field ? G.field.filter(function (f) { return f.stack > 0; }).length : 0); }
   function paidPlaces() { return G.opts.mtt ? MTT_PAID : PAYOUT[G.opts.seats].length; }
   function prizeFor(place) { if (G.opts.mtt) { var pool = MTT_FIELD * BUYIN * (G.opts.bounty === 'classique' ? 1 : 0.5); return place <= MTT_PAID ? pool * MTT_PAY[place - 1] / 100 : 0; } var pool2 = G.opts.seats * BUYIN * (G.opts.bounty === 'classique' ? 1 : 0.5); var pp = PAYOUT[G.opts.seats][place - 1]; return pp ? pool2 * pp : 0; }
@@ -629,7 +649,8 @@
         (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
     }
     h += '</div>';
-    var info = '<div class="small muted" style="text-align:center">Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + (G.opts.mtt ? remaining() + ' / ' + MTT_FIELD + ' joueurs, ' + MTT_PAID + ' payés' : alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
+    var hasHud = G.opts.format !== 'hu';
+    var info = '<div class="small muted" style="text-align:center">' + (hasHud ? 'Main ' + G.handNo : 'Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
       (G.keyMsg ? U().yo(G.keyMsg) : '');
     var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + { sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go 6', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
     var me = G.players[0];
@@ -663,7 +684,7 @@
     } else {
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="banner muted" style="text-align:center">' + (H.inHand[0] && !H.folded[0] ? 'Au tour de ' + ui.esc(G.players[H.toAct] ? G.players[H.toAct].name : '…') + '…' : 'Tu t’es couché. La main continue…') + '</div>' + (H.folded[0] || !H.inHand[0] ? '<button class="btn block" data-gact="skip">Passer à la main suivante</button>' : '');
     }
-    return ui.shell('entrainer', '<div class="stack">' + top + info + h + mine + bottom + '</div>', true);
+    return ui.shell('entrainer', '<div class="stack">' + top + (G.opts.format === 'hu' ? '' : hud()) + info + h + mine + bottom + '</div>', true);
   }
   function bilanView() {
     var ui = U(), s = G.stats, prize = PAYOUT[G.opts.seats][G.place - 1];
