@@ -63,8 +63,8 @@
     var last = a.length ? Math.max(a[0].at, chk) : 0;
     out += '<details class="card tn-bak"><summary style="cursor:pointer"><b>💾 Sauvegarde automatique</b> <span class="small muted">· ' + (last ? ago(last) : 'bientôt') + ' · toutes les 3 min</span></summary><div class="stack" style="gap:8px;margin-top:8px">' +
       '<div class="small muted">Joueurs en jeu et éliminés, places, tables, re-entries, add-ons, jetons en jeu, niveau et temps restant : tout est copié toutes les 3 minutes' + (IS_PC_APP() ? ', et la dernière copie est aussi écrite dans ton Drive (Poker Academy › Sauvegardes › tournoi-en-cours.json)' : '') + '. Si l’appli plante, rouvre-la : le tournoi est là. En cas de fausse manœuvre, reprends une copie ci-dessous.</div>' +
-      '<button class="btn" data-tmact="bakNow">Sauvegarder maintenant</button>';
-    if (a.length) out += '<div class="stack" style="gap:6px">' + a.map(function (b, i) { var Lb = levels()[b.lvl]; return '<div class="tn-row"><span style="flex:1">' + hhmm(b.at) + ' · <b>' + b.left + '</b>/' + b.entrants + ' en jeu' + (Lb ? ' · ' + (Lb.pause ? 'pause' : 'niv. ' + Lb.n) : '') + '</span><button class="btn" data-tmact="bakRestore" data-v="' + i + '" style="min-height:36px;padding:4px 12px">Reprendre</button></div>'; }).join('') + '</div>';
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="bakNow">Sauvegarder maintenant</button>' + (window.PA_GUIDE ? window.PA_GUIDE.link('sauvetournoi') : '') + '</div>';
+    if (a.length) out += '<div class="stack" style="gap:6px">' + a.map(function (b, i) { var Lb = levels()[b.lvl]; return '<div class="row" style="justify-content:space-between;gap:8px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1;min-width:0">' + hhmm(b.at) + ' · ' + b.left + ' / ' + b.entrants + ' en jeu' + (Lb ? ' · ' + (Lb.pause ? 'pause' : 'niv. ' + Lb.n) : '') + '</span><button class="btn" data-tmact="bakRestore" data-v="' + i + '" style="min-height:36px;padding:4px 12px;flex:none">Reprendre</button></div>'; }).join('') + '</div>';
     return out + '</div></details>';
   }
   function levels() {
