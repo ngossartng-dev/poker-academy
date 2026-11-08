@@ -6,13 +6,13 @@
   'use strict';
   var PA = window.PA, LADDER = ['nit', 'tag', 'equilibre', 'lag'];
   var GROUP_POS = { early: ['UTG', 'UTG+1', 'MP'], mid: ['LJ', 'HJ'], late: ['CO', 'BTN', 'SB'], bb: ['BB'] };
-  var GROUP_SCEN = { early: 'early', mid: 'oop', late: 'ip' };
+  var GROUP_SCEN = { early: 'early', mid: 'oop', late: 'ip' }, GROUP_SCEN2 = { late: 'bvb' };
   function groupOf(s) { if (s.type === 'def' && s.pos === 'BB') return 'bb'; var i = PA.POS.indexOf(s.pos); return i <= 2 ? 'early' : (i <= 4 ? 'mid' : 'late'); }
   function build(answers, best) {
     var cnt = { early: [0, 0, 0], mid: [0, 0, 0], late: [0, 0, 0], bb: [0, 0, 0] }; // [plus large, plus serré, total]
     answers.forEach(function (a) {
       var s = a.q.sit; if (s.type !== 'open' && s.type !== 'def' && s.type !== 'vs3bet') return;
-      var g = s.type === 'vs3bet' ? ({ early: 'early', oop: 'mid', ip: 'late' }[s.scen] || 'late') : groupOf(s);
+      var g = s.type === 'vs3bet' ? ({ early: 'early', oop: 'mid', ip: 'late', bvb: 'late' }[s.scen] || 'late') : groupOf(s);
       var ref = PA.actionFor(best, s, a.q.hand), play = a.given && a.given !== 'fold', refPlay = ref !== 'fold';
       cnt[g][2]++; if (play && !refPlay) cnt[g][0]++; if (!play && refPlay) cnt[g][1]++;
     });
@@ -38,6 +38,7 @@
         });
       });
       if (GROUP_SCEN[g]) put({ type: 'vs3bet', scen: GROUP_SCEN[g], bb: 100 }, gp[g]);
+      if (GROUP_SCEN2[g]) put({ type: 'vs3bet', scen: GROUP_SCEN2[g], bb: 100 }, gp[g]);
     });
     // tes vrais choix du test, s'ils sont jouables (un des profils les joue)
     answers.forEach(function (a) {

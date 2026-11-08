@@ -426,6 +426,18 @@
       var opPos = H.opener !== null && H.opener !== undefined ? H.pos[H.opener] : null, lateOp = opPos === 'CO' || opPos === 'BTN' || opPos === 'SB' || opPos === 'HJ';
       var lightOK = H.preRaises === 1 && !hu && (P.light || 0) > 0 && effBB >= 20 && LIGHT[code] && (pos === 'BTN' || pos === 'SB' || pos === 'BB' || (pos === 'CO' && opPos === 'HJ')) && (lateOp || LIGHT[code] === 2);
       if (callers > 0) threeP *= 1.3; // squeeze de valeur : argent mort
+      // blinde contre blinde : la grosse blinde sur-relance large contre l'ouverture de la petite blinde
+      var bvb = H.preRaises === 1 && opPos === 'SB' && i === H.bbSeat && !hu;
+      if (bvb) { threeP *= 1.9 + P.agg * 0.6; if (P.light) lightOK = lightOK || (LIGHT[code] && effBB >= 20); }
+      // la petite blinde a ouvert et la grosse blinde la 3-bet : elle répond avec la range « blinde contre blinde » de son profil
+      if (H.preRaises === 2 && i === H.opener && pos === 'SB' && H.pfa === H.bbSeat && effBB >= 40 && !hu) {
+        var bmap = { nit: 'nit', surv: 'nit', reg: 'tag', lag: 'lag', maniac: 'lag', lp: 'equilibre', station: 'equilibre', fan: 'equilibre' }, bk = 'tag';
+        Object.keys(OPP).forEach(function (k) { if (OPP[k] === P) bk = bmap[k] || 'tag'; });
+        var bact = PA.chart(bk, { type: 'vs3bet', scen: 'bvb', bb: 100 })[code];
+        if (bact === 'fourbet' || bact === 'allin') { var t4 = H.cur * SZ().four; if (t4 > (p.stack + H.bets[i]) * 0.4) t4 = p.stack + H.bets[i]; return ['raise', Math.round(t4)]; }
+        if (bact === 'call' || (P.sticky >= 0.6 && hp < 0.35 && Math.random() < P.sticky * 0.5)) return ['call'];
+        return ['fold'];
+      }
       if (pos === 'SB' && !P.limp && P.sticky < 0.6) callP *= 0.25; // petite blinde : 3-bet ou couche
       else if (pos !== 'BTN' && pos !== 'BB' && pos !== 'SB' && P.sticky < 0.6) callP *= 0.6; // cold call rare hors du bouton
       if (bubble && P.surv) lightOK = false;
@@ -530,6 +542,14 @@
       }
       if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) return { sit: { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : (eff > 30 ? Math.round(eff) : 30) }, hand: code };
     }
+    // tu as ouvert et un seul joueur te 3-bet (tapis profonds) : les quatre cas de « Face à un 3-bet »
+    if (H.preRaises === 2 && H.opener === 0 && H.pfa !== 0 && H.pfa !== null && eff >= 40 && H.order.length > 2) {
+      var tb = map9[H.pos[H.pfa]], live3 = 0;
+      Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== 0 && k !== H.pfa && !H.folded[k] && H.bets[k] > 0 && H.bets[k] >= H.L.bb * 2) live3++; });
+      if (live3 > 0 || G.players[H.pfa].stack === 0) return null;
+      var sc = p === 'SB' && tb === 'BB' ? 'bvb' : (['UTG', 'UTG+1', 'MP'].indexOf(p) >= 0 ? 'early' : (p === 'BTN' && (tb === 'SB' || tb === 'BB') ? 'ip' : (PA.POS.indexOf(tb) > PA.POS.indexOf(p) ? 'oop' : null)));
+      if (sc) return { sit: { type: 'vs3bet', scen: sc, pos: p, opener: tb, bb: 100 }, hand: code };
+    }
     return null;
   }
   function coachBefore() {
@@ -546,6 +566,7 @@
     var prof = PA.player().profile || 'tag';
     var given = { fold: 'fold', check: 'fold', call: 'call', raise: 'raise', allin: 'allin' }[type];
     if (hs.sit.type === 'open' && given === 'call') given = 'limp';
+    if (hs.sit.type === 'vs3bet' && given === 'raise') given = 'fourbet';
     var q = { sit: hs.sit, hand: hs.hand, answer: PA.actionFor(prof, hs.sit, hs.hand) };
     var j = PA.judge(prof, q, given);
     return { q: q, given: given, j: j };
