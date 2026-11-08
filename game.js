@@ -677,13 +677,14 @@
   }
   // délai CSS (en secondes, négatif si l'animation est déjà commencée) ; null quand elle est finie
   function fxDelay(key, base, dur) { var t0 = FX.t && FX.t[key]; if (!t0) return null; var el = (Date.now() - t0) / 1000 - (base || 0); return el > dur ? null : (-el).toFixed(3) + 's'; }
+  function dealSound(n) { if (!sndOn()) return; for (var q = 0; q < 2 * (n || 9); q++) sCard(q * 0.07); }
   function tableView() {
     var ui = U();
     if (!G) { location.hash = '#partie'; return ''; }
     if (G.over) return ui.shell('entrainer', bilanView(), true);
     var H = G.hand, n = G.players.length, L = H.L;
     var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 40 : 44, RY = narrow ? 41 : 42;
-    var theme = (window.PA.player().settings || {}).tableTheme || 'sombre';
+    var theme = (window.PA.player().settings || {}).tableTheme || 'vert';
     var D = fxDiff(H, n), FXV = fxOn(), dealD = function (k, r) { return fxDelay('deal', (r * n + k) * 0.06, 0.45); }, dealing = FXV && fxDelay('deal', 0, (2 * n) * 0.06 + 0.45) !== null;
     var h = '<div class="felt2 t-' + theme + '"><div class="rail"></div>';
     for (var k = 0; k < n; k++) {
@@ -812,7 +813,7 @@
     G.fast = false;
   }
 
-  window.PA_GAME = {
+  window.PA_GAME = { dealSound: function (n) { dealSound(n); },
     views: { partie: setupView, jeu: tableView },
     heroRangeCtx: function () { if (!G || !G.hand) return null; var hs = heroSit(); if (G.stats) G.stats.consult++; return hs; },
     _test: { canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }

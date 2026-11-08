@@ -607,3 +607,70 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .board2{perspective:600px}
 .bet2.fx-chip{animation:fxChip .38s cubic-bezier(.2,.8,.3,1) both;animation-delay:var(--cd)}
 .pot2.fx-pot{animation:fxPot .55s ease-out both;animation-delay:var(--pd)}
+
+/* =====================  Tables v3 : cartes, jetons, tapis  ===================== */
+:root{--cardfont:Georgia,'Times New Roman',serif}
+/* cartes : rang dans le coin, grand symbole au centre, papier légèrement nacré */
+.pc,.pcm{position:relative;display:block;background:linear-gradient(160deg,#ffffff 0%,#faf7f0 55%,#ece6d6 100%);border:1px solid #cdc5b1;color:#17171b;box-shadow:inset 0 1px 0 #fff,0 6px 14px rgba(0,0,0,.5)}
+.pc{border-radius:9px}
+.pc .r,.pcm .r{position:absolute;left:9%;top:4%;font-family:var(--cardfont);font-weight:700;line-height:.95;letter-spacing:-.02em}
+.pc .s,.pcm .s{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);line-height:1}
+.pc .r{font-size:32px}.pc .s{font-size:48px}
+.pcm .r{font-size:15px}.pcm .s{font-size:23px}
+.mine2 .pcm .r{font-size:20px}.mine2 .pcm .s{font-size:31px}
+.pc.red,.pcm.red{color:#cf1020}
+.pc::after,.pcm::after{content:'';position:absolute;inset:3px;border-radius:inherit;border:1px solid rgba(0,0,0,.06);pointer-events:none}
+@media(min-width:700px){.pcm .r{font-size:19px}.pcm .s{font-size:29px}.mine2 .pcm .r{font-size:25px}.mine2 .pcm .s{font-size:39px}}
+.cards{display:flex;justify-content:center;gap:12px}
+.cards .pc{width:84px;height:118px;transform:rotate(-4deg)}
+.cards .pc+.pc{transform:rotate(4deg) translateY(2px)}
+/* dos des cartes : bordeaux et treillis doré */
+.pcs.back,.felt2 .pcs.back{display:block;background:repeating-linear-gradient(45deg,rgba(255,210,63,.32) 0 1px,transparent 1px 5px),repeating-linear-gradient(-45deg,rgba(255,210,63,.32) 0 1px,transparent 1px 5px),radial-gradient(circle at 50% 40%,#a51d2d,#5c0a15 78%);border:2px solid #f6f1e6;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,210,63,.75),0 2px 5px rgba(0,0,0,.55)}
+/* jetons empilés vus de profil : liseré blanc, dessus brillant */
+.cpile{width:22px;margin:-4px 1px 0 0}
+.cpile i{left:0;bottom:calc(var(--i) * 3.6px);width:22px;height:9px;border-radius:50%;transform:none;background:repeating-linear-gradient(90deg,var(--k) 0 4px,#f4f4f4 4px 6px,var(--k) 6px 10px);box-shadow:inset 0 -2px 0 rgba(0,0,0,.35),0 1.5px 0 var(--e),0 2px 3px rgba(0,0,0,.5)}
+.cpile i:last-child{background:radial-gradient(ellipse at 50% 50%,var(--k) 0 42%,#f4f4f4 43% 50%,var(--k) 51% 100%);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),0 1.5px 0 var(--e),0 2.5px 0 var(--e),0 3px 4px rgba(0,0,0,.55)}
+.cpiles{display:inline-flex;align-items:flex-end;gap:2px}
+/* tapis de l'entraînement : feutre, bord en cuir, filet doré */
+.felt{background:radial-gradient(ellipse at 50% 36%,#33a362 0%,#1f7a44 38%,#13582f 72%,#0a3b1f 100%);border:16px solid #3a220e;box-shadow:inset 0 0 0 2px rgba(255,210,63,.5),inset 0 0 0 7px rgba(0,0,0,.18),inset 0 0 70px rgba(0,0,0,.55),0 0 0 2px #140b03,0 0 0 4px rgba(214,170,60,.7),0 18px 40px rgba(0,0,0,.7)}
+.felt::before{inset:9%;border:1.5px solid rgba(255,255,255,.09)}
+.felt::after{color:rgba(255,255,255,.06)}
+.seat{gap:3px}
+.seat .nm{background:linear-gradient(180deg,#2a2a31,#121216);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 11px;box-shadow:0 3px 8px rgba(0,0,0,.55)}
+.seat .st{background:rgba(0,0,0,.55);color:#f1d27a;border-radius:999px;padding:0 8px;font-weight:700;font-size:12px}
+.seat.hero .nm{background:linear-gradient(180deg,#ffd23f,#d9a90f);color:#1a1400;border-color:#fff3}
+.seat.out .nm,.seat.out .st{opacity:.4}
+.seat .mcd{display:flex;gap:2px;margin-bottom:-2px}
+.seat .mcd .pcs{width:17px;height:24px}
+.seat .mcd .pcs+.pcs{transform:rotate(8deg) translateX(-6px)}
+.bet{background:none;border:0;padding:0;display:inline-flex;align-items:flex-end;gap:4px}
+.bet::before{display:none}
+.bet b{background:rgba(0,0,0,.65);color:#ffd23f;border:1px solid rgba(255,210,63,.6);border-radius:999px;padding:1px 8px;font-size:13px;line-height:18px}
+.pot{display:inline-flex;align-items:flex-end;gap:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,210,63,.45);border-radius:999px;padding:3px 12px 3px 8px}
+.dealer,.dealer2{background:radial-gradient(circle at 40% 35%,#fff,#e7e1d2);color:#111;font-family:var(--cardfont);border:2px solid #ffd23f;box-shadow:0 2px 6px rgba(0,0,0,.55),inset 0 0 0 2px #fff}
+/* table de jeu : même famille de tapis, trois ambiances */
+.felt2{--leather:#3a220e;border:14px solid var(--leather);background:radial-gradient(ellipse at 50% 38%,var(--felt1) 0%,var(--felt2) 82%);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--rail) 70%,transparent),inset 0 0 70px rgba(0,0,0,.55),0 0 0 2px #120a03,0 0 0 4px color-mix(in srgb,var(--rail) 75%,transparent),0 18px 40px rgba(0,0,0,.7)}
+.felt2{--felt1:#2f9d5c;--felt2:#0d4526}
+.felt2.t-noir{--felt1:#34343c;--felt2:#0f0f13;--leather:#16161a;--rail:#ffd23f}
+.felt2.t-sombre{--felt1:#7a1424;--felt2:#2a050b;--leather:#140c0c;--rail:#d6aa3c;--chip:#ffd23f}
+.felt2 .rail{inset:7%;border-color:rgba(255,255,255,.1)}
+.seat2{background:linear-gradient(180deg,rgba(38,38,46,.95),rgba(12,12,16,.95));box-shadow:0 4px 10px rgba(0,0,0,.55)}
+.seat2 .st2{color:#f1d27a;font-weight:700}
+.bet2{background:rgba(0,0,0,.6);border:1px solid color-mix(in srgb,var(--chip) 60%,transparent);color:var(--chip)}
+.pot2{background:rgba(0,0,0,.55);border:1px solid rgba(255,210,63,.5);padding:3px 12px}
+.board2 .slot{border:1.5px dashed rgba(255,255,255,.18);background:rgba(0,0,0,.12)}
+/* distribution dans l'entraînement (test de profil, exercices) */
+.cards.fx-deal .pc{animation:fxDealMe2 .5s cubic-bezier(.2,.8,.25,1) both}
+.cards.fx-deal .pc:nth-child(1){animation-delay:.55s}.cards.fx-deal .pc:nth-child(2){animation-delay:1.18s}
+@keyframes fxDealMe2{0%{opacity:0;transform:translate(0,-30vh) scale(.5) rotate(-20deg)}100%{opacity:1}}
+.felt.fx-dealing .mcd .pcs{animation:fxDealO .3s ease-out both}
+.felt.fx-dealing .mcd .pcs:nth-child(1){animation-delay:var(--d1)}.felt.fx-dealing .mcd .pcs:nth-child(2){animation-delay:var(--d2)}
+.felt.fx-dealing .bet{animation:fxPop .35s ease-out both;animation-delay:.2s}
+@keyframes fxPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+/* le dos des cartes ne doit pas hériter du bouton « ‹ Retour » (.back) */
+.pcs.back{min-height:0!important;padding:0!important}
+.seat .mcd .pcs{width:15px;height:21px;border-width:1.5px}
+.seat .mcd .pcs+.pcs{transform:rotate(9deg) translateX(-7px)}
+.bet b{font-size:12px;line-height:17px;padding:0 7px}
+.cpile i{width:20px;height:8px}.cpile{width:20px}
+.pot::before{display:none}.pot .cpiles{margin-bottom:1px}

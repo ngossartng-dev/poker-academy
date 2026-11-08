@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.25.2';
+  var VERSION = '2.26.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -488,6 +488,14 @@
 
   /* ---------- Table ---------- */
   function seatXY(k, r) { var a = (90 + k * 40) * Math.PI / 180; return [50 + r[0] * Math.cos(a), 50 + r[1] * Math.sin(a)]; }
+  /* jetons empilés (même rendu que la table de jeu) : montant en BB → piles de jetons de couleur */
+  var CHIPS_BB = [[5, '#2b8a3e', '#123d1b'], [1, '#1c7ed6', '#0b3a66'], [0.5, '#d61f1f', '#5c0c0c'], [0.1, '#e9e9ee', '#8a8a93']];
+  function chipStack(bbAmt) {
+    var r = bbAmt, L = []; CHIPS_BB.forEach(function (c) { while (r >= c[0] - 1e-9 && L.length < 10) { L.push(c); r -= c[0]; } }); if (!L.length) L.push(CHIPS_BB[3]);
+    var P = []; for (var i = 0; i < L.length; i += 5) P.push(L.slice(i, i + 5));
+    return '<span class="cpiles">' + P.map(function (pl) { return '<span class="cpile" style="height:' + (10 + pl.length * 3.6) + 'px">' + pl.map(function (c, k) { return '<i style="--i:' + k + ';--k:' + c[1] + ';--e:' + c[2] + '"></i>'; }).join('') + '</span>'; }).join('') + '</span>';
+  }
+  var DEAL_KEY = null;
   function tableHtml(q) {
     var s = q.sit, POS = PA.POS;
     var heroPos = s.type === 'vs3bet' ? s.pos : s.pos;
@@ -509,12 +517,12 @@
       if (s.hu && pos !== 'SB' && pos !== 'BB') continue;
       var isHero = k === 0;
       var stackBB = bb - (bets[pos] || 0);
-      h += '<div class="seat' + (isHero ? ' hero' : '') + (folded[pos] ? ' out' : '') + '" style="left:' + xy[0] + '%;top:' + Math.min(xy[1], 92) + '%"><span class="nm">' + (isHero ? 'Toi · ' : '') + pos + '</span><span class="st">' + (allin[pos] ? 'Tapis' : PA.fmt(stackBB * BB)) + '</span></div>';
-      if (bets[pos]) { var bxy = seatXY(s.hu ? (pos === heroPos ? 0 : 4.5) : k, [33, 30]); h += '<div class="bet" style="left:' + bxy[0] + '%;top:' + bxy[1] + '%">' + PA.fmt(bets[pos] * BB) + '</div>'; }
-      if (s.hu ? pos === 'SB' : pos === 'BTN') { var dxy = s.hu ? seatXY((pos === heroPos ? 0 : 4.5) + 1.2, [40, 36]) : seatXY(k + 0.35, [35, 32]); h += '<div class="dealer" style="left:' + dxy[0] + '%;top:' + dxy[1] + '%">D</div>'; }
+      h += '<div class="seat' + (isHero ? ' hero' : '') + (folded[pos] ? ' out' : '') + '" style="left:' + xy[0] + '%;top:' + Math.min(xy[1], 92) + '%">' + (!isHero && !folded[pos] ? '<span class="mcd" style="--d1:' + (k * 0.07).toFixed(2) + 's;--d2:' + (k * 0.07 + 0.63).toFixed(2) + 's"><i class="pcs back"></i><i class="pcs back"></i></span>' : '') + '<span class="nm">' + (isHero ? 'Toi · ' : '') + pos + '</span><span class="st">' + (allin[pos] ? 'Tapis' : PA.fmt(stackBB * BB)) + '</span></div>';
+      if (bets[pos]) { var bxy = seatXY(s.hu ? (pos === heroPos ? 0 : 4.5) : k, [27, 23]); h += '<div class="bet" style="left:' + bxy[0] + '%;top:' + bxy[1] + '%">' + chipStack(bets[pos]) + '<b>' + PA.fmt(bets[pos] * BB) + '</b></div>'; }
+      if (s.hu ? pos === 'SB' : pos === 'BTN') { var dxy = s.hu ? seatXY((pos === heroPos ? 0 : 4.5) + 1.2, [40, 36]) : seatXY(k + (isHero ? 0.62 : 0.4), [36, 33]); h += '<div class="dealer" style="left:' + dxy[0] + '%;top:' + dxy[1] + '%">D</div>'; }
     }
     var potTxt = PA.fmt((pot + (ante ? 1 : 0)) * BB) + ' · ' + String(Math.round((pot + (ante ? 1 : 0)) * 10) / 10).replace('.', ',') + ' BB';
-    h += '<div class="pot">Pot ' + potTxt + '</div></div>';
+    h += '<div class="pot">' + chipStack(pot + (ante ? 1 : 0)) + '<span>Pot ' + potTxt + '</span></div></div>';
     var blindTxt = 'Blindes ' + PA.fmt(bl.sb) + ' / ' + PA.fmt(bl.bb) + (ante ? ' · ante ' + PA.fmt(bl.bb) + ' (BB ante)' : '');
     return { html: h, blindTxt: blindTxt, stackTxt: PA.fmt(bb * BB) + ' (' + bb + ' BB)', BB: BB, bets: bets };
   }
@@ -549,9 +557,13 @@
     var q = d.qs[d.i], t = q.custom ? null : tableHtml(q), choices = q.custom ? q.choices : PA.choicesFor(q.sit);
     var head = '<div class="drill-top"><button class="back" data-act="quitDrill">‹ Quitter</button><span class="muted small">' + esc(d.label) + ' · ' + (d.i + 1) + '/' + d.qs.length + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">' + IC.grid + 'Ma range</button></div>' +
       '<div class="bar"><i style="width:' + Math.round(d.i / d.qs.length * 100) + '%"></i></div>';
-    var body = head + (q.custom ? q.visual + '<div class="cards">' + q.cards.map(cardHtml).join('') + '</div><div class="banner">' + q.text + '</div>' + q.help :
-      '<div class="small muted" style="text-align:center">' + t.blindTxt + (q.review ? ' · <span style="color:var(--gold)">Main à revoir</span>' : '') + '</div>' + t.html +
-      '<div class="cards">' + q.cards.map(cardHtml).join('') + '</div>' +
+    var dk = (d.dk || (d.dk = Math.random())) + ':' + d.i, st0 = (PA.player() || {}).settings || {}, dealNow = dk !== DEAL_KEY && !d.fb && st0.tableFx !== false && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (!d.fb) DEAL_KEY = dk;
+    if (dealNow && st0.tableSnd !== false && window.PA_GAME && window.PA_GAME.dealSound) window.PA_GAME.dealSound(9);
+    var cardsBox = '<div class="cards' + (dealNow ? ' fx-deal' : '') + '">' + q.cards.map(cardHtml).join('') + '</div>';
+    var body = head + (q.custom ? q.visual + cardsBox + '<div class="banner">' + q.text + '</div>' + q.help :
+      '<div class="small muted" style="text-align:center">' + t.blindTxt + (q.review ? ' · <span style="color:var(--gold)">Main à revoir</span>' : '') + '</div>' + (dealNow ? t.html.replace('<div class="felt">', '<div class="felt fx-dealing">') : t.html) +
+      cardsBox +
       '<div class="banner">' + questionText(q, t) + '</div>' + oddsHelp(q));
     if (d.chrono && !d.fb) body += '<div class="timer"><i id="tmr" style="width:100%"></i></div>';
     if (!d.fb) {
@@ -729,14 +741,14 @@
 
   function reglagesView() {
     var p = PA.player(), s = p.settings;
-    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'sombre' : s[k] === undefined && k === 'season' ? 'auto' : s[k] === undefined && (k === 'tableFx' || k === 'tableSnd') ? true : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    function seg(k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button class="' + ((s[k] === undefined && k === 'tableTheme' ? 'vert' : s[k] === undefined && k === 'season' ? 'auto' : s[k] === undefined && (k === 'tableFx' || k === 'tableSnd') ? true : s[k]) === o[0] ? 'on' : '') + '" data-act="set" data-k="' + k + '" data-v="' + JSON.stringify(o[0]).replace(/"/g, '&quot;') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="' + (CLUB ? 'home' : 'moi') + '">‹ ' + (CLUB ? 'Accueil' : 'Moi') + '</button><h1>Réglages</h1>' + '<a class="btn gold block" href="#guide">❓ Mode d’emploi</a>' + (window.PA_SYNC ? window.PA_SYNC.updLink('btn block') : '') +
       '<div class="card stack"><b>Taille du texte</b>' + seg('text', [[0.9, 'Normale'], [1, 'Grande'], [1.15, 'Très grande'], [1.3, 'Énorme']]) +
       '<b>Mode gaucher</b>' + seg('lefty', [[false, 'Non'], [true, 'Oui']]) +
       (CLUB ? '' : '<b>Bouton « Ma range »</b><div class="small muted">Fais-le glisser du doigt (ou à la souris) où il te gêne le moins : il reste à cet endroit.</div>' + (fabPos() ? '<button class="btn" data-act="fabReset">Le remettre à sa place d’origine</button>' : '')) +
       '<b>Vibration</b>' + seg('vibrate', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Chrono par défaut</b>' + seg('chrono', [[false, 'Sans'], [true, '8 secondes']]) +
-      '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique'], ['noir', 'Noir et or'], ['sombre', 'Sombre et rouge']]) +
+      '<b>Style de la table</b>' + seg('tableTheme', [['vert', 'Vert classique (cuir)'], ['noir', 'Noir et or'], ['sombre', 'Bordeaux et or']]) +
       '<b>Animations de la table</b>' + seg('tableFx', [[true, 'Oui'], [false, 'Non']]) + '<div class="small muted">Cartes distribuées, flop, turn et river qui se retournent, jetons qui glissent vers le pot.</div>' +
       '<b>Sons de la table</b>' + seg('tableSnd', [[true, 'Oui'], [false, 'Non']]) +
       '<b>Décor de saison</b>' + seg('season', [['auto', 'Selon la date'], ['classique', 'Toujours classique'], ['halloween', 'Halloween'], ['noel', 'Noël'], ['hiver', 'Hiver']]) + '<div class="small muted">« Selon la date » : Halloween fin octobre, Noël en décembre, Hiver en janvier et février, classique le reste de l’année.</div>' +
