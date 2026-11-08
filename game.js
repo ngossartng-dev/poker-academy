@@ -517,7 +517,20 @@
   }
 
   /* ---------- Coach ---------- */
+  // à l'approche des places payées, Yo juge avec la range « bulle » correspondant à ton tapis
+  function atBubble() { var rem = remaining(), paid = paidPlaces(); return rem > paid && rem <= paid + (G.opts.mtt ? 4 : 1) && G.opts.format !== 'hu'; }
+  function heroStackKind() {
+    var me = G.players[0], L = G.hand.L, tot = (G.players.length + (G.field ? G.field.length : 0)) * G.opts.chips, avg = tot / Math.max(1, remaining());
+    var mine = me.stack + (G.hand.bets[0] || 0);
+    if (mine / L.bb < 15) return 'court';
+    return mine >= avg * 1.4 ? 'gros' : 'moyen';
+  }
   function heroSit() {
+    var r = heroSit0();
+    if (r && atBubble()) r.sit.bubble = heroStackKind();
+    return r;
+  }
+  function heroSit0() {
     // traduit la situation préflop du héros vers une situation de « Ma range »
     var H = G.hand, L = H.L, pos = H.pos[0], code = handCode(H.hole[0][0], H.hole[0][1]);
     var eff = (G.players[0].stack + H.bets[0]) / L.bb;
@@ -583,7 +596,7 @@
         var ph = H.phase || 'Début et milieu'; G.stats.phase[ph] = G.stats.phase[ph] || { n: 0, ok: 0 }; G.stats.phase[ph].n++; if (r.j.ok) G.stats.phase[ph].ok++;
         var pl = PA.player(); PA.updateNotion(pl, PA.notionOf(r.q.sit), 1350, r.j.ok ? 1 : (r.j.kind === 'style' ? 0.5 : 0)); if (!r.j.ok) PA.srsMiss(pl, PA.sitKey(r.q.sit) + '#' + r.q.hand, { sit: r.q.sit, hand: r.q.hand }); PA.save();
         if (!r.j.ok) G.stats.notes.push({ hand: G.handNo, code: r.q.hand, sit: r.q.sit, given: r.given, answer: r.q.answer, kind: r.j.kind });
-        if (G.opts.coach) G.coachMsg = (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : ''));
+        if (G.opts.coach) G.coachMsg = (r.q.sit.bubble ? '🫧 <b>Bulle, ' + PA.BUBBLE_NAME[r.q.sit.bubble] + '</b> : ' : '') + (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : ''));
       } else if (G.opts.coach) G.coachMsg = null;
     } else if (G.opts.coach) {
       var tc = toCall(0), pot = potTotal(), eq = equity(H.hole[0], H.board, Math.max(1, activeCount() - 1), 400), need = tc > 0 ? tc / (pot + tc) : 0;

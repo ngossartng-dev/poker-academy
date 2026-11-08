@@ -11,7 +11,7 @@
   function build(answers, best) {
     var cnt = { early: [0, 0, 0], mid: [0, 0, 0], late: [0, 0, 0], bb: [0, 0, 0] }; // [plus large, plus serré, total]
     answers.forEach(function (a) {
-      var s = a.q.sit; if (s.type !== 'open' && s.type !== 'def' && s.type !== 'vs3bet') return;
+      var s = a.q.sit; if (s.bubble || (s.type !== 'open' && s.type !== 'def' && s.type !== 'vs3bet')) return;
       var g = s.type === 'vs3bet' ? ({ early: 'early', oop: 'mid', ip: 'late', bvb: 'late' }[s.scen] || 'late') : groupOf(s);
       var ref = PA.actionFor(best, s, a.q.hand), play = a.given && a.given !== 'fold', refPlay = ref !== 'fold';
       cnt[g][2]++; if (play && !refPlay) cnt[g][0]++; if (!play && refPlay) cnt[g][1]++;
@@ -42,7 +42,7 @@
     });
     // tes vrais choix du test, s'ils sont jouables (un des profils les joue)
     answers.forEach(function (a) {
-      var s = a.q.sit; if (!a.given || (s.type !== 'open' && s.type !== 'def' && s.type !== 'vs3bet')) return;
+      var s = a.q.sit; if (!a.given || s.bubble || (s.type !== 'open' && s.type !== 'def' && s.type !== 'vs3bet')) return;
       var ok = PA.BASE_PROFILES.some(function (id) { return PA.actionFor(id, s, a.q.hand) === a.given; });
       if (!ok) return;
       var key = PA.sitKey(s), base = PA.chart('tag', s)[a.q.hand];

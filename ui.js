@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.28.0';
+  var VERSION = '2.29.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -180,6 +180,9 @@
     ui.sheet = 'range'; renderSheet();
   }
   function rsSit() {
+    var r = rsSit0(); if (RS.bubble) r.bubble = RS.bubble; return r;
+  }
+  function rsSit0() {
     var bb = RS.depth === 'deep' ? 100 : (RS.depth === 'mid' ? 30 : RS.bb);
     var t = RS.type;
     if (t === 'open') return { type: 'open', pos: RS.pos, bb: bb };
@@ -187,14 +190,14 @@
     if (t === 'vs3bet') return { type: 'vs3bet', scen: RS.scen, bb: 100 };
     return { type: 'callshove', pos: RS.pos, opener: RS.opener, bb: RS.bb };
   }
-  function rangeGrid(map, type, hero, editable) {
-    var h = '<div class="rg" role="grid" aria-label="Grille des 169 mains">';
+  function rangeGrid(map, type, hero, editable, diff) {
+    var h = '<div class="rg' + (diff ? ' rg-diff' : '') + '" role="grid" aria-label="Grille des 169 mains">';
     PA.HANDS.forEach(function (x) {
       var a = map[x];
       var cls = typeof a === 'string' ? actColor(a, type) : '';
       var style = typeof a === 'string' ? '' : ' style="background:' + a.bg + ';color:' + a.fg + '"';
       var pips = typeof a === 'object' && a.pips && a.pips.length ? '<span class="pips">' + a.pips.map(function (k) { return '<i class="pip-' + k + '"></i>'; }).join('') + '</span>' : '';
-      h += '<button class="' + cls + (x === hero ? ' hero' : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + (a && a.lbl ? ', ' + a.lbl : '') + '">' + x + pips + '</button>';
+      h += '<button class="' + cls + (x === hero ? ' hero' : '') + (diff && diff[x] ? ' bd-' + diff[x] : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + (a && a.lbl ? ', ' + a.lbl : '') + '">' + x + pips + '</button>';
     });
     return h + '</div>';
   }
@@ -258,6 +261,14 @@
       out += '<div class="seg">' + sits.map(function (k) { var m = k.split(' vs shove '); return '<button class="' + (k === key ? 'on' : '') + '" data-act="rsShove" data-v="' + k + '">' + m[0] + ' face au tapis ' + m[1] + '</button>'; }).join('') + '</div>';
       s = rsSit(); cm = PA.chart(prof, s);
     }
+    // la bulle : même situation, range resserrée (ou élargie) selon ton tapis
+    out += '<div class="seg bubble-seg"><span class="small muted" style="align-self:center;margin-right:4px">🫧 Bulle :</span>' + [['', 'Non'], ['gros', 'Gros tapis'], ['moyen', 'Tapis moyen'], ['court', 'Petit tapis']].map(function (t) { return '<button class="' + ((RS.bubble || '') === t[0] ? 'on' : '') + '" data-act="rsBubble" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    var bdiff = null;
+    if (RS.bubble) {
+      var cm0 = PA.chart(prof, rsSit0()), nOut = 0, nIn = 0; bdiff = {};
+      PA.HANDS.forEach(function (h) { if (cm0[h] !== cm[h]) { if (cm[h] === 'fold') { bdiff[h] = 'out'; nOut++; } else if (cm0[h] === 'fold') { bdiff[h] = 'in'; nIn++; } else bdiff[h] = 'chg'; } });
+      out += '<div class="banner bubble-ban">🫧 <b>À la bulle, ' + PA.BUBBLE_NAME[RS.bubble] + '</b> : ' + (nOut ? '<span class="bd-k bd-out">' + nOut + ' main' + (nOut > 1 ? 's' : '') + ' jetée' + (nOut > 1 ? 's' : '') + '</span> ' : '') + (nIn ? '<span class="bd-k bd-in">' + nIn + ' main' + (nIn > 1 ? 's' : '') + ' en plus</span> ' : '') + (Object.keys(bdiff).length - nOut - nIn ? '<span class="bd-k bd-chg">' + (Object.keys(bdiff).length - nOut - nIn) + ' jouée' + (Object.keys(bdiff).length - nOut - nIn > 1 ? 's' : '') + ' autrement</span>' : '') + (!Object.keys(bdiff).length ? 'rien ne change dans cette situation.' : '') + '<div class="small muted">Les cases entourées changent par rapport à d’habitude : barrées = tu les jettes, vertes = tu les joues en plus, jaunes = autre action.</div></div>';
+    }
     // bandeau
     var acts = {}; PA.HANDS.forEach(function (h) { acts[cm[h]] = (acts[cm[h]] || []).concat(h); });
     var ctxTxt = describeSit(s);
@@ -266,13 +277,14 @@
       out += '<div class="banner">Ta main : <b>' + RS.hero + '</b> ' + ctxTxt + ' → <span class="pill" style="background:' + CSSVAR[actColor(a, s.type)] + '">' + actName(a, s).toUpperCase() + '</span></div>';
     } else out += '<div class="banner">' + ctxTxt.charAt(0).toUpperCase() + ctxTxt.slice(1) + ' : ' + Object.keys(acts).filter(function (k) { return k !== 'fold'; }).map(function (k) { return actName(k, s) + ' ' + String(PA.pct(acts[k])).replace('.', ',') + ' %'; }).join(' · ') + '</div>';
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
-    out += rangeGrid(cm, s.type, RS.hero, RS.edit);
+    out += rangeGrid(cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
     if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">Touchez une case pour changer son action.</span>' : '') + '</div>';
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
   }
   function describeSit(s) {
+    if (s.bubble) { var s1 = {}, k1; for (k1 in s) if (k1 !== 'bubble') s1[k1] = s[k1]; return describeSit(s1) + ' (bulle, ' + PA.BUBBLE_NAME[s.bubble] + ')'; }
     if (s.hu) return s.type === 'push' ? 'en heads-up au bouton (petite blinde) à ' + PA.nearestPush(s.bb) + ' BB' : 'en heads-up en grosse blinde, face au tapis du bouton à ' + PA.nearestPush(s.bb) + ' BB';
     if (s.type === 'open') { var first = s.pos === 'UTG' ? 'premier à parler' : 'personne n’a ouvert avant toi'; return PA.depthKey(s.bb) === 'push' ? 'en ' + s.pos + ' à ' + PA.nearestPush(s.bb) + ' BB, ' + first : 'en ' + s.pos + ', ' + first; }
     if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener;
@@ -390,6 +402,7 @@
       lnkT('calcul', 'Calcul rapide', 'Cote du pot, défense minimale, bluff, outs : 20 secondes par question.'),
       sitT('outs', 'Outs et cote', 'Compter ses outs à la turn et comparer à la cote.'),
       sitT('icm', 'Bulle et ICM', 'Payer un tapis à la bulle ou en table finale : jetons contre euros.'),
+      sitT('bulle', 'Jouer la bulle', 'Ouvrir, défendre, payer un tapis à l’approche des places payées, selon ton tapis.'),
       sitT('pko', 'PKO et Space KO', 'La prime change la cote : payer ou se coucher ?'),
       lnkT('outils', 'Calculateurs', 'Équité main contre main ou contre une range, ICM, prime PKO, compteur de M.')]);
   }
@@ -428,6 +441,7 @@
       '<a class="tile" href="#calcul"><b>Calcul rapide</b><span>Cote du pot, défense minimale, bluff, outs : 20 secondes par question.</span></a>' +
       '<a class="tile" href="#choix3b"><b>3-bet, squeeze ou pas ?</b><span>Valeur, bluff, payer ou se coucher, selon qui ouvre, qui paie et ton tapis.</span></a>' +
       '<a class="tile" href="#planquiz"><b>Plan de jeu</b><span>Ouvrir, 3-bet ou payer… puis la suite si on te sur-relance : tapis, payer ou 3-bet fold ?</span></a>' +
+      '<button class="tile" data-act="startSit" data-v="bulle"><b>Jouer la bulle</b><span>Ouvrir, défendre, payer un tapis à l’approche des places payées, selon ton tapis.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="icm"><b>Bulle et ICM</b><span>Payer un tapis à la bulle ou en table finale : jetons contre euros.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="pko"><b>PKO et Space KO</b><span>La prime change la cote : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="outs"><b>Outs et cote</b><span>Compter ses outs à la turn et comparer à la cote.</span></button>' +
@@ -467,7 +481,7 @@
     if (mode === 'seance') {
       var due = PA.srsDue(p).slice(0, 8);
       due.forEach(function (d) { var q = PA.makeQuestion(prof, { sit: d.q.sit, hand: d.q.hand }); q.review = true; qs.push(q); });
-      var notionKinds = { open_early: 'open', open_mid: 'open', open_late: 'open', open_sb: 'open', bb_def: 'def', cold: 'def', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', mid: 'open' };
+      var notionKinds = { bulle: 'bulle', open_early: 'open', open_mid: 'open', open_late: 'open', open_sb: 'open', bb_def: 'def', cold: 'def', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', mid: 'open' };
       if (window.PA_SIT) window.PA_SIT.kinds.forEach(function (k) { notionKinds[k] = k; });
       var ns = Object.keys(notionKinds).map(function (n) { var st = PA.notionState(p, n); return [n, st.r + (st.n < 3 ? -150 : 0) + Math.random() * 120]; }).sort(function (a, b) { return a[1] - b[1]; });
       var k = 0;
@@ -554,8 +568,9 @@
     if (s.hu) txt = s.type === 'push' ? 'Heads-up : tu es au <b>bouton</b> (petite blinde), tu parles en premier.' : 'Heads-up : tu es en <b>grosse blinde</b>. Le bouton fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     else if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
     else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.';
-    else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = t.bets[s.opener]; txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.', bvb: 'Tout le monde s’est couché jusqu’à toi : tu as ouvert en <b>petite blinde</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + String(r4).replace('.', ',') + ' BB.' }[s.scen]; }
+    else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = String(t.bets[s.opener]).replace('.', ','); txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.', bvb: 'Tout le monde s’est couché jusqu’à toi : tu as ouvert en <b>petite blinde</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.' }[s.scen]; }
     else txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
+    if (s.bubble) txt = '<b>Bulle</b> : encore un joueur à sortir avant les places payées. Tu es <b>' + PA.BUBBLE_NAME[s.bubble] + '</b> ' + ({ gros: '(le plus gros de la table)', moyen: '(dans la moyenne : tu as le plus à perdre)', court: '(un des plus petits)' }[s.bubble]) + '. ' + txt;
     return txt + ' Ton tapis : ' + t.stackTxt + '. Que fais-tu ?';
   }
   function oddsHelp(q) {
@@ -595,6 +610,25 @@
     return shell('entrainer', '<div class="stack">' + body + '</div>', true);
   }
   function explain(q, prof) {
+    if (q.sit.bubble) {
+      var s0 = {}, k0; for (k0 in q.sit) if (k0 !== 'bubble') s0[k0] = q.sit[k0];
+      var nb = PA.chart(prof, s0)[q.hand], bu = PA.chart(prof, q.sit)[q.hand];
+      var ty = q.sit.type === 'push' ? 'open' : q.sit.type, WHY = {
+        moyen: { open: 'Tapis moyen à la bulle : c’est toi que l’ICM pénalise le plus. En début et milieu de table, tu jettes les mains qui gagnent de petits pots et perdent les gros (petites paires, as faibles, assorties moyennes, KJ, QJ, AT dépareillés). Au bouton et en petite blinde, le vol reste rentable : presque rien ne change.',
+          def: 'Tapis moyen à la bulle : plus aucun 3-bet de bluff (tu ne sur-relances qu’avec 99+, AK, AQ, AJs, KQs) et plus de payes « pour voir » avec les petites paires, les as faibles et les assorties moyennes.',
+          callshove: 'Tapis moyen à la bulle : payer un tapis te fait risquer ta place payée pour quelques jetons. Il te faut 1,5 à 2 fois plus d’avantage : tu ne gardes qu’environ la moitié de tes payes habituelles, les plus fortes.',
+          vs3bet: 'Tapis moyen à la bulle face au 3-bet : 4-bet seulement avec QQ, KK, AA et AK ; tu paies JJ, TT, AQs ; tout le reste se couche, même les bluffs à bloqueurs comme A5s.' },
+        gros: { open: 'Gros tapis à la bulle : les tapis moyens n’osent pas te payer. Tu ouvres plus large en fin de table (cut-off, bouton, petite blinde) ; en début de table, rien ne change.',
+          def: 'Gros tapis à la bulle : tu peux défendre presque comme d’habitude, en évitant les payes dépareillées faibles en fin de table. Tes sur-relances mettent la pression sur les tapis moyens.',
+          callshove: 'Gros tapis à la bulle : perdre ce coup ne te met pas en danger. Tu gardes l’essentiel de tes payes (environ 85 %), surtout face à un plus petit tapis.',
+          vs3bet: 'Gros tapis à la bulle : face au 3-bet, tu joues comme d’habitude. Évite seulement les gros coups contre un autre gros tapis.' },
+        court: { open: 'Petit tapis à la bulle : tu joues tapis ou fold avec les tables, et tu continues de pousser : à la bulle, on te paie moins.',
+          def: 'Petit tapis à la bulle : tapis ou fold. Tu ne paies plus une relance « pour voir » : soit tu fais tapis avec une main forte, soit tu te couches.',
+          callshove: 'Petit tapis à la bulle : tu paies un peu moins large qu’en temps normal (environ les trois quarts de tes payes), d’autres petits tapis peuvent sauter avant toi.',
+          vs3bet: 'Petit tapis à la bulle : face au 3-bet, c’est tapis ou fold.' } };
+      var why = (WHY[q.sit.bubble] || {})[ty] || '';
+      return why + (nb !== bu ? ' Hors bulle, ' + q.hand + ' serait « ' + actName(nb, s0) + ' » ; à la bulle, c’est « ' + actName(bu, q.sit) + ' ».' : ' Ici, la bulle ne change pas la décision avec ' + q.hand + '.');
+    }
     var s = q.sit, cm = PA.chart(prof, s), eq = Math.round(PA.D.eq[q.hand] * 100), played = PA.HANDS.filter(function (h) { return cm[h] !== 'fold'; });
     var pr = PA.PROFILES[prof].short;
     if (s.type === 'open') {
@@ -869,6 +903,7 @@
       case 'rsBB': RS.bb = parseInt(v, 10); rerenderRange(); break;
       case 'rsPos': RS.pos = v; rerenderRange(); break;
       case 'rsOp': RS.opener = v; rerenderRange(); break;
+      case 'rsBubble': RS.bubble = v || null; rerenderRange(); break;
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
@@ -878,15 +913,15 @@
       case 'print': window.print(); break;
       case 'seance': startDrill('seance', {}, 'Séance du jour'); render(); break;
       case 'wkGo': {
-        var SITK = { vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', icm: 'icm', pko: 'pko', hu: 'hu', outs: 'outs' };
-        var LBL = { vs3bet: 'Face au 3-bet', push: 'Tapis ou fold', callshove: 'Payer un tapis', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
+        var SITK = { bulle: 'bulle', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', icm: 'icm', pko: 'pko', hu: 'hu', outs: 'outs' };
+        var LBL = { bulle: 'Jouer la bulle', vs3bet: 'Face au 3-bet', push: 'Tapis ou fold', callshove: 'Payer un tapis', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
         if (SITK[v]) { startDrill('sit', { kind: SITK[v], n: 15, chrono: p.settings.chrono }, LBL[v] + ' · plan de la semaine'); render(); break; }
         var PO = { open_early: ['open', 'MP', 'deep'], open_mid: ['open', 'HJ', 'deep'], open_late: ['open', 'BTN', 'deep'], open_sb: ['open', 'SB', 'deep'], bb_def: ['def', 'all', 'deep'], cold: ['def', 'all', 'deep'], mid: ['mix', 'all', 'mid'] }[v] || ['mix', 'all', 'deep'];
         startDrill('preflop', { kind: PO[0], pos: PO[1], depth: PO[2], n: 15, chrono: p.settings.chrono }, (PA.NOTIONS[v] || 'Préflop') + ' · plan de la semaine'); render(); break;
       }
       case 'pf': { var k = t.getAttribute('data-k'); PF[k] = k === 'n' ? parseInt(v, 10) : (k === 'chrono' ? v === 'true' : v); render(); break; }
       case 'startPreflop': startDrill('preflop', { kind: PF.kind, pos: PF.pos, depth: PF.depth, n: PF.n, chrono: PF.chrono }, 'Préflop'); render(); break;
-      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { push: 'Tapis ou fold', hu: 'Tapis ou fold en heads-up', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
+      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { bulle: 'Jouer la bulle', push: 'Tapis ou fold', hu: 'Tapis ou fold en heads-up', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
       case 'answer': answer(v); break;
       case 'next': ui.drill.i++; ui.drill.fb = null; render(); break;
       case 'quitDrill': clearInterval(timerH); ui.drill = null; go('entrainer'); break;

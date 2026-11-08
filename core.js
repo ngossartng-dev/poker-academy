@@ -86,7 +86,54 @@
     var t = BVB[key] || BVB.tag, open = toSet(P.open.deep.SB || []);
     return { fourbet: expand(t.fourbet).filter(function (h) { return open[h]; }), call: expand(t.call).filter(function (h) { return open[h]; }) };
   }
-  function sitKey(s) { return [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : depthKey(s.bb), s.scen || ''].join('|'); }
+  /* ---------- La bulle (et les paliers de paiement) ----------
+     s.bubble = 'gros' | 'moyen' | 'court' : ton tapis par rapport aux autres à l'approche des places payées.
+     Moyen tapis : c'est lui qui subit le plus l'ICM (bubble factor 1,5 à 2) → il resserre surtout ses payes et ses ouvertures
+     de début de table, et jette les mains « spéculatives » (petites paires, assorties, as faibles) qui gagnent peu et perdent gros.
+     Gros tapis : il met la pression → il ouvre et sur-relance plus large en fin de table, paie à peine moins.
+     Petit tapis : il joue tapis ou fold, pousse encore et paie un peu moins large. */
+  var LADDER = ['nit', 'tag', 'equilibre', 'lag'];
+  var SPEC = toSet(expand('22-66,A2s-A9s,K2s-K9s,Q2s-Q9s,J2s-J9s,T2s-T8s,92s-98s,82s-87s,72s-76s,62s-65s,52s-54s,42s-43s,32s,A2o-A9o,K2o-KTo,Q2o-QTo,J2o-JTo,T2o-T9o,92o-98o,82o-87o,72o-76o,62o-65o,52o-54o,42o-43o,32o'));
+  var VALUE3 = toSet(expand('JJ+,AKs,AKo,AQs')), VALUE3D = toSet(expand('99+,AKs,AKo,AQs,AQo,AJs,KQs'));
+  function baseProfile(profileId) {
+    if (LADDER.indexOf(profileId) >= 0) return profileId;
+    var p = player(); return (p && p.persoFrom && LADDER.indexOf(p.persoFrom.base) >= 0) ? p.persoFrom.base : 'tag';
+  }
+  function step(profileId, d) { var i = LADDER.indexOf(baseProfile(profileId)); return LADDER[Math.max(0, Math.min(3, i + d))]; }
+  function keepTop(list, frac) { var L = list.slice().sort(function (a, b) { return ORDER_IDX[a] - ORDER_IDX[b]; }); return toSet(L.slice(0, Math.max(1, Math.round(L.length * frac)))); }
+  function bubbleChart(profileId, s, base) {
+    var k = s.bubble, out = {}, h, s0 = {}; for (h in base) out[h] = base[h];
+    for (var key in s) if (key !== 'bubble') s0[key] = s[key];
+    var early = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ'].indexOf(s.pos) >= 0, late = ['CO', 'BTN', 'SB'].indexOf(s.pos) >= 0;
+    if (s.type === 'open' && depthKey(s.bb) !== 'push') {
+      if (k === 'moyen') {
+        if (early || s.pos === 'CO') { var t = chart(step(profileId, -1), s0); HANDS.forEach(function (x) { if (out[x] !== 'fold' && t[x] === 'fold') out[x] = 'fold'; }); }
+        HANDS.forEach(function (x) { if (out[x] !== 'fold' && SPEC[x] && early && !/^(77|88|99|A[TJQK]s|K[QJT]s|QJs)$/.test(x)) out[x] = 'fold'; });
+        if (s.pos === 'BTN' || s.pos === 'SB') HANDS.forEach(function (x) { if (out[x] !== 'fold' && /o$/.test(x) && SPEC[x] && !/^A[5-9]o$/.test(x)) out[x] = 'fold'; });
+      } else if (k === 'gros' && late) { var w = chart(step(profileId, 1), s0); HANDS.forEach(function (x) { if (out[x] === 'fold' && w[x] !== 'fold') out[x] = w[x]; }); }
+    } else if (s.type === 'def') {
+      if (k === 'moyen') {
+        var t2 = chart(step(profileId, -1), s0);
+        HANDS.forEach(function (x) {
+          if (out[x] === 'call' && (t2[x] === 'fold' || SPEC[x])) out[x] = 'fold';
+          if ((out[x] === 'raise' || out[x] === 'allin') && !VALUE3D[x]) out[x] = 'fold'; // fini les 3-bets de bluff : on garde les sur-relances de valeur
+        });
+      } else if (k === 'court') {
+        HANDS.forEach(function (x) { if (out[x] === 'call') out[x] = VALUE3[x] || /^(TT|99|AQo|AJs|KQs)$/.test(x) ? 'allin' : 'fold'; else if (out[x] === 'raise') out[x] = 'allin'; });
+      } else if (k === 'gros' && late) {
+        HANDS.forEach(function (x) { if (out[x] === 'call' && SPEC[x] && /o$/.test(x)) out[x] = 'fold'; });
+      }
+    } else if (s.type === 'callshove') {
+      var calls = HANDS.filter(function (x) { return out[x] === 'call'; }), keep = keepTop(calls, k === 'moyen' ? 0.55 : k === 'gros' ? 0.85 : 0.75);
+      calls.forEach(function (x) { if (!keep[x]) out[x] = 'fold'; });
+    } else if (s.type === 'vs3bet') {
+      if (k === 'moyen') HANDS.forEach(function (x) { if (out[x] === 'fourbet' && !/^(AA|KK|QQ|AKs|AKo)$/.test(x)) out[x] = /^(JJ|TT|AQs)$/.test(x) ? 'call' : 'fold'; else if (out[x] === 'call' && !/^(JJ|TT|99|AQs|AJs|KQs|AQo)$/.test(x)) out[x] = 'fold'; });
+      else if (k === 'court') HANDS.forEach(function (x) { if (out[x] === 'fourbet') out[x] = 'allin'; else if (out[x] === 'call') out[x] = /^(JJ|TT|AQs|AQo)$/.test(x) ? 'allin' : 'fold'; });
+    }
+    return out;
+  }
+  var BUBBLE_NAME = { gros: 'gros tapis', moyen: 'tapis moyen', court: 'petit tapis' };
+  function sitKey(s) { return (s.bubble ? 'bulle-' + s.bubble + '|' : '') + [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : depthKey(s.bb), s.scen || ''].join('|'); }
   function shoveKey(pos, opener) { return pos + ' vs shove ' + opener; }
   function chart(profileId, s) {
     // renvoie {hand: action} avec action ∈ raise, call, fold, allin, fourbet
@@ -122,9 +169,10 @@
       (D.pushfold[String(nearestPush(s.bb))].push[s.pos] || []).forEach(function (h) { out[h] = 'allin'; });
     }
     if (profileId === 'perso') {
-      var p = player(); var ov = p && p.perso && p.perso[sitKey(s)];
+      var p = player(), s1 = s; if (s.bubble) { s1 = {}; for (var kk in s) if (kk !== 'bubble') s1[kk] = s[kk]; } var ov = p && p.perso && p.perso[sitKey(s1)]; // ta range Perso, puis l'effet de la bulle
       if (ov) for (i in ov) out[i] = ov[i];
     }
+    if (s.bubble) return bubbleChart(profileId, s, out);
     return out;
   }
   function actionFor(profileId, s, hand) { return chart(profileId, s)[hand]; }
@@ -148,9 +196,10 @@
   var NOTIONS = {
     open_early: 'Ouvrir en début de table', open_mid: 'Ouvrir en milieu de table', open_late: 'Ouvrir en fin de table',
     open_sb: 'Ouvrir de la petite blinde', bb_def: 'Défendre la grosse blinde', cold: 'Face à une relance (hors BB)',
-    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB'
+    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB', bulle: 'Jouer la bulle'
   };
   function notionOf(s) {
+    if (s.bubble) return 'bulle';
     if (s.type === 'push') return 'push';
     if (s.type === 'callshove') return 'callshove';
     if (s.type === 'vs3bet') return 'vs3bet';
@@ -193,6 +242,15 @@
   }
   function randomSituation(kind) {
     var s, pos, bb;
+    if (kind === 'bulle') {
+      // à l'approche des places payées : ouvrir, défendre, payer un tapis ou répondre à un 3-bet, selon ton tapis
+      var bk = rnd(['moyen', 'moyen', 'gros', 'court']), bs;
+      if (bk === 'court') bs = rnd([randomSituation('callshove'), randomSituation('def')]);
+      else bs = rnd([randomSituation('open'), randomSituation('open'), randomSituation('def'), randomSituation('def'), randomSituation('callshove'), randomSituation('vs3bet')]);
+      if (bs.type === 'open' || bs.type === 'def') bs.bb = bk === 'court' ? 15 : (bk === 'gros' ? 60 : 30);
+      if (bs.type === 'def' && bk === 'court') bs.bb = 30;
+      bs.bubble = bk; return bs;
+    }
     var kinds = kind ? [kind] : ['open', 'open', 'open', 'def', 'def', 'push', 'callshove', 'vs3bet'];
     var k = rnd(kinds);
     if (k === 'open') { pos = rnd(POS.slice(0, 8)); bb = rnd([100, 100, 100, 30]); s = { type: 'open', pos: pos, bb: bb }; }
@@ -302,7 +360,7 @@
     combos: combos, pct: pct, load: load, save: save, player: player, newPlayer: newPlayer, wipeAll: wipeAll, wipeTraining: wipeTraining,
     chart: chart, actionFor: actionFor, firstOpenPos: firstOpenPos, validOpeners: validOpeners, shoveSituations: shoveSituations,
     depthKey: depthKey, nearestPush: nearestPush, sitKey: sitKey, NOTIONS: NOTIONS, notionOf: notionOf, notionState: notionState,
-    level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
+    bubbleChart: bubbleChart, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
     randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB,
     ORDER_IDX: ORDER_IDX
   };
