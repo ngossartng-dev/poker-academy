@@ -679,21 +679,39 @@
   function fxOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableFx !== false && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function sndOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableSnd !== false; }
   function ac() { try { if (!ACX) ACX = new (window.AudioContext || window.webkitAudioContext)(); if (ACX.state === 'suspended') ACX.resume(); return ACX; } catch (e) { return null; } }
-  // carte qui glisse : petit souffle de bruit filtré
-  function sCard(at) {
-    var c = ac(); if (!c) return; var t = c.currentTime + (at || 0), len = 0.07, b = c.createBuffer(1, Math.floor(c.sampleRate * len), c.sampleRate), d = b.getChannelData(0);
-    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.2);
-    var src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; f.type = 'bandpass'; f.frequency.value = 2600 + Math.random() * 900; f.Q.value = 0.9; g.gain.value = 0.55;
-    src.connect(f); f.connect(g); g.connect(c.destination); src.start(t);
+  // bruit « brun » (plus grave et plus doux que le bruit blanc), mis en cache
+  var NOISE = null;
+  function brown(c) {
+    if (NOISE && NOISE.sampleRate === c.sampleRate) return NOISE;
+    var n = Math.floor(c.sampleRate * 0.5), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), last = 0;
+    for (var i = 0; i < n; i++) { var wn = Math.random() * 2 - 1; last = (last + 0.02 * wn) / 1.02; d[i] = last * 3.2 + wn * 0.1; } // brun + une pointe de blanc : doux mais net
+    return (NOISE = b);
   }
-  // jeton : deux petits « clic » métalliques
+  // carte distribuée : un frottement doux (la carte glisse) puis un petit « tap » mat sur le feutre
+  function sCard(at) {
+    var c = ac(); if (!c) return; var t = c.currentTime + (at || 0), nz = brown(c);
+    var src = c.createBufferSource(), hp = c.createBiquadFilter(), lp = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = nz; hp.type = 'highpass'; hp.frequency.value = 350; lp.type = 'lowpass'; lp.frequency.setValueAtTime(3200, t); lp.frequency.exponentialRampToValueAtTime(1200, t + 0.09);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+    src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(c.destination); src.start(t, Math.random() * 0.3, 0.13);
+    // le tap : très court, grave, sur le feutre
+    var s2 = c.createBufferSource(), lp2 = c.createBiquadFilter(), g2 = c.createGain(), t2 = t + 0.085;
+    s2.buffer = nz; lp2.type = 'lowpass'; lp2.frequency.value = 700;
+    g2.gain.setValueAtTime(0.0001, t2); g2.gain.exponentialRampToValueAtTime(0.45, t2 + 0.004); g2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.045);
+    s2.connect(lp2); lp2.connect(g2); g2.connect(c.destination); s2.start(t2, Math.random() * 0.3, 0.06);
+  }
+  // jeton posé : un « toc » de jeton en argile, mat (plus de son métallique aigu)
   function sChip(at, n) {
-    var c = ac(); if (!c) return; n = n || 2;
+    var c = ac(); if (!c) return; n = n || 2; var nz = brown(c);
     for (var k = 0; k < n; k++) {
-      var t = c.currentTime + (at || 0) + k * (0.045 + Math.random() * 0.03), o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain();
-      o.type = 'triangle'; o.frequency.value = 3200 + Math.random() * 1400; o2.type = 'sine'; o2.frequency.value = 5400 + Math.random() * 900;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-      o.connect(g); o2.connect(g); g.connect(c.destination); o.start(t); o2.start(t); o.stop(t + 0.08); o2.stop(t + 0.08);
+      var t = c.currentTime + (at || 0) + k * (0.055 + Math.random() * 0.035), f = 1500 + Math.random() * 500;
+      var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = nz; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 2.2;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t, Math.random() * 0.3, 0.05);
+      var o = c.createOscillator(), go = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f * 0.55, t); o.frequency.exponentialRampToValueAtTime(f * 0.4, t + 0.03);
+      go.gain.setValueAtTime(0.0001, t); go.gain.exponentialRampToValueAtTime(0.08, t + 0.002); go.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      o.connect(go); go.connect(c.destination); o.start(t); o.stop(t + 0.05);
     }
   }
   // repère ce qui vient d'apparaître et garde l'heure de départ de chaque animation :
