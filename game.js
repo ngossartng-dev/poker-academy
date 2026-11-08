@@ -731,6 +731,58 @@
   function fxDelay(key, base, dur) { var t0 = FX.t && FX.t[key]; if (!t0) return null; var el = (Date.now() - t0) / 1000 - (base || 0); return el > dur ? null : (-el).toFixed(3) + 's'; }
   var DSTEP = 0.1; // écart entre deux cartes distribuées (plus posé qu'avant)
   function dealSound(t1, t2) { if (!sndOn()) return; sCard(t1 || 0); sCard(t2 || 0.9); } // tes deux cartes seulement
+
+  /* ---------- Mise libre : une jauge de la relance minimale au tapis, avec des raccourcis ---------- */
+  function bszStep() { var L = G.hand.L; return Math.max(1, L.sb || Math.round(L.bb / 2)); }
+  function bszKey(H) { return G.handNo + '-' + H.street + '-' + H.cur; }
+  function bszFromX(x) { var B = G.bsz; if (x >= 1000) return B.max; var v = B.min + (B.max - B.min) * Math.pow(x / 1000, 2), st = bszStep(); return Math.min(B.max, Math.max(B.min, Math.round(v / st) * st)); }
+  function bszToX(v) { var B = G.bsz; return B.max > B.min ? Math.round(Math.sqrt(Math.max(0, (v - B.min) / (B.max - B.min))) * 1000) : 1000; }
+  function bszLabel(v) {
+    var H = G.hand, B = G.bsz, bbs = String(Math.round(v / H.L.bb * 10) / 10).replace('.', ',');
+    var verb = v >= B.max ? 'Tapis' : H.street > 0 ? (H.cur > 0 ? 'Relancer à' : 'Miser') : (H.cur > H.L.bb ? 'Relancer à' : H.limpers > 0 ? 'Isoler à' : 'Ouvrir à');
+    var add = v - (H.bets[0] || 0), pp = Math.round(add / Math.max(1, B.pot) * 100), sp = Math.round(add / Math.max(1, B.stack) * 100);
+    return { go: verb + (v >= B.max ? ' (' + PA.fmt(B.stack) + ')' : ' ' + PA.fmt(v)), val: PA.fmt(v), sub: bbs + ' BB' + (H.street > 0 ? ' · ' + pp + ' % du pot' : '') + ' · ' + sp + ' % de ton tapis' };
+  }
+  function bszPaint() {
+    var B = G.bsz, lb = bszLabel(B.to), e;
+    if ((e = document.getElementById('bszV'))) e.textContent = lb.val;
+    if ((e = document.getElementById('bszS'))) e.textContent = lb.sub;
+    if ((e = document.getElementById('bszGo'))) { e.textContent = lb.go; e.className = B.to >= B.max ? 'a-three' : 'a-raise'; }
+    if ((e = document.getElementById('bszR')) && +e.value !== bszToX(B.to)) e.value = bszToX(B.to);
+  }
+  function betSizer(H, L, me, minTo, maxTo, pot, tc, sizes) {
+    var key = bszKey(H);
+    if (!G.bsz || G.bsz.k !== key) G.bsz = { k: key, to: Math.max(minTo, Math.min(maxTo, Math.round((sizes[0] ? sizes[0][0] : minTo)))) };
+    var B = G.bsz; B.min = minTo; B.max = maxTo; B.pot = pot + tc; B.stack = me.stack; B.to = Math.max(minTo, Math.min(maxTo, B.to));
+    var q = [];
+    if (H.street === 0) {
+      if (H.cur <= L.bb) q = [2, 2.5, 3, 4, 5, 6].map(function (m) { return [m * L.bb, String(m).replace('.', ',') + ' BB']; });
+      else q = [2.5, 3, 4, 5].map(function (m) { return [H.cur * m, '×' + String(m).replace('.', ',')]; });
+    } else if (H.cur === 0) q = [[0.25, '¼ pot'], [1 / 3, '⅓ pot'], [0.5, '½ pot'], [2 / 3, '⅔ pot'], [0.75, '¾ pot'], [1, 'Pot'], [1.5, '1,5 pot']].map(function (f) { return [pot * f[0], f[1]]; });
+    else q = [[H.cur * 2.5, '×2,5'], [H.cur * 3, '×3'], [H.cur + (pot + tc), 'Pot']];
+    q = q.concat([[0.25, '25 %'], [0.33, '33 %'], [0.5, '50 %'], [0.75, '75 %']].map(function (f) { return [(H.bets[0] || 0) + me.stack * f[0], f[1] + ' tapis']; }));
+    var seen = {};
+    q = q.map(function (x) { return [Math.round(x[0] / bszStep()) * bszStep(), x[1]]; }).filter(function (x) { if (x[0] < minTo || x[0] >= maxTo || seen[x[0]]) return false; seen[x[0]] = 1; return true; });
+    var lb = bszLabel(B.to);
+    return '<div class="bsz"><div class="bsz-top"><span>Ta mise</span><b id="bszV">' + lb.val + '</b></div><small id="bszS">' + lb.sub + '</small>' +
+      '<div class="bsz-row"><button data-gact="bszStep" data-v="-1" aria-label="Moins">−</button><input type="range" id="bszR" min="0" max="1000" step="1" value="' + bszToX(B.to) + '" aria-label="Montant de la mise"><button data-gact="bszStep" data-v="1" aria-label="Plus">+</button></div>' +
+      (q.length ? '<div class="bsz-q">' + q.map(function (x) { return '<button data-gact="bszSet" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
+      '<button id="bszGo" class="' + (B.to >= maxTo ? 'a-three' : 'a-raise') + '" data-gact="bszGo">' + lb.go + '</button></div>';
+  }
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'bszR' && G && G.bsz) { G.bsz.to = bszFromX(+e.target.value); bszPaint(); } });
+  // grand écran (ordinateur) : la table prend toute la place libre, boutons d'action à droite
+  function fitTable() {
+    var f = document.querySelector('.felt2'); if (!f) return;
+    var wide = window.innerWidth >= 1100 && window.innerHeight >= 600, z = 1;
+    if (wide) {
+      var col = f.parentElement, cw = col ? col.clientWidth : 720, top = f.getBoundingClientRect().top + (window.scrollY || 0) - (window.scrollY || 0);
+      var r = f.getBoundingClientRect(), z0 = parseFloat(f.style.zoom) || 1, h0 = r.height / z0;
+      var avail = window.innerHeight - r.top - 76; // place pour « Ton tapis » en dessous
+      z = Math.max(1, Math.min(cw / 720, avail / h0, 2.2));
+    }
+    f.style.zoom = z > 1.02 ? z.toFixed(3) : '';
+  }
+  window.addEventListener('resize', function () { if (document.querySelector('.felt2')) fitTable(); });
   function tableView() {
     var ui = U(); if (sndOn()) sndLoad();
     if (!G) { location.hash = '#partie'; return ''; }
@@ -804,11 +856,13 @@
       if (!canRaise(0)) sizes = [];
       var raiseBtns = sizes.filter(function (s) { return s[0] >= minTo && s[0] < maxTo; }).map(function (s) { return '<button class="a-raise" data-gact="raise" data-v="' + Math.round(s[0]) + '">' + (H.cur > 0 && H.street > 0 ? 'Relancer ' : (H.street === 0 && H.cur > L.bb ? '' : (H.street === 0 ? (H.limpers > 0 ? 'Isoler ' : 'Ouvrir ') : 'Miser '))) + s[1] + '</button>'; });
       if (maxTo > H.cur && canRaise(0)) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + PA.fmt(me.stack) + ')</button>');
-      bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>';
+      var bsz = canRaise(0) && maxTo > minTo ? betSizer(H, L, me, minTo, maxTo, pot, tc, sizes) : '';
+      bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>' + bsz;
     } else {
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="banner muted" style="text-align:center">' + (H.inHand[0] && !H.folded[0] ? 'Au tour de ' + ui.esc(G.players[H.toAct] ? G.players[H.toAct].name : '…') + '…' : 'Tu t’es couché. La main continue…') + '</div>' + (H.folded[0] || !H.inHand[0] ? '<button class="btn block" data-gact="skip">Passer à la main suivante</button>' : '');
     }
-    return ui.shell('entrainer', '<div class="stack">' + top + (G.opts.format === 'hu' ? '' : hud()) + info + h + mine + bottom + '</div>', true);
+    if (window.requestAnimationFrame) requestAnimationFrame(fitTable);
+    return ui.shell('entrainer', '<div class="stack">' + top + (G.opts.format === 'hu' ? '' : hud()) + '<div class="gtab"><div class="gtab-l">' + info + h + mine + '</div><div class="gtab-r stack">' + bottom + '</div></div></div>', true);
   }
   function bilanView() {
     var ui = U(), s = G.stats, prize = PAYOUT[G.opts.seats][G.place - 1];
@@ -845,6 +899,9 @@
     else if (a === 'fold' || a === 'check' || a === 'call') heroAct(a);
     else if (a === 'raise') heroAct('raise', parseInt(v, 10));
     else if (a === 'allin') heroAct('allin');
+    else if (a === 'bszSet' && G.bsz) { G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, parseInt(v, 10))); bszPaint(); }
+    else if (a === 'bszStep' && G.bsz) { var stp = G.hand.street === 0 ? G.hand.L.bb : bszStep(); G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, G.bsz.to + (+v) * stp)); bszPaint(); }
+    else if (a === 'bszGo' && G.bsz) { if (G.bsz.to >= G.bsz.max) heroAct('allin'); else heroAct('raise', G.bsz.to); }
     else if (a === 'seat') { var sk = parseInt(v, 10); G.pop = sk < 0 || G.pop === sk ? null : sk; U().render(); }
   });
   function fastForward() {
