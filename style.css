@@ -661,7 +661,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .board2 .slot{border:1.5px dashed rgba(255,255,255,.18);background:rgba(0,0,0,.12)}
 /* distribution dans l'entraînement (test de profil, exercices) */
 .cards.fx-deal .pc{animation:fxDealMe2 .5s cubic-bezier(.2,.8,.25,1) both}
-.cards.fx-deal .pc:nth-child(1){animation-delay:.55s}.cards.fx-deal .pc:nth-child(2){animation-delay:1.18s}
+.cards.fx-deal .pc:nth-child(1){animation-delay:.72s}.cards.fx-deal .pc:nth-child(2){animation-delay:1.53s}
 @keyframes fxDealMe2{0%{opacity:0;transform:translate(0,-30vh) scale(.5) rotate(-20deg)}100%{opacity:1}}
 .felt.fx-dealing .mcd .pcs{animation:fxDealO .3s ease-out both}
 .felt.fx-dealing .mcd .pcs:nth-child(1){animation-delay:var(--d1)}.felt.fx-dealing .mcd .pcs:nth-child(2){animation-delay:var(--d2)}

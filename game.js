@@ -680,7 +680,7 @@
   function sndOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableSnd !== false; }
   function ac() { try { if (!ACX) ACX = new (window.AudioContext || window.webkitAudioContext)(); if (ACX.state === 'suspended') ACX.resume(); return ACX; } catch (e) { return null; } }
   // vrais enregistrements (cartes et jetons en argile, pack « Casino Audio » de Kenney, licence CC0), décodés une seule fois
-  var SND = { deal: [1, 2, 3, 4, 5, 6, 7, 8], place: [1, 2, 3, 4], lay: [1, 2, 3], stack: [1, 2, 3, 4, 5, 6], collide: [1, 2, 3, 4], handle: [1, 2, 5, 6] }, BUF = {}, SLOAD = false;
+  var SND = { deal: [1, 2, 3, 4, 5, 6, 7, 8], place: [1, 2, 3, 4], lay: [1, 2, 3], stack: [1, 2, 3, 4, 5, 6], collide: [1, 2, 3, 4], handle: [1, 2, 5, 6], pile: [3, 4] }, BUF = {}, SLOAD = false;
   function sndLoad() {
     var c = ac(); if (!c || SLOAD || !window.fetch) return; SLOAD = true;
     Object.keys(SND).forEach(function (k) {
@@ -706,9 +706,14 @@
   function sCard(at) { play('deal', at, 0.55); }
   function sBoard(at) { play('place', at, 0.6); }
   // mise : un ou deux jetons posés, plus une petite pile pour les grosses mises
-  function sChip(at, n) { n = n || 2; play(n > 2 ? 'stack' : 'lay', at, 0.6); if (n > 3) play('lay', (at || 0) + 0.09, 0.45); }
-  function sCollect(at) { play('collide', at, 0.6); play('collide', (at || 0) + 0.08, 0.45); }
-  function sWin(at) { play('handle', at, 0.65); }
+  // une pile de jetons : plusieurs jetons qui tombent les uns sur les autres, en cascade de plus en plus rapprochée
+  function pile(at, k, vol) {
+    var t = at || 0, gap = 0.075;
+    for (var i = 0; i < k; i++) { play(i === 0 ? 'stack' : (i % 2 ? 'lay' : 'stack'), t, vol * (1 - i * 0.1), 0.97 + i * 0.025 + Math.random() * 0.03); t += gap; gap *= 0.8; }
+  }
+  function sChip(at, n) { n = n || 2; pile(at, n > 2 ? 5 : 3, 0.62); play('pile', (at || 0) + 0.02, 0.35); }
+  function sCollect(at) { play('handle', at, 0.55); pile((at || 0) + 0.15, 4, 0.5); }
+  function sWin(at) { play('handle', at, 0.6); pile((at || 0) + 0.25, 6, 0.6); }
   // repère ce qui vient d'apparaître et garde l'heure de départ de chaque animation :
   // un nouvel affichage (action d'un adversaire) continue l'animation au lieu de la couper
   function fxDiff(H, n) {
@@ -724,7 +729,8 @@
   }
   // délai CSS (en secondes, négatif si l'animation est déjà commencée) ; null quand elle est finie
   function fxDelay(key, base, dur) { var t0 = FX.t && FX.t[key]; if (!t0) return null; var el = (Date.now() - t0) / 1000 - (base || 0); return el > dur ? null : (-el).toFixed(3) + 's'; }
-  function dealSound(n) { if (!sndOn()) return; for (var q = 0; q < 2 * (n || 9); q++) sCard(q * 0.075); }
+  var DSTEP = 0.1; // écart entre deux cartes distribuées (plus posé qu'avant)
+  function dealSound(t1, t2) { if (!sndOn()) return; sCard(t1 || 0); sCard(t2 || 0.9); } // tes deux cartes seulement
   function tableView() {
     var ui = U(); if (sndOn()) sndLoad();
     if (!G) { location.hash = '#partie'; return ''; }
@@ -732,7 +738,7 @@
     var H = G.hand, n = G.players.length, L = H.L;
     var narrow = (window.innerWidth || 1000) < 700, RX = narrow ? 40 : 44, RY = narrow ? 41 : 42;
     var theme = (window.PA.player().settings || {}).tableTheme || 'vert';
-    var D = fxDiff(H, n), FXV = fxOn(), dealD = function (k, r) { return fxDelay('deal', (r * n + k) * 0.06, 0.45); }, dealing = FXV && fxDelay('deal', 0, (2 * n) * 0.06 + 0.45) !== null;
+    var D = fxDiff(H, n), FXV = fxOn(), dealD = function (k, r) { return fxDelay('deal', (r * n + k) * DSTEP, 0.45); }, dealing = FXV && fxDelay('deal', 0, (2 * n) * DSTEP + 0.45) !== null;
     var h = '<div class="felt2 t-' + theme + '"><div class="rail"></div>';
     for (var k = 0; k < n; k++) {
       var p = G.players[k], a = SEATPOS9(k, n), x = 50 + RX * Math.cos(a), y = 50 + RY * Math.sin(a);
@@ -752,7 +758,7 @@
     if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2' + (dealing ? ' fx-dealme' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(0, 0) || '-9s') + ';--d2:' + (dealD(0, 1) || '-9s') + '"' : '') + '>' + H.hole[0].map(cardMid).join('') + '</div>';
     // les sons suivent les animations
     if (sndOn()) {
-      if (D.newHand) { var nn = 0; for (var q2 = 0; q2 < 2; q2++) for (var q1 = 0; q1 < n; q1++) if (H.inHand[q1]) sCard(nn++ * 0.06); }
+      if (D.newHand && H.inHand[0]) { sCard(0.02); sCard(n * DSTEP + 0.02); } // seulement tes deux cartes, au moment où elles arrivent
       D.board.forEach(function (bi2, j) { sBoard(0.05 + j * 0.16); });
       var nb = Object.keys(D.bets).length; if (nb) sChip(D.newHand ? 0.05 : 0.08, Math.min(4, 1 + nb));
       if (D.collect) sCollect(0.02);
@@ -860,7 +866,7 @@
     G.fast = false;
   }
 
-  window.PA_GAME = { dealSound: function (n) { dealSound(n); },
+  window.PA_GAME = { dealSound: function (a, b) { dealSound(a, b); },
     views: { partie: setupView, jeu: tableView },
     heroRangeCtx: function () { if (!G || !G.hand) return null; var hs = heroSit(); if (G.stats) G.stats.consult++; return hs; },
     _test: { canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }

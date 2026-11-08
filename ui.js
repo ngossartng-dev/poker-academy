@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.29.2';
+  var VERSION = '2.29.3';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -554,7 +554,7 @@
       if (s.hu && pos !== 'SB' && pos !== 'BB') continue;
       var isHero = k === 0;
       var stackBB = bb - (bets[pos] || 0);
-      h += '<div class="seat' + (isHero ? ' hero' : '') + (folded[pos] ? ' out' : '') + '" style="left:' + xy[0] + '%;top:' + Math.min(xy[1], 92) + '%">' + (!isHero && !folded[pos] ? '<span class="mcd" style="--d1:' + (k * 0.07).toFixed(2) + 's;--d2:' + (k * 0.07 + 0.63).toFixed(2) + 's"><i class="pcs back"></i><i class="pcs back"></i></span>' : '') + '<span class="nm">' + (isHero ? 'Toi · ' : '') + pos + '</span><span class="st">' + (allin[pos] ? 'Tapis' : PA.fmt(stackBB * BB)) + '</span></div>';
+      h += '<div class="seat' + (isHero ? ' hero' : '') + (folded[pos] ? ' out' : '') + '" style="left:' + xy[0] + '%;top:' + Math.min(xy[1], 92) + '%">' + (!isHero && !folded[pos] ? '<span class="mcd" style="--d1:' + (k * 0.09).toFixed(2) + 's;--d2:' + (k * 0.09 + 0.81).toFixed(2) + 's"><i class="pcs back"></i><i class="pcs back"></i></span>' : '') + '<span class="nm">' + (isHero ? 'Toi · ' : '') + pos + '</span><span class="st">' + (allin[pos] ? 'Tapis' : PA.fmt(stackBB * BB)) + '</span></div>';
       if (bets[pos]) { var bxy = seatXY(s.hu ? (pos === heroPos ? 0 : 4.5) : k, [27, 23]); h += '<div class="bet" style="left:' + bxy[0] + '%;top:' + bxy[1] + '%">' + chipStack(bets[pos]) + '<b>' + PA.fmt(bets[pos] * BB) + '</b></div>'; }
       if (s.hu ? pos === 'SB' : pos === 'BTN') { var dxy = s.hu ? seatXY((pos === heroPos ? 0 : 4.5) + 1.2, [40, 36]) : seatXY(k + (isHero ? 0.62 : 0.4), [36, 33]); h += '<div class="dealer" style="left:' + dxy[0] + '%;top:' + dxy[1] + '%">D</div>'; }
     }
@@ -597,7 +597,7 @@
       '<div class="bar"><i style="width:' + Math.round(d.i / d.qs.length * 100) + '%"></i></div>';
     var dk = (d.dk || (d.dk = Math.random())) + ':' + d.i, st0 = (PA.player() || {}).settings || {}, dealNow = dk !== DEAL_KEY && !d.fb && st0.tableFx !== false && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     if (!d.fb) DEAL_KEY = dk;
-    if (dealNow && st0.tableSnd !== false && window.PA_GAME && window.PA_GAME.dealSound) window.PA_GAME.dealSound(9);
+    if (dealNow && st0.tableSnd !== false && window.PA_GAME && window.PA_GAME.dealSound) window.PA_GAME.dealSound(0.74, 1.55);
     var cardsBox = '<div class="cards' + (dealNow ? ' fx-deal' : '') + '">' + q.cards.map(cardHtml).join('') + '</div>';
     var body = head + (q.custom ? q.visual + cardsBox + '<div class="banner">' + q.text + '</div>' + q.help :
       '<div class="small muted" style="text-align:center">' + t.blindTxt + (q.review ? ' · <span style="color:var(--gold)">Main à revoir</span>' : '') + '</div>' + (dealNow ? t.html.replace('<div class="felt">', '<div class="felt fx-dealing">') : t.html) +
