@@ -679,41 +679,36 @@
   function fxOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableFx !== false && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function sndOn() { var st = (window.PA.player() || {}).settings || {}; return st.tableSnd !== false; }
   function ac() { try { if (!ACX) ACX = new (window.AudioContext || window.webkitAudioContext)(); if (ACX.state === 'suspended') ACX.resume(); return ACX; } catch (e) { return null; } }
-  // bruit « brun » (plus grave et plus doux que le bruit blanc), mis en cache
-  var NOISE = null;
-  function brown(c) {
-    if (NOISE && NOISE.sampleRate === c.sampleRate) return NOISE;
-    var n = Math.floor(c.sampleRate * 0.5), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), last = 0;
-    for (var i = 0; i < n; i++) { var wn = Math.random() * 2 - 1; last = (last + 0.02 * wn) / 1.02; d[i] = last * 3.2 + wn * 0.1; } // brun + une pointe de blanc : doux mais net
-    return (NOISE = b);
+  // vrais enregistrements (cartes et jetons en argile, pack « Casino Audio » de Kenney, licence CC0), décodés une seule fois
+  var SND = { deal: [1, 2, 3, 4, 5, 6, 7, 8], place: [1, 2, 3, 4], lay: [1, 2, 3], stack: [1, 2, 3, 4, 5, 6], collide: [1, 2, 3, 4], handle: [1, 2, 5, 6] }, BUF = {}, SLOAD = false;
+  function sndLoad() {
+    var c = ac(); if (!c || SLOAD || !window.fetch) return; SLOAD = true;
+    Object.keys(SND).forEach(function (k) {
+      BUF[k] = [];
+      SND[k].forEach(function (i) {
+        fetch('audio/table/' + k + i + '.m4a').then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+          .then(function (ab) { return new Promise(function (ok, ko) { var p = c.decodeAudioData(ab, ok, ko); if (p && p.then) p.then(ok, ko); }); })
+          .then(function (b) { if (BUF[k].indexOf(b) < 0) BUF[k].push(b); }).catch(function () {});
+      });
+    });
   }
-  // carte distribuée : un frottement doux (la carte glisse) puis un petit « tap » mat sur le feutre
-  function sCard(at) {
-    var c = ac(); if (!c) return; var t = c.currentTime + (at || 0), nz = brown(c);
-    var src = c.createBufferSource(), hp = c.createBiquadFilter(), lp = c.createBiquadFilter(), g = c.createGain();
-    src.buffer = nz; hp.type = 'highpass'; hp.frequency.value = 350; lp.type = 'lowpass'; lp.frequency.setValueAtTime(3200, t); lp.frequency.exponentialRampToValueAtTime(1200, t + 0.09);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
-    src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(c.destination); src.start(t, Math.random() * 0.3, 0.13);
-    // le tap : très court, grave, sur le feutre
-    var s2 = c.createBufferSource(), lp2 = c.createBiquadFilter(), g2 = c.createGain(), t2 = t + 0.085;
-    s2.buffer = nz; lp2.type = 'lowpass'; lp2.frequency.value = 700;
-    g2.gain.setValueAtTime(0.0001, t2); g2.gain.exponentialRampToValueAtTime(0.45, t2 + 0.004); g2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.045);
-    s2.connect(lp2); lp2.connect(g2); g2.connect(c.destination); s2.start(t2, Math.random() * 0.3, 0.06);
+  // préchargé au premier toucher (le navigateur n'autorise le son qu'après un geste)
+  document.addEventListener('pointerdown', function pre() { try { if (sndOn()) { sndLoad(); document.removeEventListener('pointerdown', pre, true); } } catch (e) {} }, true);
+  var LAST = {};
+  function play(kind, at, vol, rate) {
+    var c = ac(); if (!c) return; sndLoad(); var L = BUF[kind]; if (!L || !L.length) return;
+    var i = Math.floor(Math.random() * L.length); if (L.length > 1 && i === LAST[kind]) i = (i + 1) % L.length; LAST[kind] = i; // jamais deux fois le même d'affilée
+    var s = c.createBufferSource(), g = c.createGain(); s.buffer = L[i];
+    s.playbackRate.value = rate || (0.96 + Math.random() * 0.08); g.gain.value = (vol || 0.6) * (0.85 + Math.random() * 0.15);
+    s.connect(g); g.connect(c.destination); s.start(c.currentTime + (at || 0));
   }
-  // jeton posé : un « toc » de jeton en argile, mat (plus de son métallique aigu)
-  function sChip(at, n) {
-    var c = ac(); if (!c) return; n = n || 2; var nz = brown(c);
-    for (var k = 0; k < n; k++) {
-      var t = c.currentTime + (at || 0) + k * (0.055 + Math.random() * 0.035), f = 1500 + Math.random() * 500;
-      var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
-      src.buffer = nz; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 2.2;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-      src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t, Math.random() * 0.3, 0.05);
-      var o = c.createOscillator(), go = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f * 0.55, t); o.frequency.exponentialRampToValueAtTime(f * 0.4, t + 0.03);
-      go.gain.setValueAtTime(0.0001, t); go.gain.exponentialRampToValueAtTime(0.08, t + 0.002); go.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
-      o.connect(go); go.connect(c.destination); o.start(t); o.stop(t + 0.05);
-    }
-  }
+  // carte distribuée (glisse sur le feutre) ; carte du tableau retournée et posée
+  function sCard(at) { play('deal', at, 0.55); }
+  function sBoard(at) { play('place', at, 0.6); }
+  // mise : un ou deux jetons posés, plus une petite pile pour les grosses mises
+  function sChip(at, n) { n = n || 2; play(n > 2 ? 'stack' : 'lay', at, 0.6); if (n > 3) play('lay', (at || 0) + 0.09, 0.45); }
+  function sCollect(at) { play('collide', at, 0.6); play('collide', (at || 0) + 0.08, 0.45); }
+  function sWin(at) { play('handle', at, 0.65); }
   // repère ce qui vient d'apparaître et garde l'heure de départ de chaque animation :
   // un nouvel affichage (action d'un adversaire) continue l'animation au lieu de la couper
   function fxDiff(H, n) {
@@ -729,9 +724,9 @@
   }
   // délai CSS (en secondes, négatif si l'animation est déjà commencée) ; null quand elle est finie
   function fxDelay(key, base, dur) { var t0 = FX.t && FX.t[key]; if (!t0) return null; var el = (Date.now() - t0) / 1000 - (base || 0); return el > dur ? null : (-el).toFixed(3) + 's'; }
-  function dealSound(n) { if (!sndOn()) return; for (var q = 0; q < 2 * (n || 9); q++) sCard(q * 0.07); }
+  function dealSound(n) { if (!sndOn()) return; for (var q = 0; q < 2 * (n || 9); q++) sCard(q * 0.075); }
   function tableView() {
-    var ui = U();
+    var ui = U(); if (sndOn()) sndLoad();
     if (!G) { location.hash = '#partie'; return ''; }
     if (G.over) return ui.shell('entrainer', bilanView(), true);
     var H = G.hand, n = G.players.length, L = H.L;
@@ -758,10 +753,10 @@
     // les sons suivent les animations
     if (sndOn()) {
       if (D.newHand) { var nn = 0; for (var q2 = 0; q2 < 2; q2++) for (var q1 = 0; q1 < n; q1++) if (H.inHand[q1]) sCard(nn++ * 0.06); }
-      D.board.forEach(function (bi2, j) { sCard(0.05 + j * 0.16); });
+      D.board.forEach(function (bi2, j) { sBoard(0.05 + j * 0.16); });
       var nb = Object.keys(D.bets).length; if (nb) sChip(D.newHand ? 0.05 : 0.08, Math.min(4, 1 + nb));
-      if (D.collect) sChip(0.02, 5);
-      if (D.win) sChip(0.15, 6);
+      if (D.collect) sCollect(0.02);
+      if (D.win) sWin(0.15);
     }
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
       var q = G.players[G.pop];

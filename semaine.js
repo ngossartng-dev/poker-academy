@@ -13,7 +13,10 @@
   function notionName(k) { return (window.PA.NOTIONS || {})[k] || EXTRA[k] || k; }
   function chTitle(n) { var c = ((window.PA_LESSONS || {}).CHAPTERS || []).filter(function (x) { return x.n === n; })[0]; return c ? c.title : 'Chapitre ' + n; }
   function weekId() { return window.PA_LEAGUE ? window.PA_LEAGUE.week(window.PA_LEAGUE.today()) : String(Math.floor(Date.now() / 6048e5)); }
-  function monday() { var d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+  // le plan couvre les 7 jours à partir du jour où il est fait (aujourd'hui en premier), puis il est refait
+  function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function noon(x) { var d = x ? new Date(x + 'T12:00:00') : new Date(); d.setHours(12, 0, 0, 0); return d; }
+  function since(start) { return Math.round((noon() - noon(start)) / 864e5); }
   // les points faibles : niveau le plus bas d'abord, une notion jamais travaillée compte comme faible
   function weak(p) {
     var keys = Object.keys(window.PA.NOTIONS || {}).concat(Object.keys(EXTRA).filter(function (k) { return window.PA_SIT && window.PA_SIT.kinds.indexOf(k) >= 0; }));
@@ -32,9 +35,9 @@
       [{ t: 'seance', label: 'Séance du jour : 20 décisions mélangées', min: 10 }, D(b.k)],
       [{ t: 'review', label: 'Mains à revoir', min: 5 }, { t: 'link', href: '#semaine?bilan', label: 'Regarde tes progrès de la semaine', min: 3 }]
     ];
-    return { id: weekId(), at: Date.now(), focus: w.map(function (x) { return x.k; }), start: w.map(function (x) { return x.r; }), days: plan, done: {} };
+    return { id: weekId(), from: iso(noon()), at: Date.now(), focus: w.map(function (x) { return x.k; }), start: w.map(function (x) { return x.r; }), days: plan, done: {} };
   }
-  function get(p) { if (!p.week || p.week.id !== weekId()) { p.week = build(p); window.PA.save(); } return p.week; }
+  function get(p) { if (!p.week || !p.week.from || since(p.week.from) > 6 || since(p.week.from) < 0) { p.week = build(p); window.PA.save(); } return p.week; }
 
   /* ---------- Ton bilan au club (championnat) ---------- */
   function clubBilan(p) {
@@ -63,18 +66,19 @@
 
   /* ---------- Vue ---------- */
   function view() {
-    var ui = U(), p = window.PA.player(), W = get(p), esc = ui.esc, mon = monday(), today = (new Date().getDay() + 6) % 7;
+    var ui = U(), p = window.PA.player(), W = get(p), esc = ui.esc, s0 = noon(W.from), today = since(W.from);
     var ndone = Object.keys(W.done).filter(function (k) { return W.done[k]; }).length;
     var out = '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>Mon plan de la semaine</h1>' +
-      ui.yo('Un quart d’heure par jour, sur tes points faibles. Le plan est fait le lundi à partir de tes résultats aux exercices ; touche « Fait » au fil des jours.');
+      ui.yo('Un quart d’heure par jour, sur tes points faibles. Le plan couvre les 7 jours qui viennent, à partir d’aujourd’hui, et il se refait tout seul ensuite avec tes nouveaux résultats ; touche « Fait » au fil des jours.');
     out += '<div class="card stack"><b>Tes 3 points à travailler</b><div class="wk-focus">' + W.focus.map(function (k, i) {
       var st = p.notions[k] || { r: 1350, n: 0 }, gain = st.r - (W.start[i] || st.r);
       return '<div><span>' + esc(notionName(k)) + '</span><b>Niveau ' + window.PA.level(st.r) + '/5</b><small>' + (st.n ? st.n + ' décisions' : 'jamais travaillé') + (gain ? ' · ' + (gain > 0 ? '▲ +' : '▼ ') + gain + ' cette semaine' : '') + '</small></div>';
     }).join('') + '</div><div class="wk-prog"><i style="width:' + Math.round(ndone / 7 * 100) + '%"></i></div><div class="small muted">' + ndone + ' jour' + (ndone > 1 ? 's' : '') + ' sur 7 · ' + (ndone >= 5 ? 'superbe semaine !' : ndone >= 3 ? 'bon rythme' : 'chaque jour compte') + '</div></div>';
-    out += W.days.map(function (tasks, i) {
-      var d = new Date(mon); d.setDate(mon.getDate() + i);
-      var mins = tasks.reduce(function (a, t) { return a + (t.min || 0); }, 0), dn = !!W.done[i];
-      return '<div class="card stack wk-day' + (i === today ? ' wk-today' : '') + (dn ? ' wk-done' : '') + '"><div class="row" style="justify-content:space-between;gap:8px"><b>' + DAYS[i] + ' ' + ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + (i === today ? ' · aujourd’hui' : '') + (i === 2 ? ' · tournoi du club' : '') + '</b><span class="small muted">' + mins + ' min</span></div>' +
+    out += [0, 1, 2, 3, 4, 5, 6].map(function (k) {
+      var d = new Date(s0); d.setDate(s0.getDate() + k);
+      var i = (d.getDay() + 6) % 7, tasks = W.days[i], key = iso(d); // les tâches suivent le jour de la semaine (mercredi = tournoi du club)
+      var mins = tasks.reduce(function (a, t) { return a + (t.min || 0); }, 0), dn = !!W.done[key];
+      return '<div class="card stack wk-day' + (k === today ? ' wk-today' : '') + (k < today ? ' wk-past' : '') + (dn ? ' wk-done' : '') + '"><div class="row" style="justify-content:space-between;gap:8px"><b>' + DAYS[i] + ' ' + ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + (k === today ? ' · aujourd’hui' : k === today + 1 ? ' · demain' : '') + (i === 2 ? ' · tournoi du club' : '') + '</b><span class="small muted">' + mins + ' min</span></div>' +
         tasks.map(function (t, j) {
           var ic = { lesson: '📖', drill: '🎯', review: '🔁', link: '🃏', pod: '🎧', seance: '⚡' }[t.t];
           if (t.t === 'lesson') return '<a class="wk-task" href="#lecon-' + t.ch + '">' + ic + ' ' + esc(t.label) + '</a>';
@@ -83,7 +87,7 @@
           if (t.t === 'drill') return '<button class="wk-task" data-act="wkGo" data-v="' + t.go + '">' + ic + ' ' + esc(t.label) + '</button>';
           if (t.t === 'review') { var due = window.PA.srsDue(p).length; return '<button class="wk-task" data-act="seance">' + ic + ' ' + esc(t.label) + (due ? ' · ' + due + ' en attente' : '') + '</button>'; }
           return '<button class="wk-task" data-act="seance">' + ic + ' ' + esc(t.label) + '</button>';
-        }).join('') + '<button class="btn' + (dn ? ' gold' : '') + '" data-wk="done" data-v="' + i + '">' + (dn ? '✓ Fait' : 'Marquer comme fait') + '</button></div>';
+        }).join('') + '<button class="btn' + (dn ? ' gold' : '') + '" data-wk="done" data-v="' + key + '">' + (dn ? '✓ Fait' : 'Marquer comme fait') + '</button></div>';
     }).join('');
     out += '<div id="wkBilan">' + bilanCard(p) + '</div><button class="btn block" data-wk="rebuild">Refaire le plan avec mes résultats d’aujourd’hui</button></div>';
     return ui.shell('entrainer', out);
@@ -92,7 +96,7 @@
     var t = e.target.closest ? e.target.closest('[data-wk]') : null; if (!t) return;
     var a = t.getAttribute('data-wk'), p = window.PA.player();
     if (a === 'done') { var W = get(p), i = t.getAttribute('data-v'); W.done[i] = !W.done[i]; window.PA.save(); U().render(); }
-    else if (a === 'rebuild') { var d0 = (p.week && p.week.done) || {}; p.week = build(p); p.week.done = d0; window.PA.save(); U().render(); }
+    else if (a === 'rebuild') { var d0 = (p.week && p.week.done) || {}, t0 = iso(noon()); p.week = build(p); Object.keys(d0).forEach(function (k) { if (k >= t0 && d0[k]) p.week.done[k] = true; }); window.PA.save(); U().render(); }
     else if (a === 'bilan') { var el = document.getElementById('wkBilan'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }
     else if (a === 'fiche') { if (window.PA_LEAGUE && window.PA_LEAGUE.openPlayer) window.PA_LEAGUE.openPlayer(p.pseudo); }
   });
