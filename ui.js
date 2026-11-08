@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.26.0';
+  var VERSION = '2.27.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -212,7 +212,7 @@
       if (pipOn) {
         var DEF = [], heroes = ['BB', 'SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1'];
         heroes.forEach(function (p) { var ops = PA.validOpeners(p); if (p !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; }); ops.forEach(function (o) { DEF.push(PA.chart(prof, { type: 'def', pos: p, opener: o, bb: gbb })); }); });
-        var V3 = gbb >= 40 ? ['ip', 'oop', 'early'].map(function (sc) { return PA.chart(prof, { type: 'vs3bet', scen: sc, bb: 100 }); }) : [];
+        var V3 = gbb >= 40 ? ['ip', 'oop', 'early', 'bvb'].map(function (sc) { return PA.chart(prof, { type: 'vs3bet', scen: sc, bb: 100 }); }) : [];
         PA.HANDS.forEach(function (h) {
           var pp = [], lb = [], t3 = DEF.some(function (c) { return c[h] === 'raise' || c[h] === 'allin'; });
           if (t3) { pp.push('3b'); lb.push('3-bet face à une relance'); }
@@ -251,7 +251,7 @@
       out += '<div class="small muted">La relance vient de :</div><div class="seg">' + ops.map(function (p) { return '<button class="' + (RS.opener === p ? 'on' : '') + '" data-act="rsOp" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
       s = rsSit(); cm = PA.chart(prof, s);
     } else if (RS.type === 'vs3bet') {
-      out += '<div class="seg">' + [['ip', 'J’ouvre au bouton, 3-bet des blindes'], ['oop', 'J’ouvre au CO, 3-bet du bouton'], ['early', 'J’ouvre tôt, 3-bet tardif']].map(function (t) { return '<button class="' + (RS.scen === t[0] ? 'on' : '') + '" data-act="rsScen" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+      out += '<div class="seg">' + [['ip', 'J’ouvre au bouton, 3-bet des blindes'], ['oop', 'J’ouvre au CO, 3-bet du bouton'], ['early', 'J’ouvre tôt, 3-bet tardif'], ['bvb', 'J’ouvre en SB, 3-bet de la BB']].map(function (t) { return '<button class="' + (RS.scen === t[0] ? 'on' : '') + '" data-act="rsScen" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     } else {
       var sits = PA.shoveSituations(RS.bb), key = RS.pos + ' vs shove ' + RS.opener;
       if (sits.indexOf(key) < 0) { var m = sits[0].split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; key = sits[0]; }
@@ -276,14 +276,37 @@
     if (s.hu) return s.type === 'push' ? 'en heads-up au bouton (petite blinde) à ' + PA.nearestPush(s.bb) + ' BB' : 'en heads-up en grosse blinde, face au tapis du bouton à ' + PA.nearestPush(s.bb) + ' BB';
     if (s.type === 'open') { var first = s.pos === 'UTG' ? 'premier à parler' : 'personne n’a ouvert avant toi'; return PA.depthKey(s.bb) === 'push' ? 'en ' + s.pos + ' à ' + PA.nearestPush(s.bb) + ' BB, ' + first : 'en ' + s.pos + ', ' + first; }
     if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener;
-    if (s.type === 'vs3bet') return { ip: 'au bouton face au 3-bet des blindes', oop: 'au CO face au 3-bet du bouton', early: 'en début de table face à un 3-bet tardif' }[s.scen];
+    if (s.type === 'vs3bet') return { ip: 'au bouton face au 3-bet des blindes', oop: 'au CO face au 3-bet du bouton', early: 'en début de table face à un 3-bet tardif', bvb: 'en petite blinde face au 3-bet de la grosse blinde' }[s.scen];
     return 'en ' + s.pos + ' face au tapis ' + s.opener + ' à ' + PA.nearestPush(s.bb) + ' BB';
   }
+  function floatSheet() { return window.matchMedia && window.matchMedia('(min-width: 900px) and (pointer: fine)').matches; }
+  function sheetPos() { try { var o = JSON.parse(localStorage.getItem('pa2rsheet') || 'null'); if (o && isFinite(o.x) && isFinite(o.y)) { o.x = Math.max(0, Math.min(window.innerWidth - 120, o.x)); o.y = Math.max(0, Math.min(window.innerHeight - 60, o.y)); return o; } } catch (e) {} return null; }
+  (function () {
+    var D = null;
+    document.addEventListener('pointerdown', function (e) {
+      var bar = e.target.closest ? e.target.closest('.sheet-bar') : null; if (!bar || e.target.closest('.sheet-x')) return;
+      var sh = bar.closest('.sheet'), r = sh.getBoundingClientRect(); e.preventDefault();
+      D = { sh: sh, dx: e.clientX - r.left, dy: e.clientY - r.top }; sh.classList.add('moving');
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!D) return; var W = window.innerWidth, H = window.innerHeight, r = D.sh.getBoundingClientRect();
+      D.sh.style.left = Math.max(-r.width + 120, Math.min(W - 120, e.clientX - D.dx)) + 'px'; D.sh.style.top = Math.max(0, Math.min(H - 50, e.clientY - D.dy)) + 'px';
+    });
+    function save(sh) { var r = sh.getBoundingClientRect(); try { localStorage.setItem('pa2rsheet', JSON.stringify({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) })); } catch (e) {} }
+    document.addEventListener('pointerup', function () { if (!D) return; D.sh.classList.remove('moving'); save(D.sh); D = null; });
+    // la taille changée par le coin est aussi retenue
+    if (window.ResizeObserver) { var RO = new ResizeObserver(function (en) { en.forEach(function (x) { if (x.target.classList.contains('float') && !D && x.target.isConnected && x.target.dataset.ready) save(x.target); x.target.dataset.ready = '1'; }); }); new MutationObserver(function () { var sh = document.querySelector('.sheet.float'); if (sh && !sh.dataset.obs) { sh.dataset.obs = '1'; RO.observe(sh); } }).observe(document.body, { childList: true, subtree: true }); }
+  })();
   function renderSheet() {
     var host = $('#sheet');
     if (!ui.sheet) { host.innerHTML = ''; return; }
     if (ui.sheet === 'range') {
-      host.innerHTML = '<div class="sheet-bg" data-act="closeSheet"><div class="sheet stack" role="dialog" aria-label="Ma range" data-stop="1"><div class="grab"></div>' + rangeBody(false) + '<button class="btn block" data-act="closeSheet">Fermer</button></div></div>';
+      // sur PC : fenêtre flottante qu'on déplace où on veut (la table reste visible et utilisable derrière)
+      var fl = floatSheet(), pos = fl ? sheetPos() : null, sc0 = host.querySelector('.sheet') ? host.querySelector('.sheet').scrollTop : 0;
+      host.innerHTML = '<div class="sheet-bg' + (fl ? ' float' : '') + '"' + (fl ? '' : ' data-act="closeSheet"') + '><div class="sheet stack' + (fl ? ' float' : '') + '" role="dialog" aria-label="Ma range" data-stop="1"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px' + (pos.w ? ';width:' + pos.w + 'px;height:' + pos.h + 'px' : '') + '"' : '') + '>' +
+        (fl ? '<div class="sheet-bar" title="Fais glisser pour déplacer la fenêtre"><span>✥ Ma range</span><span class="small muted">glisse-moi où tu veux · coin en bas à droite pour la taille</span><button class="sheet-x" data-act="closeSheet" aria-label="Fermer">✕</button></div>' : '<div class="grab"></div>') +
+        rangeBody(false) + '<button class="btn block" data-act="closeSheet">Fermer</button></div></div>';
+      if (sc0) host.querySelector('.sheet').scrollTop = sc0;
     }
   }
 
@@ -508,7 +531,7 @@
     if (s.type === 'open' || s.type === 'push') { acted.forEach(function (p) { if (p !== 'SB' && p !== 'BB') folded[p] = 1; }); }
     if (s.type === 'def') { var os = PA.openBB(s.opener, s.bb); bets[s.opener] = os; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB' && s.opener !== 'SB') folded.SB = 1; }
     if (s.type === 'callshove') { bets[s.opener] = PA.nearestPush(s.bb); allin[s.opener] = 1; POS.forEach(function (p) { if (p !== s.opener && p !== heroPos && !(p === 'BB' && heroPos !== 'BB') && !(p === 'SB' && heroPos === 'SB')) { if (POS.indexOf(p) < POS.indexOf(s.opener) || (POS.indexOf(p) > POS.indexOf(s.opener) && POS.indexOf(p) < POS.indexOf(heroPos))) folded[p] = 1; } }); }
-    if (s.type === 'vs3bet') { var sz3 = s.scen === 'ip' ? 11 : 8; var o3 = PA.openBB(heroPos, 100); sz3 = Math.round(o3 * (s.scen === 'ip' ? 4.4 : 3.2)); bets[heroPos] = o3; bets[s.opener] = sz3; POS.forEach(function (p) { if (p !== heroPos && p !== s.opener && p !== 'BB' && p !== 'SB') folded[p] = 1; }); if (s.opener !== 'SB') folded.SB = 1; }
+    if (s.type === 'vs3bet') { var sz3 = s.scen === 'ip' ? 11 : 8; var o3 = PA.openBB(heroPos, 100); sz3 = Math.round(o3 * (s.scen === 'ip' ? 4.4 : s.scen === 'bvb' ? 3 : 3.2) * 2) / 2; bets[heroPos] = o3; bets[s.opener] = sz3; POS.forEach(function (p) { if (p !== heroPos && p !== s.opener && p !== 'BB' && p !== 'SB') folded[p] = 1; }); if (s.opener !== 'SB' && heroPos !== 'SB') folded.SB = 1; }
     var ante = PA.depthKey(bb) !== 'deep' ? 1 : 0;
     var pot = 0; Object.keys(bets).forEach(function (k) { pot += bets[k]; });
     var h = '<div class="felt">';
@@ -531,7 +554,7 @@
     if (s.hu) txt = s.type === 'push' ? 'Heads-up : tu es au <b>bouton</b> (petite blinde), tu parles en premier.' : 'Heads-up : tu es en <b>grosse blinde</b>. Le bouton fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     else if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
     else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.';
-    else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = t.bets[s.opener]; txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.' }[s.scen]; }
+    else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = t.bets[s.opener]; txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.', bvb: 'Tout le monde s’est couché jusqu’à toi : tu as ouvert en <b>petite blinde</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + String(r4).replace('.', ',') + ' BB.' }[s.scen]; }
     else txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     return txt + ' Ton tapis : ' + t.stackTxt + '. Que fais-tu ?';
   }

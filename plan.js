@@ -42,11 +42,12 @@
   // scénario de la range « face à un 3-bet » du joueur qui a ouvert
   function scenOf(opener, threeBettor) {
     if (EARLY[opener]) return 'early';
+    if (opener === 'SB' && threeBettor === 'BB') return 'bvb';
     if ((threeBettor === 'SB' || threeBettor === 'BB') && opener !== 'SB') return 'ip';
     return 'oop';
   }
   // mains avec lesquelles celui qui a 3-bet va au tapis face à ton 4-bet
-  function fiveRange(scen) { return ['AA', 'KK', 'QQ', 'AKs', 'AKo', 'A5s'].concat(scen === 'ip' ? ['JJ', 'TT', 'AQs', 'A4s'] : []); }
+  function fiveRange(scen) { return ['AA', 'KK', 'QQ', 'AKs', 'AKo', 'A5s'].concat(scen === 'ip' || scen === 'bvb' ? ['JJ', 'TT', 'AQs', 'A4s'] : []).concat(scen === 'bvb' ? ['99', 'AJs', 'KQs', 'AQo'] : []); }
   // tapis direct (20-40 BB) : range de 3-bet tapis d'un joueur placé en « pos »
   function shoveRange(pos) { var m = D.profiles.tag.mid3b[pos === 'BB' ? 'SB' : pos]; return m && m.length ? m : ['AA', 'KK', 'QQ', 'JJ', 'AKs', 'AKo']; }
 
@@ -59,7 +60,7 @@
       var open = PA.chart(p, { type: 'open', pos: ST.pos, bb: depthBB() });
       // qui te 3-bet le plus souvent : les blindes si tu es au bouton, sinon un joueur derrière toi en position
       var tb = ST.pos === 'BTN' ? 'BB' : (ST.pos === 'SB' ? 'BB' : 'BTN');
-      var scen = EARLY[ST.pos] ? 'early' : (ST.pos === 'BTN' ? 'ip' : 'oop');
+      var scen = EARLY[ST.pos] ? 'early' : (ST.pos === 'BTN' ? 'ip' : ST.pos === 'SB' ? 'bvb' : 'oop');
       var o = openSize();
       if (deep()) {
         var v3 = PA.chart(p, { type: 'vs3bet', scen: scen, bb: 100 });

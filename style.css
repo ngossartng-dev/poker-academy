@@ -674,3 +674,13 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .bet b{font-size:12px;line-height:17px;padding:0 7px}
 .cpile i{width:20px;height:8px}.cpile{width:20px}
 .pot::before{display:none}.pot .cpiles{margin-bottom:1px}
+
+/* Ma range en fenêtre flottante sur PC */
+.sheet-bg.float{background:transparent;pointer-events:none;display:block}
+.sheet.float{position:fixed;left:calc(100vw - 600px);top:70px;width:560px;height:min(80vh,820px);max-height:none;max-width:none;min-width:360px;min-height:260px;pointer-events:auto;border:2px solid var(--gold);border-radius:14px;padding:0 14px 14px;resize:both;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.75)}
+.sheet-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;margin:0 -14px 8px;padding:8px 10px 8px 14px;background:linear-gradient(180deg,#2a2410,#17140a);border-bottom:1px solid rgba(255,210,63,.4);cursor:grab;user-select:none}
+.sheet-bar>span:first-child{font-weight:800;color:var(--gold)}
+.sheet-bar .small{flex:1}
+.sheet.moving{opacity:.92}.sheet.moving .sheet-bar{cursor:grabbing}
+.sheet-x{background:none;border:1px solid var(--line);color:#fff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px}
+.sheet-x:hover{background:#3a3a42}

@@ -54,6 +54,38 @@
   function depthKey(bb) { return bb > 40 ? 'deep' : (bb >= 20 ? 'mid' : 'push'); }
   function nearestPush(bb) { var best = 15; PUSH_DEPTHS.forEach(function (d) { if (Math.abs(d - bb) < Math.abs(best - bb)) best = d; }); return best; }
   // situation : {type:'open'|'def'|'vs3bet'|'push'|'callshove', pos, opener, bb, scen}
+  /* Petite blinde qui ouvre, grosse blinde qui sur-relance (blinde contre blinde).
+     La BB 3-bet large contre la SB : on défend plus large qu'au CO face au bouton, mais hors de position, donc on paie surtout
+     les mains qui jouent bien après le flop. Chaque liste est ensuite croisée avec l'ouverture SB du profil. */
+  function expand(spec) {
+    var out = [], R = 'AKQJT98765432';
+    spec.split(',').forEach(function (t) {
+      t = t.trim(); if (!t) return;
+      var m = t.match(/^([AKQJT2-9])([AKQJT2-9])([so]?)(\+|-([AKQJT2-9])([AKQJT2-9])[so]?)?$/); if (!m) return;
+      var a = m[1], b = m[2], k = m[3];
+      if (a === b) { // paires
+        if (m[4] === '+') { for (var i = R.indexOf(a); i >= 0; i--) out.push(R[i] + R[i]); }
+        else if (m[5]) { for (var j = R.indexOf(a); j <= R.indexOf(m[5]); j++) out.push(R[j] + R[j]); }
+        else out.push(a + b);
+      } else {
+        if (m[4] === '+') { for (var x = R.indexOf(b); x > R.indexOf(a); x--) out.push(a + R[x] + k); }
+        else if (m[6]) { for (var y = R.indexOf(b); y <= R.indexOf(m[6]); y++) out.push(a + R[y] + k); }
+        else out.push(a + b + k);
+      }
+    });
+    return out;
+  }
+  var BVB = {
+    nit: { fourbet: 'QQ+,AKs,AKo', call: 'JJ-99,AQs,AJs,KQs,AQo' },
+    tag: { fourbet: 'QQ+,AKs,AKo,A5s,A4s', call: 'JJ-66,AQs-ATs,KQs-KJs,QJs,JTs,T9s,98s,AQo-AJo,KQo' },
+    equilibre: { fourbet: 'QQ+,AKs,AKo,AQs,A5s,A4s,K9s', call: 'JJ-55,AJs-A8s,KQs-KTs,QJs-QTs,JTs-J9s,T9s,98s,87s,AQo-ATo,KQo-KJo' },
+    lag: { fourbet: 'JJ+,AKs,AKo,AQs,A5s-A3s,K9s,K8s,Q9s', call: 'TT-44,AJs-A6s,KQs-KTs,QJs-QTs,JTs-J9s,T9s-T8s,98s,87s,76s,65s,AQo-ATo,KQo-KJo,QJo' }
+  };
+  function bvbChart(profileId, P) {
+    var key = Object.keys(D.profiles).filter(function (k) { return D.profiles[k] === P; })[0] || profileId;
+    var t = BVB[key] || BVB.tag, open = toSet(P.open.deep.SB || []);
+    return { fourbet: expand(t.fourbet).filter(function (h) { return open[h]; }), call: expand(t.call).filter(function (h) { return open[h]; }) };
+  }
   function sitKey(s) { return [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : depthKey(s.bb), s.scen || ''].join('|'); }
   function shoveKey(pos, opener) { return pos + ' vs shove ' + opener; }
   function chart(profileId, s) {
@@ -80,7 +112,7 @@
         raiseL.forEach(function (h) { out[h] = dk === 'mid' && s.bb <= 30 ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 41)
       }
     } else if (s.type === 'vs3bet') {
-      var v = P.vs3bet[s.scen || 'ip'];
+      var v = s.scen === 'bvb' ? (P.vs3bet.bvb || bvbChart(profileId, P)) : P.vs3bet[s.scen || 'ip'];
       v.call.forEach(function (h) { out[h] = 'call'; });
       v.fourbet.forEach(function (h) { out[h] = 'fourbet'; });
     } else if (s.type === 'callshove') {
@@ -171,7 +203,7 @@
     } else if (k === 'push') { s = { type: 'push', pos: rnd(POS.slice(0, 8)), bb: rnd(PUSH_DEPTHS) }; }
     else if (k === 'hu') { bb = rnd(PUSH_DEPTHS); s = Math.random() < 0.5 ? { type: 'push', pos: 'SB', bb: bb, hu: true } : { type: 'callshove', pos: 'BB', opener: 'SB', bb: bb, hu: true }; }
     else if (k === 'callshove') { bb = rnd(PUSH_DEPTHS); var sk = rnd(shoveSituations(bb)); var m = sk.split(' vs shove '); s = { type: 'callshove', pos: m[0], opener: m[1], bb: bb }; }
-    else { var sc = rnd(['ip', 'oop', 'early']); s = { type: 'vs3bet', scen: sc, pos: sc === 'ip' ? 'BTN' : (sc === 'oop' ? 'CO' : 'UTG'), opener: sc === 'ip' ? 'BB' : (sc === 'oop' ? 'BTN' : 'CO'), bb: 100 }; }
+    else { var sc = rnd(['ip', 'oop', 'early', 'bvb']); s = { type: 'vs3bet', scen: sc, pos: sc === 'ip' ? 'BTN' : (sc === 'oop' ? 'CO' : sc === 'bvb' ? 'SB' : 'UTG'), opener: sc === 'ip' || sc === 'bvb' ? 'BB' : (sc === 'oop' ? 'BTN' : 'CO'), bb: 100 }; }
     return s;
   }
   function makeQuestion(profileId, opts) {
