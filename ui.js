@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.25.1';
+  var VERSION = '2.25.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -111,14 +111,15 @@
   function homeView() {
     var p = PA.player(), pr = PA.PROFILES[p.profile] || PA.PROFILES.tag;
     var due = PA.srsDue(p).length;
-    var msg = !p.testDone ? 'Avant tout, fais le test de profil : 30 mains suffisent pour voir où tu en es. Je t’attends à S’entraîner.'
+    var needTest = !p.testDone && !p.testSkip;
+    var msg = needTest ? 'Avant tout, fais le test de profil : 30 mains suffisent pour voir où tu en es.'
       : (due ? 'Ta séance du jour est prête : 20 décisions, dont ' + due + ' main' + (due > 1 ? 's' : '') + ' ratée' + (due > 1 ? 's' : '') + ' à revoir. On y va ?' : 'Ta séance du jour est prête : 20 décisions sur tes points faibles. On y va ?');
     if (p.last && p.last.route === 'drill' && !ui.drill) p.last = { route: /Test de profil/.test(p.last.label || '') ? 'testmenu' : 'entrainer', label: (/Test de profil/.test(p.last.label || '') ? 'Relancer le test de profil' : 'Relancer : ' + p.last.label), redo: true };
     var last = p.last ? '<a href="#' + p.last.route + '" class="card row" style="text-decoration:none;color:#fff"><div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center">' + IC.play + '</div><div class="stack" style="gap:6px;flex:1;min-width:0"><span class="muted small">' + (p.last.redo ? 'Série interrompue' : 'Reprendre') + '</span><b>' + esc(p.last.label) + '</b></div></a>' : '';
     var body = '<div class="stack">' +
       '<div class="row" style="justify-content:space-between"><div class="row">' + logo() + '<div><div class="disp" style="font-size:26px">Poker Academy</div><div class="muted">' + greet() + ', ' + esc(p.pseudo) + '</div></div></div><a class="chip me-chip" href="#moi" aria-label="Mon profil, mes réglages">' + IC.user + ' ' + pr.short + '</a></div>' +
       (window.PA_SEASON && window.PA_SEASON.current() !== 'classique' ? '<div><a class="season-tag" href="#reglages">Décor ' + window.PA_SEASON.NAMES[window.PA_SEASON.current()] + '</a></div>' : '') +
-      (window.PA_SYNC && window.PA_SYNC.updAvail() ? window.PA_SYNC.updLink('btn block') : '') + yo(msg) + '<a class="btn block" href="#recherche" style="justify-content:flex-start;gap:10px">🔎 Rechercher' + (window.PA_VOICE && window.PA_VOICE.ok() ? ' (ou à la voix 🎤)' : '') + '</a>' + last +
+      (window.PA_SYNC && window.PA_SYNC.updAvail() ? window.PA_SYNC.updLink('btn block') : '') + yo(msg) + (needTest ? testAsk() : '') + '<a class="btn block" href="#recherche" style="justify-content:flex-start;gap:10px">🔎 Rechercher' + (window.PA_VOICE && window.PA_VOICE.ok() ? ' (ou à la voix 🎤)' : '') + '</a>' + last +
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions · environ 10 min</div></div>' + IC.arrow + '</button>' +
       '<div class="shortcuts"><a href="#tournoi">' + IC.clock + '<span>Tournoi du club</span></a><a href="#ranges">' + IC.grid + '<span>Ma range</span></a><a href="#podcasts">' + IC.play + '<span>Podcasts</span></a></div>' +
       '<div class="grid2">' +
@@ -317,10 +318,15 @@
   }
 
   /* ---------- S'entraîner ---------- */
+  // invitation au test de profil : des boutons, pas seulement un message
+  function testAsk() {
+    return '<div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn gold" href="#testmenu" style="flex:2">▶ Faire le test de profil</a><button class="btn" data-act="testSkip" style="flex:1">Plus tard</button></div>';
+  }
   function entrainerView() {
     var p = PA.player();
     var body = '<div class="stack"><h1>S’entraîner</h1>' +
-      (!p.testDone ? yo('Commence par le test de profil : il me dit ton vrai style et tes erreurs.') : '') +
+      (!p.testDone && !p.testSkip ? yo('Commence par le test de profil : il me dit ton vrai style et tes erreurs.') + testAsk() : '') +
+      '<a class="tile" href="#testmenu"><b>Test de profil</b><span>' + (p.lastTest ? 'Dernier test : ' + new Date(p.lastTest.at).toLocaleDateString('fr-FR') + ' · le refaire pour mesurer tes progrès.' : '30, 60 ou 90 mains pour connaître ton vrai style.') + '</span></a>' +
       '<button class="big-cta" data-act="seance"><div><div class="disp">Séance du jour</div><div style="font-weight:500">20 décisions choisies pour toi</div></div>' + IC.arrow + '</button>' +
       (window.PA_WEEK ? (function () { var W = window.PA_WEEK.get(p), nd = Object.keys(W.done).filter(function (k) { return W.done[k]; }).length; return '<a class="tile wk-tile" href="#semaine"><b>Mon plan de la semaine</b><span>15 min par jour sur tes points faibles : ' + W.focus.slice(0, 2).map(function (k) { return (PA.NOTIONS[k] || k).toLowerCase(); }).join(', ') + '… · ' + nd + '/7 jours faits</span></a>'; })() : '') +
       '<div class="grid4">' +
@@ -805,6 +811,7 @@
       case 'onbLater': ui.onbActive = false; ui.onb = { step: 1 }; go('home'); render(); break;
       case 'startTest': ui.onbActive = false; ui.onb = { step: 1 }; startDrill('test', { n: parseInt(v, 10) }, 'Test de profil'); render(); break;
       case 'testMenu': go('testmenu'); break;
+      case 'testSkip': { var ps = PA.player(); ps.testSkip = true; PA.save(); render(); break; }
       case 'pickPlayer': go('pick'); render(); break;
       case 'usePlayer': PA.load().current = v; PA.save(); ui.welcomed = true; try { sessionStorage.setItem('pa2w', '1'); } catch (x) {} go('home'); render(); break;
       case 'newPlayer': PA.load().current = null; PA.save(); ui.forceNew = true; ui.onb = { step: 1 }; go('home'); render(); break;
