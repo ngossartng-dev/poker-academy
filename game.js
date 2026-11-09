@@ -340,6 +340,8 @@
       var hs = heroSit(), prof = PA.player().profile || 'tag';
       if (hs) {
         var a = PA.actionFor(prof, hs.sit, hs.hand);
+        if (a === 'raise' && hs.sit.type === 'iso') return ['raise', H.L.bb * ((hs.sit.pos === 'SB' || hs.sit.pos === 'BB' ? 4 : 3) + H.limpers)];
+        if (a === 'raise' && hs.sit.type === 'squeeze') return ['raise', H.cur * 4 + H.L.bb * (1 + (hs.sit.pos === 'SB' || hs.sit.pos === 'BB' ? 1.5 : 0))];
         if (a === 'raise') return hs.sit.type === 'def' ? ['raise', H.cur * (hs.sit.pos === 'SB' || hs.sit.pos === 'BB' ? 4 : 3)] : ['raise', H.L.bb * (G.opts.table === 'club' || G.opts.table === 'monclub' ? 2 : 2.5)];
         if (a === 'allin') return ['raise', G.players[0].stack + H.bets[0]];
         if (a === 'call') return ['call'];
@@ -543,9 +545,19 @@
       map9 = { BTN: 'SB', BB: 'BB' }; p = map9[pos];
     }
     if (H.preRaises === 0 && H.limpers === 0 && p !== 'BB') return { sit: { type: 'open', pos: p, bb: eff > 40 ? 100 : (eff >= 20 ? 30 : eff) }, hand: code };
+    // un seul limper devant toi (chapitre 7) : isoler, sur-limper ou se coucher ; iso-tapis entre 12 et 20 BB
+    if (H.preRaises === 0 && H.limpers === 1 && H.order.length > 2 && eff >= 12) {
+      var lk = Object.keys(H.inHand).map(Number).filter(function (k) { return k !== 0 && k !== H.sb && k !== H.bbSeat && !H.folded[k] && H.bets[k] >= L.bb; })[0];
+      if (lk !== undefined && map9[H.pos[lk]] && map9[H.pos[lk]] !== 'SB') return { sit: { type: 'iso', pos: p, opener: map9[H.pos[lk]], bb: eff > 20 ? 100 : 18 }, hand: code };
+    }
     if (H.preRaises === 1 && H.opener !== null) {
       var op = map9[H.pos[H.opener]], others = 0;
       Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] > 0 && k !== H.sb && k !== H.bbSeat) others++; });
+      // une ouverture et un seul payeur devant toi (chapitre 40) : squeeze, payer ou se coucher
+      if (H.limpers === 0 && others === 1 && eff >= 20 && H.order.length > 2 && G.players[H.opener].stack > 0) {
+        var ck = Object.keys(H.inHand).map(Number).filter(function (k) { return k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] > 0 && k !== H.sb && k !== H.bbSeat; })[0];
+        if (ck !== undefined && G.players[ck].stack > 0 && map9[H.pos[ck]] && PA.POS.indexOf(map9[H.pos[ck]]) < PA.POS.indexOf(p)) return { sit: { type: 'squeeze', pos: p, opener: op, caller: map9[H.pos[ck]], bb: eff > 30 ? 100 : 25 }, hand: code };
+      }
       if (H.limpers > 0 || others > 0) return null;
       var tc = toCall(0), shove = G.players[H.opener].stack === 0;
       if (shove && (p === 'BB' || p === 'SB' || p === 'BTN')) {
@@ -580,6 +592,7 @@
     var given = { fold: 'fold', check: 'fold', call: 'call', raise: 'raise', allin: 'allin' }[type];
     if (hs.sit.type === 'open' && given === 'call') given = 'limp';
     if (hs.sit.type === 'vs3bet' && given === 'raise') given = 'fourbet';
+    if (hs.sit.type === 'iso' && hs.sit.pos === 'BB' && type === 'check') given = 'call'; // checker en grosse blinde
     var q = { sit: hs.sit, hand: hs.hand, answer: PA.actionFor(prof, hs.sit, hs.hand) };
     var j = PA.judge(prof, q, given);
     return { q: q, given: given, j: j };

@@ -416,24 +416,28 @@
   };
 
   L[7] = {
-    minutes: 11, range: { type: 'open', pos: 'CO', bb: 100 },
+    minutes: 12, range: { type: 'iso', pos: 'BTN', opener: 'UTG+1', bb: 100 },
+    links: [{ href: '#ranges', label: 'Ma range › Face à un limper (selon ta position)' }, { href: '#situations', label: 'Exercices : Isoler un limper' }],
     key: ['Face à un ou plusieurs limpers, on relance pour isoler avec les mains fortes, on suit derrière avec les mains spéculatives, et on se couche avec le reste.', 'La taille d’isolement monte d’une grosse blinde par limper.'],
     sections: [
       { ask: 'Pourquoi les limpers sont-ils une bonne nouvelle ?', h: 'Le limper est souvent faible', p: ['Un joueur qui se contente de payer la grosse blinde sans relancer annonce une main moyenne : avec une grosse main, la plupart des joueurs relancent. Au club, les limpers sont surtout des joueurs récréatifs et larges-passifs.', 'Relancer pour l’isoler, c’est jouer le pot seul contre lui, souvent en position, avec l’initiative et une meilleure main.'] },
       { ask: 'Quelle taille pour isoler ?', h: 'La taille : 3 à 4 BB, plus 1 BB par limper', p: ['En position, relance à 3 BB plus 1 BB par limper ; depuis les blindes, 4 BB plus 1 BB par limper, car tu joueras hors position.', 'Exemple : blindes 100/200, deux limpers, tu es au bouton : 3 + 2 = 5 BB, soit 1 000 jetons. Plus petit, les limpers paient tous et tu te retrouves en pot à plusieurs joueurs.'] },
       { ask: 'Avec quelles mains ?', h: 'Isoler, suivre ou se coucher', p: ['Isoler : les mains qui jouent bien seules et dominent la range du limper. Au CO, à peu près 55+, A9s+, KTs+, QJs, ATo+, KQo. Au bouton, beaucoup plus large.', 'Suivre (sur-limper) : les petites paires et les connecteurs assortis, qui cherchent un brelan ou une couleur à plusieurs, pas cher.', 'Se coucher : les mains offsuit moyennes (K8o, Q9o, J9o), qui perdent de l’argent dans les pots à plusieurs.'] },
+      { ask: 'Et si je ne suis ni au cut-off ni au bouton ?', h: 'Isoler selon ta position', p: ['On peut isoler de partout, mais plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Un limper de début de table cache aussi plus souvent un piège (limp-trap, chapitre 34).', 'Profil TAG à 100 BB, face à un seul limper : en début de table (UTG+1 à LJ), 88+, AJs+, KQs, AQo+ (environ 6 % des mains) ; au hijack, 77+, ATs+, KJs+, QJs, AJo+, KQo (9 %) ; au cut-off, 55+, A9s+, KTs+, QJs, ATo+, KQo (12 %) ; au bouton, toutes les paires, tous les as assortis, K8s+, Q9s+, J9s+, T9s, 98s, A8o+, KTo+, QJo (22 %).', 'Depuis les blindes, tu joueras hors de position : isolement à 4 BB + 1 et plus serré. En petite blinde, à peu près les mains du cut-off, et tu complètes avec les petites paires, les as assortis faibles et les connecteurs assortis. En grosse blinde, 88+, ATs+, KJs+, AJo+, KQo pour la valeur, et tu checkes gratuitement tout le reste.', 'Les profils serré, équilibré et large-agressif décalent ces listes d’un cran. Tout est dans Ma range › Face à un limper, avec ta place et celle du limper ; entraîne-toi avec l’exercice « Isoler un limper ».'] },
       { ask: 'Et après le flop ?', h: 'Le plan après le flop', p: ['Contre un seul limper qui paie ton isolement, mise souvent au flop (c-bet) : il a manqué le flop deux fois sur trois.', 'S’il paie encore à la turn, ralentis avec les mains moyennes : un limper passif qui paie deux rues a souvent une paire.'] },
       { ask: 'Et contre une calling station qui limpe ?', h: 'Isoler une calling station', p: ['Elle paie ton isolement presque à chaque fois, et encore au flop. Alors : uniquement des mains de valeur (paires moyennes et hautes, as forts, figures assorties), plus de bluff.', 'Relance un peu plus gros (1 BB de plus) : elle paiera quand même, et tes mains fortes gagnent plus.', 'Après le flop, mise gros quand tu as touché, et arrête de bluffer : elle ne se couche pas.'] },
       { ask: 'Et avec un tapis court ?', h: 'L’iso-tapis entre 12 et 20 BB', p: ['Avec 15 BB, une relance à 4 BB engage plus d’un quart de ton tapis. Mieux vaut faire tapis directement sur le limper.', 'Il y a déjà 3,5 BB au milieu (le limp, les blindes et l’ante). Le limper paie rarement un tapis avec sa main moyenne : tu gagnes souvent 3,5 BB sans combat, et tu as de l’équité quand il paie.', 'Range d’iso-tapis à 15-20 BB : 66+, A9+, ATs+, KQ, plus large au bouton contre un limper qui se couche beaucoup. Attention au limp-trap (chapitre 34) : contre un joueur qui limpe ses grosses mains, resserre-toi.'] },
       { ask: 'Et si on isole devant moi quand je suis en grosse blinde ?', h: 'La grosse blinde face à un isolement', p: ['Un limper, puis le bouton isole à 4 BB : la range du bouton est large (il cherche à punir le limper), et le limper reste au milieu avec une main moyenne.', 'C’est une belle occasion de squeeze : avec la valeur (TT+, AQ+) et quelques bluffs à bloqueurs (A5s à A2s), sur-relance à environ 14 BB. Le limper se couche presque toujours, l’isoleur souvent.', 'Paie avec les mains qui jouent bien à plusieurs (petites paires, connecteurs assortis) si la cote est bonne ; couche les dépareillées moyennes.'] }
     ],
     mistake: 'Relancer trop petit (2 BB) face à deux limpers : tout le monde paie, tu joues hors de contrôle à quatre joueurs avec une main moyenne.',
-    retain: ['Isoler = 3 BB en position (4 BB des blindes) + 1 BB par limper ; contre une station, valeur seulement et 1 BB de plus.', 'Entre 12 et 20 BB, isole à tapis : 66+, A9+, ATs+, KQ.', 'Isole avec les mains fortes, suis avec petites paires et connecteurs assortis, couche les offsuit moyennes.', 'Contre un limper seul, le c-bet au flop gagne très souvent.'],
+    retain: ['Isoler = 3 BB en position (4 BB des blindes) + 1 BB par limper ; contre une station, valeur seulement et 1 BB de plus.', 'Plus tu es loin du bouton, plus tu serres : début de table 88+, AJs+, AQo+ ; bouton, une main sur cinq ; en grosse blinde, tu checkes le reste.', 'Entre 12 et 20 BB, isole à tapis : 66+, A9+, ATs+, KQ.', 'Isole avec les mains fortes, suis avec petites paires et connecteurs assortis, couche les offsuit moyennes.', 'Contre un limper seul, le c-bet au flop gagne très souvent.'],
     quiz: [
       { q: 'Blindes 100/200, un limper, tu es au bouton avec AJo. Quelle relance ?', o: ['400', '800', '1 200', 'Tu paies'], a: 1, why: '3 BB + 1 BB par limper = 4 BB, soit 800 jetons.' },
       { q: 'Deux limpers, tu es en grosse blinde avec AQo. Taille d’isolement ?', o: ['3 BB', '4 BB', '6 BB', '10 BB'], a: 2, why: 'Hors position : 4 BB + 1 BB par limper = 6 BB.' },
       { q: 'Un limper, tu es au CO avec 55. Que fais-tu le plus souvent ?', o: ['Tu te couches', 'Tu suis (sur-limp) ou tu isoles', 'Tu fais tapis', 'Tu relances à 2 BB'], a: 1, why: 'Les petites paires jouent bien en sur-limp à plusieurs ; 55 peut aussi isoler au CO.' },
       { q: 'Un limper, tu es au HJ avec K8o. Que fais-tu ?', o: ['Isoler', 'Suivre', 'Se coucher', 'Tapis'], a: 2, why: 'Les offsuit moyennes perdent de l’argent en pot à plusieurs et sont dominées.' },
+      { q: 'Un joueur UTG limpe, tu es en UTG+1 avec ATo. Que fais-tu ?', o: ['Tu isoles', 'Tu sur-limpes', 'Tu te couches', 'Tu fais tapis'], a: 2, why: 'Sept joueurs parlent encore derrière toi et un limper de début de table piège plus souvent : en début de table, on n’isole qu’avec 88+, AJs+, KQs, AQo+.' },
+      { q: 'Un limper, tu es en grosse blinde avec J7s. Que fais-tu ?', o: ['Tu isoles à 5 BB', 'Tu checkes', 'Tu te couches', 'Tu fais tapis'], a: 1, why: 'En grosse blinde, tu vois le flop gratuitement : tu n’isoles que pour la valeur, et tu checkes tout le reste.' },
       { q: 'Pourquoi isoler plutôt que suivre avec AQo ?', o: ['Pour jouer à plusieurs', 'Pour jouer seul contre une range plus faible, avec l’initiative', 'Pour bluffer au flop', 'Parce que le limp est interdit'], a: 1, why: 'L’isolement te donne un pot en tête à tête, l’initiative et la meilleure main.' }
     ]
   };
@@ -1117,6 +1121,14 @@
     ['Y', 'Celles qui jouent bien seules, et qui dominent la range du limper. Au cut-off, à peu près : les paires de cinq et plus. As-neuf assorti et mieux. Roi-dix assorti et mieux. Dame-valet assorti. As-dix et mieux, roi-dame.'],
     ['J', 'Et au bouton ?'],
     ['Y', 'Beaucoup plus large. Il ne reste que les blindes derrière toi.'],
+    ['J', 'Et si je ne suis ni au cut-off ni au bouton ?'],
+    ['Y', 'Alors tu serres. En début de table, il reste beaucoup de joueurs qui parlent après toi, et un limper de début de table cache plus souvent un piège. Tu n’isoles qu’avec huit-huit et plus, as-valet assorti et mieux, roi-dame assorti, et as-dame.'],
+    ['J', 'Et au hijack ?'],
+    ['Y', 'Entre les deux. Sept-sept et plus, as-dix assorti, roi-valet assorti, dame-valet assorti, as-valet et roi-dame. Au bouton, c’est environ une main sur cinq : toutes les paires, tous les as assortis, et beaucoup de figures.'],
+    ['J', 'Et depuis les blindes ?'],
+    ['Y', 'Tu joueras hors de position. Alors tu relances plus gros, quatre blindes plus une, et plus serré : à peu près les mains du cut-off en petite blinde, un peu moins en grosse blinde. En petite blinde, tu peux compléter avec les mains qui aiment les pots à plusieurs. En grosse blinde, tu checkes gratuitement tout le reste.'],
+    ['J', 'Où je retrouve tout ça ?'],
+    ['Y', 'Dans Ma range, onglet Face à un limper : tu choisis ta place et celle du limper. Et pour t’entraîner, l’exercice Isoler un limper.'],
     ['J', 'Et suivre ? Limper derrière ?'],
     ['Y', 'C’est pour les mains qui aiment les pots à plusieurs, pas chers. Les petites paires, qui cherchent un brelan. Les connecteurs assortis, qui cherchent une quinte ou une couleur.'],
     ['J', 'Elles ne gagnent pas souvent, ces mains.'],
@@ -2890,6 +2902,14 @@
     ['Y', 'Encore du vol, mais plus prudent. Il reste quatre joueurs. On vole avec des mains qui jouent bien si on te paie : as assortis, connecteurs assortis, figures.'],
     ['J', 'Et si la grosse blinde me relance ?'],
     ['Y', 'Prépare ta réponse avant d’ouvrir. Le plan de jeu de Ma range te le dit main par main. À quarante blindes, un quatre-bet, c’est ton tapis : tu continues avec tes mains fortes, tu jettes le reste sans regret.'],
+    ['J', 'Et si j’ouvre de la petite blinde, et que la grosse blinde me sur-relance ?'],
+    ['Y', 'C’est un cas à part. Elle sait que tu ouvres large de la petite blinde, alors elle sur-relance souvent, autour de neuf blindes. Et elle aura la position sur toi pour tout le coup.'],
+    ['J', 'Je me couche, alors ?'],
+    ['Y', 'Pas si vite. Sa range est large : tu continues avec plus de mains qu’au cut-off face au bouton. Mais tu joues hors de position, alors tu paies les mains qui jouent bien après le flop : les paires moyennes, les as et les rois assortis, les connecteurs assortis.'],
+    ['J', 'Et le quatre-bet ?'],
+    ['Y', 'Avec dame-dame et plus, et as-roi. En bluff, as-cinq et as-quatre assortis : l’as bloque ses grosses mains. Roi-neuf dépareillé, par contre, tu le jettes : souvent dominé, il joue mal hors de position.'],
+    ['J', 'Où je retrouve ça ?'],
+    ['Y', 'Dans Ma range, Face à un trois-bet, puis J’ouvre en petite blinde, trois-bet de la grosse blinde.'],
     ['J', 'Et quand je vole plus, ou moins ?'],
     ['Y', 'Plus contre les joueurs serrés, et à la bulle contre ceux qui ont peur. Moins contre une calling station en grosse blinde : elle paie tout. Contre elle, ouvre pour la valeur et mise gros après le flop.'],
     ['J', 'Le quiz ?'],
@@ -2900,7 +2920,7 @@
     ['Y', 'Deuxième question. Depuis la petite blinde, la grosse blinde doit se coucher combien de fois ?'],
     ['P', 5],
     ['J', 'Une fois sur deux.'],
-    ['Y', 'Bravo. On résume. Vole en fin de table : quarante-quatre pour cent d’abandons suffisent. Cut-off et bouton sont les vraies places de vol, le hijack plus prudemment, la petite blinde avec une ouverture à trois et beaucoup de checks après le flop. Prépare ta réponse au trois-bet. Et adapte-toi : plus contre les serrés, moins contre les stations. À bientôt !']
+    ['Y', 'Bravo. On résume. Vole en fin de table : quarante-quatre pour cent d’abandons suffisent. Cut-off et bouton sont les vraies places de vol, le hijack plus prudemment, la petite blinde avec une ouverture à trois et beaucoup de checks après le flop. Prépare ta réponse au trois-bet, y compris en petite blinde face à la grosse blinde : paie les mains qui jouent bien hors de position, quatre-bet la valeur et as-cinq, as-quatre. Et adapte-toi : plus contre les serrés, moins contre les stations. À bientôt !']
   ];
 
   L[38] = {
@@ -2992,13 +3012,14 @@
   };
 
   L[40] = {
-    minutes: 14, range: { type: 'def', pos: 'BB', opener: 'CO', bb: 100 },
-    links: [{ href: '#choix3b', label: 'S’entraîner : 3-bet, squeeze ou pas ?' }],
+    minutes: 15, range: { type: 'squeeze', pos: 'BB', opener: 'CO', caller: 'BTN', bb: 100 },
+    links: [{ href: '#ranges', label: 'Ma range › Squeeze (selon ta position)' }, { href: '#situations', label: 'Exercices : Squeezer' }, { href: '#choix3b', label: 'S’entraîner : 3-bet, squeeze ou pas ?' }],
     key: ['Le squeeze, c’est sur-relancer après une ouverture et au moins un call. L’argent mort et la range limitée du payeur le rendent très rentable.', 'On squeeze surtout depuis les blindes et le bouton, contre un ouvreur large et un payeur qui se couche ; à 20-30 BB, le squeeze devient un tapis.'],
     sections: [
       { ask: 'Pourquoi le squeeze marche si bien ?', h: 'Trois raisons', p: ['L’argent mort : ouverture à 2 BB et un call, plus les blindes et l’ante, il y a déjà 6,5 BB au milieu, contre 4,5 BB pour un 3-bet simple.', 'Le payeur est « plafonné » : avec AA, KK ou AK, il aurait relancé. Le profil TAG au bouton face au cut-off paie avec 77 à 22, QJs, KTs, ATo, KJo : des mains qui détestent une sur-relance.', 'L’ouvreur est coincé : il parle avant le payeur, sans savoir ce que celui-ci va faire. Il ne continue qu’avec le haut de sa range.'] },
       { ask: 'Combien doivent se coucher ?', h: 'Le calcul du squeeze', p: ['Cut-off ouvre à 2 BB, le bouton paie : 6,5 BB au milieu. Depuis la grosse blinde, tu squeezes à 11 BB (10 BB de plus) : ton bluff gagne si tout le monde se couche plus de 61 % du temps (10 ÷ 16,5). Depuis la petite blinde à 10 BB : 59 %.', 'Avec des joueurs TAG, l’ouvreur ne continue qu’avec QQ+, AK et parfois JJ ou AQs, environ une ouverture sur huit. Le payeur garde peut-être un quart de ses calls. Ensemble, ils se couchent environ deux fois sur trois : le squeeze light rapporte.'] },
       { ask: 'D’où squeezer ?', h: 'Les meilleures places', p: ['Le bouton : tu joueras en position contre tout le monde. Exemple : le hijack ouvre, le cut-off paie, tu squeezes à 9 BB.', 'La grosse blinde : tu fermes l’action, personne ne parle après toi. Mais tu joues hors de position : squeeze un peu plus gros (10 à 11 BB).', 'La petite blinde : la grosse blinde parle encore derrière. Squeeze plus serré, avec plus de valeur.'] },
+      { ask: 'Et depuis les autres places ?', h: 'Squeezer selon ta position', p: ['On peut squeezer de partout, mais pas avec les mêmes mains. Profil TAG à 100 BB, une ouverture et un payeur devant toi :', 'En milieu de table (MP à HJ) : il reste beaucoup de joueurs derrière toi, pas de bluff. Squeeze QQ+ et AK ; paie JJ à 77, AQs, AJs, KQs. Au cut-off : JJ+, AK, AQs, plus un seul bluff (A5s) ; paie TT à 55 et les belles assorties.', 'Au bouton : TT+, AQs+, AK, AQo, plus A5s, A4s et K9s en bluff ; paie les petites paires et les connecteurs assortis, en position. En petite blinde : JJ+, AQs+, AKo et A5s, et presque jamais de paye — c’est squeeze ou couche, la grosse blinde parle encore.', 'En grosse blinde : TT+, AQs+, AKo, plus A5s à A2s et K9s ; tu paies beaucoup grâce à la cote (petites paires, assorties, AQo à ATo, KQo, KJo). Tout est dans Ma range › Squeeze, avec ta place, celle de l’ouvreur et celle du payeur ; entraîne-toi avec l’exercice « Squeezer ».'] },
       { ask: 'Contre qui ?', h: 'Le bon ouvreur et le bon payeur', p: ['L’ouvreur idéal : un voleur qui ouvre large en fin de table et se couche souvent face à une relance.', 'Le payeur idéal : un joueur serré-passif qui paie avec ses petites paires et ses mains moyennes, et qui lâche sous la pression.', 'Le mauvais client : la calling station qui paie tout. Contre elle, squeeze seulement pour la valeur, et plus gros (ajoute 2 BB) : elle paiera quand même.'] },
       { ask: 'Avec quelles mains ?', h: 'Valeur et squeeze light', p: ['Valeur depuis la grosse blinde face à une ouverture et un call (profil TAG, 100 BB) : TT+, AQs+, AKo. Contre un ouvreur très large, ajoute JJ, AJs, KQs, AQo.', 'Squeeze light : A5s à A2s (bloqueurs d’as), K9s, et contre deux joueurs larges, A9s à A6s. Les mains assorties gardent de l’équité quand on te paie.', 'Pas de KJo, QJo, ATo : payées par deux joueurs, elles sont souvent dominées et tu joues hors de position.'] },
       { ask: 'Quelle taille selon mon tapis ?', h: 'La taille du squeeze', p: ['À 100 BB : 4 fois l’ouverture plus 1 BB par payeur (9 BB en position), plus 1 à 2 BB depuis les blindes.', 'À 40 BB : même taille (9 à 11 BB, un quart de ton tapis). Avec ta valeur, tu acceptes le tapis. Avec un squeeze light, tu te couches si on te fait tapis.', 'De 20 à 30 BB : squeeze directement à tapis. 11 BB engagerait la moitié de ton tapis : autant tout mettre et priver l’adversaire de son équité. Range resserrée : 99+, AJs+, AQo+, KQs, plus quelques As assortis contre un voleur qui se couche beaucoup. À 25 BB, ton tapis-bluff doit faire coucher tout le monde 79 % du temps (25 ÷ 31,5) : réserve-le aux ouvreurs larges.'] },
@@ -3013,6 +3034,8 @@
       { q: 'Ouverture à 2 BB et un call, tu es au bouton à 100 BB. Taille de squeeze ?', o: ['5 BB', '9 BB', '20 BB', 'Tapis'], a: 1, why: '4 × 2 + 1 = 9 BB.' },
       { q: 'À 25 BB, ton squeeze se fait…', o: ['à 9 BB', 'à 15 BB', 'à tapis', 'jamais'], a: 2, why: 'Une relance à 11 BB engagerait la moitié du tapis : autant tout mettre.' },
       { q: 'Quelle main squeezes-tu en bluff depuis la grosse blinde ?', o: ['KJo', 'A4s', 'Q9o', '22'], a: 1, why: 'Bloqueur d’as et équité si on te paie. KJo est souvent dominée.' },
+      { q: 'UTG ouvre, UTG+1 paie, tu es au hijack avec A5s. Que fais-tu ?', o: ['Squeeze en bluff', 'Tu paies', 'Tu te couches', 'Tapis'], a: 2, why: 'En milieu de table, il reste trop de joueurs derrière toi : pas de squeeze de bluff, et A5s joue mal en pot à plusieurs hors de contrôle.' },
+      { q: 'Le cut-off ouvre, le bouton paie, tu es en petite blinde avec 77. Que fais-tu ?', o: ['Tu paies', 'Tu squeezes ou tu te couches, mais tu ne paies pas', 'Tu fais tapis à 100 BB', 'Tu limpes'], a: 1, why: 'En petite blinde, payer te fait jouer hors de position avec la grosse blinde derrière : c’est squeeze ou couche. Avec 77 en TAG, couche.' },
       { q: 'Tu as payé au bouton avec 66, la grosse blinde squeeze. Tu…', o: ['paies', 'te couches', 'relances', 'fais tapis'], a: 1, why: 'Ta range est plafonnée et tu n’as pas la cote pour un brelan.' }
     ]
   };
@@ -3150,6 +3173,16 @@
     ['Y', 'Depuis la grosse blinde, tu squeezes à onze blindes. Ton bluff gagne si tout le monde se couche plus de soixante et un pour cent du temps. Contre des joueurs réguliers, ils se couchent environ deux fois sur trois.'],
     ['J', 'D’où je le fais ?'],
     ['Y', 'Le bouton, c’est le mieux : tu joues en position contre tout le monde. La grosse blinde, c’est bien aussi, personne ne parle après toi. La petite blinde, sois plus serré : la grosse blinde parle encore.'],
+    ['J', 'Et si je suis en milieu de table ?'],
+    ['Y', 'Alors il reste beaucoup de joueurs derrière toi, qui peuvent se réveiller avec une grosse main. Pas de bluff : tu squeezes seulement dame-dame et plus, et as-roi. Tu peux payer valet-valet à sept-sept, as-dame et as-valet assortis, roi-dame assorti.'],
+    ['J', 'Et au cut-off ?'],
+    ['Y', 'Encore surtout la valeur : valet-valet et plus, as-roi, as-dame assorti. Et un seul bluff, as-cinq assorti. Le bouton et les blindes parlent encore après toi.'],
+    ['J', 'Et en petite blinde, je peux payer ?'],
+    ['Y', 'Presque jamais. Tu joueras hors de position, et la grosse blinde peut encore squeezer derrière toi. En petite blinde, c’est squeeze ou couche.'],
+    ['J', 'Et en grosse blinde ?'],
+    ['Y', 'C’est l’inverse : tu fermes l’action, et la cote est très bonne. Tu squeezes ta valeur et tes as assortis faibles, et tu paies beaucoup : les petites paires, les assorties, as-dame à as-dix, roi-dame, roi-valet.'],
+    ['J', 'Où je m’entraîne ?'],
+    ['Y', 'Dans Ma range, onglet Squeeze : tu choisis ta place, celle de l’ouvreur et celle du payeur. Et l’exercice Squeezer.'],
     ['J', 'Et contre qui ?'],
     ['Y', 'Le client idéal : un voleur qui ouvre large en fin de table, et un payeur serré qui suit avec ses petites paires. Le mauvais client : la calling station. Contre elle, tu squeezes pour la valeur seulement.'],
     ['J', 'Avec quelles mains ?'],

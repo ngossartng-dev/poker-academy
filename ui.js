@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.30.2';
+  var VERSION = '2.31.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -40,12 +40,18 @@
     if (a === 'fold') return 'a-fold';
     if (a === 'call' || a === 'limp') return 'a-call';
     if (a === 'fourbet') return 'a-three';
-    if (a === 'raise') return type === 'def' ? 'a-three' : 'a-raise';
-    if (a === 'allin') return (type === 'def') ? 'a-three' : 'a-allin';
+    if (a === 'raise') return type === 'def' || type === 'squeeze' ? 'a-three' : 'a-raise';
+    if (a === 'allin') return (type === 'def' || type === 'squeeze') ? 'a-three' : 'a-allin';
     return 'a-fold';
   }
+  function isoSize(s) { var ip = s.pos !== 'SB' && s.pos !== 'BB'; return (ip ? 3 : 4) + 1; } // chapitre 7 : 3 BB en position, 4 BB des blindes, +1 BB par limper
+  function sqzSize(s) { var o = PA.openBB(s.opener, s.bb), v = 4 * o + 1 + (s.pos === 'SB' || s.pos === 'BB' ? 1.5 : 0); return Math.round(v * 2) / 2; } // chapitre 40 : 4 fois l'ouverture + 1 BB par payeur, plus hors position
   function actName(a, s) {
     if (a === 'fold') return 'Se coucher';
+    if (a === 'call' && s && s.type === 'iso') return s.pos === 'BB' ? 'Checker' : s.pos === 'SB' ? 'Compléter (limp)' : 'Sur-limper (1 BB)';
+    if (s && s.type === 'iso' && a === 'raise') return 'Isoler ' + isoSize(s) + ' BB';
+    if (s && s.type === 'squeeze' && a === 'raise') return 'Squeeze ' + String(sqzSize(s)).replace('.', ',') + ' BB';
+    if (s && (s.type === 'iso' || s.type === 'squeeze') && a === 'allin') return s.type === 'iso' ? 'Iso-tapis' : 'Squeeze tapis';
     if (a === 'call') return 'Payer';
     if (a === 'limp') return s && s.pos === 'SB' ? 'Compléter (limp)' : 'Limper (1 BB)';
     if (a === 'fourbet') return '4-bet';
@@ -175,8 +181,8 @@
   function openRange(ctx) {
     var p = PA.player(); RS.profile = p.profile || 'tag'; RS.edit = false;
     if (ctx && ctx.sit) {
-      var s = ctx.sit; RS.tab = 'sit'; RS.type = s.type === 'push' ? 'open' : s.type; RS.pos = s.pos; RS.opener = s.opener || RS.opener; RS.scen = s.scen || 'ip';
-      var dk = PA.depthKey(s.bb); RS.depth = dk; if (dk === 'push') RS.bb = PA.nearestPush(s.bb); RS.hero = ctx.hand;
+      var s = ctx.sit; RS.tab = 'sit'; RS.type = s.type === 'push' ? 'open' : s.type; RS.pos = s.pos; RS.opener = s.opener || RS.opener; RS.scen = s.scen || 'ip'; if (s.caller) RS.caller = s.caller;
+      var dk = PA.depthKey(s.bb); RS.depth = dk; if (s.type === 'iso') RS.depth = s.bb <= 20 ? 'push' : 'deep'; if (s.type === 'squeeze') RS.depth = s.bb <= 30 ? 'mid' : 'deep'; if (dk === 'push') RS.bb = PA.nearestPush(s.bb); RS.hero = ctx.hand;
     } else RS.hero = null;
     ui.sheet = 'range'; renderSheet();
   }
@@ -189,6 +195,8 @@
     if (t === 'open') return { type: 'open', pos: RS.pos, bb: bb };
     if (t === 'def') return { type: 'def', pos: RS.pos, opener: RS.opener, bb: bb };
     if (t === 'vs3bet') return { type: 'vs3bet', scen: RS.scen, bb: 100 };
+    if (t === 'iso') return { type: 'iso', pos: RS.pos, opener: RS.opener, bb: RS.depth === 'deep' ? 100 : 18 };
+    if (t === 'squeeze') return { type: 'squeeze', pos: RS.pos, opener: RS.opener, caller: RS.caller || 'CO', bb: RS.depth === 'deep' ? 100 : 25 };
     return { type: 'callshove', pos: RS.pos, opener: RS.opener, bb: RS.bb };
   }
   function rangeGrid(map, type, hero, editable, diff) {
@@ -238,8 +246,11 @@
       return out;
     }
     var s = rsSit(), cm = PA.chart(prof, s);
-    out += '<div class="seg">' + [['open', 'Ouvrir'], ['def', 'Face à une relance'], ['vs3bet', 'Face à un 3-bet'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
-    if (RS.type !== 'vs3bet' && RS.type !== 'callshove') {
+    out += '<div class="seg">' + [['open', 'Ouvrir'], ['def', 'Face à une relance'], ['iso', 'Face à un limper'], ['squeeze', 'Squeeze'], ['vs3bet', 'Face à un 3-bet'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    if (RS.type === 'iso' || RS.type === 'squeeze') {
+      if (RS.depth === 'mid' && RS.type === 'iso') RS.depth = 'push'; if (RS.depth === 'push' && RS.type === 'squeeze') RS.depth = 'mid';
+      out += '<div class="seg">' + (RS.type === 'iso' ? [['deep', 'Plus de 20 BB'], ['push', '12 à 20 BB (iso-tapis)']] : [['deep', 'Plus de 30 BB'], ['mid', '20 à 30 BB (squeeze à tapis)']]).map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    } else if (RS.type !== 'vs3bet' && RS.type !== 'callshove') {
       out += '<div class="seg">' + [['deep', '40 BB et +'], ['mid', '20-40 BB'], ['push', 'Moins de 20 BB']].map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     }
     if ((RS.depth === 'push' && RS.type === 'open') || RS.type === 'callshove') out += '<div class="seg">' + PA.PUSH_DEPTHS.map(function (d) { return '<button class="' + (RS.bb === d ? 'on' : '') + '" data-act="rsBB" data-v="' + d + '">' + d + ' BB</button>'; }).join('') + '</div>';
@@ -254,6 +265,20 @@
       if (ops.indexOf(RS.opener) < 0) RS.opener = ops[ops.length - 1];
       out += '<div class="small muted">La relance vient de :</div><div class="seg">' + ops.map(function (p) { return '<button class="' + (RS.opener === p ? 'on' : '') + '" data-act="rsOp" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
       s = rsSit(); cm = PA.chart(prof, s);
+    } else if (RS.type === 'iso' || RS.type === 'squeeze') {
+      var isq = RS.type === 'squeeze', hs2 = isq ? ['BB', 'SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP'] : ['BB', 'SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1'];
+      if (hs2.indexOf(RS.pos) < 0) RS.pos = isq ? 'BB' : 'BTN';
+      out += '<div class="small muted">Je suis en :</div><div class="seg">' + hs2.map(function (p) { return '<button class="' + (RS.pos === p ? 'on' : '') + '" data-act="rsPos" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
+      var bef = PA.POS.slice(0, PA.POS.indexOf(RS.pos)).filter(function (o) { return o !== 'SB'; }), ops2 = isq ? bef.slice(0, -1) : bef;
+      if (ops2.indexOf(RS.opener) < 0) RS.opener = isq ? ops2[Math.max(0, ops2.length - 2)] : ops2[ops2.length - 1];
+      out += '<div class="small muted">' + (isq ? 'L’ouverture vient de :' : 'Le limper est en :') + '</div><div class="seg">' + ops2.map(function (p) { return '<button class="' + (RS.opener === p ? 'on' : '') + '" data-act="rsOp" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
+      if (isq) {
+        var cls2 = bef.slice(bef.indexOf(RS.opener) + 1);
+        if (cls2.indexOf(RS.caller) < 0) RS.caller = cls2[cls2.length - 1];
+        out += '<div class="small muted">Le payeur est en :</div><div class="seg">' + cls2.map(function (p) { return '<button class="' + (RS.caller === p ? 'on' : '') + '" data-act="rsCaller" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
+      }
+      out += '<div class="small muted">' + (isq ? 'Les mains dépendent surtout de ta place : au bouton et en grosse blinde on squeeze le plus, en petite blinde c’est squeeze ou couche, en milieu de table seulement la valeur.' : 'Les mains dépendent surtout de ta place : au bouton on isole très large, en début de table et dans les blindes on serre. En grosse blinde, tu peux checker gratuitement.') + '</div>';
+      s = rsSit(); cm = PA.chart(prof, s);
     } else if (RS.type === 'vs3bet') {
       out += '<div class="seg">' + [['ip', 'J’ouvre au bouton, 3-bet des blindes'], ['oop', 'J’ouvre au CO, 3-bet du bouton'], ['early', 'J’ouvre tôt, 3-bet tardif'], ['bvb', 'J’ouvre en SB, 3-bet de la BB']].map(function (t) { return '<button class="' + (RS.scen === t[0] ? 'on' : '') + '" data-act="rsScen" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     } else {
@@ -263,6 +288,7 @@
       s = rsSit(); cm = PA.chart(prof, s);
     }
     // la bulle : même situation, range resserrée (ou élargie) selon ton tapis
+    if (RS.type === 'iso' || RS.type === 'squeeze') RS.bubble = null; else
     out += '<div class="seg bubble-seg"><span class="small muted" style="align-self:center;margin-right:4px">🫧 Bulle :</span>' + [['', 'Non'], ['gros', 'Gros tapis'], ['moyen', 'Tapis moyen'], ['court', 'Petit tapis']].map(function (t) { return '<button class="' + ((RS.bubble || '') === t[0] ? 'on' : '') + '" data-act="rsBubble" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     var bdiff = null;
     if (RS.bubble) {
@@ -289,6 +315,8 @@
     if (s.hu) return s.type === 'push' ? 'en heads-up au bouton (petite blinde) à ' + PA.nearestPush(s.bb) + ' BB' : 'en heads-up en grosse blinde, face au tapis du bouton à ' + PA.nearestPush(s.bb) + ' BB';
     if (s.type === 'open') { var first = s.pos === 'UTG' ? 'premier à parler' : 'personne n’a ouvert avant toi'; return PA.depthKey(s.bb) === 'push' ? 'en ' + s.pos + ' à ' + PA.nearestPush(s.bb) + ' BB, ' + first : 'en ' + s.pos + ', ' + first; }
     if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener;
+    if (s.type === 'iso') return 'en ' + s.pos + ' face au limp ' + s.opener + (s.bb <= 20 ? ' (12 à 20 BB)' : '');
+    if (s.type === 'squeeze') return 'en ' + s.pos + ' : ' + s.opener + ' ouvre, ' + s.caller + ' paie' + (s.bb <= 30 ? ' (20 à 30 BB)' : '');
     if (s.type === 'vs3bet') return { ip: 'au bouton face au 3-bet des blindes', oop: 'au CO face au 3-bet du bouton', early: 'en début de table face à un 3-bet tardif', bvb: 'en petite blinde face au 3-bet de la grosse blinde' }[s.scen];
     return 'en ' + s.pos + ' face au tapis ' + s.opener + ' à ' + PA.nearestPush(s.bb) + ' BB';
   }
@@ -437,6 +465,8 @@
       '<button class="tile" data-act="startSit" data-v="push"><b>Tapis ou fold</b><span>Moins de 20 BB, tout le monde s’est couché jusqu’à toi.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="callshove"><b>Payer un tapis</b><span>Un adversaire pousse : payer ou se coucher ?</span></button>' +
       '<button class="tile" data-act="startSit" data-v="hu"><b>Tapis ou fold en heads-up</b><span>Un contre un, moins de 15 BB : pousser au bouton, payer en grosse blinde.</span></button>' +
+      '<button class="tile" data-act="startSit" data-v="iso"><b>Isoler un limper</b><span>Un joueur limpe devant toi : isoler, sur-limper ou se coucher, selon ta position.</span></button>' +
+      '<button class="tile" data-act="startSit" data-v="squeeze"><b>Squeezer</b><span>Une relance et un payeur devant toi : squeeze, payer ou se coucher, selon ta position.</span></button>' +
       '<button class="tile" data-act="startSit" data-v="vs3bet"><b>Face au 3-bet</b><span>Tu as ouvert, on te relance.</span></button>' +
       '<a class="tile" href="#cas"><b>Cas concrets après le flop</b><span>A4 assorti en pot 3-bet, AK raté, top paire en grosse blinde… : que fait le solveur ?</span></a>' +
       '<a class="tile" href="#calcul"><b>Calcul rapide</b><span>Cote du pot, défense minimale, bluff, outs : 20 secondes par question.</span></a>' +
@@ -482,7 +512,7 @@
     if (mode === 'seance') {
       var due = PA.srsDue(p).slice(0, 8);
       due.forEach(function (d) { var q = PA.makeQuestion(prof, { sit: d.q.sit, hand: d.q.hand }); q.review = true; qs.push(q); });
-      var notionKinds = { bulle: 'bulle', open_early: 'open', open_mid: 'open', open_late: 'open', open_sb: 'open', bb_def: 'def', cold: 'def', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', mid: 'open' };
+      var notionKinds = { iso: 'iso', squeeze: 'squeeze', bulle: 'bulle', open_early: 'open', open_mid: 'open', open_late: 'open', open_sb: 'open', bb_def: 'def', cold: 'def', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', mid: 'open' };
       if (window.PA_SIT) window.PA_SIT.kinds.forEach(function (k) { notionKinds[k] = k; });
       var ns = Object.keys(notionKinds).map(function (n) { var st = PA.notionState(p, n); return [n, st.r + (st.n < 3 ? -150 : 0) + Math.random() * 120]; }).sort(function (a, b) { return a[1] - b[1]; });
       var k = 0;
@@ -545,9 +575,11 @@
     var acted = POS.slice(0, POS.indexOf(heroPos) < 0 ? 0 : POS.indexOf(heroPos));
     if (s.type === 'open' || s.type === 'push') { acted.forEach(function (p) { if (p !== 'SB' && p !== 'BB') folded[p] = 1; }); }
     if (s.type === 'def') { var os = PA.openBB(s.opener, s.bb); bets[s.opener] = os; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB' && s.opener !== 'SB') folded.SB = 1; }
+    if (s.type === 'iso') { bets[s.opener] = 1; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB') folded.SB = 1; }
+    if (s.type === 'squeeze') { var o2 = PA.openBB(s.opener, s.bb); bets[s.opener] = o2; bets[s.caller] = o2; acted.forEach(function (p) { if (p !== s.opener && p !== s.caller && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB') folded.SB = 1; }
     if (s.type === 'callshove') { bets[s.opener] = PA.nearestPush(s.bb); allin[s.opener] = 1; POS.forEach(function (p) { if (p !== s.opener && p !== heroPos && !(p === 'BB' && heroPos !== 'BB') && !(p === 'SB' && heroPos === 'SB')) { if (POS.indexOf(p) < POS.indexOf(s.opener) || (POS.indexOf(p) > POS.indexOf(s.opener) && POS.indexOf(p) < POS.indexOf(heroPos))) folded[p] = 1; } }); }
     if (s.type === 'vs3bet') { var sz3 = s.scen === 'ip' ? 11 : 8; var o3 = PA.openBB(heroPos, 100); sz3 = Math.round(o3 * (s.scen === 'ip' ? 4.4 : s.scen === 'bvb' ? 3 : 3.2) * 2) / 2; bets[heroPos] = o3; bets[s.opener] = sz3; POS.forEach(function (p) { if (p !== heroPos && p !== s.opener && p !== 'BB' && p !== 'SB') folded[p] = 1; }); if (s.opener !== 'SB' && heroPos !== 'SB') folded.SB = 1; }
-    var ante = PA.depthKey(bb) !== 'deep' ? 1 : 0;
+    var ante = PA.depthKey(bb) !== 'deep' || s.type === 'iso' || s.type === 'squeeze' ? 1 : 0;
     var pot = 0; Object.keys(bets).forEach(function (k) { pot += bets[k]; });
     var h = '<div class="felt">';
     for (var k = 0; k < 9; k++) {
@@ -569,6 +601,8 @@
     if (s.hu) txt = s.type === 'push' ? 'Heads-up : tu es au <b>bouton</b> (petite blinde), tu parles en premier.' : 'Heads-up : tu es en <b>grosse blinde</b>. Le bouton fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     else if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
     else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.';
+    else if (s.type === 'iso') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> limpe (il paie juste la grosse blinde), les autres se couchent.' + (s.pos === 'BB' ? ' Tu peux checker gratuitement.' : '');
+    else if (s.type === 'squeeze') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), <b>' + s.caller + '</b> paie, les autres se couchent.';
     else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = String(t.bets[s.opener]).replace('.', ','); txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.', bvb: 'Tout le monde s’est couché jusqu’à toi : tu as ouvert en <b>petite blinde</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.' }[s.scen]; }
     else txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     if (s.bubble) txt = '<b>Bulle</b> : encore un joueur à sortir avant les places payées. Tu es <b>' + PA.BUBBLE_NAME[s.bubble] + '</b> ' + ({ gros: '(le plus gros de la table)', moyen: '(dans la moyenne : tu as le plus à perdre)', court: '(un des plus petits)' }[s.bubble]) + '. ' + txt;
@@ -639,6 +673,17 @@
     if (s.type === 'def') {
       var r = PA.HANDS.filter(function (h) { return cm[h] === 'raise' || cm[h] === 'allin'; }), c = PA.HANDS.filter(function (h) { return cm[h] === 'call'; });
       return 'Face à ' + s.opener + ', ton profil sur-relance ' + String(PA.pct(r)).replace('.', ',') + ' % et paie ' + String(PA.pct(c)).replace('.', ',') + ' %.' + (s.pos === 'BB' ? ' En BB, tu as déjà mis 1 BB : la cote te permet de défendre large.' : ' Hors des blindes, on paie moins et on sur-relance plus.');
+    }
+    if (s.type === 'iso' || s.type === 'squeeze') {
+      var rr = PA.HANDS.filter(function (h) { return cm[h] === 'raise' || cm[h] === 'allin'; }), cc = PA.HANDS.filter(function (h) { return cm[h] === 'call'; }), pc = function (l) { return String(PA.pct(l)).replace('.', ','); };
+      if (s.type === 'iso') {
+        var gI = PA.isoGroup(s.pos), wI = { early: 'Il reste beaucoup de joueurs derrière toi, et un limper de début de table cache parfois une grosse main : tu n’isoles qu’avec des mains fortes.', HJ: 'Encore quatre joueurs derrière toi : isolement sélectif, avec des mains qui dominent la range du limper.', CO: 'Plus que le bouton et les blindes derrière toi : tu isoles largement pour jouer seul contre lui, en position.', BTN: 'Au bouton, c’est l’idéal : tu joueras en position contre une main moyenne. Tu isoles très large.', SB: 'De la petite blinde, tu joueras hors de position : isolement plus gros (4 BB + 1) et plus serré ; compléter reste possible avec les mains qui jouent bien à plusieurs.', BB: 'En grosse blinde, tu checkes gratuitement avec tout le reste ; tu n’isoles que pour la valeur, à 4 BB + 1, car tu joueras hors de position.' }[gI];
+        if (s.bb <= 20) return 'Tapis court face à un limper : il y a déjà environ 3,5 BB au milieu et le limper paie rarement un tapis. Ton profil fait iso-tapis avec ' + pc(rr) + ' % des mains. ' + wI;
+        return 'Face à un limp, ton profil isole ' + pc(rr) + ' % des mains ' + (s.pos === 'BB' ? '' : 'et ' + (s.pos === 'SB' ? 'complète' : 'sur-limpe') + ' ' + pc(cc) + ' %') + '. ' + wI + ' Taille : 3 BB en position, 4 BB des blindes, +1 BB par limper.';
+      }
+      var gS = PA.sqzGroup(s.pos), wS = { mid: 'Il reste beaucoup de joueurs derrière toi : pas de squeeze de bluff, seulement la valeur (QQ+, AK).', CO: 'Le bouton et les blindes parlent encore : squeeze surtout pour la valeur, un seul bluff à bloqueur (A5s).', BTN: 'Au bouton, la meilleure place : tu joueras en position contre tout le monde. Valeur plus quelques bluffs à bloqueurs (A5s, A4s, K9s).', SB: 'En petite blinde, la grosse blinde parle encore derrière toi et tu joueras hors de position : squeeze ou couche, presque jamais de paye.', BB: 'En grosse blinde, tu fermes l’action : squeeze de valeur et bluffs à bloqueurs (A5s à A2s), et tu paies beaucoup grâce à la bonne cote.' }[gS];
+      if (s.bb <= 30) return 'Entre 20 et 30 BB, le squeeze se fait à tapis : un squeeze normal engagerait la moitié de ton tapis. Ton profil pousse ' + pc(rr) + ' % des mains, les plus fortes. ' + wS;
+      return 'Ouverture plus un payeur : il y a de l’argent mort et le payeur est « plafonné ». Ton profil squeeze ' + pc(rr) + ' % des mains et paie ' + pc(cc) + ' %. ' + wS;
     }
     if (s.type === 'vs3bet') return 'Face au 3-bet : 4-bet avec le haut de range et quelques bluffs à bloqueurs (A5s, A4s), payer ' + (s.scen === 'ip' ? 'en position avec les mains jouables' : 'peu hors position') + ', coucher le reste.';
     if (s.type === 'callshove') return 'Face à ce tapis, l’équilibre paie ' + String(PA.pct(played)).replace('.', ',') + ' % des mains. Plus le tapis adverse est court et plus il pousse tard, plus tu paies large.';
@@ -904,6 +949,7 @@
       case 'rsBB': RS.bb = parseInt(v, 10); rerenderRange(); break;
       case 'rsPos': RS.pos = v; rerenderRange(); break;
       case 'rsOp': RS.opener = v; rerenderRange(); break;
+      case 'rsCaller': RS.caller = v; rerenderRange(); break;
       case 'rsBubble': RS.bubble = v || null; rerenderRange(); break;
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
@@ -914,15 +960,15 @@
       case 'print': window.print(); break;
       case 'seance': startDrill('seance', {}, 'Séance du jour'); render(); break;
       case 'wkGo': {
-        var SITK = { bulle: 'bulle', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', icm: 'icm', pko: 'pko', hu: 'hu', outs: 'outs' };
-        var LBL = { bulle: 'Jouer la bulle', vs3bet: 'Face au 3-bet', push: 'Tapis ou fold', callshove: 'Payer un tapis', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
+        var SITK = { iso: 'iso', squeeze: 'squeeze', bulle: 'bulle', vs3bet: 'vs3bet', push: 'push', callshove: 'callshove', icm: 'icm', pko: 'pko', hu: 'hu', outs: 'outs' };
+        var LBL = { iso: 'Isoler un limper', squeeze: 'Squeezer', bulle: 'Jouer la bulle', vs3bet: 'Face au 3-bet', push: 'Tapis ou fold', callshove: 'Payer un tapis', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
         if (SITK[v]) { startDrill('sit', { kind: SITK[v], n: 15, chrono: p.settings.chrono }, LBL[v] + ' · plan de la semaine'); render(); break; }
         var PO = { open_early: ['open', 'MP', 'deep'], open_mid: ['open', 'HJ', 'deep'], open_late: ['open', 'BTN', 'deep'], open_sb: ['open', 'SB', 'deep'], bb_def: ['def', 'all', 'deep'], cold: ['def', 'all', 'deep'], mid: ['mix', 'all', 'mid'] }[v] || ['mix', 'all', 'deep'];
         startDrill('preflop', { kind: PO[0], pos: PO[1], depth: PO[2], n: 15, chrono: p.settings.chrono }, (PA.NOTIONS[v] || 'Préflop') + ' · plan de la semaine'); render(); break;
       }
       case 'pf': { var k = t.getAttribute('data-k'); PF[k] = k === 'n' ? parseInt(v, 10) : (k === 'chrono' ? v === 'true' : v); render(); break; }
       case 'startPreflop': startDrill('preflop', { kind: PF.kind, pos: PF.pos, depth: PF.depth, n: PF.n, chrono: PF.chrono }, 'Préflop'); render(); break;
-      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { bulle: 'Jouer la bulle', push: 'Tapis ou fold', hu: 'Tapis ou fold en heads-up', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
+      case 'startSit': startDrill('sit', { kind: v, n: 20, chrono: p.settings.chrono }, { iso: 'Isoler un limper', squeeze: 'Squeezer', bulle: 'Jouer la bulle', push: 'Tapis ou fold', hu: 'Tapis ou fold en heads-up', callshove: 'Payer un tapis', vs3bet: 'Face au 3-bet', icm: 'Bulle et ICM', pko: 'PKO et Space KO', outs: 'Outs et cote' }[v]); render(); break;
       case 'answer': answer(v); break;
       case 'next': ui.drill.i++; ui.drill.fb = null; render(); break;
       case 'quitDrill': clearInterval(timerH); ui.drill = null; go('entrainer'); break;

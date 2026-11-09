@@ -132,8 +132,59 @@
     }
     return out;
   }
+
+  /* ---------- Isoler un limper, squeezer (chapitres 7 et 40) ----------
+     Un seul limper devant toi (iso) ; une ouverture puis un payeur devant toi (squeeze). Les mains dépendent de TA position :
+     plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Groupes : early (UTG+1 à LJ), HJ, CO, BTN, SB, BB.
+     raise = isoler / squeezer, call = sur-limper (compléter en SB, checker en BB) / payer, allin = iso-tapis ou squeeze à tapis (tapis courts). */
+  var ISO = {
+    nit: { early: ['99+,AQs+,AKo', '77-22'], HJ: ['88+,AJs+,KQs,AQo+', '66-22'], CO: ['66+,ATs+,KJs+,AJo+,KQo', '55-22,JTs,T9s'], BTN: ['44+,A7s+,KTs+,QTs+,JTs,ATo+,KJo+', '33-22,98s,87s'],
+      SB: ['77+,ATs+,KJs+,AJo+,KQo', '66-22,A9s-A2s,KTs-K9s,QTs,JTs,T9s,98s'], BB: ['99+,AJs+,KQs,AQo+', ''] },
+    tag: { early: ['88+,AJs+,KQs,AQo+', '77-22,JTs,T9s'], HJ: ['77+,ATs+,KJs+,QJs,AJo+,KQo', '66-22,A5s-A2s,JTs,T9s,98s'], CO: ['55+,A9s+,KTs+,QJs,ATo+,KQo', '44-22,A8s-A2s,QTs,JTs,T9s,98s,87s,76s'],
+      BTN: ['22+,A2s+,K8s+,Q9s+,J9s+,T9s,98s,A8o+,KTo+,QJo', '87s,76s,65s,54s'], SB: ['66+,A9s+,KTs+,QJs,ATo+,KQo', '55-22,A8s-A2s,K9s-K6s,Q9s,J9s,T9s,98s,87s,76s,65s,KJo-KTo,QJo,JTo'], BB: ['88+,ATs+,KJs+,AJo+,KQo', ''] },
+    equilibre: { early: ['77+,ATs+,KJs+,AJo+,KQo', '66-22,JTs,T9s,98s'], HJ: ['66+,A9s+,KTs+,QTs+,JTs,ATo+,KJo+', '55-22,A5s-A2s,T9s,98s,87s'], CO: ['44+,A7s+,K9s+,Q9s+,J9s+,T9s,A9o+,KJo+,QJo', '33-22,A6s-A2s,87s,76s,65s'],
+      BTN: ['22+,A2s+,K6s+,Q8s+,J8s+,T8s+,98s,87s,A7o+,K9o+,QTo+,JTo', '76s,65s,54s'], SB: ['55+,A8s+,K9s+,QTs+,JTs,A9o+,KJo+', '44-22,A7s-A2s,K8s-K5s,Q9s-Q8s,J9s,T9s,98s,87s,76s,65s,KTo,QJo-QTo,JTo'], BB: ['77+,A9s+,KTs+,QJs,ATo+,KJo+,A5s-A2s', ''] },
+    lag: { early: ['66+,A9s+,KTs+,QJs,ATo+,KQo', '55-22,T9s,98s,87s,76s'], HJ: ['55+,A8s+,K9s+,Q9s+,J9s+,T9s,ATo+,KJo+,QJo', '44-22,A7s-A2s,87s,76s,65s'], CO: ['33+,A2s+,K8s+,Q9s+,J9s+,T9s,98s,A8o+,KTo+,QTo+,JTo', '22,87s,76s,65s,54s'],
+      BTN: ['22+,A2s+,K4s+,Q6s+,J7s+,T7s+,97s+,86s+,76s,65s,A4o+,K8o+,Q9o+,J9o+,T9o', '54s,43s'], SB: ['44+,A7s+,K9s+,Q9s+,J9s+,T9s,A9o+,KTo+,QJo', '33-22,A6s-A2s,K8s-K2s,Q8s-Q6s,J8s,T8s,97s,87s,76s,65s,54s,K9o,QTo,JTo,T9o'], BB: ['66+,A8s+,KTs+,QTs+,JTs,ATo+,KJo+,A5s-A2s,K9s', ''] }
+  };
+  // iso-tapis entre 12 et 20 BB (chapitre 7) : on pousse directement sur le limper
+  var ISO_SHOVE = { early: '88+,AJs+,AQo+,KQs', HJ: '77+,ATs+,AJo+,KQs', CO: '66+,A9s+,A9o+,KQs,KQo', BTN: '44+,A7s+,A8o+,KJs+,KQo,QJs', SB: '55+,A8s+,A9o+,KJs+,KQo', BB: '77+,ATs+,ATo+,KQs,KQo' };
+  var SQZ = {
+    nit: { mid: ['QQ+,AKs,AKo', 'JJ-99,AQs'], CO: ['QQ+,AKs,AKo', 'JJ-66,AQs,AJs,KQs'], BTN: ['JJ+,AKs,AKo,AQs', 'TT-22,AJs-ATs,KQs-KJs,QJs,JTs,T9s'], SB: ['QQ+,AKs,AKo', ''],
+      BB: ['JJ+,AKs,AKo,AQs', 'TT-22,AJs-A2s,KQs-KTs,QJs-QTs,JTs,T9s,98s,87s,AQo-AJo,KQo'] },
+    tag: { mid: ['QQ+,AKs,AKo', 'JJ-77,AQs,AJs,KQs'], CO: ['JJ+,AKs,AKo,AQs,A5s', 'TT-55,AJs-ATs,KQs-KJs,QJs,JTs'], BTN: ['TT+,AQs+,AKo,AQo,A5s-A4s,K9s', '99-22,AJs-A9s,KJs-KTs,QJs-QTs,JTs,T9s,98s,87s,76s,KQs'],
+      SB: ['JJ+,AQs+,AKo,A5s', ''], BB: ['TT+,AQs+,AKo,A5s-A2s,K9s', '99-22,AJs-A6s,KQs-K8s,QJs-Q9s,JTs-J9s,T9s-T8s,98s,97s,87s,76s,65s,54s,AQo-ATo,KQo-KJo,QJo'] },
+    equilibre: { mid: ['QQ+,AKs,AKo,AQs', 'JJ-77,AJs,KQs,QJs'], CO: ['JJ+,AQs+,AKo,AQo,A5s-A4s', 'TT-44,AJs-ATs,KQs-KTs,QJs,JTs,T9s'], BTN: ['TT+,AJs+,AQo+,KQs,A5s-A3s,K9s,Q9s', '99-22,ATs-A8s,KJs-KTs,QJs-QTs,JTs,T9s,98s,87s,76s'],
+      SB: ['JJ+,AQs+,AKo,A5s-A4s', ''], BB: ['TT+,AJs+,KQs,AQo+,A5s-A2s,K9s', '99-22,ATs-A6s,KJs-K8s,QJs-Q9s,JTs-J9s,T9s-T8s,98s,97s,87s,76s,65s,54s,AJo-ATo,KQo-KJo,QJo'] },
+    lag: { mid: ['JJ+,AQs+,AKo,A5s', 'TT-66,AJs,KQs,QJs,JTs'], CO: ['TT+,AQs+,AKo,AQo,A5s-A3s,K9s', '99-44,AJs-ATs,KJs-KTs,QJs,JTs,T9s,98s'], BTN: ['99+,AJs+,AQo+,KQs,A5s-A2s,K9s-K8s,Q9s,J9s,T8s,97s,86s', '88-22,ATs-A6s,KJs-KTs,QJs-QTs,JTs,T9s,98s,87s,76s,65s'],
+      SB: ['TT+,AJs+,AQo+,KQs,A5s-A3s,K9s', ''], BB: ['TT+,AJs+,AQo+,KQs,A9s-A7s,A5s-A2s,K9s,Q9s', '99-22,A6s,KJs-K7s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,97s,87s,86s,76s,65s,54s,AJo-ATo,KQo-KJo,QJo,JTo'] }
+  };
+  // squeeze à tapis de 20 à 30 BB (chapitre 40)
+  var SQZ_SHOVE = { nit: 'TT+,AQs+,AKo', tag: '99+,AJs+,AQo+,KQs', equilibre: '99+,AJs+,AQo+,KQs,A5s-A4s', lag: '88+,ATs+,AJo+,KQs,A5s-A3s' };
+  function isoGroup(pos) { return ['UTG', 'UTG+1', 'MP', 'LJ'].indexOf(pos) >= 0 ? 'early' : pos; }
+  function sqzGroup(pos) { return ['UTG+1', 'MP', 'LJ', 'HJ'].indexOf(pos) >= 0 ? 'mid' : pos; }
+  function isoChart(profileId, s, out) {
+    var b = baseProfile(profileId), g = isoGroup(s.pos), t = (ISO[b] || ISO.tag)[g] || ISO.tag.CO;
+    if (s.pos === 'BB') HANDS.forEach(function (h) { out[h] = 'call'; }); // en grosse blinde, on checke gratuitement
+    if (s.bb <= 20) {
+      var sh = toSet(expand(ISO_SHOVE[g] || ISO_SHOVE.CO));
+      if (b === 'nit') sh = keepTop(Object.keys(sh), 0.75); else if (b === 'lag') expand(g === 'BTN' ? '33,A6s,A7o,KTs,QTs' : 'A8o,KJo,QJs').forEach(function (h) { sh[h] = true; });
+      HANDS.forEach(function (h) { if (sh[h]) out[h] = 'allin'; });
+      return out;
+    }
+    expand(t[1]).forEach(function (h) { out[h] = 'call'; });
+    expand(t[0]).forEach(function (h) { out[h] = 'raise'; });
+    return out;
+  }
+  function sqzChart(profileId, s, out) {
+    var b = baseProfile(profileId), t = (SQZ[b] || SQZ.tag)[sqzGroup(s.pos)] || SQZ.tag.CO;
+    if (s.bb <= 30) { expand(SQZ_SHOVE[b] || SQZ_SHOVE.tag).forEach(function (h) { out[h] = 'allin'; }); return out; }
+    expand(t[1]).forEach(function (h) { out[h] = 'call'; });
+    expand(t[0]).forEach(function (h) { out[h] = 'raise'; });
+    return out;
+  }
   var BUBBLE_NAME = { gros: 'gros tapis', moyen: 'tapis moyen', court: 'petit tapis' };
-  function sitKey(s) { return (s.bubble ? 'bulle-' + s.bubble + '|' : '') + [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : depthKey(s.bb), s.scen || ''].join('|'); }
+  function sitKey(s) { return (s.bubble ? 'bulle-' + s.bubble + '|' : '') + [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : (s.type === 'iso' ? (s.bb <= 20 ? 'court' : 'deep') : s.type === 'squeeze' ? (s.bb <= 30 ? 'court' : 'deep') : depthKey(s.bb)), s.scen || ''].join('|') + (s.caller ? '|' + s.caller : ''); }
   function shoveKey(pos, opener) { return pos + ' vs shove ' + opener; }
   function chart(profileId, s) {
     // renvoie {hand: action} avec action ∈ raise, call, fold, allin, fourbet
@@ -165,6 +216,8 @@
     } else if (s.type === 'callshove') {
       var c = D.pushfold[String(nearestPush(s.bb))].call[shoveKey(s.pos, s.opener)] || [];
       c.forEach(function (h) { out[h] = 'call'; });
+    } else if (s.type === 'iso') { isoChart(profileId, s, out);
+    } else if (s.type === 'squeeze') { sqzChart(profileId, s, out);
     } else if (s.type === 'push') {
       (D.pushfold[String(nearestPush(s.bb))].push[s.pos] || []).forEach(function (h) { out[h] = 'allin'; });
     }
@@ -196,10 +249,11 @@
   var NOTIONS = {
     open_early: 'Ouvrir en début de table', open_mid: 'Ouvrir en milieu de table', open_late: 'Ouvrir en fin de table',
     open_sb: 'Ouvrir de la petite blinde', bb_def: 'Défendre la grosse blinde', cold: 'Face à une relance (hors BB)',
-    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB', bulle: 'Jouer la bulle'
+    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB', bulle: 'Jouer la bulle', iso: 'Isoler un limper', squeeze: 'Squeezer'
   };
   function notionOf(s) {
     if (s.bubble) return 'bulle';
+    if (s.type === 'iso' || s.type === 'squeeze') return s.type;
     if (s.type === 'push') return 'push';
     if (s.type === 'callshove') return 'callshove';
     if (s.type === 'vs3bet') return 'vs3bet';
@@ -251,6 +305,19 @@
       if (bs.type === 'def' && bk === 'court') bs.bb = 30;
       bs.bubble = bk; return bs;
     }
+    if (kind === 'iso') {
+      // un limper devant toi ; parfois un tapis court (iso-tapis)
+      pos = rnd(['UTG+1', 'MP', 'LJ', 'HJ', 'HJ', 'CO', 'CO', 'BTN', 'BTN', 'BTN', 'SB', 'BB', 'BB']);
+      var lim = POS.slice(0, POS.indexOf(pos)).filter(function (x) { return x !== 'SB'; });
+      return { type: 'iso', pos: pos, opener: rnd(lim), bb: Math.random() < 0.25 ? rnd([15, 18]) : 100 };
+    }
+    if (kind === 'squeeze') {
+      // une ouverture et un payeur devant toi
+      pos = rnd(['MP', 'LJ', 'HJ', 'CO', 'CO', 'BTN', 'BTN', 'BTN', 'SB', 'BB', 'BB', 'BB']);
+      var before = POS.slice(0, POS.indexOf(pos)).filter(function (x) { return x !== 'SB'; }), oi = Math.floor(Math.random() * (before.length - 1));
+      var cl = before.slice(oi + 1);
+      return { type: 'squeeze', pos: pos, opener: before[oi], caller: rnd(cl), bb: Math.random() < 0.25 ? 25 : 100 };
+    }
     var kinds = kind ? [kind] : ['open', 'open', 'open', 'def', 'def', 'push', 'callshove', 'vs3bet'];
     var k = rnd(kinds);
     if (k === 'open') { pos = rnd(POS.slice(0, 8)); bb = rnd([100, 100, 100, 30]); s = { type: 'open', pos: pos, bb: bb }; }
@@ -292,6 +359,7 @@
     if (s.type === 'open' || s.type === 'push') return ['fold', 'limp', 'raise', 'allin'];
     if (s.type === 'callshove') return ['fold', 'call'];
     if (s.type === 'vs3bet') return ['fold', 'call', 'fourbet', 'allin'];
+    if (s.type === 'iso' && s.pos === 'BB') return ['call', 'raise', 'allin'];
     return ['fold', 'call', 'raise', 'allin'];
   }
   var SBLIMP = toSet(D.sbLimp || []);
@@ -315,6 +383,12 @@
     if (s.type === 'def') {
       if (given === 'raise' && answer === 'allin') return { kind: 'style', note: 'À 20-40 BB, le 3-bet devient le plus souvent un tapis : un 3-bet plus petit te laisse sans bonne option face à une 4-bet.' };
       if (given === 'allin' && dk === 'deep') return { kind: answer === 'raise' ? 'style' : 'error', note: answer === 'raise' ? 'La main se sur-relance, mais pas à tapis : à 100 BB, un 3-bet de 3 fois la relance suffit et garde les mains plus faibles en jeu.' : 'Pousser 100 BB en 3-bet : seules les mains qui te battent paient.' };
+    }
+    if (s.type === 'iso' || s.type === 'squeeze') {
+      var shortS = s.type === 'iso' ? s.bb <= 20 : s.bb <= 30, nm = s.type === 'iso' ? 'isoler' : 'squeezer';
+      if (given === 'allin' && !shortS) return { kind: 'error', note: 'À 100 BB, pousser tout ton tapis pour ' + nm + ' : seules les mains qui te battent paient. Une relance normale suffit.' };
+      if (given === 'raise' && shortS && answer === 'allin') return { kind: 'style', note: 'Avec ce tapis, une relance normale engage déjà une grosse part de tes jetons : le cours conseille de faire tapis directement.' };
+      if (given === 'raise' && shortS && answer === 'fold') return { kind: 'error', note: 'Tapis court : relancer puis devoir te coucher sur une sur-relance te coûte trop. C’est tapis ou rien, et cette main n’est pas assez forte.' };
     }
     if (s.type === 'vs3bet' && given === 'allin') {
       if (answer === 'fourbet') return { kind: 'style', note: 'Le tapis direct à 100 BB est trop gros : une 4-bet d’environ 2,2 fois garde les mêmes mains en jeu pour moins cher.' };
@@ -353,14 +427,14 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 6: 2, 7: 2, 14: 2, 15: 2, 33: 3, 35: 2, 38: 2, 39: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 6: 2, 7: 3, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
     combos: combos, pct: pct, load: load, save: save, player: player, newPlayer: newPlayer, wipeAll: wipeAll, wipeTraining: wipeTraining,
     chart: chart, actionFor: actionFor, firstOpenPos: firstOpenPos, validOpeners: validOpeners, shoveSituations: shoveSituations,
     depthKey: depthKey, nearestPush: nearestPush, sitKey: sitKey, NOTIONS: NOTIONS, notionOf: notionOf, notionState: notionState,
-    bubbleChart: bubbleChart, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
+    bubbleChart: bubbleChart, isoGroup: isoGroup, sqzGroup: sqzGroup, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
     randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB,
     ORDER_IDX: ORDER_IDX
   };
