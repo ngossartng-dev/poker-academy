@@ -82,7 +82,7 @@
         'Pour la partager, envoie le lien de la page (WhatsApp, Messenger, SMS) : il donne toujours la dernière version.'],
       tips: ['L’appli Club s’installe à côté de l’appli complète, avec ses propres données.', 'Si Play Protect affiche « Appli dangereuse bloquée » : c’est une fausse alerte, l’appli ne vient simplement pas du Play Store. Touche « Plus de détails », puis « Installer quand même ».'] },
     { id: 'maj', club: true, t: 'Mises à jour et sauvegarde', i: 'L’appli vérifie toute seule s’il existe une nouvelle version.',
-      s: ['Le bouton « 🔄 Mettre à jour l’appli » est dans Moi (appli complète) et dans Réglages (les deux applis). Quand une nouvelle version existe, il devient jaune et clignote, et il apparaît aussi en haut de l’accueil.', 'Touche-le : la page « Mettre à jour l’appli » montre la version installée, la nouvelle et ce qui change.',
+      s: ['Le bouton « 🔄 Mettre à jour l’appli » est dans Moi (appli complète : onglet Moi, à gauche sur ordinateur, en bas à droite sur téléphone) et dans Réglages (les deux applis). Quand une nouvelle version existe, il devient jaune et clignote, et il apparaît aussi en haut de l’accueil.', 'Touche-le : la page « Mettre à jour l’appli » montre la version installée, la nouvelle et ce qui change.',
         'PC : « Mettre à jour maintenant », puis « Installer et redémarrer » ; l’appli se ferme quelques secondes et se rouvre.',
         'Android : « Télécharger la nouvelle version » ; le navigateur télécharge le fichier, ouvre-le et touche « Mettre à jour ». Si Play Protect affiche un avertissement : « Plus de détails », puis « Installer quand même ».',
         'iPhone et navigateur : la mise à jour est automatique à l’ouverture.'],

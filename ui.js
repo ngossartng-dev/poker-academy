@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.30.1';
+  var VERSION = '2.30.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -78,12 +78,13 @@
   var CLUB = !!window.PA_CLUB;
   var NAV = CLUB ? [['home', 'Accueil', 'home'], ['tournoi', 'Tournoi', 'cards'], ['minuteur', 'Chrono', 'clock'], ['classement', 'Championnat', 'chart'], ['reglages', 'Réglages', 'user']]
     : [['home', 'Accueil', 'home'], ['apprendre', 'Apprendre', 'book'], ['entrainer', 'S’entraîner', 'cards'], ['club', 'Club', 'clock'], ['analyser', 'Analyser', 'chart']];
+  var SHORT = { 'Apprendre': 'Cours', 'S’entraîner': 'Entraîner', 'Championnat': 'Classement' }; // libellés courts sur petit écran
   function shell(active, body, noFab) {
     if (CLUB) { active = (location.hash || '#home').slice(1).split('?')[0] || 'home'; if (active === 'sauvegarde' || active === 'maj' || active === 'merci' || active === 'guide') active = 'reglages'; noFab = noFab || false; }
     var focus = !!noFab;
     var side = '<nav class="side" aria-label="Navigation principale"><div class="row" style="padding:0 8px 22px">' + logo() + '<span class="disp" style="font-size:26px">Poker<br>Academy</span></div>' +
       (CLUB ? NAV : NAV.concat([['moi', 'Moi', 'user']])).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
-    var nav = '<nav class="nav" aria-label="Navigation principale">' + NAV.map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + n[1] + '</a>'; }).join('') + '</nav>';
+    var nav = '<nav class="nav' + (CLUB ? '' : ' n6') + '" aria-label="Navigation principale">' + (CLUB ? NAV : NAV.concat([['moi', 'Moi', 'user']])).map(function (n) { return '<a href="#' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '">' + IC[n[2]] + (SHORT[n[1]] ? '<span class="nl">' + n[1] + '</span><span class="ns">' + SHORT[n[1]] + '</span>' : n[1]) + '</a>'; }).join('') + '</nav>';
     var fab = '<button class="fab" data-act="range" aria-label="Ouvrir ma range (fais-le glisser pour le déplacer)"' + fabStyle() + '>' + IC.grid + 'Ma range</button>';
     var pm = !focus && window.PA_LEARN && window.PA_LEARN.mini ? window.PA_LEARN.mini() : '';
     return '<div class="app' + (focus ? ' focus' : '') + '">' + side + '<main class="main">' + body + '</main></div>' + pm + (focus ? '' : nav) + (CLUB || noFab || /^#(tournoi|classement|minuteur|club|ecran|guide)/.test(location.hash) ? '' : fab);
