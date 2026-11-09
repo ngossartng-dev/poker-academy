@@ -747,7 +747,7 @@
     var B = G.bsz, lb = bszLabel(B.to), e;
     if ((e = document.getElementById('bszV'))) e.textContent = lb.val;
     if ((e = document.getElementById('bszS'))) e.textContent = lb.sub;
-    if ((e = document.getElementById('bszGo'))) { e.textContent = lb.go; e.className = B.to >= B.max ? 'a-three' : 'a-raise'; }
+    if ((e = document.getElementById('bszGo'))) { e.innerHTML = lb.go + '<small class="bsz-gs">' + lb.sub + '</small>'; e.className = B.to >= B.max ? 'a-three' : 'a-raise'; }
     if ((e = document.getElementById('bszR')) && +e.value !== bszToX(B.to)) e.value = bszToX(B.to);
   }
   function betSizer(H, L, me, minTo, maxTo, pot, tc, sizes) {
@@ -767,12 +767,17 @@
     return '<div class="bsz"><div class="bsz-top"><span>Ta mise</span><b id="bszV">' + lb.val + '</b></div><small id="bszS">' + lb.sub + '</small>' +
       '<div class="bsz-row"><button data-gact="bszStep" data-v="-1" aria-label="Moins">−</button><input type="range" id="bszR" min="0" max="1000" step="1" value="' + bszToX(B.to) + '" aria-label="Montant de la mise"><button data-gact="bszStep" data-v="1" aria-label="Plus">+</button></div>' +
       (q.length ? '<div class="bsz-q">' + q.map(function (x) { return '<button data-gact="bszSet" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
-      '<button id="bszGo" class="' + (B.to >= maxTo ? 'a-three' : 'a-raise') + '" data-gact="bszGo">' + lb.go + '</button></div>';
+      '<button id="bszGo" class="' + (B.to >= maxTo ? 'a-three' : 'a-raise') + '" data-gact="bszGo">' + lb.go + '<small class="bsz-gs">' + lb.sub + '</small></button></div>';
   }
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'bszR' && G && G.bsz) { G.bsz.to = bszFromX(+e.target.value); bszPaint(); } });
   // grand écran (ordinateur) : la table prend toute la place libre, boutons d'action à droite
   function fitTable() {
     var f = document.querySelector('.felt2'); if (!f) return;
+    // téléphone : à ton tour, fais remonter la page pour que les boutons et la jauge soient visibles en entier (une fois par décision)
+    var H = G && G.hand, pan = document.querySelector('.gtab-r');
+    if (H && H.toAct === 0 && !H.done && pan && window.innerWidth < 1100) {
+      var k = bszKey(H); if (G.scrolledFor !== k) { G.scrolledFor = k; var rb = pan.getBoundingClientRect().bottom; if (rb > window.innerHeight - 8) window.scrollBy({ top: rb - window.innerHeight + 12, behavior: 'smooth' }); }
+    }
     var wide = window.innerWidth >= 1100 && window.innerHeight >= 600, z = 1;
     if (wide) {
       var col = f.parentElement, cw = col ? col.clientWidth : 720, top = f.getBoundingClientRect().top + (window.scrollY || 0) - (window.scrollY || 0);
@@ -857,7 +862,8 @@
       var raiseBtns = sizes.filter(function (s) { return s[0] >= minTo && s[0] < maxTo; }).map(function (s) { return '<button class="a-raise" data-gact="raise" data-v="' + Math.round(s[0]) + '">' + (H.cur > 0 && H.street > 0 ? 'Relancer ' : (H.street === 0 && H.cur > L.bb ? '' : (H.street === 0 ? (H.limpers > 0 ? 'Isoler ' : 'Ouvrir ') : 'Miser '))) + s[1] + '</button>'; });
       if (maxTo > H.cur && canRaise(0)) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + PA.fmt(me.stack) + ')</button>');
       var bsz = canRaise(0) && maxTo > minTo ? betSizer(H, L, me, minTo, maxTo, pot, tc, sizes) : '';
-      bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>' + bsz;
+      if (bsz && raiseBtns.length && /data-gact="allin"/.test(raiseBtns[raiseBtns.length - 1])) btns.push(['allin', 'Tapis', 'a-three', 'allin']), raiseBtns.pop(); // Tapis sur la même ligne que Se coucher / Payer
+      bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions act-main n' + btns.length + '" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions act-q' + (bsz ? ' has-bsz' : '') + '" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>' + bsz;
     } else {
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="banner muted" style="text-align:center">' + (H.inHand[0] && !H.folded[0] ? 'Au tour de ' + ui.esc(G.players[H.toAct] ? G.players[H.toAct].name : '…') + '…' : 'Tu t’es couché. La main continue…') + '</div>' + (H.folded[0] || !H.inHand[0] ? '<button class="btn block" data-gact="skip">Passer à la main suivante</button>' : '');
     }

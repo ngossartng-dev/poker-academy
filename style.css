@@ -707,6 +707,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 @media(min-width:1100px) and (min-height:600px){.main:has(.gtab){max-width:1760px}}
 
 /* mise libre */
+.bsz-gs{display:none}
 .bsz{display:flex;flex-direction:column;gap:8px;background:#141418;border:1.5px solid #2c2c33;border-radius:14px;padding:10px 12px}
 .bsz-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.bsz-top span{color:#c9c9cf;font-weight:700}
 .bsz-top b{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-size:30px;color:var(--gold);line-height:1}
@@ -718,3 +719,24 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .bsz-q button{flex:1 0 auto;min-height:38px;padding:4px 8px;border-radius:10px;border:1px solid #3a3a42;background:#202026;color:#fff;font-weight:700;font-size:14px}
 .bsz-q button:active{background:var(--gold);color:#111}
 .bsz>#bszGo{min-height:58px;border-radius:14px;border:0;font-weight:800;font-size:1.1em;color:#fff}
+
+/* téléphone et tablette : boutons compacts, la jauge reste visible sans défiler */
+@media(max-width:1099px),(max-height:599px){
+.act-main,.act-q{gap:8px}
+.act-main button,.act-q button{min-height:48px;font-size:1em;border-radius:12px;padding:4px 6px}
+.act-q.has-bsz .a-raise{display:none}
+.act-main.n3{grid-template-columns:1.1fr 1.3fr .9fr!important}
+.bsz-top,.bsz>small{display:none}
+.bsz>#bszGo{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.bsz-gs{display:block!important;font-size:12px;font-weight:600;opacity:.9}
+.act-q.has-bsz{grid-template-columns:1fr!important}
+.act-q:empty{display:none}
+.bsz{padding:8px 10px;gap:6px}
+.bsz-top b{font-size:24px}
+.bsz small{font-size:12px;margin-top:-2px}
+.bsz-row button{width:40px;height:40px;flex-basis:40px;font-size:22px}
+.bsz-q{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.bsz-q::-webkit-scrollbar{display:none}
+.bsz-q button{flex:0 0 auto;min-height:36px;font-size:13px}
+.bsz>#bszGo{min-height:50px;font-size:1.05em}
+}
