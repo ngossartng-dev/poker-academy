@@ -113,8 +113,9 @@
     }
     var field = [];
     if (opts.mtt) for (var f = 0; f < MTT_FIELD - n; f++) field.push({ stack: opts.chips, bounty: startBounty(opts) });
-    G = { opts: opts, players: players, button: Math.floor(Math.random() * n), level: 0, handNo: 0, hand: null, log: [], stats: { hands: 0, vpip: 0, pfr: 0, pre: { ok: 0, style: 0, err: 0, n: 0 }, post: { ok: 0, n: 0 }, big: [], consult: 0, notes: [], bountyCash: 0, kos: 0, phase: {}, autoHands: 0 }, over: false, place: null, coachMsg: null, busy: false, field: field, mix: mix, nameIdx: n, names: names, keyMsg: null, played: 0 };
+    G = { opts: opts, players: players, button: Math.floor(Math.random() * n), level: 0, handNo: 0, hand: null, log: [], stats: { hands: 0, vpip: 0, pfr: 0, pre: { ok: 0, style: 0, err: 0, n: 0 }, post: { ok: 0, n: 0 }, sol: { n: 0, ok: 0, mix: 0, bad: 0 }, postNotes: [], big: [], consult: 0, notes: [], bountyCash: 0, kos: 0, phase: {}, autoHands: 0 }, over: false, place: null, coachMsg: null, busy: false, field: field, mix: mix, nameIdx: n, names: names, keyMsg: null, played: 0 };
     var pl = PA.player(); pl.last = { route: 'jeu', label: 'Partie en cours' }; PA.save();
+    if (window.PA_SOLVER && !window.PA_SOLVER.data()) try { window.PA_SOLVER.loadData(function () {}); } catch (e) {}
     startHand();
   }
   function alive() { return G.players.filter(function (p) { return p.stack > 0; }); }
@@ -270,6 +271,7 @@
       if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; } else H.sRaises = (H.sRaises || 0) + 1;
     }
     if (H.street === 0 && type === 'call' && H.preRaises === 0 && i !== H.bbSeat) H.limpers++;
+    if (p.stack === 0 && type !== 'fold' && type !== 'check') rec.allin = true;
     H.acted[i] = true; H.actions.push(rec);
     if (i === 0 && H.street === 0 && type !== 'check') { if (type !== 'fold' && !H.vpipCounted) { G.stats.vpip++; H.vpipCounted = true; } if (type === 'raise' && !H.pfrCounted) { G.stats.pfr++; H.pfrCounted = true; } }
   }
@@ -598,6 +600,97 @@
     return { q: q, given: given, j: j };
   }
 
+
+  /* ---------- Après le flop : comparaison avec le solveur (pots à deux joueurs, au flop) ----------
+     La main est rapprochée d'une des situations calculées (ouverture + paye, pot 3-bet, blinde contre blinde, limp-isolement),
+     le flop du flop calculé le plus ressemblant, ta mise de la taille calculée la plus proche (1/3, 1/2, 3/4 du pot, 1,25 pot, tapis). */
+  var PCLS = { UTG: 'utg', 'UTG+1': 'utg', MP: 'utg', LJ: 'hj', HJ: 'hj', CO: 'co', BTN: 'btn', SB: 'sb', BB: 'bb' };
+  var PFORDER = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN'];
+  function cStr(c) { return RCH[cRank(c)] + 'cdhs'[cSuit(c)]; }
+  function solSpotFor(H) {
+    var D = window.PA_SOLVER && window.PA_SOLVER.data(); if (!D) return null;
+    var live = Object.keys(H.inHand).map(Number).filter(function (k) { return !H.folded[k]; });
+    if (live.length !== 2 || live.indexOf(0) < 0 || H.order.length < 3) return null;
+    var v = live[0] === 0 ? live[1] : live[0], ph = H.pos[0], pv = H.pos[v], ch = PCLS[ph], cv = PCLS[pv]; if (!ch || !cv) return null;
+    var cls = function (k) { return PCLS[H.pos[k]]; }, id = null, approx = false;
+    if (H.preRaises === 1 && H.limpers === 0) {
+      var o = H.opener, c = o === 0 ? v : 0, oc = cls(o), cc = cls(c);
+      if ((cc === 'bb' || (cc === 'sb' && oc !== 'bb')) && oc !== 'bb') { id = (oc === 'sb' ? 'sb' : oc) + '-bb'; if (cc === 'sb') approx = true; } // la petite blinde qui paie : comme la grosse blinde
+      else if ((cc === 'btn' || cc === 'co' || cc === 'hj') && PFORDER.indexOf(H.pos[c]) > PFORDER.indexOf(H.pos[o]) && oc !== 'sb' && oc !== 'bb') id = oc === 'co' ? 'co-btn' : 'hj-btn';
+    } else if (H.preRaises === 1 && H.limpers === 1 && H.pfa !== null) {
+      var iso = H.pfa, lim = iso === 0 ? v : 0;
+      if (PFORDER.indexOf(H.pos[iso]) > PFORDER.indexOf(H.pos[lim]) && cls(lim) !== 'sb' && cls(lim) !== 'bb') id = 'limp-iso';
+    } else if (H.preRaises === 0 && H.limpers === 1 && ((ch === 'sb' && cv === 'bb') || (ch === 'bb' && cv === 'sb'))) id = 'sb-limp';
+    else if (H.preRaises === 2 && H.opener !== null && H.pfa !== null && H.pfa !== H.opener && live.indexOf(H.opener) >= 0 && live.indexOf(H.pfa) >= 0) {
+      var tb = cls(H.pfa), op = cls(H.opener);
+      if (tb === 'bb' && (op === 'btn' || op === 'co' || op === 'hj')) id = 'bb3b-btn';
+      else if (tb === 'sb' && op !== 'bb') id = op === 'btn' ? 'sb3b-btn' : 'sb3b-co';
+      else if (tb === 'btn') id = op === 'co' ? 'btn3b-co' : 'btn3b-hj';
+      else if (tb === 'co' && (op === 'hj' || op === 'utg')) id = 'btn3b-hj';
+    }
+    if (!id) return null;
+    var has = function (x) { return D.spots.some(function (s) { return s.id === x; }); };
+    var eff = Math.min(G.players[0].stack + H.bets[0], G.players[v].stack + H.bets[v]) / H.L.bb;
+    if (id === 'btn-bb' && eff <= 21 && has('btn-bb-20')) id = 'btn-bb-20';
+    else if (id === 'btn-bb' && eff >= 50 && has('btn-bb-60')) id = 'btn-bb-60';
+    else if (eff <= 30 && has(id + '-25')) id = id + '-25';
+    var pr = PA.player().profile || 'tag';
+    if ((pr === 'nit' || pr === 'lag') && has(id + '-' + pr)) id = id + '-' + pr;
+    var sp = D.spots.filter(function (s) { return s.id === id; })[0]; if (!sp) return null;
+    var heroOOP = PFORDER.indexOf(ph) < PFORDER.indexOf(pv);
+    return { id: id, sp: sp, side: heroOOP ? 'oop' : 'ip', v: v, approx: approx || (H.preRaises === 2 && H.limpers > 0) };
+  }
+  var BTOK = [['b33', 0.33], ['b50', 0.5], ['b75', 0.75], ['b125', 1.25]];
+  function tokFor(rec, nodes, prefix, isHero, heroType, heroAmt) {
+    var type = isHero ? heroType : rec.type, tc = isHero ? toCall(0) : rec.toCall, pot = isHero ? potTotal() : rec.pot;
+    var key = function (t) { return (prefix ? prefix + '-' : '') + t; };
+    if (type === 'fold') return tc > 0 ? 'f' : 'x';
+    if (type === 'check' || (type === 'call' && tc === 0)) return 'x';
+    if (type === 'call') return 'c';
+    var allin = isHero ? (heroType === 'allin' || heroAmt >= G.players[0].stack + G.hand.bets[0]) : rec.allin;
+    if (tc > 0) return allin && nodes[key('ai')] ? 'ai' : (nodes[key('r')] ? 'r' : 'ai');
+    if (allin && nodes[key('ai')]) return 'ai';
+    var amt = isHero ? heroAmt : rec.amount, frac = amt / Math.max(1, pot), best = null, bd = 9;
+    BTOK.forEach(function (b) { if (nodes[key(b[0])] && Math.abs(b[1] - frac) < bd) { bd = Math.abs(b[1] - frac); best = b[0]; } });
+    return best || (nodes[key('ai')] ? 'ai' : null);
+  }
+  function aCls(a) { return a === 'x' || a === 'c' || a === 'f' ? a : 'agg'; }
+  function solverCheck(type, amt, coteTxt) {
+    var H = G.hand; if (!H || H.street !== 1 || !window.PA_SOLVER || !window.PA_APF || !window.PA_APF.nearest) return;
+    if (!window.PA_SOLVER.data()) { window.PA_SOLVER.loadData(function () {}); return; } // premier passage : on charge les données pour les coups suivants
+    var M = solSpotFor(H); if (!M) return;
+    var flop = H.board.slice(0, 3).map(cStr), hole = H.hole[0].map(cStr), hand0 = G.handNo;
+    var map = window.PA_APF.nearest(M.sp, flop), combo = window.PA_APF.transpose(map, hole).join('');
+    if (type === 'allin') amt = G.players[0].stack + H.bets[0];
+    var recs = H.actions.filter(function (r) { return r.street === 1; }), snap = { pot: potTotal(), tc: toCall(0) };
+    // le chemin des actions déjà jouées au flop, puis ton action
+    window.PA_SOLVER.query(M.id, map.flop, '', combo, function (r0) {
+      if (!r0 || !r0.nodes) return;
+      var nodes = r0.nodes, path = '', ok = true;
+      recs.forEach(function (rec) { if (!ok) return; var t = tokFor(rec, nodes, path, false); if (!t) { ok = false; return; } path = path ? path + '-' + t : t; if (!nodes[path]) ok = false; });
+      if (!ok || nodes[path] === undefined) return;
+      var hT = (function () { var tcH = snap.tc, potH = snap.pot, key = function (t) { return (path ? path + '-' : '') + t; };
+        if (type === 'fold') return tcH > 0 ? 'f' : 'x'; if (type === 'check' || (type === 'call' && tcH === 0)) return 'x'; if (type === 'call') return 'c';
+        var allin = type === 'allin' || amt >= G.players[0].stack + (G.hand.bets[0] || 0);
+        if (tcH > 0) return allin && nodes[key('ai')] ? 'ai' : (nodes[key('r')] ? 'r' : 'ai');
+        var fr = amt / Math.max(1, potH), b = null, bd = 9; BTOK.forEach(function (x) { if (nodes[key(x[0])] && Math.abs(x[1] - fr) < bd) { bd = Math.abs(x[1] - fr); b = x[0]; } });
+        return b || 'ai'; })();
+      window.PA_SOLVER.query(M.id, map.flop, path, combo, function (r) {
+        if (!r) return; var row = r.p || r.mix; if (!row) return;
+        var L = r.a.map(function (a, k) { return [a, row[k]]; }).sort(function (x, y) { return y[1] - x[1]; });
+        var fCls = 0, fTok = 0; L.forEach(function (x) { if (aCls(x[0]) === aCls(hT)) fCls += x[1]; if (x[0] === hT) fTok += x[1]; });
+        var verdict = fCls >= 0.3 ? 'ok' : fCls >= 0.1 ? 'mix' : 'bad';
+        G.stats.sol.n++; G.stats.sol[verdict]++;
+        var AN = window.PA_APF.actName, top = L.filter(function (x) { return x[1] >= 0.05; }).slice(0, 3);
+        var solTxt = top.map(function (x) { return AN(x[0]).toLowerCase() + ' ' + Math.round(x[1] * 100) + ' %'; }).join(', ');
+        var bestAgg = L.filter(function (x) { return aCls(x[0]) === 'agg' && x[0] !== hT; })[0], sizeTip = aCls(hT) === 'agg' && verdict === 'ok' && fTok < 0.1 && bestAgg && bestAgg[1] >= 0.15 ? ' Bonne idée de miser, mais pas cette taille : le solveur préfère « ' + AN(bestAgg[0]).toLowerCase() + ' ».' : '';
+        var msg = '🧮 <b>Solveur</b> (' + M.sp.name.toLowerCase() + (M.approx ? ', situation proche' : '') + (map.exact ? '' : ', flop proche') + ') : tu as joué « ' + AN(hT).toLowerCase() + ' ». Le solveur : ' + solTxt + '.' + (verdict === 'ok' ? ' ✔ Conforme.' + sizeTip : verdict === 'mix' ? ' Jouable, mais ce n’est pas son choix principal.' : ' Écart : il ne joue presque jamais ça ici.') + (!r.p ? ' (Ta main n’est pas dans sa range ici : comparaison avec les mains de la même famille, « ' + (r.cat || '').toLowerCase() + ' ».)' : '');
+        if (verdict !== 'ok' || sizeTip) G.stats.postNotes.push({ kind: 'sol', verdict: verdict === 'ok' ? 'size' : verdict, hand: hand0, cards: H.hole[0].slice(), board: H.board.slice(0, 3), spot: M.id, spotName: M.sp.name, side: M.side, pos: M.side === 'ip' ? M.sp.ip : M.sp.oop, flop: flop, hole: hole, given: AN(hT), sol: solTxt, cat: r.cat || '', exact: map.exact, d25: /-25$/.test(M.id) });
+        if (G.opts.coach && G.hand && G.handNo === hand0) { G.coachMsg = (coteTxt ? coteTxt + '<br>' : '') + msg; if (!G.busy) U().render(); }
+      });
+    });
+  }
+
   /* ---------- Actions du héros ---------- */
   function heroAct(type, amt) {
     var H = G.hand; if (!H || H.toAct !== 0 || H.done) return;
@@ -611,14 +704,16 @@
         if (!r.j.ok) G.stats.notes.push({ hand: G.handNo, code: r.q.hand, cards: H.hole[0].slice(), sit: r.q.sit, given: r.given, answer: r.q.answer, kind: r.j.kind, note: r.j.note || '', profs: r.j.profiles || null, lvl: H.L.sb + '/' + H.L.bb, bb: Math.round((G.players[0].stack + H.bets[0]) / H.L.bb) });
         if (G.opts.coach) G.coachMsg = (r.q.sit.bubble ? '🫧 <b>Bulle, ' + PA.BUBBLE_NAME[r.q.sit.bubble] + '</b> : ' : '') + (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : ''));
       } else if (G.opts.coach) G.coachMsg = null;
-    } else if (G.opts.coach) {
-      var tc = toCall(0), pot = potTotal(), eq = equity(H.hole[0], H.board, Math.max(1, activeCount() - 1), 400), need = tc > 0 ? tc / (pot + tc) : 0;
+    } else {
+      var tc = toCall(0), pot = potTotal(), opp0 = Math.max(1, activeCount() - 1), eq = equity(H.hole[0], H.board, opp0, 400), need = tc > 0 ? tc / (pot + tc) : 0;
       G.stats.post.n++;
-      var good = true, txt = '';
-      if (type === 'fold' && tc > 0 && eq > need + 0.15) { good = false; txt = 'Couché avec ' + Math.round(eq * 100) + ' % d’équité alors qu’il en fallait ' + Math.round(need * 100) + ' % : à revoir (sauf lecture précise de l’adversaire).'; }
-      else if (type === 'call' && eq < need - 0.12) { good = false; txt = 'Payé avec ' + Math.round(eq * 100) + ' % d’équité pour ' + Math.round(need * 100) + ' % nécessaires : la cote n’y est pas.'; }
+      var good = true, txt = '', ctype = null;
+      if (type === 'fold' && tc > 0 && eq > need + 0.15) { good = false; ctype = 'fold'; txt = 'Couché avec ' + Math.round(eq * 100) + ' % d’équité alors qu’il en fallait ' + Math.round(need * 100) + ' % : à revoir (sauf lecture précise de l’adversaire).'; }
+      else if (type === 'call' && tc > 0 && eq < need - 0.12) { good = false; ctype = 'call'; txt = 'Payé avec ' + Math.round(eq * 100) + ' % d’équité pour ' + Math.round(need * 100) + ' % nécessaires : la cote n’y est pas.'; }
       if (good) G.stats.post.ok++;
-      G.coachMsg = txt || null;
+      else G.stats.postNotes.push({ kind: 'cote', hand: G.handNo, cards: H.hole[0].slice(), board: H.board.slice(), street: H.street, given: ctype, eq: eq, need: need, tc: tc, pot: pot, opp: opp0, bb: H.L.bb, txt: txt });
+      if (G.opts.coach) G.coachMsg = txt || null;
+      solverCheck(type, amt, txt);
     }
     if (type === 'fold') act(0, toCall(0) === 0 ? 'check' : 'fold');
     else if (type === 'check') act(0, 'check');
@@ -896,7 +991,8 @@
     if (s.pre.n && s.pre.ok / s.pre.n >= 0.8) good.push('Préflop discipliné : ' + Math.round(s.pre.ok / s.pre.n * 100) + ' % de décisions conformes à ton profil.');
     if (pf >= vp * 0.6 && vp > 0) good.push('Tu joues tes mains en relançant plutôt qu’en payant.');
     if (vp > 0 && pf < vp * 0.5) bad.push('Trop de payes préflop : ' + vp + ' % de mains jouées pour ' + pf + ' % relancées.');
-    if (s.post.n && s.post.ok < s.post.n) bad.push((s.post.n - s.post.ok) + ' décision' + (s.post.n - s.post.ok > 1 ? 's' : '') + ' après le flop contre la cote (paye trop chère ou couché avec beaucoup d’équité).');
+    if (s.post.n && s.post.ok < s.post.n) bad.push((s.post.n - s.post.ok) + ' décision' + (s.post.n - s.post.ok > 1 ? 's' : '') + ' après le flop contre la cote (détail plus bas).');
+    if (s.sol.bad) bad.push(s.sol.bad + ' écart' + (s.sol.bad > 1 ? 's' : '') + ' avec le solveur au flop (détail plus bas).');
     out += '<div class="card stack"><b>Ce qui était bien</b>' + (good.length ? good.map(function (x) { return '<div>• ' + x + '</div>'; }).join('') : '<div class="muted">Pas assez de mains pour en juger.</div>') + '</div>';
     out += '<div class="card stack"><b>À travailler</b>' + (bad.map(function (x) { return '<div>• ' + x + '</div>'; }).join('') || (s.notes.length ? '<div class="muted">Voir tes écarts ci-dessous.</div>' : '<div class="muted">Rien à signaler.</div>')) + '</div>';
     // toutes les mains jouées autrement que ta range, une par une : tes cartes, ce que tu as fait, ce que dit ta range
@@ -911,6 +1007,21 @@
             (n.profs ? '<div class="small muted">Un profil ' + n.profs.map(function (x) { return PA.PROFILES[x].short; }).join(' ou ') + ' l’aurait joué comme toi.</div>' : '') + (n.note ? '<div class="small muted">' + n.note + '</div>' : '') +
             '<button class="btn" data-gact="noteRange" data-v="' + i + '" style="min-height:38px;padding:4px 12px;align-self:flex-start">Voir dans ma range</button></div>';
         }).join('') + '</div>';
+    }
+    // après le flop : erreurs de cote et écarts avec le solveur
+    if (s.sol.n || s.postNotes.length) {
+      var cards = function (L) { return '<span class="ec-cards">' + L.map(function (c) { return cardSmall(c); }).join('') + '</span>'; };
+      out += '<div class="card stack ecarts"><b>Après le flop (' + s.postNotes.length + ' coup' + (s.postNotes.length > 1 ? 's' : '') + ' à revoir)</b><div class="small muted">' +
+        (s.sol.n ? 'Comparé au solveur : ' + s.sol.n + ' décision' + (s.sol.n > 1 ? 's' : '') + ' au flop, ' + s.sol.ok + ' conforme' + (s.sol.ok > 1 ? 's' : '') + ', ' + s.sol.mix + ' jouable' + (s.sol.mix > 1 ? 's' : '') + ', ' + s.sol.bad + ' écart' + (s.sol.bad > 1 ? 's' : '') + '. ' : 'Aucun coup comparable au solveur (il faut un pot à deux joueurs au flop, dans une situation calculée). ') +
+        'Contrôle de la cote : ' + s.post.ok + ' / ' + s.post.n + ' décisions correctes.</div>' +
+        (function (L) { var order = L.map(function (n, i) { return i; }).sort(function (x, y) { return (L[x].kind === 'sol' ? 0 : 1) - (L[y].kind === 'sol' ? 0 : 1) || x - y; }); var h = order.map(function (i) { return rowPN(L[i], i); }); return h.slice(0, 10).join('') + (h.length > 10 ? '<details class="ec-more"><summary>Voir les ' + (h.length - 10) + ' autres</summary>' + h.slice(10).join('') + '</details>' : ''); })(s.postNotes) + '</div>';
+      function rowPN(n, i) {
+          var st = n.kind === 'cote' ? 'ec-err' : n.verdict === 'bad' ? 'ec-err' : 'ec-style';
+          var tag = n.kind === 'cote' ? 'Cote' : n.verdict === 'bad' ? 'Écart solveur' : n.verdict === 'mix' ? 'Jouable' : 'Taille';
+          var head = '<div class="ec-head">' + cards(n.cards) + '<span class="small muted">Main ' + n.hand + ' · tableau</span>' + cards(n.board) + '<span class="ec-tag">' + tag + '</span></div>';
+          if (n.kind === 'cote') return '<div class="ec-row ' + st + '">' + head + '<div>' + ['', 'Au flop', 'À la turn', 'À la river'][n.street] + ' : ' + (n.given === 'fold' ? 'tu t’es couché' : 'tu as payé') + ' ' + PA.fmt(n.tc) + ' pour un pot de ' + PA.fmt(n.pot) + '. Il fallait <b>' + Math.round(n.need * 100) + ' %</b> d’équité, tu en avais environ <b>' + Math.round(n.eq * 100) + ' %</b> contre ' + n.opp + ' main' + (n.opp > 1 ? 's' : '') + ' au hasard.</div><div class="small muted">' + (n.given === 'fold' ? 'Avec autant d’équité, payer est rentable, sauf si tu es sûr que sa range est bien plus forte qu’une main au hasard.' : 'La cote n’y est pas : même contre une main au hasard, tu perds de l’argent à payer.') + '</div></div>';
+          return '<div class="ec-row ' + st + '">' + head + '<div>' + n.spotName + ' · tu es ' + (n.side === 'ip' ? 'en position' : 'hors de position') + (n.cat ? ' · ta main : ' + n.cat.toLowerCase() : '') + '</div><div>Tu as joué : <b>' + n.given + '</b> · Le solveur : <b class="ec-ok">' + n.sol + '</b></div>' + (n.exact ? '' : '<div class="small muted">Flop rapproché du flop calculé le plus ressemblant.</div>') + '<button class="btn" data-gact="postSol" data-v="' + i + '" style="min-height:38px;padding:4px 12px;align-self:flex-start">Revoir dans le solveur</button></div>';
+      }
     }
     var phs = Object.keys(s.phase);
     if (phs.length) out += '<div class="card stack"><b>Par phase du tournoi (décisions préflop)</b><table class="tbl">' + phs.map(function (k) { return '<tr><td>' + k + '</td><td>' + s.phase[k].ok + ' / ' + s.phase[k].n + '</td></tr>'; }).join('') + '</table></div>';
@@ -934,6 +1045,7 @@
     else if (a === 'bszSet' && G.bsz) { G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, parseInt(v, 10))); bszPaint(); }
     else if (a === 'bszStep' && G.bsz) { var stp = G.hand.street === 0 ? G.hand.L.bb : bszStep(); G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, G.bsz.to + (+v) * stp)); bszPaint(); }
     else if (a === 'bszGo' && G.bsz) { if (G.bsz.to >= G.bsz.max) heroAct('allin'); else heroAct('raise', G.bsz.to); }
+    else if (a === 'postSol') { var pn = G.stats.postNotes[parseInt(v, 10)]; if (pn && window.PA_APF) window.PA_APF.open({ pos: pn.pos, spot: pn.spot.replace(/-(25|20|60|nit|lag)$/, ''), side: pn.side, d25: pn.d25, flop: pn.flop, hand: pn.hole }); }
     else if (a === 'noteRange') { var nt = G.stats.notes[parseInt(v, 10)]; if (nt && window.PA_UI_openRange) window.PA_UI_openRange({ sit: nt.sit, hand: nt.code }); }
     else if (a === 'seat') { var sk = parseInt(v, 10); G.pop = sk < 0 || G.pop === sk ? null : sk; U().render(); }
   });
@@ -959,6 +1071,6 @@
   window.PA_GAME = { dealSound: function (a, b) { dealSound(a, b); },
     views: { partie: setupView, jeu: tableView },
     heroRangeCtx: function () { if (!G || !G.hand) return null; var hs = heroSit(); if (G.stats) G.stats.consult++; return hs; },
-    _test: { canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }
+    _test: { solSpot: function () { var M = solSpotFor(G.hand); return M ? { id: M.id, side: M.side } : null; }, canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }
   };
 })();

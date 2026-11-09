@@ -754,3 +754,4 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .ec-tag{margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e03131;color:#fff}
 .ec-style .ec-tag{background:#f2b705;color:#111}
 .ec-ok{color:var(--gold)}
+.ec-more{display:flex;flex-direction:column;gap:10px}.ec-more>summary{cursor:pointer;color:var(--gold);font-weight:700;padding:6px 0}

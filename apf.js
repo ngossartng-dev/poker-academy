@@ -145,5 +145,5 @@
     ST.opp = ''; ST.d25 = !!o.d25; ST.cards = (o.flop || []).concat(o.hand || []); ST.res = null;
     location.hash = '#apf'; if (ST.sc && ST.cards.length === 5) setTimeout(compute, 50);
   }
-  window.PA_APF = { view: view, open: open, scenarios: function (pos) { return window.PA_SOLVER && window.PA_SOLVER.data() ? scList(pos) : SC[pos] || []; }, positions: POS, has25: function (id) { return !!(V25[id] && hasSpot(V25[id])); } };
+  window.PA_APF = { view: view, open: open, nearest: nearest, transpose: transpose, spotOf: spotOf, SIZE: SIZE, actName: actName, scenarios: function (pos) { return window.PA_SOLVER && window.PA_SOLVER.data() ? scList(pos) : SC[pos] || []; }, positions: POS, has25: function (id) { return !!(V25[id] && hasSpot(V25[id])); } };
 })();
