@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.31.0';
+  var VERSION = '2.31.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -1036,6 +1036,6 @@
     document.addEventListener('scroll', hide, true);
   })();
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
-  window.PA_UI = { version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, IC: IC };
+  window.PA_UI = { version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, handText: handText, IC: IC };
   render();
 })();

@@ -744,3 +744,13 @@ textarea.tn-in{width:100%;padding:8px 12px}
 /* téléphone : 6e onglet « Moi » (profil, réglages, sauvegarde, mise à jour) */
 .nav.n6{grid-template-columns:repeat(6,minmax(0,1fr))}.nav.n6 a{font-size:11.5px;letter-spacing:-.1px;white-space:nowrap}
 .nav .ns{display:none}@media(max-width:400px){.nav .nl{display:none}.nav .ns{display:inline}}
+
+/* bilan : mains jouées autrement que la range */
+.ecarts{gap:10px}
+.ec-row{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:#141418;border-left:4px solid #e03131}
+.ec-row.ec-style{border-left-color:#f2b705}
+.ec-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ec-cards{display:inline-flex;gap:3px}
+.ec-tag{margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e03131;color:#fff}
+.ec-style .ec-tag{background:#f2b705;color:#111}
+.ec-ok{color:var(--gold)}

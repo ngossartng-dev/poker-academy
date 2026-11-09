@@ -608,7 +608,7 @@
         G.stats.pre.n++; if (r.j.ok) G.stats.pre.ok++; else if (r.j.kind === 'style') G.stats.pre.style++; else G.stats.pre.err++;
         var ph = H.phase || 'Début et milieu'; G.stats.phase[ph] = G.stats.phase[ph] || { n: 0, ok: 0 }; G.stats.phase[ph].n++; if (r.j.ok) G.stats.phase[ph].ok++;
         var pl = PA.player(); PA.updateNotion(pl, PA.notionOf(r.q.sit), 1350, r.j.ok ? 1 : (r.j.kind === 'style' ? 0.5 : 0)); if (!r.j.ok) PA.srsMiss(pl, PA.sitKey(r.q.sit) + '#' + r.q.hand, { sit: r.q.sit, hand: r.q.hand }); PA.save();
-        if (!r.j.ok) G.stats.notes.push({ hand: G.handNo, code: r.q.hand, sit: r.q.sit, given: r.given, answer: r.q.answer, kind: r.j.kind });
+        if (!r.j.ok) G.stats.notes.push({ hand: G.handNo, code: r.q.hand, cards: H.hole[0].slice(), sit: r.q.sit, given: r.given, answer: r.q.answer, kind: r.j.kind, note: r.j.note || '', profs: r.j.profiles || null, lvl: H.L.sb + '/' + H.L.bb, bb: Math.round((G.players[0].stack + H.bets[0]) / H.L.bb) });
         if (G.opts.coach) G.coachMsg = (r.q.sit.bubble ? '🫧 <b>Bulle, ' + PA.BUBBLE_NAME[r.q.sit.bubble] + '</b> : ' : '') + (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : ''));
       } else if (G.opts.coach) G.coachMsg = null;
     } else if (G.opts.coach) {
@@ -898,7 +898,20 @@
     if (vp > 0 && pf < vp * 0.5) bad.push('Trop de payes préflop : ' + vp + ' % de mains jouées pour ' + pf + ' % relancées.');
     if (s.post.n && s.post.ok < s.post.n) bad.push((s.post.n - s.post.ok) + ' décision' + (s.post.n - s.post.ok > 1 ? 's' : '') + ' après le flop contre la cote (paye trop chère ou couché avec beaucoup d’équité).');
     out += '<div class="card stack"><b>Ce qui était bien</b>' + (good.length ? good.map(function (x) { return '<div>• ' + x + '</div>'; }).join('') : '<div class="muted">Pas assez de mains pour en juger.</div>') + '</div>';
-    out += '<div class="card stack"><b>À travailler</b>' + (bad.concat(s.notes.slice(0, 8).map(function (n) { return 'Main ' + n.hand + ' : ' + n.code + ', ' + ui.describeSit(n.sit) + ' → ' + ui.actName(n.answer, n.sit) + (n.kind === 'style' ? ' (écart de style)' : ''); })).map(function (x) { return '<div>• ' + x + '</div>'; }).join('') || '<div class="muted">Rien à signaler.</div>') + '</div>';
+    out += '<div class="card stack"><b>À travailler</b>' + (bad.map(function (x) { return '<div>• ' + x + '</div>'; }).join('') || (s.notes.length ? '<div class="muted">Voir tes écarts ci-dessous.</div>' : '<div class="muted">Rien à signaler.</div>')) + '</div>';
+    // toutes les mains jouées autrement que ta range, une par une : tes cartes, ce que tu as fait, ce que dit ta range
+    if (s.notes.length) {
+      var nE = s.notes.filter(function (n) { return n.kind !== 'style'; }).length, nS = s.notes.length - nE;
+      out += '<div class="card stack ecarts"><b>Tes mains jouées autrement que ta range (' + s.notes.length + ')</b><div class="small muted">' + (nE ? nE + ' erreur' + (nE > 1 ? 's' : '') : '') + (nE && nS ? ' · ' : '') + (nS ? nS + ' écart' + (nS > 1 ? 's' : '') + ' de style (jouable par un autre profil)' : '') + '. Elles reviennent aussi dans ta Séance du jour pour être revues.</div>' +
+        s.notes.map(function (n, i) {
+          var giv = n.given === 'fold' && n.sit.type === 'iso' && n.sit.pos === 'BB' ? 'Checker' : ui.actName(n.given, n.sit);
+          return '<div class="ec-row ' + (n.kind === 'style' ? 'ec-style' : 'ec-err') + '"><div class="ec-head"><span class="ec-cards">' + (n.cards ? n.cards.map(function (c) { return cardSmall(c); }).join('') : '<b>' + n.code + '</b>') + '</span><span class="small muted">Main ' + n.hand + (n.lvl ? ' · blindes ' + n.lvl : '') + (n.bb ? ' · ' + n.bb + ' BB' : '') + '</span><span class="ec-tag">' + (n.kind === 'style' ? 'Écart de style' : 'Erreur') + '</span></div>' +
+            '<div>' + ui.describeSit(n.sit).replace(/^./, function (c) { return c.toUpperCase(); }) + '</div>' +
+            '<div>Tu as joué : <b>' + giv + '</b> · Ta range : <b class="ec-ok">' + ui.actName(n.answer, n.sit) + '</b></div>' +
+            (n.profs ? '<div class="small muted">Un profil ' + n.profs.map(function (x) { return PA.PROFILES[x].short; }).join(' ou ') + ' l’aurait joué comme toi.</div>' : '') + (n.note ? '<div class="small muted">' + n.note + '</div>' : '') +
+            '<button class="btn" data-gact="noteRange" data-v="' + i + '" style="min-height:38px;padding:4px 12px;align-self:flex-start">Voir dans ma range</button></div>';
+        }).join('') + '</div>';
+    }
     var phs = Object.keys(s.phase);
     if (phs.length) out += '<div class="card stack"><b>Par phase du tournoi (décisions préflop)</b><table class="tbl">' + phs.map(function (k) { return '<tr><td>' + k + '</td><td>' + s.phase[k].ok + ' / ' + s.phase[k].n + '</td></tr>'; }).join('') + '</table></div>';
     if (s.big.length) out += '<div class="card stack"><b>Gros pots</b>' + s.big.slice(-6).map(function (b) { return '<div>Main ' + b.hand + ' : ' + (b.net > 0 ? '+' : '') + PA.fmt(b.net) + (b.cat ? ' (' + b.cat + ')' : '') + '</div>'; }).join('') + '</div>';
@@ -921,6 +934,7 @@
     else if (a === 'bszSet' && G.bsz) { G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, parseInt(v, 10))); bszPaint(); }
     else if (a === 'bszStep' && G.bsz) { var stp = G.hand.street === 0 ? G.hand.L.bb : bszStep(); G.bsz.to = Math.max(G.bsz.min, Math.min(G.bsz.max, G.bsz.to + (+v) * stp)); bszPaint(); }
     else if (a === 'bszGo' && G.bsz) { if (G.bsz.to >= G.bsz.max) heroAct('allin'); else heroAct('raise', G.bsz.to); }
+    else if (a === 'noteRange') { var nt = G.stats.notes[parseInt(v, 10)]; if (nt && window.PA_UI_openRange) window.PA_UI_openRange({ sit: nt.sit, hand: nt.code }); }
     else if (a === 'seat') { var sk = parseInt(v, 10); G.pop = sk < 0 || G.pop === sk ? null : sk; U().render(); }
   });
   function fastForward() {
