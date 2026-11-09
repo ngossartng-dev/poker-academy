@@ -607,7 +607,7 @@
         n._c.forEach(function (c, i) { if (category(c, flop) !== cat) return; var row = n._m[i], s0 = row.reduce(function (x, y) { return x + y; }, 0); if (s0 < 0.5) return; mix = mix || n.a.map(function () { return 0; }); row.forEach(function (v, j) { mix[j] += v / s0; }); k++; });
         if (mix) mix = mix.map(function (v) { return v / k; });
         var row = idx >= 0 ? n._m[idx] : null, tot = row ? row.reduce(function (x, y) { return x + y; }, 0) : 0;
-        cb({ a: n.a, p: row && tot > 0.5 ? row.map(function (v) { return v / tot; }) : null, mix: mix, cat: cat, pot: n.pot, call: n.call, stack: S.stack, nodes: S.nodes });
+        cb({ a: n.a, i: idx, combo: idx >= 0 ? n._c[idx] : null, p: row && tot > 0.5 ? row.map(function (v) { return v / tot; }) : null, mix: mix, cat: cat, pot: n.pot, call: n.call, stack: S.stack, nodes: S.nodes });
       }
       if (ensureSpot(spot, run)) run();
     });

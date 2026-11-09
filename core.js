@@ -249,7 +249,7 @@
   var NOTIONS = {
     open_early: 'Ouvrir en début de table', open_mid: 'Ouvrir en milieu de table', open_late: 'Ouvrir en fin de table',
     open_sb: 'Ouvrir de la petite blinde', bb_def: 'Défendre la grosse blinde', cold: 'Face à une relance (hors BB)',
-    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB', bulle: 'Jouer la bulle', iso: 'Isoler un limper', squeeze: 'Squeezer'
+    vs3bet: 'Face à un 3-bet', push: 'Tapis ou fold (moins de 20 BB)', callshove: 'Payer un tapis', mid: 'Tapis de 20 à 40 BB', bulle: 'Jouer la bulle', iso: 'Isoler un limper', squeeze: 'Squeezer', postflop: 'Jouer après le flop'
   };
   function notionOf(s) {
     if (s.bubble) return 'bulle';

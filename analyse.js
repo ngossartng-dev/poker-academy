@@ -289,6 +289,26 @@
   }
 
   /* ---------- Stockage (compact) ---------- */
+
+  /* ---------- Mains jouées dans l'appli (tables d'entraînement) ----------
+     La partie envoie chaque main jouée sous une forme simple ; on la met au format d'une main importée,
+     pour qu'elle compte dans les statistiques, les fuites, la progression et la revue (marquée « appli »). */
+  function appHand(o) {
+    var h = { id: o.id, date: o.date, game: 'Entraînement', tour: o.tour, tid: o.tid, cash: false, buyin: 0, bounty: !!o.bounty, level: o.level, ante: o.ante || 0, sb: o.sb, bb: o.bb,
+      seats: o.seats, acts: o.acts, board: o.board || [], won: {}, shown: o.shown || {}, invest: o.invest || {}, hero: o.hero, cards: o.c1 + ' ' + o.c2, hand: handCode(o.c1, o.c2), btn: o.btn, sd: !!o.sd, max: o.max };
+    computeInvest(h);
+    var pm = positions(h.seats.map(function (s) { return s.seat; }).sort(function (x, y) { return x - y; }), h.btn);
+    h.pos = {}; h.seats.forEach(function (s) { h.pos[s.name] = pm[s.seat]; }); h.n = h.seats.length;
+    h.seats.forEach(function (s) { var end = o.end[s.name]; if (end === undefined) return; var w = end - s.stack + (h.total[s.name] || 0); if (w > 0.5) h.won[s.name] = w; });
+    var r = compact(h); r.src = 'app'; return r;
+  }
+  function addAppHands(list) {
+    if (!list || !list.length) return 0;
+    var db = loadDB(), have = {}; db.hands.forEach(function (x) { have[x.id] = 1; }); var n = 0;
+    list.forEach(function (o) { if (have[o.id]) return; try { db.hands.push(appHand(o)); n++; } catch (e) {} });
+    if (n) { db.hands.sort(function (p, q) { return p.d < q.d ? -1 : (p.d > q.d ? 1 : 0); }); saveDB(db); }
+    return n;
+  }
   function key() { var p = PA.player(); return 'pa2hh_' + (p ? p.id : 'x'); }
   function loadDB() { var S = window.PA_STORE; if (S) { var v = S.get(key()); return v || { hands: [], hero: null }; } try { return JSON.parse(localStorage.getItem(key()) || 'null') || { hands: [], hero: null }; } catch (e) { return { hands: [], hero: null }; } }
   function saveDB(db) {
@@ -374,14 +394,14 @@
   /* ---------- Dernières récupérations ---------- */
   function dtf(t) { var d = new Date(t); return d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
   function ago(t) { var m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'à l’instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'il y a ' + Math.round(m / 1440) + ' j'; }
-  function lastHandDate(db) { var W = db.hands.filter(function (x) { return x.src !== 'club'; }); var d = W.length ? W[W.length - 1].d : null; return d ? new Date(d.replace(' ', 'T').slice(0, 19)) : null; }
+  function lastHandDate(db) { var W = db.hands.filter(function (x) { return x.src !== 'club' && x.src !== 'app'; }); var d = W.length ? W[W.length - 1].d : null; return d ? new Date(d.replace(' ', 'T').slice(0, 19)) : null; }
   function importInfo(db) {
     var ui = U(), I = db.imp || [], L = I[0], chk = null; try { chk = JSON.parse(localStorage.getItem('pa2impchk') || 'null'); } catch (e) {}
     var lh = lastHandDate(db), srcTxt = function (x) { return (x.src === 'winamax' ? 'Winamax, automatique' : 'fichiers importés') + ' · sur le ' + (x.dev || 'PC'); };
     var h = '<div class="card stack imp-card"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>📥 Dernière récupération</b>' + (L ? '<span class="imp-ago">' + ago(L.at) + '</span>' : '') + '</div>';
     if (L) h += '<div class="imp-main"><b>+' + L.added + '</b><span>main' + (L.added > 1 ? 's' : '') + ' le ' + dtf(L.at) + '</span></div><div class="small muted">' + srcTxt(L) + '</div>';
     else h += '<div class="small muted">Pas encore de récupération enregistrée depuis cette mise à jour : la prochaine s’affichera ici.</div>';
-    h += '<div class="imp-grid"><div><span>Mains en tout</span><b>' + db.hands.filter(function (x) { return x.src !== 'club'; }).length + '</b></div><div><span>Dernière main jouée</span><b>' + (lh && !isNaN(lh) ? lh.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + lh.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—') + '</b></div>' +
+    h += '<div class="imp-grid"><div><span>Mains en tout</span><b>' + db.hands.filter(function (x) { return x.src !== 'club' && x.src !== 'app'; }).length + '</b></div><div><span>Dernière main jouée</span><b>' + (lh && !isNaN(lh) ? lh.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + lh.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—') + '</b></div>' +
       (chk ? '<div><span>Dernière vérification</span><b>' + ago(chk.at) + '</b></div>' : '') + '</div>';
     if (I.length > 1) h += '<details><summary class="small" style="cursor:pointer">Historique des récupérations (' + I.length + ')</summary><table class="tbl" style="font-size:.9em;margin-top:6px"><tr><th>Quand</th><th>Mains</th><th>Source</th></tr>' + I.slice(0, 15).map(function (x) { return '<tr><td>' + dtf(x.at) + '</td><td>+' + x.added + '</td><td class="small">' + srcTxt(x) + '</td></tr>'; }).join('') + '</table></details>';
     if (!pcApp() && window.PAAndroid) h += '<div class="small muted">Sur le téléphone, les mains arrivent du PC par la synchronisation (Moi › Sauvegarde).</div>';
@@ -477,7 +497,7 @@
   function cardsTxt(c) { if (!c) return ''; return c.split(' ').map(function (x) { var su = SUITS[x[1]] || ['?', 0]; return (x[0] === 'T' ? '10' : x[0]) + '<span style="color:' + (su[1] ? '#ff5a5a' : '#fff') + '">' + su[0] + '</span>'; }).join(' '); }
   function boardTxt(line) { return line.replace(/\b([2-9TJQKA][shdc])\b/g, function (m) { return cardsTxt(m); }); }
   function filtered(db) {
-    var src = AV.src || 'all', H = db.hands.filter(function (x) { return src === 'all' || (src === 'club' ? x.src === 'club' : x.src !== 'club'); });
+    var src = AV.src || 'all', H = db.hands.filter(function (x) { return src === 'all' || (src === 'club' ? x.src === 'club' : src === 'app' ? x.src === 'app' : (x.src !== 'club' && x.src !== 'app')); });
     if (AV.per === 'all' || !H.length) return H;
     var days = AV.per === '7' ? 7 : 30, last = H[H.length - 1].d.slice(0, 10);
     var lim = new Date(new Date(last + 'T00:00:00Z').getTime() - days * 86400000).toISOString().slice(0, 10);
@@ -535,7 +555,7 @@
     var T = [['resume', 'Résumé'], ['positions', 'Par position'], ['progres', 'Progression'], ['fuites', 'Fuites'], ['postflop', 'Après le flop'], ['coups', 'Coups clés'], ['tournois', 'Tournois'], ['club', 'Club'], ['adv', 'Adversaires'], ['import', 'Importer']];
     return '<div class="seg">' + T.map(function (t) { return '<button class="' + (AV.tab === t[0] ? 'on' : '') + '" data-hact="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
       (AV.tab === 'import' || AV.tab === 'club' || AV.tab === 'adv' || AV.tab === 'progres' ? '' : '<div class="seg">' + [['all', 'Tout'], ['30', '30 jours'], ['7', '7 jours']].map(function (t) { return '<button class="' + (AV.per === t[0] ? 'on' : '') + '" data-hact="per" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
-        [['all', 'Winamax + club'], ['wina', 'Winamax'], ['club', 'Club']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
+        [['all', 'Tout'], ['wina', 'Winamax'], ['club', 'Club'], ['app', 'Appli']].map(function (t) { return '<button class="' + ((AV.src || 'all') === t[0] ? 'on' : '') + '" data-hact="src" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>');
   }
 
   // repères (profil TAG, ranges de l’appli et solveur) et renvois aux chapitres
@@ -738,10 +758,11 @@
   }
   function view() {
     if (window.PA_STORE && !window.PA_STORE.ready()) { window.PA_STORE.whenReady(function () { U().render(); }); return U().shell('analyser', '<div class="stack"><h1>Analyser</h1><p class="muted">Chargement de tes mains…</p></div>'); }
-    var qm = /[?&](club|adv)\b/.exec(location.hash); if (qm && AV._q !== location.hash) { AV.tab = qm[1]; } AV._q = location.hash;
+    var qm = /[?&](club|adv)\b/.exec(location.hash); if (qm && AV._q !== location.hash) { AV.tab = qm[1]; } if (/[?&]app\b/.test(location.hash) && AV._q !== location.hash) { AV.src = 'app'; AV.tab = 'resume'; } AV._q = location.hash;
     var ui = U(), db = loadDB(), p = window.PA.player(), prof = p.profile || 'tag';
     var body = '<div class="stack"><h1>Analyser</h1>';
     body += '<a class="card row" href="#bankroll" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>Bankroll</b><span class="small muted"> · résultats, ROI, variance</span></span><span style="color:var(--gold)">›</span></a>';
+    body += '<a class="card row" href="#mestournois" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>📈 Mes tournois d’entraînement</b><span class="small muted"> · les parties jouées dans l’appli</span></span><span style="color:var(--gold)">›</span></a>';
     if (!db.hands.length) {
       if (AV.tab === 'club') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button>' + clubTab(db) + '</div>');
       if (AV.tab === 'adv') return ui.shell('analyser', body + '<button class="back" data-hact="tab" data-v="resume">‹ Analyser</button><h2>Adversaires du club</h2>' + carnetTab() + '</div>');
@@ -751,9 +772,9 @@
       return ui.shell('analyser', body + '</div>');
     }
     var H = filtered(db), S = stats(H, prof);
-    var nc = db.hands.filter(function (x) { return x.src === 'club'; }).length;
-    body += '<div class="muted small">' + (db.hands.length - nc) + ' mains Winamax' + (db.hero ? ' (<b>' + ui.esc(db.hero) + '</b>)' : '') + ' · ' + nc + ' mains du club</div>' + tabs();
-    if (AV.tab === 'resume') body += importInfo(db) + resume(H, S, prof);
+    var nc = db.hands.filter(function (x) { return x.src === 'club'; }).length, na = db.hands.filter(function (x) { return x.src === 'app'; }).length;
+    body += '<div class="muted small">' + (db.hands.length - nc - na) + ' mains Winamax' + (db.hero ? ' (<b>' + ui.esc(db.hero) + '</b>)' : '') + ' · ' + nc + ' mains du club · ' + na + ' mains jouées dans l’appli</div>' + tabs();
+    if (AV.tab === 'resume') body += (AV.src === 'app' ? '' : importInfo(db)) + resume(H, S, prof);
     else if (AV.tab === 'positions') body += positionsTab(S);
     else if (AV.tab === 'progres') body += progresTab(db.hands, prof);
     else if (AV.tab === 'fuites') { AV.S = S; body += fuitesTab(S); }
@@ -1105,6 +1126,6 @@
 
   document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-hfile') === 'mains' && t.files && t.files[0]) { var r = new FileReader(); r.onload = function () { importHands(String(r.result)); U().render(); }; r.readAsText(t.files[0]); } });
   if (window.PA_STORE) window.PA_STORE.whenReady(function () { setTimeout(function () { if (U() && U().render && window.PA.player()) U().render(); }, 0); });
-  window.PA_HH = { moves: moves, flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
+  window.PA_HH = { addAppHands: addAppHands, appHand: appHand, moves: moves, flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
     view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'tag')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'tag') : null; }, clear: function () { if (window.PA_STORE) window.PA_STORE.del(key()); try { localStorage.removeItem(key()); } catch (e) {} } };
 })();
