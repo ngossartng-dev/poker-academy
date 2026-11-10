@@ -437,7 +437,7 @@
   function ST(P) { return STYLE[P.key] || STYLE.reg; }
   function clubTable() { return G.opts.table === 'club' || G.opts.table === 'monclub'; }
   // au club, pas de limp (sauf en heads-up) : on relance ou on se couche
-  function noLimp() { var H = G.hand; return clubTable() && H && H.order.length > 2; }
+  function noLimp() { var H = G.hand; if (!clubTable() || !H || H.order.length <= 2) return false; var live = Object.keys(H.inHand).filter(function (k) { return !H.folded[k]; }).length; return live > 2; } // la petite blinde peut compléter quand il ne reste que les deux blindes
   function wetBoard(B) { var s = {}, r = B.map(function (c) { s[cSuit(c)] = (s[cSuit(c)] || 0) + 1; return cRank(c); }).sort(function (a, b) { return a - b; }); var fl = Object.keys(s).some(function (k) { return s[k] >= 2; }); var co = false; for (var q = 1; q < r.length; q++) if (r[q] - r[q - 1] > 0 && r[q] - r[q - 1] <= 2) co = true; return fl || co; }
   function openSize(P, L, pos) {
     var S = ST(P), x;
@@ -941,7 +941,7 @@
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
-      (SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up) — on relance ou on se couche.</div>' : '') +
+      (SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up, et la petite blinde qui complète quand tout le monde s’est couché) — on relance ou on se couche.</div>' : '') +
       '<div class="small muted">Chaque adversaire mise à sa façon, selon son profil (le nit petit et honnête, le maniac énorme, le fantasque au hasard…) : touche un joueur à la table pour voir son style.</div>' +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
