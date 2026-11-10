@@ -295,6 +295,7 @@
       if (to > H.cur) H.cur = to;
       H.bets[i] = to; rec.amount = to; if (p.stack === 0) H.allin[i] = true;
       if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; } else H.sRaises = (H.sRaises || 0) + 1;
+      H.lastAggressor = i;
     }
     if (H.street === 0 && type === 'call' && H.preRaises === 0 && i !== H.bbSeat) H.limpers++;
     if (p.stack === 0 && type !== 'fold' && type !== 'check') rec.allin = true;
@@ -419,6 +420,41 @@
     grosses: { open: null, bet: [0.66, 1], strong: 1, raise: 3.2, wildMax: 1.25, threeIP: 3.3, threeOOP: 4, four: 2.3 }
   };
   function SZ() { return SIZING[G.opts.sizing] || SIZING.club; }
+  /* ---------- Chaque profil a sa façon de miser (plus de réglage global) ----------
+     open : ouverture en BB ; three : 3-bet [en position, hors position] ; four : 4-bet ; raise : relance après le flop (× la mise) ;
+     dry / wet : mise normale sur tableau sec / dangereux (fraction du pot) ; strong : avec une grosse main ; bluff : en bluff ; over : part d'overbets. */
+  var STYLE = {
+    nit: { open: 2.2, three: [3, 3.5], four: 2.2, raise: 2.5, dry: 0.33, wet: 0.5, strong: 0.75, bluff: 0.33, over: 0, txt: 'mises petites et régulières ; une grosse mise, c’est une grosse main (il bluffe très peu)' },
+    reg: { open: 2.3, three: [3, 3.6], four: 2.2, raise: 2.8, dry: 0.33, wet: 0.66, strong: 0.66, bluff: 0.66, over: 0.03, txt: 'tailles cohérentes : petit sur tableau sec, deux tiers sur tableau dangereux, mêmes tailles en bluff et en valeur' },
+    lag: { open: 2.5, three: [3.3, 4], four: 2.3, raise: 3, dry: 0.5, wet: 0.75, strong: 0.85, bluff: 0.75, over: 0.15, txt: 'grosses mises et overbets, autant en bluff qu’en valeur : il met la pression' },
+    lp: { open: 3, three: [3, 3.5], four: 2.2, raise: 2.5, dry: 0.33, wet: 0.4, strong: 0.5, bluff: 0.33, over: 0, txt: 'limpe souvent, mise petit ; une relance de sa part est sérieuse' },
+    station: { open: 2, three: [3, 3], four: 2.1, raise: 2, dry: 0.25, wet: 0.33, strong: 0.5, bluff: 0.25, over: 0, txt: 'mises minimum, paie presque tout ; quand il relance, c’est un monstre' },
+    maniac: { open: 3.5, three: [4, 5], four: 2.5, raise: 3.5, dry: 0.75, wet: 1, strong: 1, bluff: 1, over: 0.3, txt: 'tailles énormes et imprévisibles (pot, overbet, tapis) : il bluffe beaucoup' },
+    fan: { open: 0, three: [3, 4], four: 2.3, raise: 0, dry: 0, wet: 0, strong: 0, bluff: 0, over: 0.1, wild: true, txt: 'tailles au hasard : la taille de sa mise ne veut presque rien dire' },
+    surv: { open: 2, three: [3, 3.5], four: 2.2, raise: 2.5, dry: 0.33, wet: 0.5, strong: 0.6, bluff: 0.33, over: 0, txt: 'mises prudentes, se couche face à la pression près des places payées' }
+  };
+  Object.keys(OPP).forEach(function (k) { OPP[k].key = k; });
+  function ST(P) { return STYLE[P.key] || STYLE.reg; }
+  function clubTable() { return G.opts.table === 'club' || G.opts.table === 'monclub'; }
+  function wetBoard(B) { var s = {}, r = B.map(function (c) { s[cSuit(c)] = (s[cSuit(c)] || 0) + 1; return cRank(c); }).sort(function (a, b) { return a - b; }); var fl = Object.keys(s).some(function (k) { return s[k] >= 2; }); var co = false; for (var q = 1; q < r.length; q++) if (r[q] - r[q - 1] > 0 && r[q] - r[q - 1] <= 2) co = true; return fl || co; }
+  function openSize(P, L, pos) {
+    var S = ST(P), x;
+    if (S.wild) x = [2, 2, 2.5, 3, 3, 4, 5][Math.floor(Math.random() * 7)];
+    else if (P.key === 'maniac') x = Math.random() < 0.3 ? 4 : 3;
+    else if (P.key === 'reg') x = clubTable() ? 2 : (L.ante ? 2.2 : 2.5);
+    else x = S.open;
+    if (pos === 'SB' && !S.wild) x = Math.max(x, 3);
+    return x;
+  }
+  function postSize(P, eq, pot, strong) {
+    var S = ST(P), H = G.hand;
+    if (S.wild) return [0.25, 0.33, 0.5, 0.75, 1, 1.5][Math.floor(Math.random() * 6)];
+    var f = strong ? S.strong : (eq < 0.35 ? S.bluff : (wetBoard(H.board) ? S.wet : S.dry));
+    if (Math.random() < S.over && (strong || eq < 0.3)) f = 1.25 + Math.random() * 0.5;
+    if (clubTable() && !S.over) f = Math.min(f, 0.66);
+    return f;
+  }
+  function raiseMult(P) { var S = ST(P); if (S.wild) return [2, 2.5, 3, 4][Math.floor(Math.random() * 4)]; if (P.key === 'maniac' && Math.random() < 0.3) return 2; return S.raise; }
   function botDecide(i) {
     var H = G.hand, p = G.players[i], P = OPP[p.prof], L = H.L, tc = toCall(i), bbs = p.stack / L.bb, pot = potTotal();
     var code = handCode(H.hole[i][0], H.hole[i][1]), hp = PCT[code];
@@ -437,8 +473,8 @@
       }
       if (H.preRaises === 0) {
         var openP = Math.min(hu ? 0.85 : 0.6, P.pfr * late + wild);
-        if (hp < openP) { var std = SZ().open || ((G.opts.table === 'club' || G.opts.table === 'monclub') ? 2 : (L.ante ? 2.2 : 2.5)); var sz = L.bb * (P.wild ? (G.opts.sizing === 'club' ? [2, 2, 2, 2.5, 3, 3] : [2, 2, 2.5, 3, 4, 5])[Math.floor(Math.random() * 6)] : (pos === 'SB' ? 3 : std)) + H.limpers * L.bb; if (P.name === 'Maniac') sz *= G.opts.sizing === 'club' ? 1.2 : 1.4; return ['raise', Math.round(sz)]; }
-        var limpR = P.limp > 0 ? P.limp : (P.name === 'Maniac' ? 0 : (G.opts.sizing === 'club' ? 0.3 : G.opts.sizing === 'grosses' ? 0.05 : 0.15));
+        if (hp < openP) { var sz = L.bb * openSize(P, L, pos) + H.limpers * L.bb; if (sz > (p.stack + H.bets[i]) * 0.45) sz = p.stack + H.bets[i]; return ['raise', Math.round(sz)]; }
+        var limpR = P.limp > 0 ? P.limp : (P.name === 'Maniac' ? 0 : (clubTable() ? 0.3 : 0.12));
         if (hp < Math.min(hu ? 0.95 : 0.7, P.vpip * late + wild) && (i === H.bbSeat || Math.random() < (P.limp > 0 ? 1 : limpR))) return tc === 0 ? ['check'] : ['call'];
         return tc === 0 ? ['check'] : ['fold'];
       }
@@ -468,7 +504,7 @@
         var bmap = { nit: 'nit', surv: 'nit', reg: 'tag', lag: 'lag', maniac: 'lag', lp: 'equilibre', station: 'equilibre', fan: 'equilibre' }, bk = 'tag';
         Object.keys(OPP).forEach(function (k) { if (OPP[k] === P) bk = bmap[k] || 'tag'; });
         var bact = PA.chart(bk, { type: 'vs3bet', scen: 'bvb', bb: 100 })[code];
-        if (bact === 'fourbet' || bact === 'allin') { var t4 = H.cur * SZ().four; if (t4 > (p.stack + H.bets[i]) * 0.4) t4 = p.stack + H.bets[i]; return ['raise', Math.round(t4)]; }
+        if (bact === 'fourbet' || bact === 'allin') { var t4 = H.cur * ST(P).four; if (t4 > (p.stack + H.bets[i]) * 0.4) t4 = p.stack + H.bets[i]; return ['raise', Math.round(t4)]; }
         if (bact === 'call' || (P.sticky >= 0.6 && hp < 0.35 && Math.random() < P.sticky * 0.5)) return ['call'];
         return ['fold'];
       }
@@ -478,7 +514,7 @@
       var light = lightOK && Math.random() < P.light * (callers > 0 ? 1.15 : 1);
       if (hp < threeP || light) {
         if (H.preRaises >= 3 && hp > 0.02) return hp < callP * 0.3 ? ['call'] : (tc === 0 ? ['check'] : ['fold']); // 5-bet : seulement les monstres
-        var to = H.preRaises >= 2 ? H.cur * SZ().four : (H.cur * (pos === 'BTN' || pos === 'CO' ? SZ().threeIP : SZ().threeOOP) + callers * H.cur + (i === H.bbSeat || pos === 'SB' ? L.bb : 0));
+        var to = H.preRaises >= 2 ? H.cur * ST(P).four : (H.cur * (pos === 'BTN' || pos === 'CO' ? ST(P).three[0] : ST(P).three[1]) + callers * H.cur + (i === H.bbSeat || pos === 'SB' ? L.bb : 0));
         if (effBB <= 30 && H.preRaises === 1) to = p.stack + H.bets[i]; // 20-30 BB : 3-bet et squeeze à tapis
         if (to > (p.stack + H.bets[i]) * 0.4) to = p.stack + H.bets[i]; return ['raise', Math.round(to)];
       }
@@ -492,14 +528,14 @@
       var po = tc / (pot + tc), sr = H.sRaises || 0, big = tc > (pot - tc) * 0.8, multi = opp >= 2;
       var betR = Math.min(1.5, tc / Math.max(1, pot - tc)); eq = eq - 0.1 - 0.12 * betR - (sr ? 0.08 : 0) + P.sticky * 0.06; // range de mise adverse plus forte qu'une main au hasard
       // une relance au plus par tour, une sur-relance seulement avec une main énorme
-      if (sr <= 1 && eq > (sr ? 0.8 : 0.68) && Math.random() < P.agg * (sr ? 0.5 : 1)) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * SZ().raise))];
+      if (sr <= 1 && eq > (sr ? 0.8 : 0.68) && Math.random() < P.agg * (sr ? 0.5 : 1)) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * raiseMult(P)))];
       if (spr < 0.6 && eq > 0.3) return ['call'];
       var stick = P.sticky * (multi ? 0.08 : 0.15) * (big ? 0.5 : 1) * (sr ? 0.5 : 1);
       if (eq + stick > po + (big ? 0.07 : 0.03) + (sr ? 0.06 : 0)) return ['call'];
-      if (sr === 0 && Math.random() < P.bluff * 0.2 && tc < pot * 0.4 && !multi) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * SZ().raise))];
+      if (sr === 0 && Math.random() < P.bluff * 0.2 && tc < pot * 0.4 && !multi) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * raiseMult(P)))];
       return ['fold'];
     }
-    var Z = SZ(), betFrac = P.name === 'Maniac' ? Math.min(Z.wildMax * 1.2, Math.random() < 0.3 ? 1.1 : 0.75) : (P.wild ? Math.min(Z.wildMax, [0.25, 0.5, 0.75, 1][Math.floor(Math.random() * 4)]) : (eq > 0.75 ? Z.strong : Z.bet[Math.random() < 0.5 ? 0 : 1]));
+    var Z = { bet: [ST(P).dry || 0.33, ST(P).wet || 0.66] }, betFrac = postSize(P, eq, pot, eq > 0.75);
     var size = Math.max(L.bb, Math.round(pot * betFrac));
     if (eq > 0.62 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack + H.bets[i]] : ['raise', size];
     var isAggressor = H.lastAggressor === i;
@@ -609,12 +645,23 @@
     }
     return null;
   }
+  // lire une mise selon le profil de celui qui la fait
+  function readBet(pl, tc, potBefore, street) {
+    var P = OPP[pl.prof], k = P.key, f = tc / Math.max(1, potBefore), big = f >= 0.9, small = f <= 0.4, nm = '<b>' + U().esc(pl.name) + '</b> (' + P.short + ')', riv = street === 3;
+    if (k === 'nit' || k === 'surv') return big ? nm + ' mise gros' + (riv ? ' à la river' : '') + ' : chez lui, c’est presque toujours une très grosse main. Couche-toi sans regret avec une main moyenne.' : nm + ' bluffe très peu : même une petite mise montre une vraie main.';
+    if (k === 'station' || k === 'lp') return small ? nm + ' mise petit : souvent une paire moyenne ou un tirage. Paie largement, relance tes bonnes mains : il paiera.' : nm + ' mise rarement gros : une grosse mise de sa part est sérieuse.';
+    if (k === 'maniac') return nm + ' mise énorme et souvent en bluff : paie plus large que d’habitude avec tes mains moyennes, ne bluffe pas contre lui.';
+    if (k === 'lag') return nm + (big ? ' fait une grosse mise : chez lui, autant de bluffs que de valeur. Défends avec tes paires correctes et tes bons tirages.' : ' met la pression avec des mains larges : ne te couche pas trop vite.');
+    if (k === 'fan') return nm + ' mise au hasard : la taille ne veut rien dire, juge surtout ta main et la cote.';
+    return nm + ' a des tailles cohérentes' + (big ? ' : une grosse mise montre une range forte (valeur et quelques bluffs).' : ' : petite mise = range large sur tableau sec.');
+  }
   function coachBefore() {
     var H = G.hand;
     if (H.street === 0) { G.coachMsg = null; return; }
     var opp = activeCount() - 1, eq = equity(H.hole[0], H.board, Math.max(1, opp), 500), tc = toCall(0), pot = potTotal();
     var msg = 'Ta main : <b>' + catName(evalHand(H.hole[0].concat(H.board))) + '</b>. Équité estimée contre ' + opp + ' main' + (opp > 1 ? 's' : '') + ' au hasard : <b>' + Math.round(eq * 100) + ' %</b>.';
-    if (tc > 0) { var need = tc / (pot + tc); msg += ' Pour payer ' + PA.fmt(tc) + ', il te faut <b>' + Math.round(need * 100) + ' %</b> (paye ÷ pot après ta paye). Attention : contre une relance, la range adverse est plus forte qu’une main au hasard.'; }
+    if (tc > 0) { var need = tc / (pot + tc); msg += ' Pour payer ' + PA.fmt(tc) + ', il te faut <b>' + Math.round(need * 100) + ' %</b> (paye ÷ pot après ta paye). Attention : contre une relance, la range adverse est plus forte qu’une main au hasard.';
+      var ag = H.lastAggressor; if (ag !== null && ag !== undefined && ag !== 0 && G.players[ag]) { var rd = readBet(G.players[ag], tc, pot - tc, H.street); if (rd) msg += '<br>🔎 ' + rd; } }
     else msg += ' SPR : ' + String(Math.round(G.players[0].stack / Math.max(1, pot) * 10) / 10).replace('.', ',') + ' (tapis ÷ pot).';
     G.coachMsg = msg;
   }
@@ -888,7 +935,7 @@
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
-      '<b>Mises des adversaires</b>' + seg('sizing', [['club', 'Petites (comme au club)'], ['standard', 'Moyennes'], ['grosses', 'Grosses']]) + '<div class="small muted">Petites : ouvertures à 2 BB, mises d’environ 1/3 à 1/2 du pot, relances à 2,5 fois. Grosses : mises aux 2/3 ou au pot, relances à 3 fois.</div>' +
+      '<div class="small muted">Chaque adversaire mise à sa façon, selon son profil (le nit petit et honnête, le maniac énorme, le fantasque au hasard…) : touche un joueur à la table pour voir son style.</div>' +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
       '<b>Coach</b>' + seg('coach', [[true, 'Avec Yo'], [false, 'Sans coach (bilan à la fin)']]) +
@@ -1072,7 +1119,7 @@
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
       var q = G.players[G.pop];
       h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' +
-        (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span>' : '') +
+        (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span><br><span class="small">Ses mises : ' + ST(OPP[q.prof]).txt + '.</span>' : '') +
         (G.pop !== 0 && q.note ? '<br><span class="small">Ta note : ' + ui.esc(q.note.slice(0, 120)) + '</span>' : '') +
         (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
     }
