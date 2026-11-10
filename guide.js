@@ -7,7 +7,7 @@
     { id: 'soiree', club: true, t: 'Une soirée tournoi de A à Z', i: 'De l’arrivée des joueurs au classement : tout se passe dans Club › Tournoi du club (onglet Tournoi dans l’appli Club). Sous le chrono, les 4 étapes de la soirée (Inscriptions › Tirage › Jeu › Fin) montrent où tu en es et ce qu’il reste à faire.',
       s: ['Onglet Réglages : choisis le type (Mercredi, Deep ×1,5 ou Hors championnat), la date et le format des tables (6-max, 9-max ou 10 joueurs).',
         'Onglet Joueurs : touche le nom de chaque présent dans « Les habitués », ou « Tout le club présent » puis retouche les absents. Un nouveau venu : « Ajouter au club ».',
-        'Touche « Tirer les tables et les sièges ». Le plan s’affiche dans l’onglet Tables.',
+        'Touche « Tirer les tables et les sièges ». Le plan s’affiche dans l’onglet Tables, avec le numéro de siège à côté de chaque pseudo (S1, S2…).',
         'Pas d’imprimante ? Onglet Tables › « 📋 Liste des places » : tous les joueurs par ordre alphabétique avec leur table et leur siège. « 📤 Envoyer la liste » la partage sur WhatsApp ; « 📺 Afficher sur l’écran télé » la montre en grand sur la télé (touche-le à nouveau pour la retirer).',
         'En haut de la page, touche « ▶ Lancer » : le chrono démarre et annonce chaque niveau.',
         'Quand un joueur sort : touche « ❌ Sortie », puis le joueur, puis celui qui l’a éliminé (ou « Je ne sais pas »). C’est enregistré tout de suite, avec sa place, l’heure et le niveau. Tu peux aussi toucher son nom sur la table.',

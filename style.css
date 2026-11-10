@@ -835,3 +835,6 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .ec-pod{display:flex;justify-content:center;gap:3vw;font-size:clamp(16px,3.6vh,48px)}
 .ec-pod em{font-style:normal;font-weight:800;color:#fff}
 @media (orientation:portrait){.ec-rot{flex:1 1 100%;min-height:24vh}.ec-tables{grid-template-columns:repeat(auto-fill,minmax(42vw,1fr))}}
+
+.tn-sn{position:absolute;left:-4px;top:-9px;background:var(--gold);color:#111;font-style:normal;font-weight:800;font-size:11px;line-height:1;border-radius:7px;padding:2px 5px;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
+@media(min-width:1000px){.tn-sn{font-size:13px;top:-10px}}

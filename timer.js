@@ -347,7 +347,7 @@
             var ang = Math.PI / 2 + (st - 1) * 2 * Math.PI / t.size, x = 50 + 38 * Math.cos(ang), y = 50 + 44 * Math.sin(ang);
             var pl = tb[id].filter(function (q) { return q.seat === st; })[0], dB = t.buttons && t.buttons[id] === st;
             var isH = pl && t.holder && pl.name.toLowerCase() === t.holder.toLowerCase(), isM = pl && (t.pending || []).some(function (m) { return m.name === pl.name; });
-            h += '<div class="tn-seat" style="left:' + x + '%;top:' + y + '%">' + (pl ? '<button class="tn-p' + (isH ? ' tn-h' : '') + (isM ? ' tn-moved' : '') + '" data-tmact="ko" data-v="' + t.players.indexOf(pl) + '"><span>' + esc(pl.name) + '</span></button>' : '<span class="tn-free">' + st + '</span>') + (dB && pl ? '<em class="tn-d">D</em>' : '') + '</div>';
+            h += '<div class="tn-seat" style="left:' + x + '%;top:' + y + '%">' + (pl ? '<button class="tn-p' + (isH ? ' tn-h' : '') + (isM ? ' tn-moved' : '') + '" data-tmact="ko" data-v="' + t.players.indexOf(pl) + '"><span>' + esc(pl.name) + '</span></button><em class="tn-sn">S' + st + '</em>' : '<span class="tn-free">' + st + '</span>') + (dB && pl ? '<em class="tn-d">D</em>' : '') + '</div>';
           }
           return h + '</div>';
         }).join('') + '</div>';
