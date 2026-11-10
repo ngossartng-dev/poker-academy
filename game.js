@@ -436,6 +436,8 @@
   Object.keys(OPP).forEach(function (k) { OPP[k].key = k; });
   function ST(P) { return STYLE[P.key] || STYLE.reg; }
   function clubTable() { return G.opts.table === 'club' || G.opts.table === 'monclub'; }
+  // au club, pas de limp (sauf en heads-up) : on relance ou on se couche
+  function noLimp() { var H = G.hand; return clubTable() && H && H.order.length > 2; }
   function wetBoard(B) { var s = {}, r = B.map(function (c) { s[cSuit(c)] = (s[cSuit(c)] || 0) + 1; return cRank(c); }).sort(function (a, b) { return a - b; }); var fl = Object.keys(s).some(function (k) { return s[k] >= 2; }); var co = false; for (var q = 1; q < r.length; q++) if (r[q] - r[q - 1] > 0 && r[q] - r[q - 1] <= 2) co = true; return fl || co; }
   function openSize(P, L, pos) {
     var S = ST(P), x;
@@ -474,6 +476,10 @@
       if (H.preRaises === 0) {
         var openP = Math.min(hu ? 0.85 : 0.6, P.pfr * late + wild);
         if (hp < openP) { var sz = L.bb * openSize(P, L, pos) + H.limpers * L.bb; if (sz > (p.stack + H.bets[i]) * 0.45) sz = p.stack + H.bets[i]; return ['raise', Math.round(sz)]; }
+        if (noLimp() && i !== H.bbSeat) { // les joueurs larges qui auraient limpé ouvrent au minimum, les autres se couchent
+          if (hp < Math.min(0.5, P.vpip * late * (P.limp > 0 ? 0.7 : 0.5) + wild)) return ['raise', Math.round(L.bb * 2)];
+          return tc === 0 ? ['check'] : ['fold'];
+        }
         var limpR = P.limp > 0 ? P.limp : (P.name === 'Maniac' ? 0 : (clubTable() ? 0.3 : 0.12));
         if (hp < Math.min(hu ? 0.95 : 0.7, P.vpip * late + wild) && (i === H.bbSeat || Math.random() < (P.limp > 0 ? 1 : limpR))) return tc === 0 ? ['check'] : ['call'];
         return tc === 0 ? ['check'] : ['fold'];
@@ -935,6 +941,7 @@
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
+      (SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up) — on relance ou on se couche.</div>' : '') +
       '<div class="small muted">Chaque adversaire mise à sa façon, selon son profil (le nit petit et honnête, le maniac énorme, le fantasque au hasard…) : touche un joueur à la table pour voir son style.</div>' +
       '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
@@ -1151,7 +1158,7 @@
       var btns = [];
       btns.push(['fold', tc === 0 ? 'Parole' : 'Se coucher', 'a-fold', tc === 0 ? 'check' : 'fold']);
       var limpNow = H.street === 0 && H.preRaises === 0 && H.pos[0] !== 'BB';
-      if (tc > 0) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : limpNow ? (H.pos[0] === 'SB' ? 'Compléter (limp) ' : 'Limper ') : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
+      if (tc > 0 && !(limpNow && noLimp())) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : limpNow ? (H.pos[0] === 'SB' ? 'Compléter (limp) ' : 'Limper ') : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
       var sizes = [], blind = H.pos[0] === 'SB' || H.pos[0] === 'BB';
       if (H.street === 0) {
         // tailles du cours : isolement 3 BB en position, 4 BB des blindes, +1 par limper ; 3-bet ×3 en position, ×4 hors position (+1 ouverture par payeur) ; 4-bet ×2,2 à ×2,5
