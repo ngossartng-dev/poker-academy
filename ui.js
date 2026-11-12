@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.37.0';
+  var VERSION = '2.37.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -321,8 +321,22 @@
       var a = cm[RS.hero];
       out += '<div class="banner">Ta main : <b>' + RS.hero + '</b> ' + ctxTxt + ' → <span class="pill" style="background:' + CSSVAR[actColor(a, s.type)] + '">' + actName(a, s).toUpperCase() + '</span></div>';
     } else out += '<div class="banner">' + ctxTxt.charAt(0).toUpperCase() + ctxTxt.slice(1) + ' : ' + Object.keys(acts).filter(function (k) { return k !== 'fold'; }).map(function (k) { return actName(k, s) + ' ' + String(PA.pct(acts[k])).replace('.', ',') + ' %'; }).join(' · ') + '</div>';
+    // ouverture à 40 BB et plus : les couleurs du club disent aussi quoi faire si on te relance (3-bet)
+    var plan3 = null;
+    if (s.type === 'open' && PA.depthKey(s.bb) === 'deep' && !RS.bubble && !s.bubble) {
+      var sc3 = ['UTG', 'UTG+1', 'MP'].indexOf(s.pos) >= 0 ? 'early' : (s.pos === 'BTN' ? 'ip' : (s.pos === 'SB' ? 'bvb' : 'oop')), v3 = PA.chart(prof, { type: 'vs3bet', scen: sc3, bb: 100 });
+      var PC = { four: { bg: '#f4a15d', fg: '#1a1400', lbl: 'ouvrir, puis 4-bet ou tapis si on te relance' }, call: { bg: '#63e083', fg: '#06280f', lbl: 'ouvrir, puis payer si on te relance' }, fold: { bg: '#f59aa2', fg: '#3a0a10', lbl: 'ouvrir, puis te coucher si on te relance' } };
+      var cnt3 = { four: [], call: [], fold: [] }; plan3 = {};
+      PA.HANDS.forEach(function (h) { if (cm[h] !== 'raise') { plan3[h] = cm[h]; return; } var k = v3[h] === 'fourbet' || v3[h] === 'allin' ? 'four' : (v3[h] === 'call' ? 'call' : 'fold'); plan3[h] = PC[k]; cnt3[k].push(h); });
+      var pc3 = function (l) { return String(PA.pct(l)).replace('.', ',') + ' %'; };
+      out += '<div class="legend3"><div><i style="background:' + PC.four.bg + '"></i><span><b>Orange</b> : tu ouvres, et si on te relance tu sur-relances (4-bet) ou tu fais tapis. <small>' + pc3(cnt3.four) + '</small></span></div>' +
+        '<div><i style="background:' + PC.call.bg + '"></i><span><b>Vert</b> : tu ouvres, et si on te relance tu paies. <small>' + pc3(cnt3.call) + '</small></span></div>' +
+        '<div><i style="background:' + PC.fold.bg + '"></i><span><b>Rose</b> : tu ouvres, et si on te relance tu te couches. <small>' + pc3(cnt3.fold) + '</small></span></div>' +
+        '<div><i style="background:' + CSSVAR['a-fold'] + '"></i><span><b>Gris</b> : tu te couches sans ouvrir.</span></div></div>';
+      if (RS.hero && plan3[RS.hero] && plan3[RS.hero].lbl) out += '<div class="small" style="color:var(--gold)">' + RS.hero + ' : ' + plan3[RS.hero].lbl + '.</div>';
+    } else
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
-    out += rangeGrid(cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
+    out += rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
     if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club (UTG = la range vue au club, un cran plus large à chaque place, bouton et petite blinde identiques). Face à un 3-bet : 4-bet ou tapis avec TT+, AK, AQs ; payer avec 99, AJs, ATs, KQs à KTs, QJs, QTs, JTs, AQo.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
     if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">Touchez une case pour changer son action.</span>' : '') + '</div>';
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
@@ -1025,6 +1039,13 @@
   function rerenderRange() { if (ui.sheet === 'range') renderSheet(); else { var el = $('#rangeFull'); if (el) el.innerHTML = rangeBody(true); } }
   function globColors() { var c = {}; PA.POS.slice(0, 8).forEach(function (p, i) { c[p] = GLOBAL_COLORS[i]; }); c.BB = ['#3a3a42', '#fff']; return c; }
   function globHead(h) { var i = PA.firstOpenPos(RS.profile)[h], col = i < 0 ? ['#2a2a30', '#aaa'] : GLOBAL_COLORS[i]; return '<span class="pchip big" style="background:' + col[0] + ';color:' + col[1] + '">' + (h === 'TT' ? '10-10' : h.replace(/T/g, '10')) + '</span> <span class="small muted">' + (i < 0 ? 'jamais ouverte' : 'ouverte à partir de ' + PA.POS[i]) + '</span>'; }
+  // la suite d'une ouverture à 40 BB et plus si on te relance (les couleurs de la grille « Ouvrir »)
+  function plan3Txt(s, a, h) {
+    if (!s || s.type !== 'open' || a !== 'raise' || PA.depthKey(s.bb) !== 'deep' || s.bubble) return '';
+    var sc = ['UTG', 'UTG+1', 'MP'].indexOf(s.pos) >= 0 ? 'early' : (s.pos === 'BTN' ? 'ip' : (s.pos === 'SB' ? 'bvb' : 'oop')), v = PA.chart(RS.profile, { type: 'vs3bet', scen: sc, bb: 100 })[h];
+    var k = v === 'fourbet' || v === 'allin' ? ['#f4a15d', '#1a1400', 'Si on te relance : 4-bet ou tapis'] : (v === 'call' ? ['#63e083', '#06280f', 'Si on te relance : payer'] : ['#f59aa2', '#3a0a10', 'Si on te relance : se coucher']);
+    return '<div style="margin:0 0 12px"><span class="pill" style="font-size:17px;background:' + k[0] + ';color:' + k[1] + '">' + k[2] + '</span></div>';
+  }
   function zoomCell(h) {
     if (RS.tab === 'glob' && window.PA_PLAN) {
       var dz = document.createElement('div'); dz.className = 'zoom';
@@ -1033,7 +1054,7 @@
     }
     var s = rsSit(), a = RS.tab === 'glob' ? null : PA.chart(RS.profile, s)[h];
     var div = document.createElement('div'); div.className = 'zoom';
-    div.innerHTML = '<div><div class="disp" style="font-size:64px">' + h + '</div>' + (a ? '<div style="margin:12px 0"><span class="pill" style="font-size:22px;background:' + CSSVAR[actColor(a, s.type)] + '">' + actName(a, s) + '</span></div>' : '') + '<div class="muted">Bat une main au hasard ' + Math.round(PA.D.eq[h] * 100) + ' % du temps</div><button class="btn" style="margin-top:16px">Fermer</button></div>';
+    div.innerHTML = '<div><div class="disp" style="font-size:64px">' + h + '</div>' + (a ? '<div style="margin:12px 0"><span class="pill" style="font-size:22px;background:' + CSSVAR[actColor(a, s.type)] + '">' + actName(a, s) + '</span></div>' : '') + plan3Txt(s, a, h) + '<div class="muted">Bat une main au hasard ' + Math.round(PA.D.eq[h] * 100) + ' % du temps</div><button class="btn" style="margin-top:16px">Fermer</button></div>';
     div.addEventListener('click', function () { div.remove(); });
     document.body.appendChild(div);
   }
