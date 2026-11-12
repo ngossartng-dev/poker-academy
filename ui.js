@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.40.0';
+  var VERSION = '2.40.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -151,11 +151,11 @@
     } else if (st.step === 0) {
       body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:40px">' + yo('Désolé, Poker Academy est réservée aux personnes majeures. Reviens nous voir à tes 18 ans !') + '<button class="btn" data-act="onbBack">Retour</button></div>';
     } else if (st.step === 2) {
-      body = '<div class="stack" style="max-width:640px;margin:0 auto">' + yo('Choisis le style qui te ressemble le plus. Pas d’inquiétude : le test de profil te dira ensuite si c’est le bon, et tu pourras en changer à tout moment.') +
+      body = '<div class="stack" style="max-width:640px;margin:0 auto">' + yo('Choisis le style qui te ressemble le plus. Pas d’inquiétude : le test de profil te dira ensuite si c’est le bon, et tu pourras en changer à tout moment. Ta range ne sera personnalisable (case par case) qu’après le test de profil.') +
         Object.keys(PA.PROFILES).map(function (k) { var pr = PA.PROFILES[k]; return '<button class="prof-card' + (st.profile === k ? ' on' : '') + '" data-act="pickProf" data-v="' + k + '"><div class="row" style="justify-content:space-between"><b>' + pr.name + '</b>' + (pr.reco ? '<span class="chip">Recommandé</span>' : '') + '</div><div class="muted">Mains jouées : ' + pr.vpip + '</div><div>' + pr.desc + '</div></button>'; }).join('') +
         '<button class="btn gold block" data-act="onb2"' + (st.profile ? '' : ' disabled') + '>Valider ce profil</button></div>';
     } else {
-      body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:16px">' + yo('Parfait. Maintenant, le test de profil : je te sers des mains, tu décides comme à la table, sans aide. À la fin, je te dis ton vrai style et tes erreurs à corriger. 30 mains, c’est environ 5 minutes.') +
+      body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:16px">' + yo('Parfait. Maintenant, le test de profil : je te sers des mains, tu décides comme à la table, sans aide. À la fin, je te dis ton vrai style et tes erreurs à corriger. 30 mains, c’est environ 5 minutes. Une fois le test fait, tu pourras personnaliser ta range : Ma range › « Modifier cette range ».') +
         '<div class="seg">' + [30, 60, 90].map(function (n) { return '<button data-act="startTest" data-v="' + n + '">' + n + ' mains</button>'; }).join('') + '</div>' +
         '<button class="btn ghost" data-act="onbLater">Plus tard</button></div>';
     }
@@ -343,9 +343,14 @@
       if (RS.hero && plan3[RS.hero] && plan3[RS.hero].lbl) out += '<div class="small" style="color:var(--gold)">' + RS.hero + ' : ' + plan3[RS.hero].lbl + '.</div>';
     } else
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
-    out += rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
+    out += '@@EDIT@@' + rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
     if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club, une range 6-max. La 1re place à parler (LJ, et aussi UTG à MP sur une table à 9 ou 10) joue la range vue au club ; HJ, CO et le bouton s’élargissent d’un cran à chaque place ; la petite blinde ouvre comme le bouton. Les couleurs disent quoi faire si on te relance.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
-    if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
+    var plr = PA.player();
+    var ed = '';
+    if (plr && !plr.testDone && !CLUB) ed += '<div class="banner">Ta range sera personnalisable après le test de profil : il faut d’abord savoir comment tu joues. Ensuite, tu pourras changer la couleur de chaque case (ouvrir, payer, relancer, se coucher).</div><a class="btn block" href="#testmenu">Faire le test de profil</a>';
+    else if (prof !== 'perso' && !CLUB) ed += '<div class="row"><button class="btn gold" data-act="persoStart">Personnaliser ma range</button><span class="muted small">Ta range devient ton profil Perso (base : la range du club), et tu changes la couleur des cases une par une.</span></div>';
+    if (prof === 'perso' && plr && plr.testDone) ed += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
+    out = out.replace('@@EDIT@@', ed);
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
@@ -1014,6 +1019,7 @@
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
       case 'toggleEdit': RS.edit = !RS.edit; RS.brush = null; rerenderRange(); break;
+      case 'persoStart': p.profile = 'perso'; if (!p.persoBase) p.persoBase = 'club'; PA.save(); RS.profile = 'perso'; RS.edit = true; RS.brush = null; RS.tab = 'sit'; rerenderRange(); break;
       case 'rsBrush': RS.brush = RS.brush === v ? null : v; rerenderRange(); break;
       case 'persoClub': if (typeof confirm === 'function' && !confirm('Repartir de la range du club ? Tes modifications actuelles du profil Perso seront effacées.')) break; p.perso = {}; p.persoBase = 'club'; p.persoFrom = null; PA.save(); RS.edit = false; rerenderRange(); break;
       case 'cell': zoomCell(v); break;

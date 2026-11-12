@@ -11,7 +11,7 @@
     tag: { id: 'tag', name: 'Serré-agressif', short: 'TAG', vpip: '~16-20 %', desc: 'Le standard solide en tournoi. Recommandé.', reco: true },
     equilibre: { id: 'equilibre', name: 'Équilibré', short: 'Équilibré', vpip: '~20-24 %', desc: 'Plus de vols et de défenses.' },
     lag: { id: 'lag', name: 'Large-agressif', short: 'LAG', vpip: '~26-32 %', desc: 'Met la pression, demande de l’expérience.' },
-    perso: { id: 'perso', name: 'Personnalisé', short: 'Perso', vpip: '—', desc: 'Part de la range du club ; vous modifiez les cases.' }
+    perso: { id: 'perso', name: 'Personnalisé', short: 'Perso', vpip: '—', desc: 'Part de la range du club ; tu modifies les cases après le test de profil.' }
   };
   var BASE_PROFILES = ['nit', 'tag', 'equilibre', 'lag'];
 
