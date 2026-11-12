@@ -54,23 +54,25 @@
      Photo du 11/11/2026 : range « MP » d'une table à 6 (la 1re place à parler), à 40 BB et plus. C'est une range 6-max :
      on ne l'adapte pas aux tables à 9 ou 10, les places d'avant (UTG, UTG+1, MP) jouent la même range.
      Puis chaque place suivante (HJ, CO, bouton) descend d'un cran par ligne ; la petite blinde ouvre comme le bouton. */
-  var CLUB_STEP = { UTG: 0, 'UTG+1': 0, MP: 0, LJ: 0, HJ: 1, CO: 2, BTN: 3, SB: 3 }, CLUB_MAX = 6, RK = 'AKQJT98765432';
+  var CLUB_STEP = { UTG: 0, 'UTG+1': 0, MP: 0, LJ: 0, HJ: 1, CO: 2, BTN: 3, SB: 3 }, CLUB_MAX = 6,
+    // de 20 à 40 BB : chaque place joue un cran plus serré (les premières places un cran sous la range de la photo)
+    CLUB_MID_STEP = { UTG: -1, 'UTG+1': -1, MP: -1, LJ: -1, HJ: 0, CO: 1, BTN: 2, SB: 2 }, RK = 'AKQJT98765432';
   // [carte haute, kicker le plus bas au départ, cran où la ligne apparaît, kicker le plus bas possible]
   var CLUB_S = [['A', '2', 0, '2'], ['K', '8', 0, '2'], ['Q', '8', 0, '2'], ['J', '8', 0, '4'], ['T', '8', 0, '6'], ['9', '8', 0, '5'], ['8', '7', 0, '4'], ['7', '6', 1, '4'], ['6', '5', 2, '3'], ['5', '4', 3, '2'], ['4', '3', 4, '3']];
   var CLUB_O = [['A', '9', 0, '2'], ['K', 'T', 0, '7'], ['Q', 'J', 0, '8'], ['J', 'T', 1, '8'], ['T', '9', 2, '8'], ['9', '8', 3, '7'], ['8', '7', 4, '7'], ['7', '6', 5, '6']];
   function clubOpen(st) {
-    st = Math.max(0, Math.min(CLUB_MAX, st)); var out = [], i;
+    st = Math.max(-1, Math.min(CLUB_MAX, st)); var out = [], i;
     for (i = 0; i < 13; i++) out.push(RK[i] + RK[i]);
-    function rows(T, suf) { T.forEach(function (r) { if (st < r[2]) return; var hi = RK.indexOf(r[0]), lo = Math.min(RK.indexOf(r[1]) + (st - r[2]), RK.indexOf(r[3])); for (var k = hi + 1; k <= lo; k++) out.push(r[0] + RK[k] + suf); }); }
+    function rows(T, suf) { T.forEach(function (r) { if (r[2] > 0 && st < r[2]) return; var hi = RK.indexOf(r[0]), lo = Math.min(RK.indexOf(r[1]) + (st - r[2]), RK.indexOf(r[3])); for (var k = hi + 1; k <= lo; k++) out.push(r[0] + RK[k] + suf); }); }
     rows(CLUB_S, 's'); rows(CLUB_O, 'o');
     return out;
   }
   // face à un 3-bet : orange = 4-bet ou tapis, vert = payer, le reste se couche (TT en orange, 99 en vert : variante la plus courante)
   var CLUB_4B = ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AKo'], CLUB_CALL = ['99', 'AJs', 'ATs', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'AQo'];
   (function () {
-    var t = D.profiles.tag, deep = {}; Object.keys(CLUB_STEP).forEach(function (pos) { deep[pos] = clubOpen(CLUB_STEP[pos]); });
+    var t = D.profiles.tag, deep = {}, mid = {}; Object.keys(CLUB_STEP).forEach(function (pos) { deep[pos] = clubOpen(CLUB_STEP[pos]); mid[pos] = clubOpen(CLUB_MID_STEP[pos]); });
     var v = { call: CLUB_CALL, fourbet: CLUB_4B };
-    D.profiles.club = { open: { deep: deep, mid: t.open.mid }, bb: t.bb, vsOpen: t.vsOpen, mid3b: t.mid3b, vs3bet: { ip: v, oop: v, early: v, bvb: t.vs3bet.bvb } };
+    D.profiles.club = { open: { deep: deep, mid: mid }, bb: t.bb, vsOpen: t.vsOpen, mid3b: t.mid3b, vs3bet: { ip: v, oop: v, early: v, bvb: t.vs3bet.bvb } };
   })();
   // la base du profil Perso : la range du club, sauf pour un profil Perso créé avant (il reste sur TAG tant qu'on ne le refait pas)
   function persoBase() { var p = player(); if (!p) return 'club'; if (p.persoBase) return p.persoBase === 'club' ? 'club' : 'tag'; return (p.perso && Object.keys(p.perso).length) || p.persoFrom ? 'tag' : 'club'; }
@@ -494,7 +496,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 3, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 3, 14: 2, 15: 2, 20: 2, 33: 3, 35: 2, 37: 3, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
@@ -502,7 +504,7 @@
     chart: chart, actionFor: actionFor, firstOpenPos: firstOpenPos, validOpeners: validOpeners, shoveSituations: shoveSituations,
     depthKey: depthKey, nearestPush: nearestPush, sitKey: sitKey, NOTIONS: NOTIONS, notionOf: notionOf, notionState: notionState,
     bubbleChart: bubbleChart, isoGroup: isoGroup, sqzGroup: sqzGroup, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
-    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB, clubOpen: clubOpen, CLUB_STEP: CLUB_STEP, persoBase: persoBase, VS_PROF: VS_PROF, vsOn: vsOn, noVs: noVs,
+    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB, clubOpen: clubOpen, CLUB_STEP: CLUB_STEP, CLUB_MID_STEP: CLUB_MID_STEP, persoBase: persoBase, VS_PROF: VS_PROF, vsOn: vsOn, noVs: noVs,
     ORDER_IDX: ORDER_IDX
   };
 })();

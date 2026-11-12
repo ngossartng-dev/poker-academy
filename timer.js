@@ -311,9 +311,17 @@
   var TAB = null, ROSTER = false;
   function clearSheet() { try { document.querySelectorAll('body > .tn-sheet, body > .tn-sheet-bg').forEach(function (el) { el.parentNode.removeChild(el); }); } catch (e) {} }
   window.addEventListener('hashchange', function () { if (!/^#tournoi/.test(location.hash)) { KO = null; clearSheet(); } if (!/^#minuteur/.test(location.hash)) EDIT = false; });
+  // tête mise à prix : le vainqueur du dernier tournoi du même type ; absent ce soir → le 2e, puis le 3e…
+  // figée dès que la prime est tombée
+  function syncHolder(t) {
+    var LG = window.PA_LEAGUE; if (!LG || !t) return;
+    if (t.players.some(function (x) { return x.bountyFrom; })) return;
+    var h = LG.holderInfo ? LG.holderInfo(t.type || 'mercredi', t.date || LG.today(), t.players.map(function (x) { return x.name; })) : null;
+    t.holder = h ? h.name : null; t.holderFor = h && h.rank > 1 ? h.first : null; t.holderRank = h ? h.rank : 0;
+  }
   function tournoiView() {
     var ui = U(), t = T(), s = live(), c = cfg(), LG = window.PA_LEAGUE, esc = ui.esc;
-    if (LG) { t.type = t.type || 'mercredi'; t.date = t.date || LG.today(); t.holder = LG.holder(t.type, t.date); }
+    if (LG) { t.type = t.type || 'mercredi'; t.date = t.date || LG.today(); } syncHolder(t);
     var tab = TAB || (t.drawn ? 'tables' : 'joueurs');
     var typeName = LG ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Hors championnat' }[t.type] : 'Tournoi';
     var dateTxt = t.date ? t.date.split('-').reverse().join('/') : '';
@@ -338,7 +346,7 @@
     // ---- tête mise à prix ----
     if (LG && t.type !== 'libre' && t.holder) {
       var hIn = t.players.some(function (x) { return x.name.toLowerCase() === t.holder.toLowerCase() && !x.out; });
-      out += '<div class="tn-wanted"><div class="tn-wanted-t">Tête mise à prix</div><div class="tn-wanted-n">' + esc(t.holder) + '</div><div class="tn-wanted-s">' + (hIn ? '+' + LG.BONUS + ' points pour qui l’élimine' : 'pas en jeu ce soir') + '</div></div>';
+      out += '<div class="tn-wanted"><div class="tn-wanted-t">Tête mise à prix</div><div class="tn-wanted-n">' + esc(t.holder) + '</div><div class="tn-wanted-s">' + (hIn ? '+' + LG.BONUS + ' points pour qui l’élimine' : 'pas en jeu ce soir') + (t.holderFor ? '<br>à la place de ' + esc(t.holderFor) + ', absent ce soir' : '') + '</div></div>';
     }
     if (t.msg) out += '<div class="tn-msg">' + t.msg + '</div>';
     out += movesHtml(false);
@@ -736,7 +744,7 @@
   // élimination : idx = joueur qui sort, by = index de celui qui l'élimine ('' = inconnu)
   function doKO(idx, by) {
     if (by === null || by === undefined || by === -1) by = '';
-    var tk = T(), pk = tk.players[idx];
+    var tk = T(), pk = tk.players[idx]; syncHolder(tk);
       if (pk && !pk.out) {
         var lft = alivePl().length, killer = by !== '' ? tk.players[+by] : null;
         pk.out = true; pk.place = lft; pk.from = 'table ' + pk.table + ' siège ' + pk.seat; pk.table = null;
@@ -783,7 +791,7 @@
       '<div class="small muted">Si Windows demande d’autoriser Poker Academy sur le pare-feu, accepte pour les réseaux privés.</div><div class="row" style="gap:8px"><button class="btn" data-tmact="rmNew" style="flex:1">Nouveau code</button><button class="btn" data-tmact="rmOff" style="flex:1">Arrêter</button></div></div>';
   }
   function remoteState() {
-    var s = live(), t = T(), l = s.L[s.idx] || {}, chips = chipsInPlay(), bb = curBB(s), avg = t.left > 0 ? chips / t.left : 0, LG = window.PA_LEAGUE;
+    var s = live(), t = T(), l = s.L[s.idx] || {}, chips = chipsInPlay(), bb = curBB(s), avg = t.left > 0 ? chips / t.left : 0, LG = window.PA_LEAGUE; syncHolder(t);
     var al = alivePl();
     return { at: Date.now(), lvl: l.pause ? 'Pause' : 'Niveau ' + l.n, bl: l.pause ? 'Pause' : fmt(l.sb) + ' / ' + fmt(l.bb), ante: l.ante ? anteTxt(l) : '', rem: s.rem, run: !!ST.since, next: nextInfo(s),
       left: t.left, total: t.entrants + t.re, avg: avg ? fmt(Math.round(avg)) : '', avgBB: avg && bb ? Math.round(avg / bb) : 0, voice: vOn(), name: LG && t.players.length ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Tournoi' }[t.type || 'mercredi'] : 'Tournoi du club',
@@ -801,7 +809,7 @@
   /* ---------- Écran pour la télé du club ---------- */
   function ecranView() {
     var ui = U(), esc = ui.esc, s = live(), t = T(), LG = window.PA_LEAGUE, c = cfg();
-    if (!s.L.length) return view();
+    if (!s.L.length) return view(); syncHolder(t);
     var l = s.L[s.idx], run = !!ST.since, chips = chipsInPlay(), avg = t.left > 0 ? chips / t.left : 0, bb = curBB(s), al = alivePl();
     var typeName = LG && t.players.length ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Tournoi' }[t.type || 'mercredi'] : 'Tournoi du club';
     var pz = -1, secs = s.rem; for (var k = s.idx + 1; k < s.L.length; k++) { if (s.L[k].pause) { pz = k; break; } secs += s.L[k].min * 60; }

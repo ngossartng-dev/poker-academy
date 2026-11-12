@@ -38,7 +38,8 @@
           // ouverture à 40 BB et plus : la range du club, décalée de sh crans
           var cm = {}, st = Math.max(0, Math.min(6, PA.CLUB_STEP[pos] + sh)); PA.HANDS.forEach(function (h) { cm[h] = 'fold'; }); PA.clubOpen(st).forEach(function (h) { cm[h] = 'raise'; });
           put({ type: 'open', pos: pos, bb: 100 }, cm);
-          put({ type: 'open', pos: pos, bb: 30 }, PA.chart(gp[g], { type: 'open', pos: pos, bb: 30 }));
+          var cm2 = {}, st2 = Math.max(-1, Math.min(6, PA.CLUB_MID_STEP[pos] + sh)); PA.HANDS.forEach(function (h) { cm2[h] = 'fold'; }); PA.clubOpen(st2).forEach(function (h) { cm2[h] = 'raise'; });
+          put({ type: 'open', pos: pos, bb: 30 }, cm2);
         }
         var ops = PA.validOpeners(pos); if (pos !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; });
         [100, 30].forEach(function (bb) { ops.forEach(function (o) { var sd = { type: 'def', pos: pos, opener: o, bb: bb }; put(sd, PA.chart(gp[g], sd)); }); });

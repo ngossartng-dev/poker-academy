@@ -32,15 +32,26 @@
     var f = function (d) { return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2); };
     return 'Semaine ' + n + ' (du ' + f(mon) + ' au ' + f(sun) + ')';
   }
-  // tête mise à prix : vainqueur du dernier tournoi du même type, avant cette date
-  function holder(type, date) {
-    if (!TYPES[type] || type === 'libre') return null;
+  // tête mise à prix : vainqueur du dernier tournoi du même type, avant cette date.
+  // S'il est absent ce soir, c'est le 2e de ce tournoi, puis le 3e, etc. (present = pseudos inscrits ce soir)
+  function holderChain(type, date) {
+    if (!TYPES[type] || type === 'libre') return [];
     var dt = date || today(), prev = load().list.filter(function (x) { return x.type === type && x.date < dt; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
-    // reprise du classement : la tête mise à prix indiquée à la main (une pour le mercredi, une pour le vendredi), tant qu'aucun tournoi de ce type n'a été joué depuis
+    // reprise du classement : la tête mise à prix indiquée à la main (une pour le mercredi, une pour le vendredi), tant qu'aucun tournoi de ce type n'a été joué depuis ;
+    // ses remplaçants sont alors pris dans l'ordre du classement de la saison
     var cy = carryOf(dt.slice(0, 4)), ch = cy && cy.holders && cy.holders[type];
-    if (ch && cy.date <= dt && (!prev || prev.date < cy.date)) return ch;
-    return prev ? prev.winner : null;
+    if (ch && cy.date <= dt && (!prev || prev.date < cy.date)) return [ch].concat(standings(load().list.filter(function (x) { return x.date.slice(0, 4) === dt.slice(0, 4) && x.date < dt; }), dt.slice(0, 4)).map(function (r) { return r.name; }).filter(function (n) { return key(n) !== key(ch); }));
+    return prev ? prev.rows.slice().sort(function (a, b) { return a.place - b.place; }).map(function (r) { return r.name; }) : [];
   }
+  function holderInfo(type, date, present) {
+    var ch = holderChain(type, date); if (!ch.length) return null;
+    if (present && present.length) {
+      var pk = {}; present.forEach(function (n) { pk[key(n)] = 1; });
+      for (var i = 0; i < ch.length; i++) if (pk[key(ch[i])]) return { name: ch[i], rank: i + 1, first: ch[0] };
+    }
+    return { name: ch[0], rank: 1, first: ch[0] };
+  }
+  function holder(type, date, present) { var h = holderInfo(type, date, present); return h ? h.name : null; }
   function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 10) / 10; }
   // enregistre un tournoi terminé (état du tournoi du minuteur)
   function record(t) {
@@ -330,5 +341,5 @@
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
