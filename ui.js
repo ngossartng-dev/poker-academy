@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.41.0';
+  var VERSION = '2.41.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -352,6 +352,14 @@
     else if (prof !== 'perso' && !CLUB) ed += '<div class="row"><button class="btn gold" data-act="persoStart">Personnaliser ma range</button><span class="muted small">Ta range devient ton profil Perso (base : la range du club), et tu changes la couleur des cases une par une.</span></div>';
     if (prof === 'perso' && plr && plr.testDone) ed += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
     out = out.replace('@@EDIT@@', ed);
+    // rappel discret : les tailles du club après le flop (repliable)
+    if (window.PA_MEMO && window.PA_MEMO.clubSizes) {
+      var CZ = window.PA_MEMO.clubSizes(), szLine = function (r) { return '<div class="szm-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; };
+      out += '<div class="szm"><button class="szm-h" data-act="szmToggle" aria-expanded="' + (RS.szm ? 'true' : 'false') + '">📏 Après le flop : les tailles du club <span>' + (RS.szm ? '▴' : '▾') + '</span></button>' +
+        (RS.szm ? '<div class="szm-b">' + (s.type === 'open' ? '<div class="small muted">Tu as ouvert : si on te paie, c’est toi qui mises en premier (c-bet).</div>' : (s.type === 'bbdef' || s.type === 'def' ? '<div class="small muted">Tu as payé : le donk bet (50 %) se garde pour les boards bas et connectés qui t’aident.</div>' : '')) +
+          ['flop', 'turn', 'river'].map(function (k) { return '<div class="szm-s">' + { flop: 'Flop', turn: 'Turn', river: 'River' }[k] + '</div>' + CZ[k].map(szLine).join(''); }).join('') +
+          '<div class="small muted">En % du pot. Turn et river : à valider par Lionel. Exemples : <a href="#lecon-13">chapitre 13</a>, <a href="#lecon-15">15</a> et <a href="#lecon-16">16</a> · fiche mémo · exercice <a href="#taille">Quelle taille au flop ?</a></div></div>' : '') + '</div>';
+    }
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
@@ -1026,6 +1034,7 @@
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
+      case 'szmToggle': RS.szm = !RS.szm; rerenderRange(); break;
       case 'toggleEdit': RS.edit = !RS.edit; RS.brush = null; rerenderRange(); break;
       case 'persoStart': p.profile = 'perso'; if (!p.persoBase) p.persoBase = 'club'; PA.save(); RS.profile = 'perso'; RS.edit = true; RS.brush = null; RS.tab = 'sit'; rerenderRange(); break;
       case 'rsBrush': RS.brush = RS.brush === v ? null : v; rerenderRange(); break;

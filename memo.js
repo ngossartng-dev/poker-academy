@@ -5,6 +5,13 @@
     return '<table class="memo-t"><thead><tr>' + head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>' +
       rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td' + (i ? ' class="n"' : '') + '>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
   }
+  // les tailles du club après le flop (chapitres 13, 15 et 16) : servent ici et dans le rappel de Ma range
+  var CLUB_SZ = {
+    flop: [['C-bet sur board sec, pairé ou d’une couleur', '25 à 33 %'], ['Tirage, bluff ou semi-bluff', '25 à 35 %'], ['Main forte sur board à tirages', '66 à 75 %'], ['Très grosse main sur board sec', '25 à 33 %, puis plus gros'], ['Donk bet (board bas et connecté)', '50 %'], ['À 3 joueurs ou plus', '50 à 66 %'], ['Check-raise', '× 2,2 à 2,5 (sec) · × 3 à 4 (tirages)']],
+    turn: [['Deuxième mise, la carte t’aide', '50 à 75 %'], ['Valeur sur board à tirages', '66 à 75 % (ou le pot à 40 BB)'], ['Tirage avec beaucoup d’outs', '50 à 66 %'], ['Mise retardée (flop checké)', '50 %'], ['Main moyenne, ou la carte complète un tirage', 'check']],
+    river: [['Valeur forte', '66 à 75 %'], ['Valeur fine', '25 à 40 %'], ['Mise de blocage (main moyenne, hors position)', '20 à 33 %'], ['Bluff', 'même taille que la valeur'], ['Bluff-catcher, ou rien', 'check']]
+  };
+  function clubSizes() { return CLUB_SZ; }
   function body() {
     var sizes = tbl(['Coup', 'Taille'], [
       ['Ouverture (club)', '2 BB · petite blinde 3 BB'],
@@ -15,7 +22,7 @@
       ['5-bet (100 BB)', 'tapis'],
       ['20 à 30 BB', '3-bet, squeeze et isolement à tapis'],
       ['40 BB', 'le 4-bet est un tapis'],
-      ['Check-raise', 'environ 3 × la mise adverse']
+      ['Check-raise', '2,2 à 2,5 × la mise sur board sec, 3 à 4 × sur board à tirages']
     ]);
     var seuils = tbl(['Situation', 'Il faut'], [
       ['Grosse blinde face à 2 BB (ante BB)', '18 % d’équité'],
@@ -55,6 +62,7 @@
       '<section><h2>Les seuils</h2>' + seuils + '</section>' +
       '<section><h2>Défense minimale et bluff</h2>' + mdf + '<div class="small muted">Défense = pot ÷ (pot + mise) · bluff = mise ÷ (pot + mise)</div></section>' +
       '<section><h2>Les outs</h2>' + outs + '<div class="small muted">Règle du 4 au flop (avec deux cartes à venir), du 2 à la turn.</div></section>' +
+      '<section class="wide"><h2>Après le flop : les tailles du club</h2><div class="memo-grid">' + ['flop', 'turn', 'river'].map(function (k) { return '<div><b>' + { flop: 'Flop', turn: 'Turn', river: 'River' }[k] + '</b>' + tbl(['Coup', '% du pot'], CLUB_SZ[k]) + '</div>'; }).join('') + '</div><div class="small muted">Turn et river : repères à valider par Lionel. Détails et exemples : chapitres 13, 15 et 16.</div></section>' +
       '<section class="wide"><h2>Après le flop</h2>' + post + '</section></div>';
   }
   function view() {
@@ -62,8 +70,8 @@
     var out = '<div class="stack memo"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Fiche mémo</h1>' +
       '<div class="small muted no-print">Toutes les tailles et tous les seuils sur une page, à garder dans le portefeuille pour le club.</div>' +
       '<button class="btn gold block no-print" data-act="print">Imprimer ou enregistrer en PDF</button>' + body() +
-      '<div class="small muted">Poker Academy · profil TAG · chiffres tirés des ranges de l’appli et du solveur.</div><a class="btn block no-print" href="#lexique">Le lexique : tous les termes du cours</a></div>';
+      '<div class="small muted">Poker Academy · range du club · chiffres tirés des ranges de l’appli, du solveur et des repères du club.</div><a class="btn block no-print" href="#lexique">Le lexique : tous les termes du cours</a></div>';
     return ui.shell('apprendre', out);
   }
-  window.PA_MEMO = { view: view, body: body };
+  window.PA_MEMO = { view: view, body: body, clubSizes: clubSizes };
 })();
