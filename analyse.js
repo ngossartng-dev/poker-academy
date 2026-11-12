@@ -195,7 +195,7 @@
     if (!profileId || !h.hand || !pf.pos) return null;
     var s = null, mine = pf.act;
     if (pf.ctx === 'unopened' && pf.pos !== 'BB') s = { type: 'open', pos: pf.pos, bb: pf.bbStack };
-    else if (pf.ctx === 'vsOpen' && pf.openerPos && pf.bbStack > 20 && pf.openerPos !== 'SB' && pf.openerPos !== 'BB') s = { type: 'def', pos: pf.pos, opener: pf.openerPos, bb: pf.bbStack };
+    else if (pf.ctx === 'vsOpen' && pf.openerPos && pf.bbStack > 20 && pf.openerPos !== 'SB' && pf.openerPos !== 'BB' && !((pf.pos === 'BB' || pf.pos === 'SB') && pf.bbStack < 40)) s = { type: 'def', pos: pf.pos, opener: pf.openerPos, bb: pf.bbStack };
     if (!s) return null;
     var want; try { want = PA.actionFor(profileId, s, h.hand); } catch (e) { return null; }
     if (!want) return null;

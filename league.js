@@ -35,7 +35,10 @@
   // tête mise à prix : vainqueur du dernier tournoi du même type, avant cette date
   function holder(type, date) {
     if (!TYPES[type] || type === 'libre') return null;
-    var prev = load().list.filter(function (x) { return x.type === type && x.date < (date || today()); }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+    var dt = date || today(), prev = load().list.filter(function (x) { return x.type === type && x.date < dt; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+    // reprise du classement : la tête mise à prix indiquée à la main (une pour le mercredi, une pour le vendredi), tant qu'aucun tournoi de ce type n'a été joué depuis
+    var cy = carryOf(dt.slice(0, 4)), ch = cy && cy.holders && cy.holders[type];
+    if (ch && cy.date <= dt && (!prev || prev.date < cy.date)) return ch;
     return prev ? prev.winner : null;
   }
   function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 10) / 10; }
@@ -54,7 +57,7 @@
   function years() { var y = {}, dd = load(); dd.list.forEach(function (x) { y[x.date.slice(0, 4)] = 1; }); Object.keys(dd.carry || {}).forEach(function (k) { if (dd.carry[k] && dd.carry[k].rows && dd.carry[k].rows.length) y[k] = 1; }); var a = Object.keys(y).sort().reverse(); return a.length ? a : [String(new Date().getFullYear())]; }
   // reprise du classement : les points déjà acquis avant de commencer à utiliser l'appli, par saison
   function carryOf(year) { var c = (load().carry || {})[year]; return c && c.rows && c.rows.length ? c : null; }
-  function setCarry(year, date, rows) { var d = load(); d.carry = d.carry || {}; d.carry[year] = { at: Date.now(), date: date, rows: rows }; save(d); }
+  function setCarry(year, date, rows, holders) { var d = load(); d.carry = d.carry || {}; d.carry[year] = { at: Date.now(), date: date, rows: rows, holders: holders || {} }; save(d); }
   // enregistre à la main un tournoi déjà joué : la liste des joueurs du 1er au dernier
   function recordManual(o) {
     var type = TYPES[o.type] ? o.type : 'mercredi', n = o.names.length, d = load(), bk = key(o.bonusTo);
@@ -205,10 +208,19 @@
   function manualCard(cy) {
     var ui = U(), h = '<div class="card stack"><b>✍️ Saisie manuelle</b>';
     if (V.form === 'carry') {
-      var txt = cy ? cy.rows.map(function (r) { return r.name + ' ' + String(r.pts).replace('.', ',') + (r.n ? ' ' + r.n : ''); }).join('\n') : roster().join(' \n') + ' ';
-      h += '<div class="small muted">La saison a déjà commencé : entre les points que chaque joueur a aujourd’hui. Un joueur par ligne, le pseudo puis ses points (exemple : <b>YO 45,5</b>). Tu peux ajouter le nombre de tournois déjà joués pour garder une moyenne juste (exemple : <b>YO 45,5 4</b>). Les lignes sans points sont ignorées.</div>' +
-        '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + (cy ? cy.date : today()) + '" style="' + INP + '">' +
-        '<textarea id="lgCarryTxt" rows="12" spellcheck="false" autocapitalize="characters" style="' + INP + ';width:100%;font-family:monospace">' + ui.esc(txt) + '</textarea>' +
+      if (!V.crows) V.crows = cy ? cy.rows.map(function (r) { return { name: r.name, pts: String(r.pts).replace('.', ','), n: r.n ? String(r.n) : '' }; }) : roster().map(function (nm) { return { name: nm, pts: '', n: '' }; });
+      if (!V.crows.length) V.crows.push({ name: '', pts: '', n: '' });
+      var hd = (cy && cy.holders) || {};
+      h += '<div class="small muted">La saison a déjà commencé : pour chaque joueur, son pseudo et ses points actuels. Le nombre de tournois joués est facultatif (il sert à garder une moyenne juste). Une ligne sans points est ignorée.</div>' +
+        '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + (V.cdate || (cy ? cy.date : today())) + '" style="' + INP + '">' +
+        '<datalist id="lgNames">' + roster().map(function (x) { return '<option value="' + ui.esc(x) + '">'; }).join('') + '</datalist>' +
+        '<div class="lg-crows"><div class="lg-crow lg-crh"><span>Pseudo</span><span>Points</span><span>Tournois</span><span></span></div>' + V.crows.map(function (r, i) {
+          return '<div class="lg-crow"><input class="lg-cr" data-i="' + i + '" data-f="name" list="lgNames" autocapitalize="characters" value="' + ui.esc(r.name) + '" placeholder="Pseudo" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="pts" inputmode="decimal" value="' + ui.esc(r.pts) + '" placeholder="0" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="n" inputmode="numeric" value="' + ui.esc(r.n) + '" placeholder="–" style="' + INP + '"><button class="btn" data-lgact="crDel" data-v="' + i + '" aria-label="Retirer">✕</button></div>';
+        }).join('') + '</div>' +
+        '<button class="btn" data-lgact="crAdd">+ Ajouter un joueur</button>' +
+        '<b>Les têtes mises à prix (+' + BONUS + ' points pour qui les élimine)</b><div class="small muted">Chaque type de tournoi a la sienne : le vainqueur du dernier mercredi pour le mercredi, le vainqueur du dernier deep pour le vendredi. Indique-les pour le prochain tournoi ; ensuite l’appli les suit toute seule.</div>' +
+        '<label class="small muted" for="lgHoldM">Tête mise à prix du mercredi :</label><input id="lgHoldM" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldM != null ? V.choldM : (hd.mercredi || '')) + '" placeholder="Pseudo, ou vide" style="' + INP + '">' +
+        '<label class="small muted" for="lgHoldD">Tête mise à prix du vendredi (deep) :</label><input id="lgHoldD" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldD != null ? V.choldD : (hd.deep || '')) + '" placeholder="Pseudo, ou vide" style="' + INP + '">' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="saveCarry" style="flex:1">Enregistrer la reprise ' + V.year + '</button><button class="btn" data-lgact="formCancel">Annuler</button></div>' +
         (cy ? '<button class="btn" data-lgact="delCarry">Supprimer la reprise ' + V.year + '</button>' : '');
     } else if (V.form === 'past') {
@@ -222,6 +234,13 @@
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="formCarry" style="flex:1">' + (cy ? 'Modifier la reprise du classement' : 'Reprendre le classement en cours') + '</button><button class="btn" data-lgact="formPast" style="flex:1">Ajouter un tournoi déjà joué</button></div>';
     }
     return h + (V.fmsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.fmsg) + '</div>' : '') + '</div>';
+  }
+  // garde ce qui est tapé dans le tableau de reprise avant de redessiner la page
+  function readCrows() {
+    if (!V.crows) V.crows = [];
+    document.querySelectorAll('.lg-cr').forEach(function (el) { var i = +el.getAttribute('data-i'), f = el.getAttribute('data-f'); if (V.crows[i]) V.crows[i][f] = el.value; });
+    var dEl = document.getElementById('lgCarryDate'), m = document.getElementById('lgHoldM'), d2 = document.getElementById('lgHoldD');
+    if (dEl) V.cdate = dEl.value; if (m) V.choldM = m.value; if (d2) V.choldD = d2.value;
   }
   function cleanName(x) { return String(x || '').trim().replace(/\s+/g, ' ').slice(0, 30); }
   function addToRoster(names) { var r = roster(), seen = {}; r.forEach(function (x) { seen[key(x)] = 1; }); var nw = names.filter(function (x) { return !seen[key(x)] && (seen[key(x)] = 1); }); if (nw.length) setRoster(r.concat(nw)); }
@@ -271,19 +290,22 @@
     var t = e.target.closest ? e.target.closest('[data-lgact]') : null; if (!t) return;
     var a = t.getAttribute('data-lgact'), v = t.getAttribute('data-v');
     function done(m) { V.msg = m; U().render(); }
-    if (a === 'formCarry' || a === 'formPast' || a === 'formCancel') { V.form = a === 'formCarry' ? 'carry' : a === 'formPast' ? 'past' : null; V.fmsg = ''; U().render(); return; }
+    if (a === 'formCarry' || a === 'formPast' || a === 'formCancel') { V.form = a === 'formCarry' ? 'carry' : a === 'formPast' ? 'past' : null; V.fmsg = ''; V.crows = null; V.cdate = null; V.choldM = V.choldD = null; U().render(); return; }
+    if (a === 'crAdd' || a === 'crDel') { readCrows(); if (a === 'crAdd') V.crows.push({ name: '', pts: '', n: '' }); else V.crows.splice(+t.getAttribute('data-v'), 1); U().render(); if (a === 'crAdd') setTimeout(function () { var L = document.querySelectorAll('.lg-cr[data-f="name"]'); if (L.length) L[L.length - 1].focus(); }, 50); return; }
     if (a === 'saveCarry') {
+      readCrows();
       var seenC = {}, rowsC = [], badC = [];
-      String((document.getElementById('lgCarryTxt') || {}).value || '').split('\n').forEach(function (ln) {
-        ln = ln.replace(/[;\t:=]/g, ' ').trim(); if (!ln) return;
-        var m2 = ln.match(/^(.*?)\s+(-?\d+(?:[.,]\d+)?)(?:\s+(\d+))?$/); if (!m2) return;
-        var nm = cleanName(m2[1]), pts = Math.round(parseFloat(m2[2].replace(',', '.')) * 10) / 10; if (!nm || isNaN(pts)) return; if (seenC[key(nm)]) { badC.push(nm + ' (en double)'); return; }
-        seenC[key(nm)] = 1; var rw = { name: nm, pts: pts }; if (m2[3]) rw.n = +m2[3]; rowsC.push(rw);
+      V.crows.forEach(function (r) {
+        var nm = cleanName(r.name).toUpperCase(), ps = String(r.pts || '').replace(/\s/g, '').replace(',', '.'); if (!nm || ps === '') return;
+        var pts = Math.round(parseFloat(ps) * 10) / 10; if (isNaN(pts)) { badC.push(nm + ' (points illisibles)'); return; }
+        if (seenC[key(nm)]) { badC.push(nm + ' (en double)'); return; } seenC[key(nm)] = 1;
+        var rw = { name: nm, pts: pts }, nn = parseInt(r.n, 10); if (nn > 0) rw.n = nn; rowsC.push(rw);
       });
-      if (!rowsC.length) { V.fmsg = 'Aucune ligne avec des points : écris le pseudo puis ses points, par exemple « YO 45,5 ».'; U().render(); return; }
-      var dc = (document.getElementById('lgCarryDate') || {}).value || today();
-      setCarry(V.year, dc, rowsC); addToRoster(rowsC.map(function (r) { return r.name; }));
-      V.form = null; V.fmsg = 'Reprise enregistrée : ' + rowsC.length + ' joueurs.' + (badC.length ? ' Lignes ignorées : ' + badC.slice(0, 4).join(', ') + '.' : ''); U().render(); return;
+      if (badC.length) { V.fmsg = 'À corriger : ' + badC.join(', ') + '.'; U().render(); return; }
+      if (!rowsC.length) { V.fmsg = 'Aucun joueur avec des points : remplis au moins une ligne.'; U().render(); return; }
+      var hm2 = cleanName(V.choldM).toUpperCase(), hdp = cleanName(V.choldD).toUpperCase(), hol = {}; if (hm2) hol.mercredi = hm2; if (hdp) hol.deep = hdp;
+      setCarry(V.year, V.cdate || today(), rowsC, hol); addToRoster(rowsC.map(function (r) { return r.name; }).concat(hm2 ? [hm2] : [], hdp ? [hdp] : []));
+      V.form = null; V.crows = null; V.cdate = null; V.choldM = V.choldD = null; V.fmsg = 'Reprise enregistrée : ' + rowsC.length + ' joueurs' + (hm2 || hdp ? ' ; têtes mises à prix : ' + [hm2 ? hm2 + ' (mercredi)' : '', hdp ? hdp + ' (vendredi)' : ''].filter(Boolean).join(', ') : '') + '.'; U().render(); return;
     }
     if (a === 'delCarry') { if (typeof confirm === 'function' && !confirm('Supprimer la reprise du classement ' + V.year + ' ?')) return; setCarry(V.year, today(), []); V.form = null; V.fmsg = 'Reprise supprimée.'; U().render(); return; }
     if (a === 'savePast') {

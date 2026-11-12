@@ -58,7 +58,7 @@
   var GNAME = { early: 'début de table (UTG à MP)', mid: 'milieu de table (LJ, HJ)', late: 'fin de table (CO, bouton, SB)', bb: 'défense de la grosse blinde' };
   function summary(r) {
     var sh = r.shift || {};
-    return '<div class="small muted">Base : la range du club (UTG, puis un cran plus large à chaque place ; bouton et petite blinde identiques).</div>' + Object.keys(GNAME).map(function (g) { var n = sh[g] || 0, c = Math.abs(n) + ' cran' + (Math.abs(n) > 1 ? 's' : ''); return '<div>' + GNAME[g] + ' : <b>' + (n > 0 ? 'élargie de ' + c : n < 0 ? 'resserrée de ' + c : 'range du club') + '</b></div>'; }).join('') +
+    return '<div class="small muted">Base : la range du club (6-max : la 1re place à parler, puis un cran plus large jusqu’au bouton ; petite blinde comme le bouton).</div>' + Object.keys(GNAME).map(function (g) { var n = sh[g] || 0, c = Math.abs(n) + ' cran' + (Math.abs(n) > 1 ? 's' : ''); return '<div>' + GNAME[g] + ' : <b>' + (n > 0 ? 'élargie de ' + c : n < 0 ? 'resserrée de ' + c : 'range du club') + '</b></div>'; }).join('') +
       (r.hands ? '<div class="small muted">Plus ' + r.hands + ' main' + (r.hands > 1 ? 's' : '') + ' reprise' + (r.hands > 1 ? 's' : '') + ' telle' + (r.hands > 1 ? 's' : '') + ' que tu les as jouées pendant le test.</div>' : '');
   }
   window.PA_PERSO = { build: build, summary: summary };

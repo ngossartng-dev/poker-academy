@@ -3,51 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Poker Academy Club · Télécharger</title>
+<title>Poker Academy · Télécharger</title>
 <link rel="icon" href="../icons/club-192.png">
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{--gold:#ffd23f;--bg:#0b0b0d;--panel:#16161b;--line:#2e2e35;--ink:#f4f4f6;--muted:#a9a9b3}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:18px;line-height:1.5}
-main{max-width:680px;margin:0 auto;padding:24px 16px 48px}
+main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
 h1{font-family:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;font-weight:800;text-transform:uppercase;color:var(--gold);font-size:44px;line-height:1;margin:8px 0 6px}
-.v{color:var(--muted);margin-bottom:20px}
+h2{margin:0 0 6px;font-size:22px}
+.v{color:var(--muted);margin-bottom:14px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.pick button{background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:16px;padding:14px 10px;font:inherit;cursor:pointer;text-align:left}
+.pick button b{display:block;font-size:20px}
+.pick button span{display:block;font-size:14px;color:var(--muted);line-height:1.35;margin-top:4px}
+.pick button.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.pick button.on b{color:var(--gold)}
 .card{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
-.card h2{margin:0 0 6px;font-size:22px}
 .card p{margin:6px 0;color:#d6d6dc;font-size:16px}
 a.btn{display:block;text-align:center;background:var(--gold);color:#1a1400;font-weight:800;border-radius:14px;padding:16px;text-decoration:none;margin-top:10px;font-size:19px}
 a.btn.alt{background:none;color:var(--gold);border:2px solid var(--gold)}
 ol{padding-left:22px;margin:8px 0;font-size:16px;color:#d6d6dc}
 .small{font-size:14px;color:var(--muted)}
+.ver{display:none}.ver.on{display:block}
 </style>
 </head>
 <body>
 <main>
-<img src="../icons/club-192.png" alt="" width="84" height="84" style="border-radius:18px">
-<h1>Poker Academy Club</h1>
+<div style="font-size:34px;letter-spacing:6px"><span>♠</span><span style="color:#ff5a5a">♥</span><span style="color:#ff5a5a">♦</span><span>♣</span></div>
+<h1>Poker Academy</h1>
 <div class="v" id="v">Dernière version…</div>
-<p style="color:#d6d6dc">L’appli du club : inscription des joueurs, tirage des tables, chrono avec annonces vocales, écran télé, télécommande et championnat.</p>
+<b>1. Choisis l’appli à installer</b>
+<div class="pick">
+<button id="pFull" data-v="full"><b>Appli complète</b><span>Cours, podcasts, quiz, ranges, tables d’entraînement, coach Yo, et aussi tout le club.</span></button>
+<button id="pClub" data-v="club"><b>Appli Club</b><span>Seulement le club : tournoi, chrono, écran télé, télécommande et championnat. Plus légère.</span></button>
+</div>
+<b>2. Choisis ton appareil</b>
 
-<div class="card"><h2>Android</h2>
-<p>Télécharge l’APK, ouvre-le, puis autorise l’installation si le téléphone le demande.</p>
-<a class="btn" id="apk" href="#">Télécharger pour Android</a></div>
+<div class="ver" id="vFull">
+<div class="card"><h2>Android</h2><p>Télécharge l’APK, ouvre-le, puis autorise l’installation si le téléphone le demande. Pour mettre à jour, installe le nouvel APK par-dessus : tes données sont gardées.</p><a class="btn" id="apk" href="#">Appli complète pour Android</a></div>
+<div class="card"><h2>PC Windows</h2><p>Lance l’installateur. Si Windows affiche « Windows a protégé votre ordinateur », clique sur « Informations complémentaires », puis « Exécuter quand même ».</p><a class="btn" id="exe" href="#">Appli complète pour Windows</a></div>
+<div class="card"><h2>iPhone et iPad</h2><ol><li>Ouvre le lien ci-dessous <b>dans Safari</b>.</li><li>Touche Partager (le carré avec une flèche).</li><li>Choisis « Sur l’écran d’accueil », puis « Ajouter ».</li></ol><a class="btn alt" href="../">Ouvrir l’appli complète</a></div>
+</div>
 
-<div class="card"><h2>PC Windows</h2>
-<p>Lance l’installateur. Si Windows affiche « Windows a protégé votre ordinateur », clique sur « Informations complémentaires », puis « Exécuter quand même ».</p>
-<a class="btn" id="exe" href="#">Télécharger pour Windows</a></div>
+<div class="ver" id="vClub">
+<div class="card"><h2>Android</h2><p>Télécharge l’APK, ouvre-le, puis autorise l’installation si le téléphone le demande.</p><a class="btn" id="apkc" href="#">Appli Club pour Android</a></div>
+<div class="card"><h2>PC Windows</h2><p>Lance l’installateur. Si Windows affiche « Windows a protégé votre ordinateur », clique sur « Informations complémentaires », puis « Exécuter quand même ».</p><a class="btn" id="exec" href="#">Appli Club pour Windows</a></div>
+<div class="card"><h2>iPhone et iPad</h2><ol><li>Ouvre le lien ci-dessous <b>dans Safari</b>.</li><li>Touche Partager (le carré avec une flèche).</li><li>Choisis « Sur l’écran d’accueil », puis « Ajouter » ; l’appli s’appelle « PA Club ».</li></ol><a class="btn alt" href="../club.html">Ouvrir l’appli Club</a></div>
+</div>
 
-<div class="card"><h2>iPhone et iPad</h2>
-<ol><li>Ouvre le lien ci-dessous <b>dans Safari</b>.</li><li>Touche Partager (le carré avec une flèche).</li><li>Choisis « Sur l’écran d’accueil », puis « Ajouter ».</li></ol>
-<a class="btn alt" href="../club.html">Ouvrir l’appli Club</a></div>
-
-<p class="small">Les mises à jour se font ensuite depuis l’appli (bouton « Mettre à jour »). Merci à Lionel et à tout le club ♥</p>
+<p class="small">Les deux applis peuvent être installées sur le même appareil. Le championnat se synchronise entre elles par Google Drive. Les mises à jour se font ensuite depuis l’appli (bouton « Mettre à jour »). Merci à Lionel et à tout le club ♥</p>
 </main>
 <script>
+function pick(v) {
+  document.getElementById('pFull').className = v === 'full' ? 'on' : '';
+  document.getElementById('pClub').className = v === 'club' ? 'on' : '';
+  document.getElementById('vFull').className = 'ver' + (v === 'full' ? ' on' : '');
+  document.getElementById('vClub').className = 'ver' + (v === 'club' ? ' on' : '');
+  try { history.replaceState(null, '', '#' + v); } catch (e) {}
+}
+document.getElementById('pFull').onclick = function () { pick('full'); };
+document.getElementById('pClub').onclick = function () { pick('club'); };
+pick(location.hash === '#club' ? 'club' : location.hash === '#full' ? 'full' : 'club');
 fetch('version.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
   document.getElementById('v').textContent = 'Version ' + j.version;
-  if (j.apkClub) document.getElementById('apk').href = j.apkClub;
-  if (j.exeClub) document.getElementById('exe').href = j.exeClub;
+  if (j.apk) document.getElementById('apk').href = j.apk; if (j.exe) document.getElementById('exe').href = j.exe;
+  if (j.apkClub) document.getElementById('apkc').href = j.apkClub; if (j.exeClub) document.getElementById('exec').href = j.exeClub;
 }).catch(function () { document.getElementById('v').textContent = ''; });
 </script>
 </body>

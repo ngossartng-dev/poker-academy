@@ -85,14 +85,24 @@
   var NICE = series(20, [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8]);
   var ANTES = series(5, [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8]);
   var SPEED = { lente: [1.25, 'Lente (+25 % par niveau)'], normale: [1.33, 'Normale (+33 %)'], rapide: [1.5, 'Rapide (+50 %)'] };
-  var CFG0 = { sb: 50, bb: 100, n: 18, mins: 20, speed: 'normale', ante: 'bb', anteFrom: 4, pauseEvery: 5, pauseMin: 10, chips: 20000, reStack: 0, addStack: 0, reEnd: 0, addPause: 0, colorUp: '' };
+  var CFG0 = { sb: 50, bb: 100, n: 18, mins: 20, speed: 'normale', ante: 'bb', anteFrom: 4, pauseEvery: 5, pauseMin: 10, chips: 20000, reStack: 0, addStack: 0, reEnd: 0, addPause: 0, colorUp: '', chipSet: '25, 100, 500, 1000, 5000' };
+  // les jetons du club (pas de jeton de 50) et le plus petit jeton encore en jeu à un niveau donné (après les retraits)
+  function chipSet() { var c = cfg(); return String(c.chipSet || CFG0.chipSet).split(/[^\d]+/).map(Number).filter(function (x) { return x > 0; }).sort(function (a, b) { return a - b; }); }
+  function unitAt(n) { var cs = chipSet(), gone = {}; colorUps().forEach(function (cu) { if (n >= cu.lvl) gone[cu.chip] = 1; }); var left = cs.filter(function (x) { return !gone[x]; }); return left[0] || cs[cs.length - 1] || 25; }
+  function upTo(x, u) { return Math.max(u, Math.ceil(x / u) * u); }
+  // une structure en texte, à partir de la liste des niveaux
+  function toText(L) { return L.map(function (l) { return l.pause ? 'pause ' + l.min : l.sb + '/' + l.bb + (l.ante ? (l.bbAnte ? ' bbante ' : ' ante ') + l.ante : '') + (l.min !== ST.mins ? ' ' + l.min + ' min' : ''); }).join('\n'); }
+  // les montants impossibles à payer avec les jetons en jeu à ce niveau
+  function badAmounts(l) { if (l.pause) return []; var u = unitAt(l.n), b = []; ['sb', 'bb', 'ante'].forEach(function (k) { if (l[k] && l[k] % u) b.push(k); }); return b; }
   function cfg() { return Object.assign({}, CFG0, ST.cfg || {}); }
   function nearest(list, x) { var b = list[0]; list.forEach(function (v) { if (Math.abs(v - x) < Math.abs(b - x)) b = v; }); return b; }
   function generate(c) {
     var lines = [], sb = c.sb, bb = c.bb, f = SPEED[c.speed] ? SPEED[c.speed][0] : 1.33;
     for (var i = 1; i <= c.n; i++) {
       var ante = '';
-      if (c.ante !== 'none' && i >= c.anteFrom) ante = c.ante === 'bb' ? ' bbante ' + bb : ' ante ' + nearest(ANTES, bb / 8);
+      // montants payables avec les jetons du club en jeu à ce niveau (pas de jeton de 50 : tout est en multiples du plus petit jeton)
+      var u = unitAt(i); bb = upTo(bb, 2 * u); sb = bb / 2;
+      if (c.ante !== 'none' && i >= c.anteFrom) ante = c.ante === 'bb' ? ' bbante ' + bb : ' ante ' + upTo(nearest(ANTES, bb / 8), u);
       lines.push(sb + '/' + bb + ante);
       if (c.pauseEvery > 0 && i % c.pauseEvery === 0 && i < c.n) lines.push('pause ' + c.pauseMin);
       // niveau suivant : la grosse blinde « ronde » la plus proche de bb × facteur, toujours au-dessus
@@ -502,6 +512,16 @@
     var mins = Math.ceil(secs / 60);
     return (nx ? 'Prochain niveau : ' + lvlTxt(nx) : 'Dernier niveau') + (pz > 0 && !(nx && nx.pause) ? ' · prochaine pause dans ' + (mins >= 60 ? hm(mins) : mins + ' min') : '');
   }
+  function lvEditor(L) {
+    var IN2 = 'background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:3px 4px;font:inherit;min-height:40px;box-sizing:border-box';
+    var inp = function (i, f, v, w, bad) { return '<input class="lv-in" data-i="' + i + '" data-f="' + f + '" type="number" inputmode="numeric" min="0" value="' + v + '" style="width:' + w + 'px;' + IN2 + (bad ? ';border-color:#e0464c;color:#ff8a8a' : '') + '">'; };
+    if (!L.length) return '<div class="small muted">Aucun niveau : touche « Créer la structure » ou « + Un niveau à la fin ».</div>';
+    return '<div style="overflow-x:auto"><table class="tbl lv-tbl"><tr><th>N°</th><th>Petite</th><th>Grosse</th><th>Ante</th><th>Min</th><th></th></tr>' + L.map(function (l, i) {
+      var bad = badAmounts(l), ctl = '<td class="lv-ctl"><button data-tmact="lvAdd" data-v="' + i + '" title="Ajouter un niveau dessous">+</button><button data-tmact="lvPause" data-v="' + i + '" title="Ajouter une pause dessous">☕</button><button data-tmact="lvDel" data-v="' + i + '" title="Supprimer">✕</button></td>';
+      if (l.pause) return '<tr class="lv-pause"><td>☕</td><td colspan="3">Pause</td><td>' + inp(i, 'min', l.min, 42) + '</td>' + ctl + '</tr>';
+      return '<tr><td><b>' + l.n + '</b></td><td>' + inp(i, 'sb', l.sb, 56, bad.indexOf('sb') >= 0) + '</td><td>' + inp(i, 'bb', l.bb, 60, bad.indexOf('bb') >= 0) + '</td><td><select class="lv-in" data-i="' + i + '" data-f="kind" style="' + IN2 + ';width:60px"><option value="none"' + (!l.ante ? ' selected' : '') + '>Non</option><option value="bb"' + (l.ante && l.bbAnte ? ' selected' : '') + '>GB</option><option value="classic"' + (l.ante && !l.bbAnte ? ' selected' : '') + '>Joueur</option></select>' + (l.ante && !l.bbAnte ? inp(i, 'ante', l.ante, 60, bad.indexOf('ante') >= 0) : '') + '</td><td>' + inp(i, 'min', l.min, 42) + '</td>' + ctl + '</tr>';
+    }).join('') + '</table></div>' + (L.some(function (l) { return badAmounts(l).length; }) ? '<div class="small" style="color:#ff8a8a">Les cases en rouge ne tombent pas juste avec les jetons en jeu (plus petit jeton : ' + chipSet()[0] + ', puis selon les retraits).</div>' : '');
+  }
   function view() {
     var ui = U(), s = live();
     if (EDIT || !s.L.length) {
@@ -529,10 +549,16 @@
         '<b>3. Les pauses</b>' +
         row('Une pause tous les … niveaux (0 = aucune)', num('tmPEvery', c.pauseEvery, 80, 0, 30)) +
         row('Durée des pauses (minutes)', num('tmPMin', c.pauseMin, 80, 1, 60)) +
+        '<b>Les jetons du club</b>' +
+        row('Valeurs des jetons', '<input id="tmChipSet" type="text" value="' + ui.esc(c.chipSet || CFG0.chipSet) + '" style="width:210px;' + IN + '">') +
+        row('Retrait des petits jetons', '<input id="tmColorUp" type="text" value="' + ui.esc(c.colorUp || '') + '" placeholder="25 au niveau 8" style="width:210px;' + IN + '">') +
+        '<div class="small muted">Les blindes et les antes créées sont toujours des multiples du plus petit jeton en jeu (pas de jeton de 50 : 75/150 se paie avec des 25 ; après le retrait des 25, tout passe en centaines).</div>' +
         '<button class="btn gold block" data-tmact="gen">Créer la structure</button></div>' +
-        '<div class="card stack"><b>Les niveaux</b><div class="small muted">Un niveau par ligne : « 100/200 », « 100/200 bbante 200 » (ante de grosse blinde) ou « 100/200 ante 25 » (ante classique). « pause 10 » ajoute une pause de 10 minutes. Une durée différente en fin de ligne : « 600/1200 bbante 1200 30 min ».</div>' +
-        '<textarea id="tmText" rows="14" style="width:100%;' + IN + ';padding:8px">' + ui.esc(ST.text) + '</textarea>' +
-        '<div class="row"><button class="btn gold" data-tmact="savestruct" style="flex:1">Enregistrer et revenir au minuteur</button><button class="btn" data-tmact="preview">Aperçu</button></div>' + prev + '</div></div>');
+        '<div class="card stack"><b>4. Les niveaux, un par un</b><div class="small muted">Change n’importe quelle case : petite blinde, grosse blinde, ante (Non, GB = ante de grosse blinde, Joueur = ante par joueur), durée en minutes. « + » ajoute un niveau juste en dessous, « ☕ » une pause, « ✕ » supprime la ligne. Une case en rouge ne peut pas se payer avec les jetons en jeu à ce niveau.</div>' +
+        lvEditor(L0) +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="lvAdd" data-v="' + (L0.length - 1) + '">+ Un niveau à la fin</button><button class="btn" data-tmact="lvPause" data-v="' + (L0.length - 1) + '">+ Une pause à la fin</button></div>' +
+        '<button class="btn gold block" data-tmact="savestruct">Enregistrer et revenir au minuteur</button>' + prev +
+        '<details><summary class="small muted">Saisir ou coller la structure en texte</summary><div class="small muted">Un niveau par ligne : « 100/200 », « 100/200 bbante 200 » ou « 100/200 ante 25 ». « pause 10 » ajoute une pause. Une durée différente : « 600/1200 bbante 1200 30 min ».</div><textarea id="tmText" rows="10" style="width:100%;' + IN + ';padding:8px">' + ui.esc(ST.text) + '</textarea><button class="btn" data-tmact="txtApply">Remplacer les niveaux par ce texte</button></details></div></div>');
     }
     var l = s.L[s.idx], run = !!ST.since;
     var body = '<div class="stack" style="text-align:center;align-items:stretch;max-width:900px;margin:0 auto">' +
@@ -663,6 +689,18 @@
     else if (a === 'rmNew') { RM.code = String(1000 + Math.floor(Math.random() * 9000)); rmStart(true); return; }
     else if (a === 'ecranOut') { location.hash = T().players.length ? '#tournoi' : '#minuteur'; return; }
     else if (a === 'done') EDIT = false;
+    else if (a === 'txtApply') { var tx = document.getElementById('tmText'); if (tx) { ST.text = tx.value; ST.structAt = Date.now(); } }
+    else if (a === 'lvDel' || a === 'lvAdd' || a === 'lvPause') {
+      var LL = levels(), i0 = +t.getAttribute('data-v');
+      if (a === 'lvDel') LL.splice(i0, 1);
+      else if (a === 'lvPause') LL.splice(i0 + 1, 0, { pause: true, min: cfg().pauseMin || 10 });
+      else {
+        var prevL = LL.slice(0, i0 + 1).filter(function (x) { return !x.pause; }).pop(), nn = (LL.slice(0, i0 + 1).filter(function (x) { return !x.pause; }).length) + 1, u0 = unitAt(nn);
+        var nb0 = prevL ? upTo(NICE.filter(function (x) { return x > prevL.bb; }).reduce(function (bst, x) { return Math.abs(x - prevL.bb * 1.33) < Math.abs(bst - prevL.bb * 1.33) ? x : bst; }, prevL.bb * 2), 2 * u0) : upTo(cfg().bb, 2 * u0);
+        LL.splice(i0 + 1, 0, { n: 0, sb: nb0 / 2, bb: nb0, ante: prevL && prevL.ante ? (prevL.bbAnte ? nb0 : upTo(prevL.ante * nb0 / prevL.bb, u0)) : 0, bbAnte: !!(prevL && prevL.bbAnte), min: prevL ? prevL.min : ST.mins });
+      }
+      ST.text = toText(LL); ST.structAt = Date.now();
+    }
     else if (a === 'gen' || a === 'preview' || a === 'savestruct') {
       var v = function (id, d) { var el = document.getElementById(id); var x = el ? parseInt(el.value, 10) : NaN; return isNaN(x) ? d : x; };
       var g = function (id, d) { var el = document.getElementById(id); return el ? el.value : d; };
@@ -670,11 +708,19 @@
       ST.cfg = Object.assign(cfg(), { sb: Math.max(1, v('tmSb', c0.sb)), bb: Math.max(1, v('tmBb', c0.bb)), n: Math.max(1, Math.min(90, v('tmN', c0.n))), mins: Math.max(1, Math.min(120, v('tmMins', c0.mins))), speed: g('tmSpeed', c0.speed), ante: g('tmAnte', c0.ante), anteFrom: Math.max(1, v('tmAnteFrom', c0.anteFrom)), pauseEvery: Math.max(0, v('tmPEvery', c0.pauseEvery)), pauseMin: Math.max(1, v('tmPMin', c0.pauseMin)), chips: Math.max(0, v('tmChips', c0.chips)), reStack: Math.max(0, v('tmRe', c0.reStack)), addStack: Math.max(0, v('tmAdd', c0.addStack)) });
       if (ST.cfg.sb > ST.cfg.bb) ST.cfg.sb = Math.round(ST.cfg.bb / 2);
       ST.mins = ST.cfg.mins;
-      ST.text = a === 'gen' ? generate(ST.cfg) : document.getElementById('tmText').value;
+      var csE = document.getElementById('tmChipSet'), cuE = document.getElementById('tmColorUp'); if (csE) ST.cfg.chipSet = csE.value; if (cuE) ST.cfg.colorUp = cuE.value;
+      if (a === 'gen') ST.text = generate(ST.cfg);
       ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0);
       if (a === 'savestruct') { var L2 = levels(); ST.idx = 0; ST.rem = L2.length ? L2[0].min * 60 : 0; ST.since = null; EDIT = false; awake(false); }
     }
     save(); keepScroll(function () { U().render(); });
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target; if (!el || !el.classList || !el.classList.contains('lv-in')) return;
+    var LL = levels(), i = +el.getAttribute('data-i'), f = el.getAttribute('data-f'), x = parseInt(String(el.value).replace(/\s/g, ''), 10), l = LL[i]; if (!l) return;
+    if (f === 'kind') { l.bbAnte = el.value === 'bb'; if (el.value === 'none') l.ante = 0; else if (!l.ante) l.ante = l.bbAnte ? l.bb : upTo(l.bb / 8, unitAt(l.n)); if (l.bbAnte) l.ante = l.bb; }
+    else if (!isNaN(x) && x >= 0) { l[f] = f === 'min' ? Math.max(1, Math.min(240, x)) : x; if (f === 'bb' && l.bbAnte && l.ante) l.ante = x; }
+    ST.text = toText(LL); ST.structAt = Date.now(); save(); keepScroll(function () { U().render(); });
   });
   document.addEventListener('change', function (e) { if (e.target && e.target.id === 'tnDate') { T().date = e.target.value; save(); U().render(); return; } });
   document.addEventListener('change', function (e) { var id = e.target && e.target.id;

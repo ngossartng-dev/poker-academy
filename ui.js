@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.37.2';
+  var VERSION = '2.38.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -256,6 +256,10 @@
     if (RS.type === 'iso' || RS.type === 'squeeze') {
       if (RS.depth === 'mid' && RS.type === 'iso') RS.depth = 'push'; if (RS.depth === 'push' && RS.type === 'squeeze') RS.depth = 'mid';
       out += '<div class="seg">' + (RS.type === 'iso' ? [['deep', 'Plus de 20 BB'], ['push', '12 à 20 BB (iso-tapis)']] : [['deep', 'Plus de 30 BB'], ['mid', '20 à 30 BB (squeeze à tapis)']]).map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    } else if (RS.type === 'bbdef' || (RS.type === 'def' && RS.pos === 'SB')) {
+      // défense des blindes : seulement à 40 BB et plus pour le moment
+      RS.depth = 'deep'; s = rsSit(); cm = PA.chart(prof, s);
+      out += '<div class="small muted">Défense des blindes : 40 BB et plus. Sous 40 BB, le club ne défend pas les blindes pour le moment.</div>';
     } else if (RS.type !== 'vs3bet' && RS.type !== 'callshove') {
       out += '<div class="seg">' + [['deep', '40 BB et +'], ['mid', '20-40 BB'], ['push', 'Moins de 20 BB']].map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     }
@@ -340,8 +344,8 @@
     } else
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
     out += rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
-    if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club (UTG = la range vue au club, un cran plus large à chaque place, bouton et petite blinde identiques). Face à un 3-bet : 4-bet ou tapis avec TT+, AK, AQs ; payer avec 99, AJs, ATs, KQs à KTs, QJs, QTs, JTs, AQo.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
-    if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">' + (plan3 ? 'Touche une case pour changer sa couleur : gris, rose, vert, orange. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
+    if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club, une range 6-max. La 1re place à parler (LJ, et aussi UTG à MP sur une table à 9 ou 10) joue la range vue au club ; HJ, CO et le bouton s’élargissent d’un cran à chaque place ; la petite blinde ouvre comme le bouton. Les couleurs disent quoi faire si on te relance.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
+    if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
@@ -584,8 +588,9 @@
         tries3++;
         if (opts.pos && opts.pos !== 'all' && s3.type === 'open') s3.pos = opts.pos;
         if (opts.depth && opts.depth !== 'any' && (s3.type === 'open' || s3.type === 'def')) {
+          if (s3.type === 'def' && (s3.pos === 'BB' || s3.pos === 'SB') && opts.depth !== 'deep') { s3 = null; continue; } // blindes : 40 BB et plus seulement
           if (opts.depth === 'deep') s3.bb = 100; else if (opts.depth === 'mid') s3.bb = 30;
-          else { if (s3.type === 'def') { if (s3.pos !== 'BB') { s3 = null; continue; } s3.bb = [12, 15, 18][Math.floor(Math.random() * 3)]; continue; } s3.bb = PA.PUSH_DEPTHS[Math.floor(Math.random() * 6)]; }
+          else { if (s3.type === 'def') { s3 = null; continue; } s3.bb = PA.PUSH_DEPTHS[Math.floor(Math.random() * 6)]; }
         }
       } while (!s3 && tries3 < 30);
       if (!s3) s3 = PA.randomSituation('push');
@@ -823,7 +828,7 @@
     if (errors.length) out += '<div class="card stack"><b>Erreurs à corriger</b>' + errors.map(function (e) { return '<div>' + handText(e.a.q.cards) + ' — ' + describeSit(e.a.q.sit) + ' : tu as choisi « ' + (e.a.given ? actName(e.a.given, e.a.q.sit) : 'rien') + ' », ton profil joue « ' + actName(e.right, e.a.q.sit) + ' ».</div>'; }).join('') + '</div>';
     if (window.PA_PERSO) {
       var nA = d.answers.length;
-      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : la range du club (celle de Lionel : UTG, puis un cran plus large à chaque place). Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, j’élargis ou je resserre d’un ou deux crans. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
+      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : la range du club (celle de Lionel, en 6-max : la 1re place à parler, puis un cran plus large jusqu’au bouton). Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, j’élargis ou je resserre d’un ou deux crans. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
     }
     out += '<div class="row"><button class="btn gold" data-act="adopt" data-v="' + best + '" style="flex:1">Adopter le profil ' + pr.short + '</button><button class="btn" data-act="nav" data-v="home">Garder mon profil (' + PA.PROFILES[p.profile || 'tag'].short + ')</button></div></div>';
     return out;
@@ -1006,7 +1011,8 @@
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
-      case 'toggleEdit': RS.edit = !RS.edit; rerenderRange(); break;
+      case 'toggleEdit': RS.edit = !RS.edit; RS.brush = null; rerenderRange(); break;
+      case 'rsBrush': RS.brush = RS.brush === v ? null : v; rerenderRange(); break;
       case 'persoClub': if (typeof confirm === 'function' && !confirm('Repartir de la range du club ? Tes modifications actuelles du profil Perso seront effacées.')) break; p.perso = {}; p.persoBase = 'club'; p.persoFrom = null; PA.save(); RS.edit = false; rerenderRange(); break;
       case 'cell': zoomCell(v); break;
       case 'editCell': editCell(v); break;
@@ -1068,7 +1074,7 @@
     if (s.type === 'open' && PA.depthKey(s.bb) === 'deep' && !s.bubble) {
       // ouverture à 40 BB et plus : gris → rose (ouvrir, se coucher si relance) → vert (payer) → orange (4-bet ou tapis) → gris
       var sc = ['UTG', 'UTG+1', 'MP'].indexOf(s.pos) >= 0 ? 'early' : (s.pos === 'BTN' ? 'ip' : (s.pos === 'SB' ? 'bvb' : 'oop')), s3 = { type: 'vs3bet', scen: sc, bb: 100 }, k3 = PA.sitKey(s3);
-      var v = PA.chart('perso', s3)[h], st = cur !== 'raise' ? 0 : (v === 'call' ? 2 : (v === 'fourbet' || v === 'allin' ? 3 : 1)), n2 = (st + 1) % 4;
+      var v = PA.chart('perso', s3)[h], st = cur !== 'raise' ? 0 : (v === 'call' ? 2 : (v === 'fourbet' || v === 'allin' ? 3 : 1)), n2 = RS.brush ? ['gris', 'rose', 'vert', 'orange'].indexOf(RS.brush) : (st + 1) % 4;
       p.perso[key] = p.perso[key] || {}; p.perso[key][h] = n2 === 0 ? 'fold' : 'raise';
       if (n2 > 0) { p.perso[k3] = p.perso[k3] || {}; p.perso[k3][h] = ['', 'fold', 'call', 'fourbet'][n2]; }
       PA.save(); rerenderRange(); return;

@@ -844,3 +844,22 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .legend3>div{display:flex;align-items:center;gap:12px;font-size:1em;line-height:1.3}
 .legend3 i{flex:none;width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.25)}
 .legend3 small{color:var(--muted);white-space:nowrap}
+
+/* éditeur de structure niveau par niveau */
+.lv-tbl{border-collapse:collapse}.lv-tbl td,.lv-tbl th{padding:3px 2px;vertical-align:middle}.lv-tbl input,.lv-tbl select{font-size:15px!important}
+.lv-tbl .lv-pause td{color:var(--gold);font-weight:700}
+.lv-ctl{white-space:nowrap}
+.lv-ctl button{min-width:30px;width:30px;height:34px;padding:0;margin-left:2px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;cursor:pointer}
+
+.brush{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.brush button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.brush button.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.brush i{width:20px;height:20px;border-radius:6px;border:1px solid rgba(255,255,255,.3)}
+
+/* reprise du classement, joueur par joueur */
+.lg-crows{display:flex;flex-direction:column;gap:6px}
+.lg-crow{display:grid;grid-template-columns:minmax(0,1fr) 66px 52px 40px;gap:5px;align-items:center}
+.lg-crow input{width:100%;min-width:0;padding:6px 7px!important;font-size:1em!important}
+.lg-crow input[data-f="name"]{text-transform:uppercase}
+.lg-crow .btn{min-height:44px;padding:0}
+.lg-crh span{font-size:13px;color:var(--muted)}

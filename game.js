@@ -640,13 +640,14 @@
         return null;
       }
       if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) {
+        // défense des blindes sous 40 BB : pas de range au club pour le moment, Yo ne juge pas ce coup
+        if ((p === 'BB' || p === 'SB') && eff < 40) return null;
         var ds = { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : (eff > 30 ? Math.round(eff) : 30) };
         if (p === 'BB') {
           // défense de grosse blinde : selon le profil de l'ouvreur, la taille de sa relance, et ton tapis sous 20 BB
           var ok = OPP[G.players[H.opener].prof] ? OPP[G.players[H.opener].prof].key : 'reg', xs = H.bets[H.opener] / L.bb;
           var vp = ok === 'nit' || ok === 'surv' ? 'serre' : (ok === 'maniac' ? 'mani' : (ok === 'lag' || ok === 'fan' ? 'large' : 'std'));
           if (vp !== 'std') ds.vp = vp; if (xs <= 2.2) ds.sz = 2; else if (xs > 2.75) ds.sz = 3;
-          if (eff < 20 && eff >= 8) ds.bb = Math.round(eff);
         }
         return { sit: ds, hand: code };
       }

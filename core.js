@@ -51,9 +51,10 @@
 
   /* ---------- Ranges ---------- */
   /* ---------- Range du club (Lionel) : base du profil Perso ----------
-     Photo du 11/11/2026 : range « MP en 6-max », utilisée pour UTG à 9 ou 10 joueurs, à 40 BB.
-     À chaque place suivante, chaque ligne de la grille descend d'un cran ; le bouton et la petite blinde ont la même range. */
-  var CLUB_STEP = { UTG: 0, 'UTG+1': 1, MP: 2, LJ: 3, HJ: 4, CO: 5, BTN: 6, SB: 6 }, CLUB_MAX = 6, RK = 'AKQJT98765432';
+     Photo du 11/11/2026 : range « MP » d'une table à 6 (la 1re place à parler), à 40 BB et plus. C'est une range 6-max :
+     on ne l'adapte pas aux tables à 9 ou 10, les places d'avant (UTG, UTG+1, MP) jouent la même range.
+     Puis chaque place suivante (HJ, CO, bouton) descend d'un cran par ligne ; la petite blinde ouvre comme le bouton. */
+  var CLUB_STEP = { UTG: 0, 'UTG+1': 0, MP: 0, LJ: 0, HJ: 1, CO: 2, BTN: 3, SB: 3 }, CLUB_MAX = 6, RK = 'AKQJT98765432';
   // [carte haute, kicker le plus bas au départ, cran où la ligne apparaît, kicker le plus bas possible]
   var CLUB_S = [['A', '2', 0, '2'], ['K', '8', 0, '2'], ['Q', '8', 0, '2'], ['J', '8', 0, '4'], ['T', '8', 0, '6'], ['9', '8', 0, '5'], ['8', '7', 0, '4'], ['7', '6', 1, '4'], ['6', '5', 2, '3'], ['5', '4', 3, '2'], ['4', '3', 4, '3']];
   var CLUB_O = [['A', '9', 0, '2'], ['K', 'T', 0, '7'], ['Q', 'J', 0, '8'], ['J', 'T', 1, '8'], ['T', '9', 2, '8'], ['9', '8', 3, '7'], ['8', '7', 4, '7'], ['7', '6', 5, '6']];
@@ -384,9 +385,10 @@
     else if (k === 'def') {
       pos = rnd(['BB', 'BB', 'BB', 'BTN', 'CO', 'SB', 'HJ']); var ops = validOpeners(pos);
       if (pos !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; });
-      s = { type: 'def', pos: pos, opener: rnd(ops), bb: rnd([100, 100, 30]) };
-      // en grosse blinde : une fois sur deux, l'ouvreur a un profil ou une taille de relance particuliers ; parfois un tapis court
-      if (pos === 'BB' && Math.random() < 0.5) { s.vp = rnd(['serre', 'large', 'mani', 'std']); s.sz = rnd([2, 2.5, 3]); if (s.vp === 'std') delete s.vp; if (s.sz === 2.5) delete s.sz; if (Math.random() < 0.25) s.bb = rnd([12, 15, 18]); }
+      // défense des blindes : seulement à 40 BB et plus (règle du club, pour le moment)
+      s = { type: 'def', pos: pos, opener: rnd(ops), bb: pos === 'BB' || pos === 'SB' ? 100 : rnd([100, 100, 30]) };
+      // en grosse blinde : une fois sur deux, l'ouvreur a un profil ou une taille de relance particuliers
+      if (pos === 'BB' && Math.random() < 0.5) { s.vp = rnd(['serre', 'large', 'mani', 'std']); s.sz = rnd([2, 2.5, 3]); if (s.vp === 'std') delete s.vp; if (s.sz === 2.5) delete s.sz; }
     } else if (k === 'push') { s = { type: 'push', pos: rnd(POS.slice(0, 8)), bb: rnd(PUSH_DEPTHS) }; }
     else if (k === 'hu') { bb = rnd(PUSH_DEPTHS); s = Math.random() < 0.5 ? { type: 'push', pos: 'SB', bb: bb, hu: true } : { type: 'callshove', pos: 'BB', opener: 'SB', bb: bb, hu: true }; }
     else if (k === 'callshove') { bb = rnd(PUSH_DEPTHS); var sk = rnd(shoveSituations(bb)); var m = sk.split(' vs shove '); s = { type: 'callshove', pos: m[0], opener: m[1], bb: bb }; }
@@ -492,7 +494,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 6: 2, 7: 3, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 2, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
