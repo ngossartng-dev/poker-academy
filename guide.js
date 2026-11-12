@@ -64,6 +64,7 @@
         'Prime : qui élimine le vainqueur du tournoi précédent du même type (mercredi ou deep) gagne 2 points.',
         'Club › Championnat : onglets Classement (podium, barres mercredi / deep / primes, moyenne), Semaines, Tournois et Trophées.',
         'Touche un nom pour ouvrir sa fiche : rang, moyenne, courbe de la saison, bête noire, victime préférée, tous ses tournois.',
+        'La saison a commencé avant l’appli ? Onglet Classement › « ✍️ Saisie manuelle ». « Reprendre le classement en cours » : un joueur par ligne, le pseudo puis ses points (YO 45,5), et si tu veux le nombre de tournois déjà joués (YO 45,5 4). Ces points s’ajoutent à ceux des tournois suivants (en gris dans les barres) ; tu peux les modifier ou les supprimer. « Ajouter un tournoi déjà joué » : la date, le type, puis les joueurs du 1er au dernier ; les points sont calculés avec le barème.',
         'Fin d’année : onglet Trophées › « Clôturer la saison » ; le podium et les trophées entrent au palmarès. Les tournois de janvier partent dans la saison suivante.'],
       tips: ['Un tournoi « Hors championnat » est enregistré sans points.', 'Un tournoi enregistré par erreur : onglet Tournois, ouvre-le, « Supprimer ce tournoi du classement ».'] },
     { id: 'exports', club: true, t: 'Exports et partage', i: 'Le classement et les tournois se partagent en Excel, en PDF, en image ou en texte.',

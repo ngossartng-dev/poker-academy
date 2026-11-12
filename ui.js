@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.36.0';
+  var VERSION = '2.36.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -103,7 +103,7 @@
     var LG = window.PA_LEAGUE, TM = window.PA_TIMER, t = null;
     try { t = JSON.parse(localStorage.getItem('pa2timer') || '{}').t; } catch (e) {}
     var live = t && t.players && t.players.length ? t.players.filter(function (x) { return !x.out; }).length + ' joueurs en jeu sur ' + t.players.length : 'Inscrire les joueurs, tirer les tables, lancer le chrono';
-    var st = null, yr = String(new Date().getFullYear()); if (LG) { var list = LG.load().list.filter(function (x) { return x.date.slice(0, 4) === yr; }); st = { n: list.length, top: LG.standings(list)[0] }; }
+    var st = null, yr = String(new Date().getFullYear()); if (LG) { var list = LG.load().list.filter(function (x) { return x.date.slice(0, 4) === yr; }); st = { n: list.length, top: LG.standings(list, yr)[0] }; }
     var body = '<div class="stack"><div class="row" style="gap:12px;align-items:center">' + logo() + '<div><div class="disp" style="font-size:30px">Poker Academy</div><div class="disp" style="font-size:20px;color:var(--gold);letter-spacing:.2em">Club</div></div></div>' +
       '<a class="big-cta" href="#tournoi" style="text-decoration:none"><div><div class="disp" style="font-size:1.45em">Tournoi du club</div><div style="font-weight:500">' + esc(live) + '</div></div>' + IC.arrow + '</a>' +
       '<div class="grid4"><a class="tile" href="#ecran"><b>📺 Écran télé</b><span>Blindes, chrono, joueurs, changements de place, en grand.</span></a>' +

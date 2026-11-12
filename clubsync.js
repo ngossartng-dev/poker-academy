@@ -17,9 +17,9 @@
   function localData() {
     var d = league().load(), st = timer() && timer().getStruct ? timer().getStruct() : null;
     return { app: 'Poker Academy Club', v: 1, at: Date.now(), by: app() + ' · ' + device(),
-      league: { list: d.list || [], deleted: d.deleted || [], roster: d.roster || null, rosterAt: d.rosterAt || 0, closed: d.closed || {} }, struct: st };
+      league: { list: d.list || [], deleted: d.deleted || [], roster: d.roster || null, rosterAt: d.rosterAt || 0, closed: d.closed || {}, carry: d.carry || {} }, struct: st };
   }
-  function sig(x) { try { return JSON.stringify([x.league.list.map(function (t) { return t.id + ':' + (t.editAt || 0); }).sort(), x.league.deleted.slice().sort(), x.league.rosterAt, x.league.roster, x.league.closed, x.struct && x.struct.at]); } catch (e) { return ''; } }
+  function sig(x) { try { return JSON.stringify([x.league.list.map(function (t) { return t.id + ':' + (t.editAt || 0); }).sort(), x.league.deleted.slice().sort(), x.league.rosterAt, x.league.roster, x.league.closed, x.league.carry || {}, x.struct && x.struct.at]); } catch (e) { return ''; } }
   function merge(a, b) {
     if (!b || !b.league) return a;
     var del = {}; (a.league.deleted || []).concat(b.league.deleted || []).forEach(function (id) { del[id] = 1; });
@@ -28,12 +28,13 @@
     var list = Object.keys(m).map(function (k) { return m[k]; }).sort(function (x, y) { return x.date < y.date ? -1 : x.date > y.date ? 1 : 0; });
     var ra = a.league.rosterAt || 0, rb = b.league.rosterAt || 0;
     var closed = {}; [a.league.closed || {}, b.league.closed || {}].forEach(function (c) { Object.keys(c).forEach(function (y) { if (!closed[y] || (c[y].at || 0) > (closed[y].at || 0)) closed[y] = c[y]; }); });
+    var carry = {}; [a.league.carry || {}, b.league.carry || {}].forEach(function (c) { Object.keys(c).forEach(function (y) { if (!carry[y] || (c[y].at || 0) > (carry[y].at || 0)) carry[y] = c[y]; }); });
     var sa = a.struct, sb = b.struct, struct = !sa ? sb : !sb ? sa : ((sb.at || 0) > (sa.at || 0) ? sb : sa);
-    return { app: a.app, v: 1, at: Date.now(), by: a.by, league: { list: list, deleted: Object.keys(del), roster: rb > ra ? b.league.roster : a.league.roster, rosterAt: Math.max(ra, rb), closed: closed }, struct: struct };
+    return { app: a.app, v: 1, at: Date.now(), by: a.by, league: { list: list, deleted: Object.keys(del), roster: rb > ra ? b.league.roster : a.league.roster, rosterAt: Math.max(ra, rb), closed: closed, carry: carry }, struct: struct };
   }
   function applyLocal(x) {
     var d = league().load();
-    d.list = x.league.list; d.deleted = x.league.deleted; d.closed = x.league.closed;
+    d.list = x.league.list; d.deleted = x.league.deleted; d.closed = x.league.closed; d.carry = x.league.carry || d.carry || {};
     if (x.league.roster) { d.roster = x.league.roster; d.rosterAt = x.league.rosterAt; }
     league().saveRaw(d);
     if (x.struct && timer() && timer().setStruct) timer().setStruct(x.struct);

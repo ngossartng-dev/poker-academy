@@ -13,13 +13,13 @@
   function yearData(year) {
     var lg = L(), list = lg.load().list.filter(function (x) { return x.date.slice(0, 4) === year; });
     var champ = list.filter(function (x) { return x.type !== 'libre'; });
-    var st = lg.standings(list), seen = {}, prim = 0;
+    var st = lg.standings(list, year), seen = {}, prim = 0;
     champ.forEach(function (tn) { tn.rows.forEach(function (r) { seen[r.name.toLowerCase()] = 1; prim += r.bonus || 0; }); });
     var ws = {}; list.forEach(function (x) { (ws[lg.week(x.date)] = ws[lg.week(x.date)] || []).push(x); });
     var weeks = [], cum = [];
     Object.keys(ws).sort().forEach(function (w) {
       cum = cum.concat(ws[w]);
-      var gen = lg.standings(cum), rk = {}, pts = {};
+      var gen = lg.standings(cum, year), rk = {}, pts = {};
       gen.forEach(function (o, i) { rk[o.name.toLowerCase()] = { r: i + 1, t: o.total }; });
       var stw = lg.standings(ws[w]); stw.forEach(function (o) { pts[o.name.toLowerCase()] = o.total; });
       var first = ws[w].map(function (x) { return x.date; }).sort()[0];
@@ -32,6 +32,7 @@
       nLib: list.filter(function (x) { return x.type === 'libre'; }).length, nPlayers: Object.keys(seen).length, avgPlayers: nT ? r1(list.reduce(function (a, x) { return a + x.n; }, 0) / nT) : 0,
       primes: r1(prim), st: st, weeks: weeks };
   }
+  function carryNote(year) { var c = L().carryOf ? L().carryOf(year) : null; return c ? ' · le total inclut la reprise du classement au ' + dfr(c.date) : ''; }
   function tnTitle(tn) { return L().TYPES[tn.type].name + ' du ' + dfr(tn.date); }
   function tnSub(tn) { return tn.n + ' joueurs' + (tn.re ? ' · ' + tn.re + ' re-entry' : '') + (tn.add ? ' · ' + tn.add + ' add-on' : '') + (tn.type === 'deep' ? ' · points ×1,5' : tn.type === 'libre' ? ' · hors championnat' : '') + (tn.holder ? ' · tête mise à prix : ' + tn.holder : '') + (tn.prize ? ' · dotation ' + tn.prize + ' €' : ''); }
   function tnBounty(tn) { var r = tn.rows.filter(function (x) { return x.bonus; })[0]; return r ? r.name : ''; }
@@ -124,7 +125,7 @@
     var D = yearData(year), now = new Date().toLocaleDateString('fr-FR'); prio = 0;
     // 1. classement : chiffres clés, puis le tableau avec barres
     var head = H(['Rang', 'Joueur', 'Total', 'Mercredi', 'Deep ×1,5', 'Primes', 'Tournois', 'Moyenne / tournoi', 'Victoires', 'Meilleure place', 'Éliminations']); head.h = 32;
-    var r1s = [[{ v: 'Championnat du club · ' + year, s: 2 }], [{ v: 'Édité le ' + now + ' · Poker Academy · le deep rapporte ×1,5 et compte dans le même classement que les mercredis', s: 3 }], []]
+    var r1s = [[{ v: 'Championnat du club · ' + year, s: 2 }], [{ v: 'Édité le ' + now + ' · Poker Academy · le deep rapporte ×1,5 et compte dans le même classement que les mercredis' + carryNote(year), s: 3 }], []]
       .concat(kpiRows([['Tournois', D.nT], ['Mercredis', D.nMer], ['Deeps (×1,5)', D.nDeep], ['Joueurs classés', D.nPlayers], ['Moyenne de joueurs par tournoi', D.avgPlayers], ['Points de prime', D.primes]]), [[], head]);
     var top = r1s.length;
     D.st.forEach(function (o, i) {
@@ -362,7 +363,7 @@
   function yearPdf(year) {
     var D = yearData(year), doc = Doc('Championnat du club ' + year);
     doc.newPage();
-    doc.h1('Championnat du club', 'Classement général : mercredis et deeps comptent ensemble (le deep rapporte ×1,5) · les 3 premiers sont récompensés', year);
+    doc.h1('Championnat du club', 'Classement général : mercredis et deeps comptent ensemble (le deep rapporte ×1,5) · les 3 premiers sont récompensés' + carryNote(year), year);
     doc.kpis([['Tournois', D.nT, D.nMer + ' mercredi · ' + D.nDeep + ' deep' + (D.nLib ? ' · ' + D.nLib + ' hors champ.' : '')], ['Joueurs classés', D.nPlayers, 'au moins un tournoi'], ['Moyenne de joueurs', f1(D.avgPlayers), 'par tournoi'], ['Primes', '+' + f1(D.primes), 'points de prime', RED]]);
     doc.podium(D.st);
     doc.h2('Classement général');
@@ -382,7 +383,7 @@
     return doc.bytes();
   }
   function awardsPdf(year) {
-    var lg = L(), list = lg.load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = lg.standings(list), tr = lg.trophies(list), doc = Doc('Remise des prix ' + year);
+    var lg = L(), list = lg.load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = lg.standings(list, year), tr = lg.trophies(list), doc = Doc('Remise des prix ' + year);
     doc.newPage(); doc.h1('Remise des prix', 'Championnat du club · ' + list.length + ' tournois · merci à tous les joueurs, à Lionel et au club', year);
     doc.podium(st);
     doc.h2('Les trophées de la saison');
@@ -411,7 +412,7 @@
   function rankCanvas(year) {
     var lg = L(), D = yearData(year), list = D.list.filter(function (x) { return x.type !== 'libre'; });
     var last = D.list[D.list.length - 1], lastW = last ? lg.week(last.date) : null;
-    var prev = lg.standings(D.list.filter(function (x) { return lg.week(x.date) !== lastW; })), pr = {};
+    var prev = lg.standings(D.list.filter(function (x) { return lg.week(x.date) !== lastW; }), year), pr = {};
     prev.forEach(function (o, i) { pr[o.name.toLowerCase()] = i + 1; });
     var st = D.st, W = 1080, Hh = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;
     var c = cv.getContext('2d'), G = '#ffd23f', GD = '#b8901f', BR = '#9a6a18', RD = '#e0464c', DISP = '800 {s}px "Big Shoulders Display", Impact, "Arial Narrow", sans-serif', TXT = '{w} {s}px "IBM Plex Sans", system-ui, sans-serif';

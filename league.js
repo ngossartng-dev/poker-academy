@@ -51,14 +51,29 @@
     d.list.push(rec); d.list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); save(d);
     return rec;
   }
-  function years() { var y = {}; load().list.forEach(function (x) { y[x.date.slice(0, 4)] = 1; }); var a = Object.keys(y).sort().reverse(); return a.length ? a : [String(new Date().getFullYear())]; }
-  function standings(list) {
-    var m = {};
+  function years() { var y = {}, dd = load(); dd.list.forEach(function (x) { y[x.date.slice(0, 4)] = 1; }); Object.keys(dd.carry || {}).forEach(function (k) { if (dd.carry[k] && dd.carry[k].rows && dd.carry[k].rows.length) y[k] = 1; }); var a = Object.keys(y).sort().reverse(); return a.length ? a : [String(new Date().getFullYear())]; }
+  // reprise du classement : les points déjà acquis avant de commencer à utiliser l'appli, par saison
+  function carryOf(year) { var c = (load().carry || {})[year]; return c && c.rows && c.rows.length ? c : null; }
+  function setCarry(year, date, rows) { var d = load(); d.carry = d.carry || {}; d.carry[year] = { at: Date.now(), date: date, rows: rows }; save(d); }
+  // enregistre à la main un tournoi déjà joué : la liste des joueurs du 1er au dernier
+  function recordManual(o) {
+    var type = TYPES[o.type] ? o.type : 'mercredi', n = o.names.length, d = load(), bk = key(o.bonusTo);
+    var rows = o.names.map(function (nm, i) { var pts = placePts(n, i + 1, type), bonus = bk && type !== 'libre' && key(nm) === bk ? BONUS : 0; return { name: nm, place: i + 1, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 10) / 10, prize: null, entries: 1, koBy: null, koAt: null, koLevel: null, bountyFrom: null }; });
+    var rec = { prize: 0, id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: o.date, type: type, n: n, re: 0, add: 0, winner: o.names[0], holder: null, rows: rows, manual: true };
+    d.list.push(rec); d.list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); save(d);
+    return rec;
+  }
+  function standings(list, year) {
+    var m = {}, cy = year ? carryOf(year) : null;
     list.forEach(function (tn) { if (tn.type === 'libre') return; tn.rows.forEach(function (r) {
       var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
       o.total += r.total; o.pts += r.pts; if (tn.type === 'deep') o.deep += r.pts; else o.mer += r.pts; o.bonus += r.bonus; o.n++; if (r.place === 1) o.wins++; if (r.place <= 3) o.pod++; o.places += r.place / tn.n; o.best = Math.min(o.best, r.place);
     }); tn.rows.forEach(function (r) { if (r.koBy && m[key(r.koBy)]) m[key(r.koBy)].kos++; }); });
-    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 10) / 10; o.mer = Math.round(o.mer * 10) / 10; o.deep = Math.round(o.deep * 10) / 10; o.bonus = Math.round(o.bonus * 10) / 10; o.moy = o.n ? Math.round(o.total / o.n * 10) / 10 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
+    if (cy) cy.rows.forEach(function (r) {
+      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
+      o.total += r.pts; o.pts += r.pts; o.carry = r.pts; if (r.n) { o.n += r.n; o.carryN = r.n; }
+    });
+    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 10) / 10; o.mer = Math.round(o.mer * 10) / 10; o.deep = Math.round(o.deep * 10) / 10; o.bonus = Math.round(o.bonus * 10) / 10; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 10) / 10 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
   }
 
   /* ---------- Trophées de la saison ---------- */
@@ -85,18 +100,18 @@
   }
   function closedInfo(year) { var d = load(), c = (d.closed || {})[year]; return c && !c.open ? c : null; }
   function closeSeason(year) {
-    var d = load(), list = d.list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list);
+    var d = load(), list = d.list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list, year);
     d.closed = d.closed || {}; d.closed[year] = { at: Date.now(), podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }), trophies: trophies(list).map(function (t) { return { title: t.title, icon: t.icon, who: t.who, val: t.val }; }), n: list.length };
     save(d);
   }
   function palmares() {
     var d = load(), ys = years(), cur = String(new Date().getFullYear());
-    return ys.map(function (y) { var c = (d.closed || {})[y]; if (c && !c.open) return { year: y, closed: true, podium: c.podium }; var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === y; })); return { year: y, closed: false, current: y === cur, podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }) }; }).filter(function (p) { return p.podium.length; });
+    return ys.map(function (y) { var c = (d.closed || {})[y]; if (c && !c.open) return { year: y, closed: true, podium: c.podium }; var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === y; }), y); return { year: y, closed: false, current: y === cur, podium: st.slice(0, 3).map(function (o) { return { name: o.name, total: o.total }; }) }; }).filter(function (p) { return p.podium.length; });
   }
 
   /* ---------- Fiche d'un joueur ---------- */
   function playerData(name, year) {
-    var k = key(name), list = load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list), me = null, rank = 0;
+    var k = key(name), list = load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list, year), me = null, rank = 0;
     st.forEach(function (o, i) { if (key(o.name) === k) { me = o; rank = i + 1; } });
     var hist = [], by = {}, vic = {};
     list.forEach(function (tn) { tn.rows.forEach(function (r) {
@@ -106,7 +121,7 @@
     function top(m) { var ks = Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }); return ks[0] && m[ks[0]] > 0 ? { name: ks[0], n: m[ks[0]] } : null; }
     // courbe : points cumulés et rang après chaque semaine
     var ws = {}; list.forEach(function (x) { (ws[week(x.date)] = ws[week(x.date)] || []).push(x); }); var cum = [], curve = [];
-    Object.keys(ws).sort().forEach(function (w) { cum = cum.concat(ws[w]); var g = standings(cum), pt = 0, rr = null; g.forEach(function (o, i) { if (key(o.name) === k) { pt = o.total; rr = i + 1; } }); curve.push({ w: w, pts: pt, rank: rr }); });
+    Object.keys(ws).sort().forEach(function (w) { cum = cum.concat(ws[w]); var g = standings(cum, year), pt = 0, rr = null; g.forEach(function (o, i) { if (key(o.name) === k) { pt = o.total; rr = i + 1; } }); curve.push({ w: w, pts: pt, rank: rr }); });
     return { me: me, rank: rank, of: st.length, hist: hist.reverse(), nemesis: top(by), victim: top(vic), curve: curve, troph: trophies(list).filter(function (t) { return key(t.who) === k; }) };
   }
   function curveSvg(c) {
@@ -147,7 +162,7 @@
     else if (hd) L.push('🛡️ ' + hd.name + ', tête mise à prix, n’a pas été chassé' + (hd.place === 1 ? ' : il gagne encore !' : (hd.koBy ? '' : '')));
     if (kk && ko[kk] > 1) L.push('🔪 Le plus de sorties : ' + kk + ' (' + ko[kk] + ')');
     if (last && last.koAt) L.push('🏁 Dernière main à ' + hmf(last.koAt) + (last.koLevel ? ' (' + last.koLevel + ')' : ''));
-    if (tn.type !== 'libre') { var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === tn.date.slice(0, 4) && x.date <= tn.date; })); L.push('📊 Classement ' + tn.date.slice(0, 4) + ' : ' + st.slice(0, 5).map(function (o, i) { return (i + 1) + '. ' + o.name + ' ' + f1(o.total); }).join(' · ')); }
+    if (tn.type !== 'libre') { var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === tn.date.slice(0, 4) && x.date <= tn.date; }), tn.date.slice(0, 4)); L.push('📊 Classement ' + tn.date.slice(0, 4) + ' : ' + st.slice(0, 5).map(function (o, i) { return (i + 1) + '. ' + o.name + ' ' + f1(o.total); }).join(' · ')); }
     L.push('', 'Merci à tous, et merci à Lionel ! ♠️♥️♦️♣️');
     return L.join('\n');
   }
@@ -170,10 +185,10 @@
   // classement en barres : mercredi (or), deep (bronze), primes (rouge)
   function bars(st) {
     var ui = U(), max = Math.max.apply(null, st.map(function (o) { return o.total; }).concat([1]));
-    return '<div class="lg-leg"><span><i style="background:var(--gold)"></i>Mercredi</span><span><i style="background:#9a6a18"></i>Deep ×1,5</span><span><i style="background:#e0464c"></i>Primes</span><span class="lg-legr">Total · moyenne</span></div><div>' +
+    return '<div class="lg-leg"><span><i style="background:var(--gold)"></i>Mercredi</span><span><i style="background:#9a6a18"></i>Deep ×1,5</span><span><i style="background:#e0464c"></i>Primes</span>' + (st.some(function (o) { return o.carry; }) ? '<span><i style="background:#6b7280"></i>Reprise</span>' : '') + '<span class="lg-legr">Total · moyenne</span></div><div>' +
       st.map(function (o, i) {
         var seg = function (v, c) { return v > 0 ? '<i style="width:' + (v / max * 100).toFixed(1) + '%;background:' + c + '"></i>' : ''; };
-        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + o.n + ' t.' + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>moy. ' + f1(o.moy || 0) + '</small></div></div>';
+        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + o.n + ' t.' + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.carry || 0, '#6b7280') + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>moy. ' + f1(o.moy || 0) + '</small></div></div>';
       }).join('') + '</div>';
   }
   function tnCard(tn) {
@@ -185,6 +200,31 @@
       return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus ? ' <span class="small muted">(' + f1(r.pts) + ' + ' + f1(r.bonus) + ' prime)</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
     }).join('') + '</table>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
   }
+  // saisie manuelle : reprendre un classement en cours, ou ajouter un tournoi déjà joué
+  var INP = 'min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:1.05em';
+  function manualCard(cy) {
+    var ui = U(), h = '<div class="card stack"><b>✍️ Saisie manuelle</b>';
+    if (V.form === 'carry') {
+      var txt = cy ? cy.rows.map(function (r) { return r.name + ' ' + String(r.pts).replace('.', ',') + (r.n ? ' ' + r.n : ''); }).join('\n') : roster().join(' \n') + ' ';
+      h += '<div class="small muted">La saison a déjà commencé : entre les points que chaque joueur a aujourd’hui. Un joueur par ligne, le pseudo puis ses points (exemple : <b>YO 45,5</b>). Tu peux ajouter le nombre de tournois déjà joués pour garder une moyenne juste (exemple : <b>YO 45,5 4</b>). Les lignes sans points sont ignorées.</div>' +
+        '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + (cy ? cy.date : today()) + '" style="' + INP + '">' +
+        '<textarea id="lgCarryTxt" rows="12" spellcheck="false" autocapitalize="characters" style="' + INP + ';width:100%;font-family:monospace">' + ui.esc(txt) + '</textarea>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="saveCarry" style="flex:1">Enregistrer la reprise ' + V.year + '</button><button class="btn" data-lgact="formCancel">Annuler</button></div>' +
+        (cy ? '<button class="btn" data-lgact="delCarry">Supprimer la reprise ' + V.year + '</button>' : '');
+    } else if (V.form === 'past') {
+      h += '<div class="small muted">Pour un tournoi déjà joué : un joueur par ligne, <b>du 1er au dernier</b>. Les points sont calculés avec le barème habituel.</div>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><input type="date" id="lgPastDate" value="' + today() + '" style="' + INP + ';flex:1"><select id="lgPastType" style="' + INP + ';flex:1"><option value="mercredi">Tournoi du mercredi</option><option value="deep">Deep du vendredi (×1,5)</option><option value="libre">Hors championnat</option></select></div>' +
+        '<textarea id="lgPastTxt" rows="10" spellcheck="false" autocapitalize="characters" placeholder="VAINQUEUR&#10;DEUXIÈME&#10;TROISIÈME&#10;…" style="' + INP + ';width:100%;font-family:monospace"></textarea>' +
+        '<label class="small muted" for="lgPastBonus">Prime de ' + BONUS + ' points (celui qui a sorti la tête mise à prix), si elle a été gagnée :</label><input type="text" id="lgPastBonus" placeholder="Pseudo, ou vide" style="' + INP + '">' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="savePast" style="flex:1">Enregistrer ce tournoi</button><button class="btn" data-lgact="formCancel">Annuler</button></div>';
+    } else {
+      h += '<div class="small muted">La saison a commencé avant l’appli ? Reprends le classement en cours, ou ajoute un par un les tournois déjà joués.</div>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="formCarry" style="flex:1">' + (cy ? 'Modifier la reprise du classement' : 'Reprendre le classement en cours') + '</button><button class="btn" data-lgact="formPast" style="flex:1">Ajouter un tournoi déjà joué</button></div>';
+    }
+    return h + (V.fmsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.fmsg) + '</div>' : '') + '</div>';
+  }
+  function cleanName(x) { return String(x || '').trim().replace(/\s+/g, ' ').slice(0, 30); }
+  function addToRoster(names) { var r = roster(), seen = {}; r.forEach(function (x) { seen[key(x)] = 1; }); var nw = names.filter(function (x) { return !seen[key(x)] && (seen[key(x)] = 1); }); if (nw.length) setRoster(r.concat(nw)); }
   function view() {
     var ui = U(), d = load(), ys = years(); V.year = V.year && ys.indexOf(V.year) >= 0 ? V.year : ys[0];
     var inY = d.list.filter(function (x) { return x.date.slice(0, 4) === V.year; });
@@ -195,17 +235,19 @@
       '<div class="row" style="gap:8px;flex-wrap:wrap"><div class="seg">' + [['annuel', 'Classement'], ['semaine', 'Semaines'], ['tournois', 'Tournois'], ['trophees', 'Trophées']].map(function (o) { return '<button class="' + (V.tab === o[0] ? 'on' : '') + '" data-lgact="tab" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       (ys.length > 1 ? '<div class="seg">' + ys.map(function (y) { return '<button class="' + (V.year === y ? 'on' : '') + '" data-lgact="year" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' : '') + '</div>';
     if (V.tab === 'annuel') {
-      var st = standings(inY), avgP = inY.length ? inY.reduce(function (a, x) { return a + x.n; }, 0) / inY.length : 0, prim = st.reduce(function (a, o) { return a + o.bonus; }, 0);
+      var st = standings(inY, V.year), cyv = carryOf(V.year), avgP = inY.length ? inY.reduce(function (a, x) { return a + x.n; }, 0) / inY.length : 0, prim = st.reduce(function (a, o) { return a + o.bonus; }, 0);
       if (inY.length) out += '<div class="lg-kpis"><div><span>Tournois</span><b>' + inY.length + '</b><small>' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mer. · ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep</small></div><div><span>Joueurs classés</span><b>' + st.length + '</b><small>au championnat</small></div><div><span>Moyenne de joueurs</span><b>' + f1(avgP) + '</b><small>par tournoi</small></div><div><span>Primes</span><b style="color:#e0464c">+' + f1(prim) + '</b><small>points</small></div></div>';
       out += '<div class="card stack"><b>Classement ' + V.year + '</b><div class="small muted">' + inY.filter(function (x) { return x.type !== 'libre'; }).length + ' tournois au championnat (' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mercredi(s), ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep(s)).</div>' +
         (st.length ? '<div class="lg-pod">' + [1, 0, 2].map(function (i) { var o = st[i]; if (!o) return '<div></div>'; return '<div class="lg-pod' + (i + 1) + '"><div class="lg-med">' + ['🥇', '🥈', '🥉'][i] + '</div><b>' + ui.esc(o.name) + '</b><span>' + f1(o.total) + ' pts</span><div class="lg-step">' + (i + 1) + '</div></div>'; }).join('') + '</div>' : '') +
+        (cyv ? '<div class="small muted">Dont la reprise du classement au ' + dfr(cyv.date) + ' (' + cyv.rows.length + ' joueurs, en gris).</div>' : '') +
         (st.length ? bars(st) : '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>') + '</div>';
+      out += manualCard(cyv);
     } else if (V.tab === 'semaine') {
       var ws = {}; inY.forEach(function (x) { (ws[week(x.date)] = ws[week(x.date)] || []).push(x); });
       var wk = Object.keys(ws).sort().reverse();
       if (!wk.length) out += '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
       var cum = [];
-      wk.slice().reverse().forEach(function (w) { cum = cum.concat(ws[w]); ws[w].cum = standings(cum); });
+      wk.slice().reverse().forEach(function (w) { cum = cum.concat(ws[w]); ws[w].cum = standings(cum, V.year); });
       out += wk.map(function (w) {
         var stw = standings(ws[w]), stc = ws[w].cum;
         return '<div class="card stack"><b>' + weekLabel(w) + '</b><div class="small muted">' + ws[w].map(function (x) { return TYPES[x.type].short + ' du ' + dfr(x.date) + ' : ' + ui.esc(x.winner || '—'); }).join(' · ') + '</div>' + table(stw, false) +
@@ -220,7 +262,7 @@
     } else {
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
-    if (window.PA_EXPORT && d.list.length) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>Exporter ' + V.year + '</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('exports') : '') + '</div><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
+    if (window.PA_EXPORT && (d.list.length || carryOf(V.year))) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>Exporter ' + V.year + '</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('exports') : '') + '</div><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
     if (window.PA_CLUBSYNC) out += window.PA_CLUBSYNC.card();
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
     return ui.shell('club', out);
@@ -229,6 +271,31 @@
     var t = e.target.closest ? e.target.closest('[data-lgact]') : null; if (!t) return;
     var a = t.getAttribute('data-lgact'), v = t.getAttribute('data-v');
     function done(m) { V.msg = m; U().render(); }
+    if (a === 'formCarry' || a === 'formPast' || a === 'formCancel') { V.form = a === 'formCarry' ? 'carry' : a === 'formPast' ? 'past' : null; V.fmsg = ''; U().render(); return; }
+    if (a === 'saveCarry') {
+      var seenC = {}, rowsC = [], badC = [];
+      String((document.getElementById('lgCarryTxt') || {}).value || '').split('\n').forEach(function (ln) {
+        ln = ln.replace(/[;\t:=]/g, ' ').trim(); if (!ln) return;
+        var m2 = ln.match(/^(.*?)\s+(-?\d+(?:[.,]\d+)?)(?:\s+(\d+))?$/); if (!m2) return;
+        var nm = cleanName(m2[1]), pts = Math.round(parseFloat(m2[2].replace(',', '.')) * 10) / 10; if (!nm || isNaN(pts)) return; if (seenC[key(nm)]) { badC.push(nm + ' (en double)'); return; }
+        seenC[key(nm)] = 1; var rw = { name: nm, pts: pts }; if (m2[3]) rw.n = +m2[3]; rowsC.push(rw);
+      });
+      if (!rowsC.length) { V.fmsg = 'Aucune ligne avec des points : écris le pseudo puis ses points, par exemple « YO 45,5 ».'; U().render(); return; }
+      var dc = (document.getElementById('lgCarryDate') || {}).value || today();
+      setCarry(V.year, dc, rowsC); addToRoster(rowsC.map(function (r) { return r.name; }));
+      V.form = null; V.fmsg = 'Reprise enregistrée : ' + rowsC.length + ' joueurs.' + (badC.length ? ' Lignes ignorées : ' + badC.slice(0, 4).join(', ') + '.' : ''); U().render(); return;
+    }
+    if (a === 'delCarry') { if (typeof confirm === 'function' && !confirm('Supprimer la reprise du classement ' + V.year + ' ?')) return; setCarry(V.year, today(), []); V.form = null; V.fmsg = 'Reprise supprimée.'; U().render(); return; }
+    if (a === 'savePast') {
+      var seenP = {}, namesP = [], dupP = [];
+      String((document.getElementById('lgPastTxt') || {}).value || '').split('\n').forEach(function (ln) { var nm = cleanName(ln.replace(/^\s*\d+\s*[.)\-:]?\s+/, '')); if (!nm) return; if (seenP[key(nm)]) { dupP.push(nm); return; } seenP[key(nm)] = 1; namesP.push(nm); });
+      if (dupP.length) { V.fmsg = 'Pseudo en double : ' + dupP.join(', ') + '. Corrige la liste.'; U().render(); return; }
+      if (namesP.length < 2) { V.fmsg = 'Il faut au moins 2 joueurs, un par ligne, du 1er au dernier.'; U().render(); return; }
+      var dp = (document.getElementById('lgPastDate') || {}).value || today(), tp = (document.getElementById('lgPastType') || {}).value || 'mercredi', bo = cleanName((document.getElementById('lgPastBonus') || {}).value);
+      if (bo && !seenP[key(bo)]) { V.fmsg = 'La prime est pour « ' + bo + ' », qui n’est pas dans la liste des joueurs.'; U().render(); return; }
+      var recP = recordManual({ date: dp, type: tp, names: namesP, bonusTo: bo }); addToRoster(namesP);
+      V.year = dp.slice(0, 4); V.form = null; V.fmsg = TYPES[tp].name + ' du ' + dfr(dp) + ' enregistré : ' + namesP.length + ' joueurs, vainqueur ' + recP.winner + '.'; U().render(); return;
+    }
     if (a === 'sum') { V.sum = V.sum === v ? null : v; if (V.sum) shareText(summary(v), done); else U().render(); return; }
     if (a === 'pl') { V.pl = v || null; U().render(); window.scrollTo(0, 0); return; }
     if (a === 'awards') { V.msg = ''; window.PA_EXPORT.awards(V.year, done); return; }
@@ -241,5 +308,5 @@
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
