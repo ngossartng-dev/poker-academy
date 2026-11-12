@@ -72,7 +72,14 @@
   (function () {
     var t = D.profiles.tag, deep = {}, mid = {}; Object.keys(CLUB_STEP).forEach(function (pos) { deep[pos] = clubOpen(CLUB_STEP[pos]); mid[pos] = clubOpen(CLUB_MID_STEP[pos]); });
     var v = { call: CLUB_CALL, fourbet: CLUB_4B };
-    D.profiles.club = { open: { deep: deep, mid: mid }, bb: t.bb, vsOpen: t.vsOpen, mid3b: t.mid3b, vs3bet: { ip: v, oop: v, early: v, bvb: t.vs3bet.bvb } };
+    // défense pensée pour une table à 6 : face à UTG, UTG+1 ou MP (qui ouvrent la même range que le LJ), on défend comme face au LJ
+    var EARLY = ['UTG', 'UTG+1', 'MP'], bbd = {}, vso = {};
+    Object.keys(t.bb.deep).forEach(function (o) { bbd[o] = EARLY.indexOf(o) >= 0 ? t.bb.deep.LJ : t.bb.deep[o]; });
+    Object.keys(t.vsOpen.deep).forEach(function (pos) {
+      var row = t.vsOpen.deep[pos], late = ['HJ', 'CO', 'BTN', 'SB'].indexOf(pos) >= 0; vso[pos] = {};
+      Object.keys(row).forEach(function (o) { vso[pos][o] = late && EARLY.indexOf(o) >= 0 && row.LJ ? row.LJ : row[o]; });
+    });
+    D.profiles.club = { open: { deep: deep, mid: mid }, bb: { deep: bbd }, vsOpen: { deep: vso }, mid3b: t.mid3b, vs3bet: { ip: v, oop: v, early: v, bvb: t.vs3bet.bvb } };
   })();
   // la base du profil Perso : la range du club, sauf pour un profil Perso créé avant (il reste sur TAG tant qu'on ne le refait pas)
   function persoBase() { var p = player(); if (!p) return 'club'; if (p.persoBase) return p.persoBase === 'club' ? 'club' : 'tag'; return (p.perso && Object.keys(p.perso).length) || p.persoFrom ? 'tag' : 'club'; }
@@ -496,7 +503,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 3, 14: 2, 15: 2, 20: 2, 33: 3, 35: 2, 37: 3, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 5: 2, 6: 3, 7: 3, 8: 2, 13: 3, 14: 2, 15: 2, 20: 2, 33: 3, 35: 2, 37: 3, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
