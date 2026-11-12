@@ -40,6 +40,19 @@
     return mem;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
+  // appli PC : « Ma range » peut s'ouvrir dans une fenêtre à part, qui partage les mêmes données.
+  // La fenêtre Ma range relit tout ; la fenêtre principale ne reprend que la range (Perso, profil), pour ne rien perdre en cours de route.
+  window.addEventListener('storage', function (e) {
+    if (e.key !== KEY || !e.newValue) return;
+    if ((location.hash || '').indexOf('#rangewin') === 0) mem = null;
+    else {
+      try {
+        var n = JSON.parse(e.newValue), m = load();
+        Object.keys(n.players || {}).forEach(function (id) { var a = m.players[id], b = n.players[id]; if (a && b) { a.perso = b.perso; a.persoBase = b.persoBase; a.persoFrom = b.persoFrom; a.profile = b.profile; } });
+      } catch (x) {}
+    }
+    if (window.PA_UI && window.PA_UI.onStorage) window.PA_UI.onStorage();
+  });
   function player() { var s = load(); return s.current ? s.players[s.current] : null; }
   function newPlayer(pseudo, age) {
     var s = load(); var id = 'p' + Date.now();

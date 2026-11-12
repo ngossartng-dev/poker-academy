@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.41.1';
+  var VERSION = '2.42.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -352,6 +352,7 @@
     else if (prof !== 'perso' && !CLUB) ed += '<div class="row"><button class="btn gold" data-act="persoStart">Personnaliser ma range</button><span class="muted small">Ta range devient ton profil Perso (base : la range du club), et tu changes la couleur des cases une par une.</span></div>';
     if (prof === 'perso' && plr && plr.testDone) ed += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
     out = out.replace('@@EDIT@@', ed);
+    if (PC_FULL && (location.hash || '').indexOf('#rangewin') !== 0) out += '<button class="btn block" data-act="rwOpen">🪟 Ouvrir Ma range dans une fenêtre à part</button>';
     // rappel discret : les tailles du club après le flop (repliable)
     if (window.PA_MEMO && window.PA_MEMO.clubSizes) {
       var CZ = window.PA_MEMO.clubSizes(), szLine = function (r) { return '<div class="szm-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; };
@@ -948,6 +949,15 @@
   }
 
   /* ---------- Rendu ---------- */
+  // appli PC : Ma range dans une fenêtre à part (que l'on peut garder au premier plan à côté d'un autre jeu)
+  var PC_FULL = location.hostname === '127.0.0.1' && location.port === '47816';
+  function rangeWinView() {
+    var p = PA.player();
+    if (!p) return '<div class="stack" style="padding:16px">' + yo('Crée d’abord ton joueur dans la fenêtre principale de Poker Academy.') + '</div>';
+    if (!RS.profile) RS.profile = p.profile || 'tag';
+    return '<div class="rangewin"><div class="row rw-bar"><button class="btn' + (ui.rwTop ? ' gold' : '') + '" data-act="rwTop">' + (ui.rwTop ? '📌 Toujours devant : oui' : '📌 Garder devant les autres fenêtres') + '</button></div><div class="stack" id="rangeFull">' + rangeBody(true) + '</div></div>';
+  }
+  function pcRange(act, on) { try { return fetch('/api/rangewin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ act: act, on: !!on }) }); } catch (e) { return null; } }
   function render() {
     applySettings();
     var app = $('#root');
@@ -965,6 +975,7 @@
       if (r === 'home') { app.innerHTML = clubHomeView(); top(); return; }
     }
     if (r === 'pick') { app.innerHTML = pickPlayerView(); return; }
+    if (r === 'rangewin') { app.innerHTML = rangeWinView(); return; }
     if (r === 'quizclub' && window.PA_COACH) { app.innerHTML = window.PA_COACH.quiz(); top(); return; }
     if (!p) { app.innerHTML = Object.keys(s.players).length && !ui.forceNew ? pickPlayerView() : onbView(); return; }
     if (!p.profile || ui.onbActive) { if (!p.profile) ui.onb.step = Math.max(2, ui.onb.step); app.innerHTML = onbView(); return; }
@@ -1034,6 +1045,8 @@
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
+      case 'rwOpen': pcRange('open'); break;
+      case 'rwTop': ui.rwTop = !ui.rwTop; pcRange('top', ui.rwTop); render(); break;
       case 'szmToggle': RS.szm = !RS.szm; rerenderRange(); break;
       case 'toggleEdit': RS.edit = !RS.edit; RS.brush = null; rerenderRange(); break;
       case 'persoStart': p.profile = 'perso'; if (!p.persoBase) p.persoBase = 'club'; PA.save(); RS.profile = 'perso'; RS.edit = true; RS.brush = null; RS.tab = 'sit'; rerenderRange(); break;
@@ -1136,6 +1149,6 @@
     document.addEventListener('scroll', hide, true);
   })();
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
-  window.PA_UI = { version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, handText: handText, IC: IC };
+  window.PA_UI = { onStorage: function () { if ((location.hash || '').indexOf('#rangewin') === 0) render(); else rerenderRange(); }, version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, handText: handText, IC: IC };
   render();
 })();

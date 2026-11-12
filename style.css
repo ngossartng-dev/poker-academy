@@ -875,3 +875,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .szm-r{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid rgba(255,255,255,.08);font-size:16px;line-height:1.35}
 .szm-r b{white-space:nowrap;text-align:right}
 @media (max-width:420px){.szm-r{flex-direction:column;gap:0}.szm-r b{text-align:left;white-space:normal}}
+
+.rangewin{padding:12px 14px 24px;max-width:760px;margin:0 auto}
+.rw-bar{position:sticky;top:0;z-index:5;background:var(--bg,#0b0b0d);padding:6px 0 10px}
+.rw-bar .btn{flex:1}
