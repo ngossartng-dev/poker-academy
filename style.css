@@ -866,3 +866,4 @@ textarea.tn-in{width:100%;padding:8px 12px}
 
 .tl-sp{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}.tl-sp b{color:var(--gold,#d4af37)}
 .tl-row{padding:6px 0;border-top:1px solid rgba(212,175,55,.2);font-size:16px;line-height:1.45}
+.lr-g{touch-action:none;user-select:none;-webkit-user-select:none}

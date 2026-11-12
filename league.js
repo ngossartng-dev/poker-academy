@@ -52,6 +52,10 @@
     return { name: ch[0], rank: 1, first: ch[0] };
   }
   function holder(type, date, present) { var h = holderInfo(type, date, present); return h ? h.name : null; }
+  // mains du club commentées (partagées avec la synchronisation du championnat)
+  function hands() { return (load().hands || []).slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }); }
+  function saveHand(h) { var d = load(); d.hands = d.hands || []; h.editAt = Date.now(); if (!h.id) { h.id = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); h.at = Date.now(); d.hands.push(h); } else { d.hands = d.hands.map(function (x) { return x.id === h.id ? h : x; }); } save(d); return h; }
+  function delHand(id) { var d = load(); d.hands = (d.hands || []).filter(function (x) { return x.id !== id; }); d.handsDel = (d.handsDel || []).concat([id]); save(d); }
   function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 10) / 10; }
   // enregistre un tournoi terminé (état du tournoi du minuteur)
   function record(t) {
@@ -341,5 +345,5 @@
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });
-  window.PA_LEAGUE = { holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();

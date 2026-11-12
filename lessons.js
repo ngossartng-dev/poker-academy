@@ -13,7 +13,7 @@
     [10, 'III', 'Outils de calcul', 67], [11, 'III', 'Lire un board', 75], [12, 'III', 'Lecture de main', 0], [13, 'III', 'Le sizing', 77], [42, 'III', 'Avantage de range, avantage de nuts et défense', 0],
     [14, 'III', 'Le flop : c-bet et défense', 91], [44, 'III', 'Le slowplay et le check-raise', 0], [15, 'III', 'La turn', 0], [43, 'III', 'Float, mise sonde, c-bet retardé et donk bet', 0], [46, 'III', 'Check derrière, range bet, barrels, contrôle du pot et protection', 0], [16, 'III', 'La river', 102], [17, 'III', 'SPR et pots 3-bet', 100], [18, 'III', 'Pots multiway', 0], [38, 'III', 'Cas concrets après le flop', 0], [33, 'III', 'Jouer les paires et les as forts après le flop', 0], [35, 'III', 'La river avec le solveur', 0], [47, 'III', 'Valeur fine, block bet, hero call et autres coups à la river', 0],
     [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0], [20, 'IV', 'Tapis de 25 à 40 BB', 113], [21, 'IV', 'Tapis de 15 à 25 BB', 117], [22, 'IV', 'Tables de push/fold', 123],
-    [23, 'IV', 'L’ICM complet', 134], [48, 'IV', 'Jouer la bulle et les places payées', 0], [24, 'IV', 'Table finale et heads-up', 136], [36, 'IV', 'Le heads-up', 0], [25, 'IV', 'PKO et Space KO', 137],
+    [23, 'IV', 'L’ICM complet', 134], [48, 'IV', 'Jouer la bulle et les places payées', 0], [49, 'IV', 'Les tournois du club', 0], [24, 'IV', 'Table finale et heads-up', 136], [36, 'IV', 'Le heads-up', 0], [25, 'IV', 'PKO et Space KO', 137],
     [26, 'V', 'Profils adverses', 161], [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0], [28, 'V', 'Image de table et lecture au club', 162],
     [29, 'VI', 'Mental et tilt', 172], [30, 'VI', 'Revue de sessions', 175], [31, 'VI', 'Mains commentées', 176], [32, 'VI', 'Plan de progression', 189]
   ];
@@ -35,7 +35,11 @@
       { q: 'Combien de façons de gagner offre une mise ?', o: ['Une', 'Deux', 'Trois', 'Aucune'], a: 1, why: 'Avoir la meilleure main ou faire coucher l’adversaire.' },
       { q: 'Selon le théorème fondamental, tu gagnes quand l’adversaire…', o: ['gagne un pot', 'joue autrement qu’il le ferait en voyant tes cartes', 'fait tapis', 'se couche toujours'], a: 1, why: 'C’est l’écart à la décision parfaite qui crée le profit.' },
       { q: 'Le principal défaut d’un joueur trop serré en tournoi ?', o: ['Il perd de gros pots', 'Les blindes le grignotent quand elles montent', 'Il bluffe trop', 'Il paie trop'], a: 1, why: 'Il attend trop longtemps et devient court.' },
-      { q: 'Lequel n’est pas un des trois leviers de progression ?', o: ['La position', 'L’agression', 'L’adaptation', 'La chance'], a: 3, why: 'La chance ne se travaille pas.' }
+      { q: 'Lequel n’est pas un des trois leviers de progression ?', o: ['La position', 'L’agression', 'L’adaptation', 'La chance'], a: 3, why: 'La chance ne se travaille pas.' },
+      { q: 'Pourquoi la relance est-elle l’action de base de ce cours ?', o: ['Elle coûte moins cher', 'Elle donne deux façons de gagner : la meilleure main ou faire coucher l’adversaire', 'Elle évite de jouer après le flop', 'Elle impressionne la table'], a: 1, why: 'Payer ne gagne qu’au showdown ; relancer gagne aussi quand il se couche.' },
+      { q: 'Serré, cela veut dire…', o: ['jouer peu de mains, en moyenne plus fortes', 'payer souvent', 'ne jamais bluffer', 'jouer vite'], a: 0, why: 'Tes mains sont en moyenne plus fortes que celles des adversaires.' },
+      { q: 'Il paie ta mise avec une main moins bonne que la tienne. Selon le théorème fondamental…', o: ['tu perds', 'tu gagnes', 'c’est neutre', 'ça dépend du board'], a: 1, why: 'Il joue autrement qu’il le ferait en voyant tes cartes : c’est ton profit.' },
+      { q: 'Que finissent par faire les adversaires d’un joueur trop serré ?', o: ['Ils le paient tout le temps', 'Ils se couchent dès qu’il relance', 'Ils le bluffent jamais', 'Ils limpent'], a: 1, why: 'Ils savent qu’il ne relance qu’avec des monstres.' }
     ]
   };
 
@@ -53,26 +57,34 @@
       { q: 'Qui parle en dernier après le flop ?', o: ['La BB', 'Le bouton', 'UTG', 'La SB'], a: 1, why: 'Le bouton parle en dernier à chaque tour après le flop.' },
       { q: 'Qui parle en premier après le flop ?', o: ['UTG', 'La SB', 'Le bouton', 'Le CO'], a: 1, why: 'La petite blinde, si elle est encore dans le coup.' },
       { q: 'À six joueurs, l’UTG ressemble à quelle place à neuf ?', o: ['UTG', 'LJ', 'Bouton', 'BB'], a: 1, why: 'Il reste à peu près le même nombre de joueurs derrière.' },
-      { q: 'Combien de places entre UTG et le bouton à neuf joueurs (exclus) ?', o: ['3', '4', '5', '6'], a: 2, why: 'UTG+1, MP, LJ, HJ, CO.' }
+      { q: 'Combien de places entre UTG et le bouton à neuf joueurs (exclus) ?', o: ['3', '4', '5', '6'], a: 2, why: 'UTG+1, MP, LJ, HJ, CO.' },
+      { q: 'Dans l’ordre de parole avant le flop, quelle place vient juste après le LJ ?', o: ['MP', 'HJ', 'CO', 'BTN'], a: 1, why: 'UTG, UTG+1, MP, LJ, HJ, CO, bouton, SB, BB.' },
+      { q: 'Pourquoi ouvre-t-on plus large au cut-off et au bouton ?', o: ['Les blindes sont plus petites', 'On jouera en position presque tout le temps', 'Les cartes sont meilleures', 'C’est la règle du club'], a: 1, why: 'Parler en dernier permet de voir ce qu’il fait avant de décider.' },
+      { q: 'À huit joueurs, quelle place retire-t-on par rapport à neuf ?', o: ['UTG', 'UTG+1', 'HJ', 'CO'], a: 1, why: 'À huit, on retire l’UTG+1.' },
+      { q: 'Ce qui fixe vraiment ta range d’ouverture, c’est…', o: ['le nom de ta place', 'le nombre de joueurs qui parlent après toi', 'ton tapis seulement', 'la couleur de tes cartes'], a: 1, why: 'Compte les joueurs qui parlent après toi.' }
     ]
   };
 
   L[3] = {
     minutes: 8,
-    key: ['Au club, on joue environ 25 à 30 mains par heure : avec des niveaux de 20 minutes, les blindes montent toutes les 8 à 10 mains.', 'Les tables de club limpent et paient plus qu’en ligne : on isole, on mise pour la valeur, on bluffe moins.'],
+    key: ['Au club, on joue environ 25 à 30 mains par heure : avec des niveaux de 20 minutes, les blindes montent toutes les 8 à 10 mains.', 'Pas de limp au club (sauf en tête-à-tête), et des tables qui paient plus qu’en ligne : on mise pour la valeur, on bluffe moins, on respecte les grosses mises.'],
     sections: [
       { ask: 'Qu’est-ce qui change au club ?', h: 'Le rythme', p: ['En ligne, une table joue 60 à 80 mains par heure. Au club, plutôt 25 à 30. Avec des niveaux de 20 minutes, tu ne vois que 8 à 10 mains par niveau : les blindes montent très vite par rapport au nombre de mains.', 'Conséquence : il faut voler et défendre plus tôt qu’en ligne. Attendre une grosse main, c’est laisser ton tapis fondre.'] },
-      { ask: 'Comment jouent les tables de club ?', h: 'Les tendances d’une table de club', p: ['Plus de limps, plus de payes, des relances souvent petites (2 BB), peu de sur-relances en bluff. Une relance ou une grosse mise d’un récréatif, c’est souvent une vraie main.', 'Ajustements : isole les limpers (chapitre 7), mise gros pour la valeur, réduis tes bluffs, respecte les grosses mises.'] },
+      { ask: 'Comment jouent les tables de club ?', h: 'Les tendances d’une table de club', p: ['Plus de payes, des relances souvent petites (2 BB), peu de sur-relances en bluff. Une relance ou une grosse mise d’un récréatif, c’est souvent une vraie main.', 'Au club, le limp est interdit, sauf en tête-à-tête (la petite blinde peut compléter) : on ouvre en relançant ou on se couche. Le chapitre 7, sur les limpers, sert en ligne et dans d’autres clubs.', 'Ajustements : mise gros pour la valeur, réduis tes bluffs, respecte les grosses mises.'] },
       { ask: 'Et les règles à respecter ?', h: 'L’étiquette et la procédure', p: ['Parle à ton tour. Annonce clairement « relance » avant de bouger tes jetons, ou pose le montant en une seule fois : sinon, la mise peut être comptée comme un simple call.', 'Ne commente pas un coup en cours, ne montre pas tes cartes à un voisin, garde tes cartes visibles sur la table.'] },
       { ask: 'Peut-on lire les joueurs ?', h: 'La lecture physique', p: ['Les indices les plus fiables sont le temps de réflexion et les habitudes de mise, plus que les gestes. Un joueur qui paie très vite a souvent une main moyenne ; une longue réflexion puis une grosse mise, souvent une vraie main chez un récréatif.', 'Note après chaque soirée trois choses sur les habitués : largeur de jeu, agressivité, une habitude marquante.'] }
     ],
     mistake: 'Jouer au club comme en ligne en attendant les grosses mains : au rythme du club, les blindes te rattrapent avant.',
-    retain: ['Au club, environ 8 à 10 mains par niveau de 20 minutes : vole et défends plus tôt.', 'Tables de club : isole, mise pour la valeur, bluffe moins.', 'Annonce « relance » ou pose le montant en une fois.'],
+    retain: ['Au club, environ 8 à 10 mains par niveau de 20 minutes : vole et défends plus tôt.', 'Au club : pas de limp, mise pour la valeur, bluffe moins.', 'Annonce « relance » ou pose le montant en une fois.'],
     quiz: [
       { q: 'Combien de mains par heure environ à une table de club ?', o: ['10', '25 à 30', '60 à 80', '150'], a: 1, why: 'Le jeu live est bien plus lent qu’en ligne.' },
       { q: 'Niveaux de 20 minutes au club : combien de mains par niveau environ ?', o: ['3', '8 à 10', '25', '50'], a: 1, why: 'Environ un tiers de 25 à 30 mains par heure.' },
       { q: 'Contre une table de club qui paie beaucoup, ton arme principale ?', o: ['Le bluff', 'La valeur', 'Le limp', 'Le check'], a: 1, why: 'Ils paient : on mise pour la valeur.' },
-      { q: 'Tu veux relancer : comment éviter qu’on compte un call ?', o: ['Poser les jetons en plusieurs fois', 'Annoncer « relance » ou poser le montant en une fois', 'Ne rien dire', 'Montrer ses cartes'], a: 1, why: 'C’est la règle de la mise en une seule fois.' }
+      { q: 'Tu veux relancer : comment éviter qu’on compte un call ?', o: ['Poser les jetons en plusieurs fois', 'Annoncer « relance » ou poser le montant en une fois', 'Ne rien dire', 'Montrer ses cartes'], a: 1, why: 'C’est la règle de la mise en une seule fois.' },
+      { q: 'Au club, tu veux jouer 9-9 en début de table. Tu peux limper ?', o: ['Oui', 'Non : on ouvre en relançant ou on se couche', 'Seulement en petite blinde', 'Seulement au deep'], a: 1, why: 'Le limp est interdit, sauf en tête-à-tête (la petite blinde peut compléter).' },
+      { q: 'Un récréatif fait une grosse relance. Le plus souvent, c’est…', o: ['un bluff', 'une vraie main', 'une erreur', 'un tirage'], a: 1, why: 'Peu de sur-relances en bluff au club.' },
+      { q: 'Indice physique le plus fiable ?', o: ['Les mains qui tremblent', 'Le temps de réflexion et les habitudes de mise', 'Le regard', 'La façon de ranger ses jetons'], a: 1, why: 'Les gestes sont souvent du cinéma.' },
+      { q: 'Un joueur paie très vite. Il a le plus souvent…', o: ['un monstre', 'une main moyenne', 'rien', 'un tirage max'], a: 1, why: 'Avec un monstre il aurait réfléchi à relancer, avec rien il se serait couché.' }
     ]
   };
 
@@ -91,7 +103,11 @@
       { q: 'Tournois à 10 € : bankroll conseillée ?', o: ['100 €', '300 €', '1 000 à 2 000 €', '10 000 €'], a: 2, why: '100 à 200 buy-ins en MTT.' },
       { q: '40 tournois sans place payée prouvent que…', o: ['tu joues mal', 'rien à eux seuls : la variance est forte', 'il faut monter de niveau', 'il faut arrêter le poker'], a: 1, why: 'Il faut juger les décisions, pas les résultats.' },
       { q: 'Une soirée avec deux re-entries à 10 € coûte…', o: ['10 €', '20 €', '30 €', '0 €'], a: 2, why: 'Chaque entrée est un buy-in.' },
-      { q: 'Après une grosse perte, tu…', o: ['montes de niveau pour te refaire', 'appliques tes règles fixées à froid', 'pioches hors bankroll', 'joues toute la nuit'], a: 1, why: 'Les règles servent justement dans ces moments.' }
+      { q: 'Après une grosse perte, tu…', o: ['montes de niveau pour te refaire', 'appliques tes règles fixées à froid', 'pioches hors bankroll', 'joues toute la nuit'], a: 1, why: 'Les règles servent justement dans ces moments.' },
+      { q: 'Sit & Go : combien de buy-ins conseillés ?', o: ['10 à 20', '50 à 100', '100 à 200', '500'], a: 1, why: 'Moins de variance qu’en tournoi multi-tables.' },
+      { q: 'Règle de palier possible : quand redescendre de niveau ?', o: ['Après une mauvaise soirée', 'Si la bankroll tombe sous 80 buy-ins du niveau', 'Jamais', 'Quand on s’ennuie'], a: 1, why: 'Une règle fixée à froid, appliquée sans discuter.' },
+      { q: 'Lequel est un signe d’alerte de tilt ?', o: ['Jouer reposé', 'Jouer pour se refaire', 'Revoir ses mains', 'Suivre son plan'], a: 1, why: 'Se refaire, monter de niveau après une perte, piocher hors bankroll : on arrête.' },
+      { q: 'D’où vient la majorité des gains en tournoi multi-tables ?', o: ['De petites places régulières', 'De quelques gros résultats rares', 'Des bluffs', 'Des primes'], a: 1, why: 'C’est pourquoi les séries sans gain sont normales.' }
     ]
   };
 
@@ -111,7 +127,10 @@
       { q: 'Tirage quinte par les deux bouts, une carte à venir. Équité environ ?', o: ['8 %', '16 %', '32 %', '50 %'], a: 1, why: '8 outs × 2 %.' },
       { q: 'Pot 1 000, il mise 500. Équité requise ?', o: ['20 %', '25 %', '33 %', '50 %'], a: 1, why: '500 ÷ 2 000.' },
       { q: 'Les cotes implicites, ce sont…', o: ['les jetons déjà dans le pot', 'les gains futurs si tu touches', 'les blindes', 'la prime PKO'], a: 1, why: 'Ce que tu gagneras ensuite.' },
-      { q: 'Où réalises-tu le mieux ton équité ?', o: ['Hors position', 'En position', 'Pareil', 'Jamais'], a: 1, why: 'Tu vois avant de décider.' }
+      { q: 'Où réalises-tu le mieux ton équité ?', o: ['Hors position', 'En position', 'Pareil', 'Jamais'], a: 1, why: 'Tu vois avant de décider.' },
+      { q: 'Tirage ventral : combien d’outs ?', o: ['2', '4', '8', '9'], a: 1, why: 'Une seule hauteur de carte complète la quinte : 4 outs.' },
+      { q: 'Tirage couleur au flop : chance de la toucher d’ici la river, environ ?', o: ['18 %', '36 %', '50 %', '9 %'], a: 1, why: '9 outs × 4 % ≈ 36 %.' },
+      { q: 'Un out « sale », c’est…', o: ['une carte qui complète ton tirage mais donne une meilleure main à l’adversaire', 'une carte de la mauvaise couleur', 'un as', 'une carte déjà vue'], a: 0, why: 'Il ne compte pas dans tes outs.' }
     ]
   };
 
@@ -129,7 +148,11 @@
       { q: 'Quel board est sec ?', o: ['9♥ 8♣ 7♦', 'K♠ 7♦ 2♣', '6♥ 5♥ 4♥', 'J♠ T♠ 9♦'], a: 1, why: 'Cartes éloignées, couleurs différentes.' },
       { q: 'Quel board favorise la grosse blinde ?', o: ['A♠ K♦ 3♣', '7♥ 6♣ 5♦', 'K♠ Q♦ 2♣', 'A♥ A♣ 8♦'], a: 1, why: 'Bas et connecté : plus de mains de la BB.' },
       { q: 'Sur un board monotone sans la couleur, tu…', o: ['mises gros', 'ralentis', 'fais tapis', 'surmises'], a: 1, why: 'Beaucoup de mains te battent ou ont un gros tirage.' },
-      { q: 'L’avantage des nuts, c’est…', o: ['avoir la meilleure main', 'avoir plus de mains très fortes dans sa range', 'avoir la position', 'avoir le plus de jetons'], a: 1, why: 'C’est une notion de range.' }
+      { q: 'L’avantage des nuts, c’est…', o: ['avoir la meilleure main', 'avoir plus de mains très fortes dans sa range', 'avoir la position', 'avoir le plus de jetons'], a: 1, why: 'C’est une notion de range.' },
+      { q: '8♠ 8♦ 3♣ est un board…', o: ['monotone', 'pairé', 'connecté', 'sec et haut'], a: 1, why: 'Une paire au tableau.' },
+      { q: 'Board sec avec une carte haute : en relanceur, tu mises…', o: ['rarement et gros', 'souvent et petit', 'jamais', 'toujours tapis'], a: 1, why: 'Tu as l’avantage de range ; l’adversaire a peu touché.' },
+      { q: 'Qui a l’avantage sur A♥ K♣ 4♦ ?', o: ['La grosse blinde qui a payé', 'Le relanceur', 'Personne', 'Celui qui a le plus de jetons'], a: 1, why: 'Le relanceur a plus d’as-figures et de paires hautes.' },
+      { q: 'Board pairé : en général…', o: ['peu de mains ont touché, petites mises fréquentes', 'il faut toujours checker', 'on mise toujours gros', 'on fait tapis'], a: 0, why: 'Peu de combinaisons ont amélioré.' }
     ]
   };
 
@@ -153,7 +176,8 @@
       { q: 'Pourquoi garder une même taille pour valeur et bluffs contre un joueur attentif ?', o: ['Pour aller plus vite', 'Pour ne pas être lisible', 'C’est la règle', 'Pour gagner moins'], a: 1, why: 'Sinon la taille révèle ta main.' },
       { q: 'Au club, une donk bet ou une reprise de lead se fait à…', o: ['un quart du pot', '50 % du pot', 'le pot', 'deux fois le pot'], a: 1, why: 'Repère du club : la moitié du pot.' },
       { q: 'Pot de 6 BB, tu as Q♥J♥ sur T♥7♥2♣ (tirage couleur). Taille du club ?', o: ['1,5 à 2 BB', '4,5 BB', '6 BB', 'Tapis'], a: 0, why: 'Tirage, bluff ou semi-bluff : 25 à 35 % du pot.' },
-      { q: 'Pot de 6 BB, top paire bon kicker sur J♥T♥8♣. Taille ?', o: ['1,5 BB', '2 BB', '4 à 4,5 BB', '12 BB'], a: 2, why: 'Main forte sur un board à tirages : 66 à 75 %, pour faire payer les tirages.' }
+      { q: 'Pot de 6 BB, top paire bon kicker sur J♥T♥8♣. Taille ?', o: ['1,5 BB', '2 BB', '4 à 4,5 BB', '12 BB'], a: 2, why: 'Main forte sur un board à tirages : 66 à 75 %, pour faire payer les tirages.' },
+      { q: 'Au club, tu as payé en grosse blinde, flop K♠ 7♦ 2♣. Donk bet ?', o: ['Oui, 50 % du pot', 'Non : ce board aide le relanceur', 'Oui, tapis', 'Oui, 25 %'], a: 1, why: 'La donk bet se réserve aux boards bas et connectés qui t’aident plus que lui.' }
     ]
   };
 
@@ -163,6 +187,7 @@
     sections: [
       { ask: 'Comment classer sa main à la river ?', h: 'Valeur, bluff-catcher, bluff', p: ['Valeur : ta main bat la plupart des mains qui paieront. Bluff-catcher : elle bat les bluffs mais perd contre la valeur, donc tu checkes et tu décides si tu paies. Bluff : elle ne gagne presque jamais au showdown.'] },
       { ask: 'Quand miser pour la valeur ?', h: 'La valeur, fine ou forte', p: ['Mise si tu bats plus de la moitié des mains qui paient. Valeur fine : contre un joueur qui paie large, une petite mise (25 à 40 % du pot) avec top paire moyenne rapporte ce que le check laisse passer.', 'Valeur forte : avec une très grosse main sur un board effrayant, mise deux tiers du pot à une surmise.'] },
+      { ask: 'Quelles tailles à la river ?', h: 'Les tailles du club à la river', p: ['Repères du club, à faire valider par Lionel.', '• Valeur forte (ta main bat presque tout ce qui paie) : <b>66 à 75 % du pot</b>.', '• Valeur fine (top paire moyenne contre un joueur qui paie large) : <b>25 à 40 %</b>.', '• Mise de blocage (block bet), hors de position avec une main moyenne : <b>20 à 33 %</b>. Tu fixes le prix au lieu de subir une grosse mise.', '• Bluff : <b>la même taille que ta valeur forte</b> (66 à 75 %), sinon ta taille trahit ta main. Avec un tirage manqué qui bloque ses payes.', '• Bluff-catcher (tu bats les bluffs, pas la valeur) : <b>check</b>, puis tu décides si tu paies.', '• Rien, sans bloqueur : <b>check</b>, et tu abandonnes le pot.', 'Pour t’entraîner : S’entraîner › Après le flop › « Turn et river ».'] },
       { ask: 'Avec quoi bluffer ?', h: 'Choisir ses bluffs', p: ['Les meilleurs bluffs sont des tirages manqués qui bloquent ses payes : l’as de pique sur un board à trois piques retire ses couleurs à l’as.', 'Part de bluffs pour une mise : B ÷ (1 + 2B). Au pot : un tiers de bluffs, soit 2 mains de valeur pour 1 bluff.'] },
       { ask: 'Payer ou se coucher ?', h: 'Le bluff-catcher', p: ['Calcule l’équité requise (au pot, 33 %), puis demande-toi combien de bluffs sa ligne contient. Un nit qui mise gros à la river après avoir payé deux rues en contient très peu : couche-toi. Un large-agressif en contient beaucoup : paie plus large.'] }
     ],
@@ -172,7 +197,11 @@
       { q: 'Une paire moyenne à la river qui bat les bluffs mais pas la valeur est…', o: ['une main de valeur', 'un bluff-catcher', 'un bluff', 'une main nulle'], a: 1, why: 'Elle attrape les bluffs.' },
       { q: 'Meilleur bluff à la river sur un board à trois piques ?', o: ['Une paire', 'Un tirage manqué avec l’as de pique', 'Une couleur', 'Une quinte'], a: 1, why: 'L’as de pique bloque les meilleures couleurs.' },
       { q: 'Mise au pot à la river : part de bluffs équilibrée ?', o: ['10 %', '25 %', '33 %', '50 %'], a: 2, why: '1 ÷ 3.' },
-      { q: 'Un nit mise gros à la river. Avec un bluff-catcher, tu…', o: ['paies', 'te couches le plus souvent', 'relances', 'fais tapis'], a: 1, why: 'Peu de bluffs dans sa range.' }
+      { q: 'Un nit mise gros à la river. Avec un bluff-catcher, tu…', o: ['paies', 'te couches le plus souvent', 'relances', 'fais tapis'], a: 1, why: 'Peu de bluffs dans sa range.' },
+      { q: 'Repère du club : valeur forte à la river, quelle taille ?', o: ['20 à 33 %', '25 à 40 %', '66 à 75 %', 'Check'], a: 2, why: 'Ta main bat presque tout ce qui paie.' },
+      { q: 'Repère du club : valeur fine (top paire moyenne contre un joueur qui paie large) ?', o: ['25 à 40 %', '66 à 75 %', 'La taille du pot', 'Check'], a: 0, why: 'Une grosse mise ne se ferait payer que par mieux.' },
+      { q: 'Repère du club : tu bluffes à la river. Quelle taille ?', o: ['Plus petite que ta valeur', 'La même que ta valeur forte, 66 à 75 %', 'Tapis toujours', 'Le minimum'], a: 1, why: 'Sinon ta taille trahit ta main.' },
+      { q: 'Hors de position avec une main moyenne, le club conseille…', o: ['une mise de blocage de 20 à 33 %', 'un tapis', 'un check-raise', 'un fold'], a: 0, why: 'Tu fixes un petit prix au lieu de subir une grosse mise.' }
     ]
   };
 
@@ -190,7 +219,11 @@
       { q: 'Avec la BB ante, un tapis de 25 BB donne un M de…', o: ['5', '10', '25', '62'], a: 1, why: '25 ÷ 2,5 = 10.' },
       { q: 'Zone orange (M de 6 à 10) : tu joues…', o: ['normalement', 'tapis ou fold', 'en limpant', 'en payant'], a: 1, why: 'Le tapis devient la seule arme efficace.' },
       { q: 'À 30 BB face à une ouverture du bouton, avec A5s, une bonne option est…', o: ['le petit 3-bet', 'le tapis (resteal)', 'le limp', 'la paye systématique'], a: 1, why: 'A5s bloque les as et garde de l’équité.' },
-      { q: 'Pourquoi éviter le petit 3-bet à 30 BB ?', o: ['Il est trop cher', 'Il te laisse sans bonne option face au tapis adverse', 'Il est interdit', 'Il fait peur'], a: 1, why: 'Tu engages une grosse part de ton tapis puis tu dois te coucher.' }
+      { q: 'Pourquoi éviter le petit 3-bet à 30 BB ?', o: ['Il est trop cher', 'Il te laisse sans bonne option face au tapis adverse', 'Il est interdit', 'Il fait peur'], a: 1, why: 'Tu engages une grosse part de ton tapis puis tu dois te coucher.' },
+      { q: 'Avec la BB ante, combien coûte un tour de table ?', o: ['1,5 BB', '2,5 BB', '5 BB', '10 BB'], a: 1, why: 'Petite blinde + grosse blinde + ante de grosse blinde.' },
+      { q: 'Tapis de 30 BB : M ?', o: ['6', '12', '20', '30'], a: 1, why: '30 ÷ 2,5 = 12.' },
+      { q: 'Zone jaune (M de 10 à 20) : tu…', o: ['joues normalement', 'voles davantage', 'joues tapis ou fold', 'attends'], a: 1, why: 'Zone verte : normal ; jaune : on vole ; orange : tapis ou fold.' },
+      { q: 'Range du club à 30 BB, au bouton : environ…', o: ['17,6 %', '28,2 %', '35,1 %', '43 %'], a: 2, why: 'Un cran plus serré qu’à 40 BB et plus (43 %).' }
     ]
   };
 
@@ -208,7 +241,11 @@
       { q: 'À 15 BB, re-shove face à une ouverture UTG avec…', o: ['A9s', '99+, AQs+, AKo', 'toutes les paires', 'K9o'], a: 1, why: 'Contre une range forte, seule la crème se pousse.' },
       { q: 'Après avoir ouvert, se coucher face à un tapis avec une main moyenne est…', o: ['une erreur', 'le prix normal de la fold equity', 'interdit', 'toujours mauvais'], a: 1, why: 'Ta range d’ouverture n’est pas faite pour payer entièrement.' },
       { q: 'Le stop-and-go consiste à…', o: ['limper puis se coucher', 'payer le 3-bet puis pousser au flop', 'pousser préflop', 'checker deux rues'], a: 1, why: 'Tu reprends l’initiative au flop.' },
-      { q: 'À 22 BB au CO avec une main correcte, l’option la plus courante est…', o: ['limp', 'ouverture à 2 BB puis tapis ou fold', 'tapis direct', 'fold toujours'], a: 1, why: 'De 18 à 25 BB, on garde l’ouverture minimale.' }
+      { q: 'À 22 BB au CO avec une main correcte, l’option la plus courante est…', o: ['limp', 'ouverture à 2 BB puis tapis ou fold', 'tapis direct', 'fold toujours'], a: 1, why: 'De 18 à 25 BB, on garde l’ouverture minimale.' },
+      { q: 'À 15 BB, face à une ouverture tardive (CO, bouton, SB), on re-shove environ…', o: ['3 à 4 % des mains', '12 à 21 % des mains', '50 %', 'tout'], a: 1, why: 'Par exemple 44+, A9s+, KTs+, QJs, ATo+, KQo.' },
+      { q: 'À 15 BB, l’ouvreur paie un re-shove avec…', o: ['presque rien', '47 à 66 % de sa range d’ouverture', 'toute sa range', 'seulement AA'], a: 1, why: 'Il paie souvent : ton re-shove doit avoir de la valeur.' },
+      { q: 'Vers combien de BB passe-t-on au tapis direct en fin de table ?', o: ['40 BB', '25 BB', '15 BB et moins', '2 BB'], a: 2, why: 'Ouverture puis tapis ou fold de 18 à 25 BB ; tapis direct vers 15 BB et moins.' },
+      { q: 'Au club, 20 BB en grosse blinde, le bouton ouvre. Avec AJo, tu…', o: ['paies', 'fais tapis (resteal) ou te couches', 'fais un petit 3-bet', 'limpes'], a: 1, why: 'Sous 40 BB, pas de paye depuis les blindes ; le resteal à tapis reste permis.' }
     ]
   };
 
@@ -226,7 +263,11 @@
       { q: 'À 8 BB, part des mains poussées au bouton (équilibre) ?', o: ['19 %', '36 %', '48 %', '78 %'], a: 2, why: 'Selon les tables du cours.' },
       { q: 'À 8 BB, la BB paie un tapis de la SB avec…', o: ['26 %', '45 %', '64 %', '90 %'], a: 2, why: 'La SB pousse très large en face-à-face.' },
       { q: 'Contre un joueur qui paie trop peu, tu pousses…', o: ['plus serré', 'plus large', 'pareil', 'jamais'], a: 1, why: 'Ta fold equity augmente.' },
-      { q: 'Ces tables tiennent-elles compte de l’ICM ?', o: ['Oui', 'Non, elles sont en jetons'], a: 1, why: 'Il faut les ajuster près des paliers.' }
+      { q: 'Ces tables tiennent-elles compte de l’ICM ?', o: ['Oui', 'Non, elles sont en jetons'], a: 1, why: 'Il faut les ajuster près des paliers.' },
+      { q: 'À 15 BB, part de mains poussées en UTG (équilibre) ?', o: ['9 %', '19 %', '38 %', '65 %'], a: 0, why: 'UTG 9 %, bouton 38 %, SB 65 %.' },
+      { q: 'À 8 BB, la BB paie un tapis UTG avec…', o: ['26 % des mains', '45 %', '64 %', '90 %'], a: 0, why: 'La range UTG est forte.' },
+      { q: 'Contre un joueur qui paie tout, tu pousses…', o: ['plus large', 'plus serré', 'pareil', 'jamais'], a: 1, why: 'Ce sont des ranges d’équilibre : on s’adapte.' },
+      { q: 'Où trouver les tables dans l’appli ?', o: ['Ma range › Moins de 20 BB', 'Réglages', 'Le chrono', 'Analyser'], a: 0, why: 'Puis la profondeur, de 15 à 3 BB.' }
     ]
   };
 
@@ -245,7 +286,11 @@
       { q: 'Buy-in 10 € (5 € de prix), 20 000 jetons au départ. Combien de jetons par euro ?', o: ['2 000', '4 000', '10 000', '20 000'], a: 1, why: '20 000 ÷ 5.' },
       { q: 'En PKO, éliminer un joueur à 8 € de prime rapporte tout de suite…', o: ['8 €', '4 €', '2 €', '0 €'], a: 1, why: 'La moitié est encaissée.' },
       { q: 'La prime compte dans ta cote si…', o: ['tu es couvert', 'tu couvres l’adversaire', 'toujours', 'jamais'], a: 1, why: 'Sinon, tu ne peux pas l’éliminer.' },
-      { q: 'Plus les blindes montent, l’effet de la prime en jetons…', o: ['augmente', 'diminue', 'reste le même', 'disparaît d’un coup'], a: 1, why: 'Les pots grossissent, la prime pèse moins.' }
+      { q: 'Plus les blindes montent, l’effet de la prime en jetons…', o: ['augmente', 'diminue', 'reste le même', 'disparaît d’un coup'], a: 1, why: 'Les pots grossissent, la prime pèse moins.' },
+      { q: 'Tu élimines un joueur : que deviennent sa prime ?', o: ['Tout pour toi en argent', 'La moitié pour toi tout de suite, l’autre moitié s’ajoute à ta prime', 'Elle disparaît', 'Elle va au vainqueur'], a: 1, why: 'C’est le principe du PKO.' },
+      { q: 'Avec la prime, l’équité requise pour payer…', o: ['augmente', 'baisse', 'ne change pas', 'double'], a: 1, why: 'Équité = paye ÷ (pot final + prime en jetons).' },
+      { q: 'En Space KO, on raisonne avec…', o: ['la plus grosse prime possible', 'la valeur moyenne de la prime', 'rien', 'la plus petite'], a: 1, why: 'La prime est tirée au sort.' },
+      { q: 'Près de la bulle d’un PKO, la prime et l’ICM…', o: ['poussent tous deux à payer', 'se compensent en partie', 'n’ont aucun effet', 'poussent tous deux à se coucher'], a: 1, why: 'La prime pousse à payer, l’ICM à se coucher.' }
     ]
   };
 
@@ -263,7 +308,11 @@
       { q: 'Un joueur à 40/6 est plutôt…', o: ['un nit', 'une calling station', 'un maniac', 'un régulier'], a: 1, why: 'Il joue beaucoup et relance peu.' },
       { q: 'Un grand écart entre VPIP et PFR signifie…', o: ['agressivité', 'passivité', 'jeu serré', 'bluffs'], a: 1, why: 'Il paie beaucoup plus qu’il ne relance.' },
       { q: 'Contre un nit, ton ajustement principal ?', o: ['Le bluffer souvent et respecter ses grosses mises', 'Le payer toujours', 'Ne jamais jouer', 'Le 4-bet bluff'], a: 0, why: 'Il se couche trop et ne mise gros qu’avec la valeur.' },
-      { q: 'Combien de mains pour une première idée du VPIP ?', o: ['5', '30 à 50', '1 000', '10 000'], a: 1, why: 'Une première idée, pas une certitude.' }
+      { q: 'Combien de mains pour une première idée du VPIP ?', o: ['5', '30 à 50', '1 000', '10 000'], a: 1, why: 'Une première idée, pas une certitude.' },
+      { q: 'Le VPIP mesure…', o: ['la part des mains où il met volontairement des jetons', 'sa part de relances', 'ses gains', 'ses abattages'], a: 0, why: 'C’est sa largeur de jeu.' },
+      { q: 'Un joueur à 35/10 est plutôt…', o: ['un nit', 'un large-passif', 'un régulier', 'un maniac'], a: 1, why: 'Il entre dans beaucoup de pots sans relancer : isole et mise.' },
+      { q: 'Au club, la meilleure information sur un joueur, c’est…', o: ['ses gestes', 'les cartes qu’il montre à l’abattage', 'sa tenue', 'son nombre de jetons'], a: 1, why: 'Note avec quoi il a relancé ou payé, et depuis quelle position.' },
+      { q: 'Contre une calling station, tu…', o: ['bluffes souvent', 'mises pour la valeur, jamais de bluff', 'checkes tout', 'limpes'], a: 1, why: 'Elle ne se couche pas.' }
     ]
   };
 
@@ -280,7 +329,12 @@
     quiz: [
       { q: 'Tu viens de montrer un bluff. Tes prochaines mises de valeur…', o: ['seront moins payées', 'seront plus payées', 'ne changent rien', 'sont interdites'], a: 1, why: 'On te croit bluffeur : on te paie.' },
       { q: 'Indice le plus fiable au club ?', o: ['Les mains qui tremblent', 'Le temps de décision et les habitudes de mise', 'Le regard', 'La tenue'], a: 1, why: 'Plus difficile à simuler.' },
-      { q: 'Avec une image très serrée, tu…', o: ['voles plus', 'voles moins', 'paies tout', 'limpes'], a: 0, why: 'On se couche face à tes relances.' }
+      { q: 'Avec une image très serrée, tu…', o: ['voles plus', 'voles moins', 'paies tout', 'limpes'], a: 0, why: 'On se couche face à tes relances.' },
+      { q: 'Avec une image agressive (on te croit bluffeur), ta valeur se mise…', o: ['petit', 'plein pot', 'jamais', 'à tapis toujours'], a: 1, why: 'On te paiera plus : mise ta valeur fort et bluffe moins.' },
+      { q: 'Qu’est-ce qui pèse le plus dans ton image ?', o: ['Tes vêtements', 'Les mains que tu montres', 'Ton nombre de jetons', 'Ta place à table'], a: 1, why: 'Un bluff montré fait de toi un bluffeur pour plusieurs tours.' },
+      { q: 'Un indice physique seul…', o: ['remplace la lecture de range', 'confirme la lecture de range, sans la remplacer', 'ne sert à rien', 'est toujours fiable'], a: 1, why: 'Il confirme, il ne décide pas.' },
+      { q: 'Pour ne rien trahir toi-même, tu…', o: ['changes de rythme', 'gardes une routine identique à chaque décision', 'commentes tes mains', 'joues vite les mains faciles'], a: 1, why: 'Même temps, même façon de miser.' },
+      { q: 'Un changement de rythme d’un adversaire est un indice…', o: ['fiable', 'sans aucune valeur', 'interdit', 'toujours un bluff'], a: 0, why: 'Avec le temps de décision et les tailles habituelles.' }
     ]
   };
 
@@ -297,26 +351,37 @@
     quiz: [
       { q: 'Vouloir se refaire après une perte, c’est…', o: ['de la stratégie', 'un tilt de perte', 'normal et sans risque', 'une bonne idée'], a: 1, why: 'C’est l’un des tilts les plus coûteux.' },
       { q: 'Premier réflexe quand un signe de tilt apparaît ?', o: ['Jouer plus vite', 'Faire une pause', 'Monter de niveau', 'Payer plus'], a: 1, why: 'La pause casse l’enchaînement émotionnel.' },
-      { q: 'Quand fixer sa limite de perte ?', o: ['Après avoir perdu', 'Avant la session, à froid', 'Jamais', 'Au milieu de la session'], a: 1, why: 'À froid, le jugement est intact.' }
+      { q: 'Quand fixer sa limite de perte ?', o: ['Après avoir perdu', 'Avant la session, à froid', 'Jamais', 'Au milieu de la session'], a: 1, why: 'À froid, le jugement est intact.' },
+      { q: 'Se croire invincible après un gros gain, c’est…', o: ['de la confiance', 'un tilt de victoire', 'normal', 'un bon signe'], a: 1, why: 'Le tilt de victoire existe aussi.' },
+      { q: 'Lequel est un signe de tilt ?', o: ['Jouer plus vite et sortir de ta range', 'Faire des pauses', 'Suivre ton plan', 'Revoir tes mains'], a: 0, why: 'Note tes trois signes personnels : ce sont tes alarmes.' },
+      { q: 'Avant chaque grosse décision, l’outil conseillé…', o: ['trois respirations lentes', 'un café', 'décider vite', 'regarder ton téléphone'], a: 0, why: 'Un outil simple préparé à froid.' },
+      { q: 'Après la session, la main qui t’a énervé…', o: ['s’oublie', 's’écrit et s’analyse sur la décision, pas le résultat', 'se rejoue tout de suite', 'se raconte à la table'], a: 1, why: 'C’est la revue du chapitre 30.' },
+      { q: 'Ton garde-fou contre le tilt pendant la partie ?', o: ['Ta range', 'La chance', 'Tes adversaires', 'Ton nombre de jetons'], a: 0, why: 'Si tu t’en écartes sans raison, tu es en tilt.' }
     ]
   };
 
   L[31] = {
-    minutes: 10,
+    minutes: 10, links: [{ href: '#mainsclub', label: 'Club › Mains du club' }],
     key: ['Une main se relit en quatre temps : préflop, flop, turn, river, en se demandant à chaque fois quelle est la range de chacun.', 'Voici cinq mains typiques de tournoi, du préflop à la river.'],
     sections: [
+      { ask: 'Et les mains de notre club ?', h: 'Les mains du club, commentées par Lionel', p: ['Les mains de ce chapitre sont des exemples. Les vraies mains du club sont dans Club › Mains du club : un coup joué un mercredi ou au deep, la question à se poser, et le commentaire de Lionel.', 'Tu réponds d’abord, puis tu lis le commentaire. Ajoute toi aussi les coups qui t’ont fait hésiter : elles sont partagées avec la synchronisation du championnat.'] },
       { ask: 'Première main ?', h: 'Main 1 : AQo en UTG', p: ['100 BB, tu es UTG avec A♠ Q♦. Tu ouvres à 2 BB (la main est dans toutes les ranges). Le bouton paie. Flop Q♣ 8♥ 3♦ : top paire bon kicker sur board sec, c-bet d’un tiers du pot, il paie.', 'Turn 2♠ : carte blanche, tu mises encore deux tiers pour la valeur. River 9♣ : un récréatif paie souvent avec une dame plus faible ou un 8 : mise la moitié du pot. Leçon : la main qu’on a peur d’ouvrir est une machine à valeur.'] },
       { ask: 'Deuxième main ?', h: 'Main 2 : défense de grosse blinde', p: ['Le bouton ouvre à 2 BB, tu as K♥ 9♦ en grosse blinde. Il te faut 22 % d’équité : tu paies. Flop 9♠ 6♥ 2♣ : top paire, tu checkes, il mise un tiers, tu paies.', 'Turn A♦ : mauvaise carte pour toi, elle améliore sa range. Il mise deux tiers : contre un régulier, tu te couches souvent ; contre un maniac, tu paies. Leçon : la turn change la hiérarchie.'] },
       { ask: 'Troisième main ?', h: 'Main 3 : 12 BB au CO', p: ['Blindes 500/1 000, ante 1 000, tu as 12 BB au CO avec K♠ T♠. Les tables donnent un tapis : tu pousses. Le bouton paie avec A♥ J♣ : tu as environ 41 %, tu perds parfois, mais la décision est rentable car tout le monde se couche souvent.', 'Leçon : à 12 BB, on juge la décision sur l’ensemble des réponses adverses, pas sur cette main.'] },
       { ask: 'Quatrième main ?', h: 'Main 4 : la bulle', p: ['Quatre joueurs, trois payés (50/30/20 €), tapis de 40, 14, 9 et 21 BB. Tu as 21 BB en grosse blinde, la SB pousse 9 BB. Tu as J♦ 7♣, environ 45 % contre sa range de tapis, pour 42 % requis : en jetons, la paye est rentable. Avec l’ICM, se coucher vaut 25,51 € et payer 25,10 € : fold.', 'Leçon : à la bulle avec un tapis moyen, on paie moins (chapitre 23).'] },
-      { ask: 'Cinquième main ?', h: 'Main 5 : value bet contre une station', p: ['Club, une calling station limpe, tu isoles à 5 BB au bouton avec J♥ J♣. Flop T♦ 7♠ 3♣ : mise deux tiers. Turn 4♥ : mise deux tiers. River 2♦ : mise encore deux tiers.', 'Elle paie trois rues avec 9-8 ou une paire de 7 : tu prends le maximum. Leçon : contre une station, la valeur se prend en grosses mises sur trois rues.'] }
+      { ask: 'Cinquième main ?', h: 'Main 5 : value bet contre une station', p: ['Club, tu ouvres à 2 BB au bouton avec J♥ J♣, une calling station paie en grosse blinde. Flop T♦ 7♠ 3♣ : mise deux tiers. Turn 4♥ : mise deux tiers. River 2♦ : mise encore deux tiers.', 'Elle paie trois rues avec 9-8 ou une paire de 7 : tu prends le maximum. Leçon : contre une station, la valeur se prend en grosses mises sur trois rues.'] }
     ],
     mistake: 'Juger une main sur son résultat (« j’ai perdu, donc c’était mauvais ») au lieu de la décision prise avec l’information disponible.',
     retain: ['Relis en quatre temps : préflop, flop, turn, river.', 'À chaque rue : quelle range pour lui, quelle range pour moi ?', 'On juge la décision, pas le résultat.'],
     quiz: [
       { q: 'Main 1 : pourquoi miser la river 9♣ avec AQ sur Q-8-3-2 ?', o: ['Pour bluffer', 'Pour la valeur contre les dames plus faibles et les 8', 'Pour protéger', 'Par réflexe'], a: 1, why: 'Il paie souvent avec moins bien.' },
       { q: 'Main 3 : tu perds le tapis avec KTs contre AJo (41 %). La décision était…', o: ['mauvaise', 'rentable malgré le résultat', 'interdite', 'indifférente'], a: 1, why: 'On juge l’ensemble des réponses adverses.' },
-      { q: 'Main 4 : en jetons tu paierais, en ICM tu te couches. Pourquoi ?', o: ['La main est mauvaise', 'Perdre te coûte plus que gagner ne rapporte à la bulle', 'Les blindes sont trop petites', 'Par prudence sans raison'], a: 1, why: 'C’est l’effet de bulle.' }
+      { q: 'Main 4 : en jetons tu paierais, en ICM tu te couches. Pourquoi ?', o: ['La main est mauvaise', 'Perdre te coûte plus que gagner ne rapporte à la bulle', 'Les blindes sont trop petites', 'Par prudence sans raison'], a: 1, why: 'C’est l’effet de bulle.' },
+      { q: 'Main 2 : K9 en grosse blinde, la turn amène un as. Pourquoi c’est mauvais ?', o: ['L’as améliore la range du bouton', 'L’as t’aide', 'Rien ne change', 'Le pot grossit'], a: 0, why: 'La turn change la hiérarchie.' },
+      { q: 'Main 3 : à 12 BB, on juge la décision…', o: ['sur cette main seulement', 'sur l’ensemble des réponses adverses', 'sur le résultat', 'au hasard'], a: 1, why: 'Le tapis est rentable car tout le monde se couche souvent.' },
+      { q: 'Main 5 : contre une calling station, la valeur se prend…', o: ['en petites mises', 'en grosses mises sur trois rues', 'en checkant', 'en bluffant'], a: 1, why: 'Elle paie avec 9-8 ou une paire de 7.' },
+      { q: 'Une main se relit en combien de temps ?', o: ['Un seul : le résultat', 'Quatre : préflop, flop, turn, river', 'Deux', 'Aucun'], a: 1, why: 'À chaque fois : quelle est la range de chacun ?' },
+      { q: 'Où trouver les vraies mains du club commentées par Lionel ?', o: ['Club › Mains du club', 'Réglages', 'Le chrono', 'Nulle part'], a: 0, why: 'Elles sont partagées avec la synchronisation du championnat.' }
     ]
   };
 
@@ -333,7 +398,12 @@
     quiz: [
       { q: 'Quelle fréquence pour la Séance du jour ?', o: ['Une fois par mois', 'Chaque jour, 10 minutes', 'Une fois par an', 'Avant les gros tournois seulement'], a: 1, why: 'La répétition courte et régulière.' },
       { q: 'Première priorité de travail ?', o: ['L’ICM', 'Les ranges d’ouverture et de défense', 'Les bluffs à la river', 'Le heads-up'], a: 1, why: 'Ce sont les décisions les plus fréquentes.' },
-      { q: 'Une main ratée revient après…', o: ['1, 3, 7 et 21 jours', 'jamais', 'un an', 'chaque minute'], a: 0, why: 'C’est la répétition espacée.' }
+      { q: 'Une main ratée revient après…', o: ['1, 3, 7 et 21 jours', 'jamais', 'un an', 'chaque minute'], a: 0, why: 'C’est la répétition espacée.' },
+      { q: 'Deuxième priorité de travail ?', o: ['Le tapis ou fold', 'L’ICM', 'La river', 'Le mental'], a: 0, why: 'Décisif en tournoi, juste après les ranges.' },
+      { q: 'Tous les combien refaire le test de profil ?', o: ['Chaque jour', 'Chaque mois', 'Jamais', 'Chaque année'], a: 1, why: 'Il montre où tu en es.' },
+      { q: 'Meilleur indicateur qu’une range est acquise ?', o: ['Tes gains', 'Tu ne consultes plus « Ma range » pendant tes parties', 'Le nombre de quiz', 'La chance'], a: 1, why: 'Quand il tombe à zéro, la range est acquise.' },
+      { q: 'On progresse par…', o: ['de longues séances rares', 'une répétition courte et régulière', 'le seul jeu en tournoi', 'la lecture d’un livre une fois'], a: 1, why: 'Une décision répétée cent fois devient automatique.' },
+      { q: 'Une fois par semaine, l’appli conseille…', o: ['un Sit & Go ou un tournoi « Moments clés », sans coach', 'rien', '10 heures de jeu', 'de tout recommencer'], a: 0, why: 'Pour mesurer tes progrès.' }
     ]
   };
 
@@ -355,7 +425,10 @@
       { q: 'Tu as AQo en UTG : tu parles en premier. Que fait le profil le plus serré ?', o: ['Il se couche', 'Il limpe', 'Il ouvre (première relance)', 'Il fait tapis'], a: 2, why: 'AQo s’ouvre en UTG dans tous les profils, même le plus serré.' },
       { q: 'Blindes 200/400, relance habituelle au club ?', o: ['400', '800', '1 000', '1 200'], a: 1, why: 'Au club, on ouvre à 2 BB : 800.' },
       { q: 'Taille d’ouverture depuis la SB ?', o: ['2 BB', '2,2 BB', '2,5 BB', '3 BB'], a: 3, why: 'Hors position, on relance un peu plus gros.' },
-      { q: 'Pourquoi ouvrir plus large au bouton ?', o: ['Les cartes sont meilleures', 'Il ne reste que deux joueurs et tu as la position', 'Les blindes sont plus grosses', 'C’est la règle'], a: 1, why: 'Moins de joueurs à passer, et la position à chaque tour.' }
+      { q: 'Pourquoi ouvrir plus large au bouton ?', o: ['Les cartes sont meilleures', 'Il ne reste que deux joueurs et tu as la position', 'Les blindes sont plus grosses', 'C’est la règle'], a: 1, why: 'Moins de joueurs à passer, et la position à chaque tour.' },
+      { q: 'Range du club : sur une table à 10, UTG ouvre…', o: ['plus serré que le LJ', 'la même range que le LJ (la range de la photo)', 'plus large que le bouton', 'aucune main'], a: 1, why: 'C’est une range de table à 6 : on ne la resserre pas pour 9 ou 10 joueurs.' },
+      { q: 'Range du club, tu ouvres 99 et on te 3-bet. Couleur de la case ?', o: ['Orange : 4-bet ou tapis', 'Vert : tu paies', 'Rose : tu te couches', 'Gris : tu n’ouvres pas'], a: 1, why: 'Vert : 99, AJs, ATs, KQs, KJs, KTs, QJs, QTs, JTs, AQo.' },
+      { q: 'Tapis de 30 BB : la range du club au cut-off ouvre environ…', o: ['17,6 %', '28,2 %', '35,1 %', '43 %'], a: 1, why: 'Entre 20 et 40 BB, chaque place joue un cran plus serré : le cut-off passe de 35,1 % à 28,2 %.' }
     ]
   };
 
@@ -380,7 +453,8 @@
       { q: 'Meilleur bluff de 3-bet depuis la BB ?', o: ['K7o', 'A4s', 'Q8o', '72o'], a: 1, why: 'A4s bloque les as et garde de l’équité.' },
       { q: 'Un joueur très serré ouvre UTG, tu as A7o en grosse blinde. Tu…', o: ['paies, la cote est bonne', '3-bet en bluff', 'jettes', 'fais tapis'], a: 2, why: 'Sa range est forte : ton as est dominé trop souvent.' },
       { q: 'Un maniaque ouvre au bouton, tu as ATo en grosse blinde (50 BB). Tu…', o: ['jettes', 'paies seulement', '3-bet pour la valeur', 'fais tapis'], a: 2, why: 'Il ouvre presque tout et paie les 3-bets avec moins bien.' },
-      { q: 'Taille de 3-bet depuis la BB face à 2,5 BB ?', o: ['5 BB', '7 BB', '10 à 11 BB', '20 BB'], a: 2, why: 'Environ 4 fois l’ouverture, hors position.' }
+      { q: 'Taille de 3-bet depuis la BB face à 2,5 BB ?', o: ['5 BB', '7 BB', '10 à 11 BB', '20 BB'], a: 2, why: 'Environ 4 fois l’ouverture, hors position.' },
+      { q: 'Au club, 30 BB en grosse blinde, le cut-off ouvre. Avec QJs, tu…', o: ['paies', 'fais un petit 3-bet', 'te couches (ou tapis avec une grosse main seulement)', 'limpes'], a: 2, why: 'Sous 40 BB, pas de défense de blinde : tapis avec les grosses mains, sinon fold.' }
     ]
   };
 
@@ -402,7 +476,9 @@
       { q: 'Range du club : tu as ouvert avec KJs, on te 3-bet. Tu…', o: ['te couches', 'paies', '4-bet', 'fais tapis'], a: 1, why: 'KJs est en vert : tu paies.' },
       { q: 'Tu as ouvert en UTG, le CO te 3-bet. Avec AJo, tu…', o: ['paies', 'te couches', '4-bet', 'fais tapis'], a: 1, why: 'Hors position face à une range forte, AJo est dominée.' },
       { q: 'Pourquoi A5s est un bon bluff de 3-bet ?', o: ['C’est une main forte', 'Elle bloque les as adverses et garde de l’équité', 'Elle fait souvent quinte', 'Au hasard'], a: 1, why: 'Bloqueur d’as et équité de secours.' },
-      { q: 'Une range de 3-bet sans aucun bluff est…', o: ['optimale', 'facile à lire', 'imbattable', 'interdite'], a: 1, why: 'L’adversaire se couche avec tout sauf ses meilleures mains.' }
+      { q: 'Une range de 3-bet sans aucun bluff est…', o: ['optimale', 'facile à lire', 'imbattable', 'interdite'], a: 1, why: 'L’adversaire se couche avec tout sauf ses meilleures mains.' },
+      { q: 'Taille du 3-bet hors de position (depuis les blindes) ?', o: ['2 fois l’ouverture', '3 fois', '4 fois', 'Tapis'], a: 2, why: 'Hors de position, 4 fois l’ouverture.' },
+      { q: 'Range du club : tu as ouvert avec AQo et on te 3-bet. Tu…', o: ['4-bet ou tapis', 'paies', 'te couches', 'limpes'], a: 1, why: 'AQo est vert : tu paies. AQs est orange.' }
     ]
   };
 
@@ -422,7 +498,10 @@
       { q: '3-bet à 8 BB, tu 4-bet en position. Taille ?', o: ['12 BB', '18 BB', '30 BB', 'Tapis à 100 BB'], a: 1, why: 'Environ 2,2 fois le 3-bet.' },
       { q: 'Le click back, c’est…', o: ['un call', 'une relance minimum en retour', 'un tapis', 'un check'], a: 1, why: 'Dans ton vocabulaire : relance minimum de retour.' },
       { q: 'Pourquoi éviter le click back en bluff ?', o: ['Il coûte trop cher', 'L’adversaire paie presque toujours avec une si bonne cote', 'C’est interdit', 'Il fait peur'], a: 1, why: 'La cote offerte est énorme.' },
-      { q: 'À 35 BB, ton 4-bet devient le plus souvent…', o: ['un call', 'un tapis', 'un min-raise', 'un fold'], a: 1, why: 'Au-dessous de 40 BB, le 4-bet est un tapis.' }
+      { q: 'À 35 BB, ton 4-bet devient le plus souvent…', o: ['un call', 'un tapis', 'un min-raise', 'un fold'], a: 1, why: 'Au-dessous de 40 BB, le 4-bet est un tapis.' },
+      { q: 'Pourquoi le squeeze est-il si rentable ?', o: ['Le payeur a souvent une très grosse main', 'L’argent mort, et un ouvreur coincé entre toi et le payeur', 'On joue toujours en position', 'Il est obligatoire'], a: 1, why: 'Le payeur aurait sur-relancé avec une très grosse main : beaucoup de folds.' },
+      { q: 'Depuis la grosse blinde, face à une ouverture et un call, quelle main est un bluff de squeeze ?', o: ['A4s', 'QJo', '76o', 'K2o'], a: 0, why: 'A2s à A5s et K9s en bluff : ils bloquent les as.' },
+      { q: 'Tu as ouvert, on te squeeze. Tu continues…', o: ['plus large que face à un 3-bet simple', 'plus serré : QQ+, AK et quelques mains fortes', 'avec toutes tes paires', 'jamais'], a: 1, why: 'Tu es hors de position avec un joueur derrière.' }
     ]
   };
 
@@ -431,7 +510,7 @@
     links: [{ href: '#ranges', label: 'Ma range › Face à un limper (selon ta position)' }, { href: '#situations', label: 'Exercices : Isoler un limper' }],
     key: ['Face à un ou plusieurs limpers, on relance pour isoler avec les mains fortes, on suit derrière avec les mains spéculatives, et on se couche avec le reste.', 'La taille d’isolement monte d’une grosse blinde par limper.'],
     sections: [
-      { ask: 'Pourquoi les limpers sont-ils une bonne nouvelle ?', h: 'Le limper est souvent faible', p: ['Un joueur qui se contente de payer la grosse blinde sans relancer annonce une main moyenne : avec une grosse main, la plupart des joueurs relancent. Au club, les limpers sont surtout des joueurs récréatifs et larges-passifs.', 'Relancer pour l’isoler, c’est jouer le pot seul contre lui, souvent en position, avec l’initiative et une meilleure main.'] },
+      { ask: 'Pourquoi les limpers sont-ils une bonne nouvelle ?', h: 'Le limper est souvent faible', p: ['Un joueur qui se contente de payer la grosse blinde sans relancer annonce une main moyenne : avec une grosse main, la plupart des joueurs relancent. Là où le limp est permis (en ligne, dans d’autres clubs), les limpers sont surtout des joueurs récréatifs et larges-passifs. Au club, il est interdit sauf en tête-à-tête.', 'Relancer pour l’isoler, c’est jouer le pot seul contre lui, souvent en position, avec l’initiative et une meilleure main.'] },
       { ask: 'Quelle taille pour isoler ?', h: 'La taille : 3 à 4 BB, plus 1 BB par limper', p: ['En position, relance à 3 BB plus 1 BB par limper ; depuis les blindes, 4 BB plus 1 BB par limper, car tu joueras hors position.', 'Exemple : blindes 100/200, deux limpers, tu es au bouton : 3 + 2 = 5 BB, soit 1 000 jetons. Plus petit, les limpers paient tous et tu te retrouves en pot à plusieurs joueurs.'] },
       { ask: 'Avec quelles mains ?', h: 'Isoler, suivre ou se coucher', p: ['Isoler : les mains qui jouent bien seules et dominent la range du limper. Au CO, à peu près 55+, A9s+, KTs+, QJs, ATo+, KQo. Au bouton, beaucoup plus large.', 'Suivre (sur-limper) : les petites paires et les connecteurs assortis, qui cherchent un brelan ou une couleur à plusieurs, pas cher.', 'Se coucher : les mains offsuit moyennes (K8o, Q9o, J9o), qui perdent de l’argent dans les pots à plusieurs.'] },
       { ask: 'Et si je ne suis ni au cut-off ni au bouton ?', h: 'Isoler selon ta position', p: ['On peut isoler de partout, mais plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Un limper de début de table cache aussi plus souvent un piège (limp-trap, chapitre 34).', 'Profil TAG à 100 BB, face à un seul limper : en début de table (UTG+1 à LJ), 88+, AJs+, KQs, AQo+ (environ 6 % des mains) ; au hijack, 77+, ATs+, KJs+, QJs, AJo+, KQo (9 %) ; au cut-off, 55+, A9s+, KTs+, QJs, ATo+, KQo (12 %) ; au bouton, toutes les paires, tous les as assortis, K8s+, Q9s+, J9s+, T9s, 98s, A8o+, KTo+, QJo (22 %).', 'Depuis les blindes, tu joueras hors de position : isolement à 4 BB + 1 et plus serré. En petite blinde, à peu près les mains du cut-off, et tu complètes avec les petites paires, les as assortis faibles et les connecteurs assortis. En grosse blinde, 88+, ATs+, KJs+, AJo+, KQo pour la valeur, et tu checkes gratuitement tout le reste.', 'Les profils serré, équilibré et large-agressif décalent ces listes d’un cran. Tout est dans Ma range › Face à un limper, avec ta place et celle du limper ; entraîne-toi avec l’exercice « Isoler un limper ».'] },
@@ -449,7 +528,8 @@
       { q: 'Un limper, tu es au HJ avec K8o. Que fais-tu ?', o: ['Isoler', 'Suivre', 'Se coucher', 'Tapis'], a: 2, why: 'Les offsuit moyennes perdent de l’argent en pot à plusieurs et sont dominées.' },
       { q: 'Un joueur UTG limpe, tu es en UTG+1 avec ATo. Que fais-tu ?', o: ['Tu isoles', 'Tu sur-limpes', 'Tu te couches', 'Tu fais tapis'], a: 2, why: 'Sept joueurs parlent encore derrière toi et un limper de début de table piège plus souvent : en début de table, on n’isole qu’avec 88+, AJs+, KQs, AQo+.' },
       { q: 'Un limper, tu es en grosse blinde avec J7s. Que fais-tu ?', o: ['Tu isoles à 5 BB', 'Tu checkes', 'Tu te couches', 'Tu fais tapis'], a: 1, why: 'En grosse blinde, tu vois le flop gratuitement : tu n’isoles que pour la valeur, et tu checkes tout le reste.' },
-      { q: 'Pourquoi isoler plutôt que suivre avec AQo ?', o: ['Pour jouer à plusieurs', 'Pour jouer seul contre une range plus faible, avec l’initiative', 'Pour bluffer au flop', 'Parce que le limp est interdit'], a: 1, why: 'L’isolement te donne un pot en tête à tête, l’initiative et la meilleure main.' }
+      { q: 'Pourquoi isoler plutôt que suivre avec AQo ?', o: ['Pour jouer à plusieurs', 'Pour jouer seul contre une range plus faible, avec l’initiative', 'Pour bluffer au flop', 'Parce que le limp est interdit'], a: 1, why: 'L’isolement te donne un pot en tête à tête, l’initiative et la meilleure main.' },
+      { q: 'Au club, ce chapitre sur les limpers sert surtout…', o: ['à chaque tournoi du mercredi', 'en ligne et dans d’autres clubs, car le limp est interdit chez nous sauf en tête-à-tête', 'au deep seulement', 'jamais'], a: 1, why: 'Au club, on ouvre en relançant ou on se couche ; la petite blinde peut compléter.' }
     ]
   };
 
@@ -457,7 +537,7 @@
     minutes: 9,
     key: ['Lire une main, c’est réduire la range adverse action après action, du préflop à la river.', 'On ne cherche pas une main précise : on retire ce qu’il n’aurait pas joué ainsi.'],
     sections: [
-      { ask: 'Par où commence-t-on ?', h: 'Étape 1 : la range de départ', p: ['Tout commence avant le flop : sa position et son action. Un joueur serré qui ouvre UTG a environ 10 % des mains : paires moyennes et hautes, As forts, figures assorties. Un récréatif qui limpe au bouton peut avoir presque tout, sauf les très grosses mains, qu’il aurait relancées.', 'Note sa range de départ en une phrase : « UTG serré : 77+, AJ+, KQ ».'] },
+      { ask: 'Par où commence-t-on ?', h: 'Étape 1 : la range de départ', p: ['Tout commence avant le flop : sa position et son action. Un joueur serré qui ouvre UTG a environ 10 % des mains : paires moyennes et hautes, As forts, figures assorties. Un récréatif qui limpe au bouton peut avoir presque tout, sauf les très grosses mains, qu’il aurait relancées.', 'Note sa range de départ en une phrase : « UTG serré : 77+, AJ+, KQ ».', 'Pour t’entraîner : S’entraîner › Après le flop › « Lire la range adverse » : tu colories les mains qu’il peut avoir, l’appli corrige.'] },
       { ask: 'Et quand il mise au flop ?', h: 'Étape 2 : chaque action retire des mains', p: ['Sur K♠ 7♦ 2♣, il mise la moitié du pot : il garde ses rois, ses paires hautes, quelques bluffs (AQ, AJ). Il retire les mains qui auraient checké, comme 88 ou 99 chez un joueur prudent.', 'S’il checke puis paie, il a souvent une main moyenne : une paire de 7, une petite paire en dessous du roi, ou un tirage s’il y en a un.'] },
       { ask: 'Comment compter concrètement ?', h: 'Étape 3 : compter les combinaisons', p: ['Une paire servie compte 6 combinaisons, une main assortie 4, une main dépareillée 12. Les cartes du tableau en retirent : sur un roi au flop, il reste 3 rois, donc AK ne vaut plus que 12 combinaisons (3 × 4) au lieu de 16.', 'Exemple à la river : tu comptes 6 combinaisons de valeur et 8 bluffs probables (tirages manqués). S’il mise le pot, il te faut 33 % : avec 8 bluffs sur 14 combinaisons, tu gagnes 57 % du temps. Tu paies.'] },
       { ask: 'Et le profil du joueur ?', h: 'Étape 4 : ajuster au profil', p: ['La même ligne ne veut pas dire la même chose chez tout le monde. Une grosse mise à la river d’un nit, c’est presque toujours la valeur ; chez un maniac, il faut payer plus large.', 'Un récréatif fantasque mise souvent selon sa main, pas selon une stratégie : grosse mise, grosse main ; petite mise, main moyenne.'] }
@@ -470,7 +550,9 @@
       { q: 'Flop K♠ 7♦ 2♣. Combien de combinaisons d’AK restent possibles ?', o: ['16', '12', '9', '6'], a: 1, why: 'Il reste 3 rois : 4 as × 3 rois = 12.' },
       { q: 'Un nit mise gros à la river après avoir payé deux rues. Que contient surtout sa range ?', o: ['Des bluffs', 'De la valeur', 'Des tirages', 'N’importe quoi'], a: 1, why: 'Un nit bluffe très rarement : une grosse mise tardive, c’est presque toujours la valeur.' },
       { q: 'Il mise le pot à la river. Quelle part de bluffs te faut-il dans sa range pour payer ?', o: ['25 %', '33 %', '50 %', '66 %'], a: 1, why: 'Mise du pot : tu paies 1 pour gagner 2, il te faut 33 %.' },
-      { q: 'Première étape de la lecture de main ?', o: ['Regarder ses cartes au showdown', 'Estimer sa range préflop selon position et profil', 'Deviner sa main exacte', 'Regarder son tapis'], a: 1, why: 'Tout part de la range de départ.' }
+      { q: 'Première étape de la lecture de main ?', o: ['Regarder ses cartes au showdown', 'Estimer sa range préflop selon position et profil', 'Deviner sa main exacte', 'Regarder son tapis'], a: 1, why: 'Tout part de la range de départ.' },
+      { q: 'Il checke puis paie au flop. Le plus souvent, il a…', o: ['un monstre', 'une main moyenne ou un tirage', 'rien du tout', 'AA'], a: 1, why: 'Avec une grosse main il aurait souvent misé ou relancé.' },
+      { q: 'Lire une main, c’est surtout…', o: ['deviner sa main exacte', 'retirer, action après action, ce qu’il n’aurait pas joué ainsi', 'regarder ses gestes', 'compter ses jetons'], a: 1, why: 'On réduit une range, on ne cherche pas une main précise.' }
     ]
   };
 
@@ -480,7 +562,7 @@
     sections: [
       { ask: 'Quand faire un c-bet ?', h: 'Le c-bet selon le board', p: ['Sur un board sec avec une carte haute (K♠ 7♦ 2♣, A♥ 8♣ 3♦), le relanceur a plus de mains fortes : c-bet fréquent, petit, environ un tiers du pot.', 'Sur un board bas et connecté (8♥ 7♥ 5♣), la range du défenseur en BB touche davantage : check plus souvent, et mise plus gros (deux tiers du pot) avec tes vraies mains et tes gros tirages.'] },
       { ask: 'Et quand on est plusieurs ?', h: 'Le nombre d’adversaires', p: ['Contre un adversaire, tu peux miser souvent. Contre deux, réduis nettement tes bluffs. Contre trois ou plus, mise surtout pour la valeur : la probabilité qu’un des joueurs ait touché devient grande.'] },
-      { ask: 'Comment défendre face à un c-bet ?', h: 'Défendre : la cote et la défense minimale', p: ['Face à une mise d’un tiers du pot, il te faut 20 % d’équité pour payer, et tu dois défendre environ 75 % de ta range pour ne pas te faire exploiter. Face à une mise du pot, 33 % et 50 %.', 'Exemple : pot 1 200, il mise 400. Tu paies 400 pour un pot final de 2 000 : 20 %. Un tirage ventre (4 outs, environ 17 % sur deux cartes) ne suffit pas seul ; une paire moyenne ou un tirage couleur, si.'] },
+      { ask: 'Comment défendre face à un c-bet ?', h: 'Défendre : la cote et la défense minimale', p: ['Face à une mise d’un tiers du pot, il te faut 20 % d’équité pour payer, et tu dois défendre environ 75 % de ta range pour ne pas te faire exploiter. Face à une mise du pot, 33 % et 50 %.', 'Exemple : pot 1 200, il mise 400. Tu paies 400 pour un pot final de 2 000 : 20 %. Un tirage ventre (4 outs, environ 17 % sur deux cartes) ne suffit pas seul ; une paire moyenne ou un tirage couleur, si.', 'Pour t’entraîner : S’entraîner › Après le flop › « Face à une mise » : se coucher, payer ou relancer selon la taille de la mise, ta main et le board.'] },
       { ask: 'Quand relancer le c-bet ?', h: 'Le check-raise', p: ['Check-relance avec tes meilleures mains (double paire, brelan) et tes gros tirages (couleur + quinte), surtout sur les boards bas qui te sont favorables.', 'Taille : 2,2 à 2,5 fois la mise sur un board sec, 3 à 4 fois sur un board à tirages (chapitre 13). Garde des mains fortes dans ta range de call pour ne pas être lisible.'] },
       { ask: 'Et face à une surmise ?', h: 'Face à une surmise au flop', p: ['Une mise plus grosse que le pot au flop est rare et souvent très polarisée : grosse main ou bluff. Il te faut 40 % d’équité face à deux fois le pot. Paie avec les mains fortes et les gros tirages, couche les paires moyennes, sauf contre un maniac.'] },
       { ask: 'Que fait le solveur sur un flop sec ?', h: 'En chiffres : K♦ 8♠ 3♣', p: ['Bouton contre grosse blinde, 40 BB, la grosse blinde checke. Le bouton mise 60 % du temps, le plus souvent un tiers du pot (35 %).', 'Top paire : mise 79 %. Sans rien : il mise 73 %, ce sont ses bluffs. Avec seulement la hauteur as, il checke 64 % : la main gagne souvent au check, et un bluff ne ferait coucher que des mains plus faibles.', 'Retiens : sur un flop sec avec une carte haute, petite mise fréquente, et ce sont les mains sans aucune valeur qui bluffent, pas les as hauteur.'] },
@@ -509,6 +591,7 @@
     sections: [
       { ask: 'Qu’est-ce qui change à la turn ?', h: 'Pourquoi la turn compte autant', p: ['Après une mise au flop payée, le pot a souvent doublé. Une mise de deux tiers du pot à la turn prépare un tapis à la river. C’est le moment de décider si ta main vaut trois rues de valeur.'] },
       { ask: 'Quand continuer à bluffer ?', h: 'Le double barrel', p: ['Bon candidat : une carte haute qui tombe sur un board bas (un as ou un roi sur 8♠ 6♦ 2♣) : elle améliore ta range de relanceur plus que celle du défenseur.', 'Bons bluffs : les tirages (couleur, quinte) qui ont encore des outs, et les mains qui bloquent ses meilleures payes. Mauvais bluffs : les mains sans équité quand la carte aide le défenseur (un 7 sur 8-6-2).'] },
+      { ask: 'Quelles tailles à la turn ?', h: 'Les tailles du club à la turn', p: ['Repères du club, à faire valider par Lionel. Exemple : après un tiers du pot payé au flop, le pot fait environ 10 BB à la turn.', '• Deuxième mise (double barrel) quand la carte t’aide, par exemple un as ou un roi sur un board bas : <b>50 à 75 % du pot</b> (5 à 7,5 BB).', '• Main de valeur sur un board à tirages : <b>66 à 75 %</b>, ou la taille du pot à 40 BB pour préparer le tapis à la river.', '• Tirage qui garde beaucoup d’outs (semi-bluff) : <b>50 à 66 %</b>. Sans outs, tu ne continues pas à bluffer.', '• Mise retardée (delayed c-bet) après un flop checké des deux côtés : <b>50 %</b>.', '• Main moyenne, ou paire haute quand la turn complète une couleur ou une quinte : <b>check</b>, tu contrôles le pot.', '• Surmise à la turn : 120 à 150 %, rare, seulement sur une carte blanche quand tu as plus de très grosses mains que lui.', 'Pour t’entraîner : S’entraîner › Après le flop › « Turn et river ».'] },
       { ask: 'Et les cartes qui changent tout ?', h: 'Les cartes qui changent l’avantage', p: ['La troisième carte d’une couleur, la carte qui complète une quinte, ou la carte qui double le board changent la hiérarchie. Avec une paire haute sans la couleur, ralentis sur la troisième carte de couleur : check et contrôle du pot.', 'À l’inverse, si la carte complète ce que tu représentes (tu as relancé préflop et un as tombe), mise : ton adversaire peut difficilement continuer.'] },
       { ask: 'Faut-il parfois surmiser à la turn ?', h: 'La surmise à la turn', p: ['C’est le cas le plus fréquent de surmise : une carte blanche (2♥ sur K♠ 9♦ 4♣) alors que tu as l’avantage des nuts (tu as plus de rois et de brelans que lui). Mise 1,2 à 1,5 fois le pot avec tes meilleures mains et quelques tirages.', 'Face à une surmise à la turn, il te faut environ 38 % d’équité contre 1,5 fois le pot : paie avec les mains fortes, couche les paires moyennes, sauf contre un joueur qui bluffe beaucoup.'] },
       { ask: 'Et quand on n’a pas misé au flop ?', h: 'Après un check au flop', p: ['Si tu as checké le flop en position, la turn est un bon moment pour miser (delayed c-bet) : l’adversaire a montré de la faiblesse en checkant à son tour.', 'Si le défenseur mise dans le relanceur à la turn après un check au flop, c’est souvent une main moyenne qui veut de la valeur ou une protection.'] },
@@ -548,7 +631,10 @@
       { q: 'SPR de 2 en pot 4-bet avec top paire bon kicker. Tu…', o: ['checkes et te couches', 'engages ton tapis', 'mises un quart du pot', 'te couches à la première mise'], a: 1, why: 'SPR bas : top paire bon kicker est une main d’engagement.' },
       { q: 'SPR de 15 avec top paire kicker moyen. Plan ?', o: ['Tapis au flop', 'Contrôler le pot', 'Surmise', 'Fold immédiat'], a: 1, why: 'SPR haut : les mains moyennes ne supportent pas trois grosses mises.' },
       { q: 'SPR typique d’un pot 3-bet à 100 BB ?', o: ['Environ 2', 'Environ 5', 'Environ 17', 'Environ 30'], a: 1, why: 'Pot 3-bet : environ 17,5 BB au flop pour 92 BB restants.' },
-      { q: 'Tu as payé un 3-bet. Ta range est…', o: ['plus forte que la sienne', 'plafonnée', 'polarisée vers les nuts', 'identique'], a: 1, why: 'Tu aurais 4-bet tes meilleures mains.' }
+      { q: 'Tu as payé un 3-bet. Ta range est…', o: ['plus forte que la sienne', 'plafonnée', 'polarisée vers les nuts', 'identique'], a: 1, why: 'Tu aurais 4-bet tes meilleures mains.' },
+      { q: 'SPR typique d’un pot simple (relance et call) à 100 BB ?', o: ['Environ 2', 'Environ 5', 'Environ 17', 'Environ 50'], a: 2, why: 'Pot simple ≈ 17, pot 3-bet ≈ 5, pot 4-bet ≈ 2.' },
+      { q: 'SPR entre 6 et 13 : pour mettre tout ton tapis, il faut…', o: ['une paire', 'double paire ou mieux', 'n’importe quelle top paire', 'un tirage'], a: 1, why: 'Repère d’engagement du chapitre.' },
+      { q: 'SPR de 2 avec une main forte : la surmise au flop…', o: ['est absurde', 'met simplement tapis, et c’est souvent la meilleure taille', 'est interdite', 'se garde pour la river'], a: 1, why: 'Elle évite de laisser une carte gratuite.' }
     ]
   };
 
@@ -562,7 +648,7 @@
       { ask: 'Avec quelles mains entrer à plusieurs ?', h: 'Les mains qui aiment le multiway', p: ['Les petites paires (pour le brelan), les connecteurs assortis et les As assortis (pour la couleur max) gagnent des gros pots à plusieurs.', 'Les mains comme KJo, QTo ou A9o ont une équité correcte sur le papier (KJ : 34 % contre trois), mais elles perdent de l’argent : quand elles touchent une paire, elles sont souvent dominées, et elles font rarement une couleur ou une quinte.'] },
       { ask: 'Comment miser au flop à plusieurs ?', h: 'Le c-bet à plusieurs', p: ['Exemple, flop K♥ 7♣ 2♦ sans tirage. Top paire K-Q : 87 % contre un adversaire, encore 68 % contre trois. Tu mises pour la valeur.', 'Paire de 9 sous le roi : 73 % contre un adversaire, mais 40 % contre trois. À deux tu mises, à quatre tu checkes.', 'Dame-dame sur 9-5-2 : 81 % contre un, 55 % contre trois. Toujours une mise, mais prépare-toi à ralentir si on te relance.', 'Taille : la moitié aux deux tiers du pot, pour faire payer cher les tirages. Un petit c-bet à plusieurs fait payer tout le monde.'] },
       { ask: 'Et mes tirages ?', h: 'Les tirages à plusieurs', p: ['Un tirage couleur max (A♥5♥ sur K♥ 8♥ 3♣) garde 46 % contre trois adversaires : avec plusieurs joueurs dans le pot, la cote est excellente. Paie, et relance parfois pour grossir le pot quand tu as les outs max.', 'En revanche, le semi-bluff perd de sa force : avec trois joueurs, il est rare que tout le monde se couche. Mise ou relance tes tirages pour la valeur du pot, pas pour faire coucher.', 'Méfie-toi des petits tirages couleur : contre trois joueurs, une couleur à l’as ou au roi est souvent déjà là quand la tienne rentre.'] },
-      { ask: 'Au club, plusieurs joueurs limpent. Je fais quoi ?', h: 'Isoler ou limper derrière', p: ['Avec une main forte (paires de 9 et plus, AK, AQ, AJ assortis, KQ assortis), relance pour isoler : 3 BB plus 1 BB par limper. Tu joueras contre un seul joueur, souvent le plus faible.', 'Avec une petite paire ou un connecteur assorti, limpe derrière : tu entres pas cher dans un pot à plusieurs, exactement ce que ces mains aiment. Plus il y a de limpers, plus c’est vrai.', 'Avec KJo, QTo ou A9o face à trois limpers : couche-toi ou relance, mais ne limpe pas. Ce sont les mains qui perdent le plus dans les pots à plusieurs.'] },
+      { ask: 'Plusieurs joueurs limpent (en ligne ou dans un autre club). Je fais quoi ?', h: 'Isoler ou limper derrière', p: ['Avec une main forte (paires de 9 et plus, AK, AQ, AJ assortis, KQ assortis), relance pour isoler : 3 BB plus 1 BB par limper. Tu joueras contre un seul joueur, souvent le plus faible.', 'Avec une petite paire ou un connecteur assorti, limpe derrière : tu entres pas cher dans un pot à plusieurs, exactement ce que ces mains aiment. Plus il y a de limpers, plus c’est vrai.', 'Avec KJo, QTo ou A9o face à trois limpers : couche-toi ou relance, mais ne limpe pas. Ce sont les mains qui perdent le plus dans les pots à plusieurs.'] },
       { ask: 'Et quand quelqu’un mise devant moi ?', h: 'Face à une mise avec des joueurs derrière', p: ['Paie plus serré : un joueur derrière toi peut encore relancer. Avec un tirage, préfère les tirages max pour ne pas perdre un gros pot contre une meilleure couleur.', 'Au club, une mise dans un pot à quatre joueurs, c’est souvent une vraie main : les récréatifs bluffent rarement dans ces coups-là. Et une relance au flop à plusieurs, c’est presque toujours deux paires ou mieux.'] }
     ],
     mistake: 'C-better en bluff avec AK sans rien sur 9-8-6 à quatre joueurs : quelqu’un a presque toujours touché.',
@@ -574,7 +660,8 @@
       { q: 'Contre trois adversaires, à quelle fréquence au moins l’un d’eux a une paire ou mieux au flop ?', o: ['Une fois sur cinq', 'Une fois sur deux', 'Plus de huit fois sur dix', 'Toujours'], a: 2, why: 'Environ 82 % avec des mains au hasard en comptant les tableaux pairés, 75 % avec une paire faite avec ses propres cartes.' },
       { q: 'K♥ 7♣ 2♦, quatre joueurs. Tu as 9♠9♦. Que fais-tu ?', o: ['Mise de valeur', 'Check', 'Tapis', 'Surmise'], a: 1, why: 'Contre trois adversaires, ta paire ne gagne plus que 40 % : check.' },
       { q: 'Trois limpers devant toi au bouton, tu as 5♣5♦. Le plus souvent :', o: ['Relancer à 3 BB', 'Limper derrière', 'Tapis', 'Se coucher'], a: 1, why: 'Une petite paire aime entrer pas cher dans un pot à plusieurs.' },
-      { q: 'Tirage couleur au 10, mise devant toi, deux joueurs derrière. Prudence parce que…', o: ['le pot est petit', 'une meilleure couleur est possible et on peut te relancer', 'les tirages ne touchent jamais', 'c’est interdit'], a: 1, why: 'À plusieurs, les tirages non max et la relance derrière coûtent cher.' }
+      { q: 'Tirage couleur au 10, mise devant toi, deux joueurs derrière. Prudence parce que…', o: ['le pot est petit', 'une meilleure couleur est possible et on peut te relancer', 'les tirages ne touchent jamais', 'c’est interdit'], a: 1, why: 'À plusieurs, les tirages non max et la relance derrière coûtent cher.' },
+      { q: 'À plusieurs adversaires, les bluffs…', o: ['augmentent', 'deviennent rares', 'sont obligatoires', 'ne changent pas'], a: 1, why: 'Quelqu’un a souvent touché.' }
     ]
   };
 
@@ -595,7 +682,10 @@
       { q: 'Tu es gros tapis à la bulle, les tapis moyens sont à ta gauche. Tu…', o: ['ouvres plus large', 'ne joues que AA', 'limpes tout', 'fais tapis à chaque main'], a: 0, why: 'Les tapis moyens ne peuvent pas te contrer sans risquer leur tournoi.' },
       { q: 'Face à l’autre gros tapis, à la bulle, tu…', o: ['cherches la confrontation', 'évites les coups marginaux', 'paies tout', 'bluffes plus'], a: 1, why: 'Vous avez tous les deux beaucoup à perdre.' },
       { q: 'Juste après la bulle, les adversaires poussent souvent plus large. Tu…', o: ['paies un peu plus large', 'paies plus serré', 'ne changes rien', 'te couches toujours'], a: 0, why: 'Ils n’ont plus peur, leurs ranges s’élargissent.' },
-      { q: 'En début de tournoi contre un récréatif, ton arme principale est…', o: ['le bluff', 'le value bet', 'le limp', 'le tapis préflop'], a: 1, why: 'Il paie trop : on mise pour la valeur.' }
+      { q: 'En début de tournoi contre un récréatif, ton arme principale est…', o: ['le bluff', 'le value bet', 'le limp', 'le tapis préflop'], a: 1, why: 'Il paie trop : on mise pour la valeur.' },
+      { q: 'À 100 BB et plus, en début de tournoi, tu cherches…', o: ['les gros bluffs', 'les gros pots avec les grosses mains', 'à pousser souvent', 'à limper'], a: 1, why: 'Serré-agressif, value bet franc, peu de bluffs.' },
+      { q: 'Gros tapis à la bulle : quelle taille de relance pour mettre la pression ?', o: ['2 à 2,2 BB, répétées', 'Tapis à chaque fois', '5 BB', 'Le limp'], a: 0, why: 'Des petites relances répétées suffisent.' },
+      { q: 'Petits tapis à l’approche de la bulle : ils doivent…', o: ['attendre les places payées', 'pousser avant d’être trop courts', 'limper', 'payer tout'], a: 1, why: 'Attendre les fait mourir aux blindes.' }
     ]
   };
 
@@ -615,7 +705,10 @@
       { q: 'Qui subit le plus la pression de la bulle ?', o: ['Le gros tapis', 'Le tapis moyen', 'Le tout petit tapis', 'Personne'], a: 1, why: 'Il peut perdre beaucoup et gagne peu.' },
       { q: 'À la bulle, l’ICM resserre surtout…', o: ['tes tapis en premier', 'tes calls de tapis', 'tes c-bets', 'tes limps'], a: 1, why: 'Payer un tapis te met à risque d’élimination.' },
       { q: 'Un bubble factor de 2 signifie que…', o: ['tu dois payer deux fois plus', 'il te faut beaucoup plus d’avantage pour payer', 'tu as deux fois plus de jetons', 'rien de spécial'], a: 1, why: 'Perdre coûte deux fois plus que gagner ne rapporte.' },
-      { q: 'Un call rentable en jetons peut-il être un fold en euros ?', o: ['Oui', 'Non'], a: 0, why: 'C’est l’effet de bulle.' }
+      { q: 'Un call rentable en jetons peut-il être un fold en euros ?', o: ['Oui', 'Non'], a: 0, why: 'C’est l’effet de bulle.' },
+      { q: 'Quel tapis peut prendre le plus de risques à la bulle ?', o: ['Le tapis moyen', 'Le gros tapis (et le tout petit, presque éliminé)', 'Personne', 'Celui qui a le moins de cartes'], a: 1, why: 'Les tapis moyens subissent le plus l’ICM.' },
+      { q: 'À la bulle, ta fold equity quand tu pousses…', o: ['baisse', 'augmente', 'disparaît', 'ne change pas'], a: 1, why: 'Les autres joueurs se couchent davantage.' },
+      { q: 'Bubble factor d’un gros tapis ?', o: ['Environ 1', 'Environ 2', 'Environ 5', '0'], a: 0, why: '1 pour un gros tapis, 1,5 à 2 pour un tapis moyen.' }
     ]
   };
 
@@ -639,7 +732,7 @@
       { q: 'Part de mains à ouvrir au bouton en heads-up à 30 BB ?', o: ['20 %', '40 %', '75 à 85 %', '100 %'], a: 2, why: 'Il ne reste qu’un adversaire, la position et les blindes poussent à ouvrir très large.' },
       { q: 'En table finale, le petit tapis est encore là. Deux tapis moyens doivent…', o: ['s’affronter', 'éviter les gros coups entre eux', 'pousser à chaque main', 'faire un deal'], a: 1, why: 'L’élimination du petit tapis rapporterait à tous les deux.' },
       { q: 'Face à une surmise de 1,5 fois le pot en heads-up, équité requise ?', o: ['25 %', '33 %', '37,5 %', '50 %'], a: 2, why: '1,5 ÷ (1 + 3) = 37,5 %.' },
-      { q: 'Un deal ICM…', o: ['est obligatoire', 'partage les gains selon les tapis, c’est ton choix', 'donne tout au chip leader', 'est interdit sur Winamax'], a: 1, why: 'C’est un accord entre joueurs.' },
+      { q: 'Un deal ICM…', o: ['est obligatoire', 'partage les gains selon les tapis, c’est ton choix', 'donne tout au chip leader', 'est interdit en ligne'], a: 1, why: 'C’est un accord entre joueurs.' },
       { q: 'À trois joueurs, le bouton ouvre environ comme…', o: ['l’UTG à neuf', 'le bouton à neuf', 'la grosse blinde', 'personne'], a: 1, why: 'Il n’a que les deux blindes derrière lui, comme le bouton à neuf quand tout le monde s’est couché.' },
       { q: 'Heads-up à 10 BB, la petite blinde pousse environ…', o: ['un tiers des mains', 'la moitié', 'trois mains sur quatre', 'toutes'], a: 2, why: '74 % des mains selon les tables d’équilibre.' },
       { q: 'Heads-up à 10 BB, en grosse blinde avec roi-deux dépareillé face au tapis :', o: ['tu te couches', 'tu paies', 'ça dépend de la couleur', 'tu relances'], a: 1, why: 'La grosse blinde paie 56 % des mains à 10 BB, roi-deux est dedans.' }
@@ -688,7 +781,11 @@
       { q: 'Quelles mains revoir en priorité ?', o: ['Les gros pots perdus seulement', 'Celles où tu as hésité', 'Les mains gagnées', 'Aucune'], a: 1, why: 'L’hésitation signale une zone à travailler.' },
       { q: 'Tu ne peux pas dire pourquoi tu as payé. C’était…', o: ['une bonne décision', 'un réflexe', 'un bluff', 'une lecture'], a: 1, why: 'Sans raison formulable, c’est un réflexe.' },
       { q: 'Le solveur sert surtout à…', o: ['apprendre les bases', 'vérifier une décision précise une fois les bases acquises', 'remplacer la revue', 'choisir ses tournois'], a: 1, why: 'Il mesure l’écart à l’équilibre.' },
-      { q: 'Une revue se termine par…', o: ['un score', 'deux ou trois points de travail', 'rien', 'une nouvelle range'], a: 1, why: 'L’objectif est de transformer la session en travail ciblé.' }
+      { q: 'Une revue se termine par…', o: ['un score', 'deux ou trois points de travail', 'rien', 'une nouvelle range'], a: 1, why: 'L’objectif est de transformer la session en travail ciblé.' },
+      { q: 'Après les mains où tu as hésité, que revoir ?', o: ['Rien d’autre', 'Les tapis et les gros pots, puis les mains hors range', 'Seulement les mains gagnées', 'Les mains des autres'], a: 1, why: 'C’est l’ordre de priorité de la revue.' },
+      { q: 'Revue : tu as couché AQo en UTG « par peur d’être relancé ». Le point de travail ?', o: ['Jeter AQo', 'Ouvrir toute ma range UTG, y compris AQo', 'Limper AQo', 'Ne plus jouer UTG'], a: 1, why: 'AQo fait partie de la range du club dès la première place.' },
+      { q: 'Première question de la grille de revue ?', o: ['Combien j’ai perdu ?', 'Quelle était ma range, et ma main en faisait-elle partie ?', 'Qui a gagné ?', 'Quelle heure était-il ?'], a: 1, why: 'La grille commence par ta range.' },
+      { q: 'Qui classe les mains à revoir dans l’appli ?', o: ['Le tracker (tapis, gros pots, mains hors range)', 'Personne', 'Le chrono', 'Le championnat'], a: 0, why: 'Analyser classe les mains pour toi.' }
     ]
   };
 
@@ -810,7 +907,7 @@
     ['J', 'Donc je ne joue pas UTG à six comme UTG à neuf.'],
     ['Y', 'Surtout pas. La règle simple : ne regarde pas le nom de ta place. Compte les joueurs qui parlent après toi.'],
     ['J', 'Huit derrière, je suis très serré. Deux derrière, j’ouvre large.'],
-    ['Y', 'Parfait. D’ailleurs, l’appli lit tes mains Winamax comme ça.'],
+    ['Y', 'Parfait. D’ailleurs, l’appli lit tes historiques de mains en ligne comme ça.'],
     ['J', 'Et les blindes ? Elles ont un avantage ?'],
     ['Y', 'Avant le flop, oui. Elles parlent en dernier, et elles ont déjà mis des jetons. Donc elles ont une bonne cote pour payer.'],
     ['J', 'Et après ?'],
@@ -854,19 +951,20 @@
     ['J', 'Et en grosse blinde ?'],
     ['Y', 'Face à une petite relance à deux grosses blindes, tu défends plus large. Tu as une très bonne cote. On le verra au chapitre six.'],
     ['J', 'Et les joueurs, ils sont différents d’en ligne ?'],
-    ['Y', 'Oui. En moyenne, une table de club limpe plus. Elle paie plus. Et elle sur-relance rarement en bluff.'],
-    ['J', 'C’est vrai qu’il y a beaucoup de limps.'],
+    ['Y', 'Oui. En moyenne, une table de club paie plus. Et elle sur-relance rarement en bluff.'],
+    ['J', 'Et chez nous, on n’a pas le droit de limper.'],
+    ['Y', 'Exact. Au club, le limp est interdit, sauf en tête-à-tête, et la petite blinde peut compléter. Donc on ouvre en relançant, ou on se couche. Le chapitre sept, sur les limpers, te servira en ligne ou dans d’autres clubs.'],
     ['Y', 'Et autre chose : quand un joueur récréatif fait une grosse relance, ou une grosse mise à la river, c’est presque toujours une vraie main.'],
     ['J', 'Alors je m’adapte comment ?'],
-    ['Y', 'Quatre réglages. Un : quand il y a des limpers, tu relances pour les isoler. Deux : tu mises gros pour la valeur, parce qu’ils paient. Trois : tu bluffes moins, pour la même raison. Quatre : tu respectes les grosses mises des joueurs prudents.'],
+    ['Y', 'Trois réglages. Un : tu mises gros pour la valeur, parce qu’ils paient. Deux : tu bluffes moins, pour la même raison. Trois : tu respectes les grosses mises des joueurs prudents.'],
     ['J', 'Je te raconte une main de l’autre soir ?'],
     ['Y', 'Vas-y.'],
-    ['J', 'J’avais as-roi au cut-off. Deux joueurs avaient limpé. J’ai juste payé. Je ne voulais pas me faire relancer.'],
+    ['J', 'J’avais as-roi au cut-off. Le hijack avait ouvert. J’ai juste payé. Je ne voulais pas me faire relancer.'],
     ['Y', 'Et ensuite ?'],
-    ['J', 'On était cinq au flop. J’ai raté. J’ai lâché.'],
-    ['Y', 'Voilà le prix du call. Avec as-roi derrière deux limpers, tu relances. À peu près cinq grosses blindes.'],
+    ['J', 'Le bouton et la grosse blinde ont payé aussi. On était quatre au flop. J’ai raté. J’ai lâché.'],
+    ['Y', 'Voilà le prix du call. Avec as-roi face à une ouverture, tu sur-relances. À peu près trois fois sa relance.'],
     ['J', 'Et ça change quoi ?'],
-    ['Y', 'Souvent, tu prends le pot tout de suite. Sinon, tu joues contre un ou deux adversaires, avec la meilleure main et l’initiative. À cinq au flop, as-roi hauteur as ne vaut plus grand-chose.'],
+    ['Y', 'Souvent, tu prends le pot tout de suite. Sinon, tu joues contre un seul adversaire, avec la meilleure main et l’initiative. À quatre au flop, as-roi hauteur as ne vaut plus grand-chose.'],
     ['J', 'Compris. Et l’autre jour, on m’a compté un call alors que je voulais relancer.'],
     ['Y', 'C’est la règle de la mise en une seule fois. Si tu poses tes jetons en plusieurs fois sans rien dire, on peut compter seulement le premier geste.'],
     ['J', 'Donc je fais comment ?'],
@@ -889,7 +987,7 @@
     ['Y', 'Troisième question. Comment éviter qu’on te compte un call quand tu veux relancer ?'],
     ['P', 5],
     ['J', 'J’annonce « relance », ou je pose tout d’un coup.'],
-    ['Y', 'Parfait. On résume. Au club, huit à dix mains par niveau : on vole et on défend plus tôt. Les tables de club limpent et paient : on isole, on mise pour la valeur, on bluffe moins. On respecte les grosses mises. Et on annonce sa relance. À bientôt !']
+    ['Y', 'Parfait. On résume. Au club, huit à dix mains par niveau : on vole et on défend plus tôt. Pas de limp, et des tables qui paient : on mise pour la valeur, on bluffe moins. On respecte les grosses mises. Et on annonce sa relance. À bientôt !']
   ];
 
   L[4].podcast = [
@@ -911,7 +1009,7 @@
     ['Y', 'Ça paraît beaucoup. Mais c’est ce qui te protège de la ruine. Avec trente buy-ins, une mauvaise série normale peut te vider. Avec cent cinquante, elle te fait juste baisser un peu.'],
     ['J', 'Et si je n’ai pas cette somme ?'],
     ['Y', 'Alors la solution, ce n’est pas de jouer sans bankroll. C’est de jouer moins cher. Ou des freerolls, comme au club.'],
-    ['J', 'Et les re-entries ? Sur Winamax, je me réinscris parfois.'],
+    ['J', 'Et les re-entries ? En ligne, je me réinscris parfois.'],
     ['Y', 'Chaque entrée est un buy-in. Une soirée à dix euros avec deux re-entries, ça coûte combien ?'],
     ['J', 'Trente euros.'],
     ['Y', 'Voilà. C’est souvent là que la bankroll fond sans qu’on s’en rende compte. Décide avant le tournoi combien d’entrées tu t’autorises.'],
@@ -1082,14 +1180,14 @@
   ];
 
   L[7].podcast = [
-    ['J', 'Salut Yo ! Les limpers. Au club, il y en a partout.'],
+    ['J', 'Salut Yo ! Les limpers. Chez nous, au club, c’est interdit, mais en ligne et dans d’autres clubs, il y en a partout.'],
     ['Y', 'Salut ! Et c’est une mine de jetons, si on sait quoi faire. D’abord : qu’est-ce qu’un limper nous dit ?'],
     ['J', 'Qu’il paie juste la grosse blinde, sans relancer.'],
     ['Y', 'Oui. Et avec une grosse main, que ferait la plupart des joueurs ?'],
     ['J', 'Ils relanceraient.'],
     ['Y', 'Donc un limper a souvent une main moyenne. Une petite paire. Deux cartes assorties. Un as faible.'],
     ['J', 'Toujours ?'],
-    ['Y', 'Pas toujours. Certains limpent avec les as, pour piéger. Mais c’est rare. Au club, les limpers sont surtout des joueurs récréatifs, et des larges-passifs.'],
+    ['Y', 'Pas toujours. Certains limpent avec les as, pour piéger. Mais c’est rare. Les limpers sont surtout des joueurs récréatifs, et des larges-passifs.'],
     ['J', 'Et contre eux, je fais quoi ?'],
     ['Y', 'Trois options. Isoler, suivre, ou se coucher.'],
     ['J', 'Isoler, c’est relancer ?'],
@@ -1133,7 +1231,7 @@
     ['J', 'Et si je suis en grosse blinde, et que le bouton isole un limper devant moi ?'],
     ['Y', 'Belle occasion. Le bouton isole large, il cherche à punir le limper. Toi, tu peux sur-relancer à environ quatorze blindes, avec ta valeur et quelques as assortis. Le limper se couche presque toujours, l’isoleur souvent.'],
     ['J', 'Une main vécue ?'],
-    ['Y', 'Au club. Un habitué limpe. Un autre limpe derrière. Tu es au hijack avec as-roi.'],
+    ['Y', 'En ligne. Un récréatif limpe. Un autre limpe derrière. Tu es au hijack avec as-roi.'],
     ['J', 'J’isole. Cinq grosses blindes.'],
     ['Y', 'Bravo. Le premier se couche. Le second paie. Flop : roi, huit, quatre. Il checke.'],
     ['J', 'Je mise.'],
@@ -1707,7 +1805,7 @@
     ['J', 'Et la surmise ?'],
     ['Y', 'Avec un SPR de deux ou trois, une surmise au flop, c’est un tapis. Et c’est souvent la meilleure taille avec une main forte : tu ne laisses aucune carte gratuite.'],
     ['J', 'Une main ?'],
-    ['Y', 'Tournoi Winamax. Tu as trente-cinq grosses blindes au cut-off. Tu ouvres à deux. Le bouton paie. Les blindes se couchent. Avec les antes, il y a environ six grosses blindes et demie au milieu. Il te reste trente-trois.'],
+    ['Y', 'Tournoi en ligne. Tu as trente-cinq grosses blindes au cut-off. Tu ouvres à deux. Le bouton paie. Les blindes se couchent. Avec les antes, il y a environ six grosses blindes et demie au milieu. Il te reste trente-trois.'],
     ['J', 'SPR d’à peu près cinq.'],
     ['Y', 'Bravo. Tu as as-roi. Flop : roi, neuf, quatre.'],
     ['J', 'Top paire, meilleur kicker, SPR cinq… c’est une main d’engagement.'],
@@ -1757,7 +1855,7 @@
     ['Y', 'Il marche moins bien. Avec trois joueurs, il est rare que tout le monde se couche. Tu mises ton tirage pour grossir le pot, pas pour faire coucher.'],
     ['J', 'Et un petit tirage couleur, au sept ?'],
     ['Y', 'Prudence. Contre trois joueurs, une couleur plus haute est souvent déjà là quand la tienne rentre. Tu perds un gros pot avec une belle main. C’est pour ça qu’on préfère les as assortis.'],
-    ['J', 'Au club, il y a souvent trois limpers avant moi. Je fais quoi ?'],
+    ['J', 'En ligne, il y a souvent trois limpers avant moi. Je fais quoi ?'],
     ['Y', 'Ça dépend de ta main. Avec une main forte, paires de neuf et plus, as-roi, as-dame, tu relances pour isoler. Trois blindes, plus une par limper. Avec trois limpers, six blindes.'],
     ['J', 'Et avec cinq-cinq ?'],
     ['Y', 'Tu limpes derrière. Tu entres pas cher dans un pot à plusieurs, exactement ce que ta main aime. Si tu touches ton brelan, tu gagnes un gros pot.'],
@@ -1855,7 +1953,7 @@
     ['J', 'Il y a un compteur dans l’appli, non ?'],
     ['Y', 'Oui, dans Apprendre, Outils. Une main ?'],
     ['J', 'Vas-y.'],
-    ['Y', 'Tournoi Winamax. Blindes cinq cents, mille, ante mille. Tu as vingt-huit grosses blindes, en grosse blinde. Le bouton, un joueur agressif, ouvre à deux mille. Tu as as-cinq de carreau.'],
+    ['Y', 'Tournoi en ligne. Blindes cinq cents, mille, ante mille. Tu as vingt-huit grosses blindes, en grosse blinde. Le bouton, un joueur agressif, ouvre à deux mille. Tu as as-cinq de carreau.'],
     ['J', 'Je paie ?'],
     ['Y', 'Tu joueras hors de position, avec hauteur as. Bof.'],
     ['J', 'Une petite sur-relance ?'],
@@ -2118,7 +2216,7 @@
     ['Y', 'Parfait. On résume. Chaque palier réactive l’ICM : les tapis moyens évitent de s’affronter. Le deal, c’est ton choix. En face-à-face, on joue soixante-quinze à quatre-vingt-cinq pour cent au bouton, et on défend très large. Et face à une surmise, on compte. À bientôt !']
   ];
   L[25].podcast = [
-    ['J', 'Salut Yo ! Les PKO, et les Space KO. Sur Winamax, il y en a plein.'],
+    ['J', 'Salut Yo ! Les PKO, et les Space KO. En ligne, il y en a plein.'],
     ['Y', 'Salut ! Oui, et ils changent pas mal de décisions. Le principe : une partie du buy-in forme la prime de chaque joueur.'],
     ['J', 'Et quand j’élimine quelqu’un ?'],
     ['Y', 'Tu touches la moitié de sa prime tout de suite. L’autre moitié s’ajoute à ta propre prime. Elle grossit.'],
@@ -2149,13 +2247,13 @@
     ['J', 'Le risque, sans la récompense.'],
     ['Y', 'Exactement.'],
     ['J', 'Et le Space KO ?'],
-    ['Y', 'C’est la version Winamax où la prime est tirée au sort, au moment de l’élimination. Parfois petite, parfois énorme. Pour décider, tu prends la valeur moyenne. Pas le jackpot.'],
+    ['Y', 'C’est la version où la prime est tirée au sort, au moment de l’élimination. Parfois petite, parfois énorme. Pour décider, tu prends la valeur moyenne. Pas le jackpot.'],
     ['J', 'Et près de la bulle ?'],
     ['Y', 'Deux forces s’opposent. La prime te pousse à payer. L’ICM, à te coucher. Avec un tapis moyen, reste prudent. Sauf si la prime est vraiment grosse.'],
     ['J', 'Il y a un outil ?'],
     ['Y', 'Oui, dans Outils : le convertisseur de prime. Tu entres les chiffres, il te donne le prix avec et sans la prime.'],
     ['J', 'Une main ?'],
-    ['Y', 'PKO à cinq euros sur Winamax. Début de tournoi. Tu as trente mille jetons, en grosse blinde. Un joueur avec sept mille, et deux euros cinquante de prime, pousse depuis le bouton. Tu as dame-neuf.'],
+    ['Y', 'PKO à cinq euros en ligne. Début de tournoi. Tu as trente mille jetons, en grosse blinde. Un joueur avec sept mille, et deux euros cinquante de prime, pousse depuis le bouton. Tu as dame-neuf.'],
     ['J', 'Sans prime, c’est limite.'],
     ['Y', 'Avec la prime, ta cote baisse nettement. Et tu le couvres largement. Tu paies.'],
     ['J', 'Et si c’était moi qui avais sept mille ?'],
@@ -2261,7 +2359,7 @@
     ['J', 'Et quand c’est un récréatif qui surmise ?'],
     ['Y', 'Le plus souvent, une très grosse main. Couche tes mains moyennes.'],
     ['J', 'Une main ?'],
-    ['Y', 'Au club. Une calling station limpe. Tu isoles au bouton avec as-valet de trèfle. Elle paie. Flop : valet, sept, trois. Elle checke.'],
+    ['Y', 'En ligne. Une calling station limpe. Tu isoles au bouton avec as-valet de trèfle. Elle paie. Flop : valet, sept, trois. Elle checke.'],
     ['J', 'Je mise. Deux tiers.'],
     ['Y', 'Elle paie. Turn : un deux. Elle checke.'],
     ['J', 'Encore deux tiers.'],
@@ -2373,7 +2471,7 @@
     ['J', 'L’erreur classique ?'],
     ['Y', 'Continuer à jouer pour se refaire, après une mauvaise carte. C’est exactement le moment où tes décisions sont les pires.'],
     ['J', 'Une situation ?'],
-    ['Y', 'Tournoi Winamax. Tu as as-as. Tu pousses. Un joueur paie avec roi-dame, et touche la quinte à la river. Tu perds la moitié de ton tapis.'],
+    ['Y', 'Tournoi en ligne. Tu as as-as. Tu pousses. Un joueur paie avec roi-dame, et touche la quinte à la river. Tu perds la moitié de ton tapis.'],
     ['J', 'Je connais trop bien.'],
     ['Y', 'Deux mains plus tard, tu es au cut-off avec as-sept. Et le joueur qui vient de te battre ouvre en UTG. Ta tête te dit quoi ?'],
     ['J', 'Je vais le punir.'],
@@ -2421,7 +2519,7 @@
     ['J', 'La peur d’être relancé.'],
     ['Y', 'Ce n’est pas une raison de poker. Point de travail : ouvrir toute ma range UTG, as-dame compris. Et la séance du jour le reprendra.'],
     ['J', 'C’est rapide, en fait.'],
-    ['Y', 'Deux minutes. Une autre, avec tes vraies mains Winamax. Six-six au bouton, face à une ouverture MP. Soixante-quatorze grosses blindes. Tu te couches. Ta range paie.'],
+    ['Y', 'Deux minutes. Une autre, avec tes vraies mains jouées en ligne. Six-six au bouton, face à une ouverture MP. Soixante-quatorze grosses blindes. Tu te couches. Ta range paie.'],
     ['J', 'Et ma raison, c’était : je n’aime pas les petites paires.'],
     ['Y', 'Un réflexe. Point de travail : payer mes paires en position face aux ouvertures du milieu.'],
     ['J', 'Et le solveur, dans tout ça ?'],
@@ -2477,7 +2575,7 @@
     ['J', 'Je me couche.'],
     ['Y', 'Voilà. À la bulle, avec un tapis moyen, on paie moins.'],
     ['J', 'Et la dernière ?'],
-    ['Y', 'Au club. Une calling station limpe. Tu isoles à cinq grosses blindes au bouton, avec valet-valet. Elle paie. Flop : dix, sept, trois.'],
+    ['Y', 'Au club. Tu ouvres à deux grosses blindes au bouton, avec valet-valet. Une calling station paie en grosse blinde. Flop : dix, sept, trois.'],
     ['J', 'Deux tiers.'],
     ['Y', 'Turn : un quatre.'],
     ['J', 'Deux tiers.'],
@@ -2572,7 +2670,7 @@
 
   L[34] = {
     minutes: 7,
-    key: ['Le limp-trap (limper une très grosse main pour sur-relancer) ne marche que s’il y a des joueurs agressifs derrière toi.', 'Sur une table de club passive, ouvre normalement tes as et tes rois : on paie tes relances de toute façon.'],
+    key: ['Le limp-trap (limper une très grosse main pour sur-relancer) ne marche que s’il y a des joueurs agressifs derrière toi.', 'Sur une table passive, ouvre normalement tes as et tes rois : on paie tes relances de toute façon. Au club, le limp est interdit sauf en tête-à-tête : le limp-trap ne se joue qu’en ligne ou ailleurs, et en petite blinde contre la grosse blinde.'],
     sections: [
       { ask: 'C’est quoi, le limp-trap ?', h: 'Le principe', p: ['Avec A-A ou K-K, tu paies seulement la grosse blinde au lieu d’ouvrir. Si quelqu’un relance derrière pour t’isoler, tu sur-relances dans un pot déjà gonflé, avec une main qui paraissait faible.'] },
       { ask: 'Quand est-ce que ça marche ?', h: 'Trois conditions', p: ['1. Des joueurs agressifs derrière toi, qui relancent souvent les limpers (un large-agressif ou un maniac à ta gauche, c’est la cible idéale). 2. Peu de risque que trois joueurs limpent derrière toi. 3. Une image qui ne trahit pas ta main : si tu ne limpes jamais, ton limp devient lisible.', 'Au club, beaucoup de tables sont passives : on limpe derrière toi et personne ne relance. Tu joues alors A-A contre quatre adversaires : environ 85 % d’équité contre une main, autour de 55 % contre quatre.'] },
@@ -2583,11 +2681,14 @@
     mistake: 'Limper A-A sur une table passive, se retrouver à cinq, et payer tout son tapis sur un flop 8-9-10 avec une seule paire.',
     retain: ['Limp-trap : seulement avec des joueurs agressifs derrière.', 'Table passive : ouvre normalement tes grosses paires.', 'Relancé : tapis sous 25 BB, sinon sur-relance de 4 à 5 fois ; pas relancé : prudence à plusieurs.', 'Garde-le rare, sinon tu deviens lisible.'],
     quiz: [
-      { q: 'Table de club passive, A-A en début de table. Tu…', o: ['limpes pour piéger', 'ouvres normalement', 'fais tapis', 'paies seulement'], a: 1, why: 'Personne ne relancerait : tu jouerais à plusieurs avec une paire.' },
+      { q: 'Table passive (en ligne), A-A en début de table. Tu…', o: ['limpes pour piéger', 'ouvres normalement', 'fais tapis', 'paies seulement'], a: 1, why: 'Personne ne relancerait : tu jouerais à plusieurs avec une paire.' },
       { q: 'Tu as limpé K-K avec 20 BB, un joueur relance. Tu…', o: ['paies', 'fais tapis', 'te couches', 'relances petit'], a: 1, why: 'Sous 25 BB, le tapis direct est la suite naturelle.' },
       { q: 'La meilleure cible pour un limp-trap ?', o: ['Une calling station', 'Un nit', 'Un large-agressif à ta gauche', 'Un joueur absent'], a: 2, why: 'Il relance souvent les limpers.' },
       { q: 'Le principal danger du limp-trap ?', o: ['Gagner trop', 'Jouer à plusieurs avec une seule paire et devenir lisible', 'Perdre la blinde', 'Aucun'], a: 1, why: 'Les deux risques qui coûtent le plus cher.' },
-      { q: 'A-A contre quatre adversaires : équité environ…', o: ['85 %', '70 %', '55 %', '30 %'], a: 2, why: 'L’équité fond avec le nombre de joueurs.' }
+      { q: 'A-A contre quatre adversaires : équité environ…', o: ['85 %', '70 %', '55 %', '30 %'], a: 2, why: 'L’équité fond avec le nombre de joueurs.' },
+      { q: 'Au club, peux-tu faire un limp-trap en début de table ?', o: ['Oui', 'Non : le limp est interdit sauf en tête-à-tête', 'Seulement au deep', 'Seulement avec AA'], a: 1, why: 'Au club, seul le jeu en tête-à-tête (et la petite blinde qui complète) permet le limp.' },
+      { q: 'Tu as limpé A-A avec 60 BB, un joueur relance. Quelle sur-relance ?', o: ['Le minimum', '4 à 5 fois sa relance', 'Tapis direct', 'Tu paies seulement'], a: 1, why: 'Au-delà de 25 BB, sur-relance forte pour ne pas laisser un bon prix aux autres.' },
+      { q: 'En petite blinde contre la grosse blinde seule, limper quelques grosses mains…', o: ['est une faute', 'protège tes limps faibles', 'est interdit', 'ne sert à rien'], a: 1, why: 'La grosse blinde ne peut plus attaquer tes limps sans risque.' }
     ]
   };
 
@@ -2669,7 +2770,7 @@
     ['J', 'Lesquelles ?'],
     ['Y', 'Un : il faut des joueurs agressifs derrière toi, qui relancent souvent les limpers. Deux : il ne faut pas que trois joueurs limpent derrière toi. Trois : ta main doit pouvoir être jouée sans être lisible.'],
     ['J', 'Et au club ?'],
-    ['Y', 'C’est justement le problème. Au club, beaucoup de tables sont passives. On limpe derrière toi, personne ne relance. Et tu te retrouves avec ta paire d’as contre quatre joueurs.'],
+    ['Y', 'C’est justement le problème. Beaucoup de tables sont passives. On limpe derrière toi, personne ne relance. Et tu te retrouves avec ta paire d’as contre quatre joueurs. Et au club, de toute façon, le limp est interdit sauf en tête-à-tête.'],
     ['J', 'Et c’est grave ?'],
     ['Y', 'Paire d’as gagne environ quatre-vingt-cinq pour cent contre une main. Contre quatre mains, elle tombe autour de cinquante-cinq pour cent. Et tu ne sais plus où tu en es après le flop.'],
     ['J', 'Donc sur une table passive…'],
@@ -2726,7 +2827,10 @@
       { q: 'Exemple 1 (tout checké), le bouton avec une petite paire…', o: ['mise le pot', 'checke presque toujours', 'fait tapis', 'mise 1/2'], a: 1, why: 'Aucune main pire ne paie, et elle gagne souvent à l’abattage.' },
       { q: 'Exemple 2 (deux rues payées), le bouton avec une top paire…', o: ['fait tapis', 'checke le plus souvent', 'mise 1/2', 'se couche'], a: 1, why: 'Check 77 % : elle attrape les bluffs.' },
       { q: 'Face à une mise du pot, quelle part de ta range dois-tu défendre environ ?', o: ['Un quart', 'La moitié', 'Les trois quarts', 'Tout'], a: 1, why: 'Sinon tous les bluffs adverses rapportent.' },
-      { q: 'Contre un récréatif qui bluffe peu à la river, avec un attrape-bluff…', o: ['tu paies toujours', 'tu te couches plus souvent', 'tu relances', 'tu fais tapis'], a: 1, why: 'Ses mises sont surtout de la valeur.' }
+      { q: 'Contre un récréatif qui bluffe peu à la river, avec un attrape-bluff…', o: ['tu paies toujours', 'tu te couches plus souvent', 'tu relances', 'tu fais tapis'], a: 1, why: 'Ses mises sont surtout de la valeur.' },
+      { q: 'À la river, avec quelles mains mise-t-on ?', o: ['Les mains moyennes', 'La valeur et les bluffs', 'Toutes', 'Aucune'], a: 1, why: 'Les mains moyennes checkent.' },
+      { q: 'Plus le coup a été chargé avant la river, plus la river…', o: ['se polarise : grosses mains et bluffs', 'se joue petit', 'se checke toujours', 'se joue en block bet'], a: 0, why: 'La top paire checke et attrape les bluffs.' },
+      { q: 'Face à une mise du pot à la river, équité requise ?', o: ['20 %', '25 %', '33 %', '50 %'], a: 2, why: 'Mise ÷ (pot + 2 mises) = 1 ÷ 3.' }
     ]
   };
 
@@ -2947,7 +3051,8 @@
       { q: 'K♠T♦ en grosse blinde sur K♦ 8♠ 3♣, le bouton mise un tiers du pot :', o: ['tu te couches', 'tu relances le plus souvent', 'tu paies toujours', 'tu fais tapis à chaque fois'], a: 1, why: 'Relance 62 % : tu fais payer ses paires et ses as.' },
       { q: 'Même main, mais il mise trois quarts du pot :', o: ['tu relances', 'tu paies', 'tu te couches', 'tu fais tapis'], a: 1, why: 'Paye 91 % : face à une grosse mise, on contrôle la taille du pot.' },
       { q: 'Q♠Q♣ au bouton, flop 8♥ 7♥ 4♦, la grosse blinde checke :', o: ['check', 'un tiers du pot', '1,25 fois le pot', 'tapis'], a: 2, why: 'Mise gros 82 %, dont 57 % de surmise : beaucoup de tirages à faire payer.' },
-      { q: 'Tu as volé de la petite blinde, la grosse blinde paie, flop K♦ 8♠ 3♣ :', o: ['tu mises toujours', 'tu checkes plus d’une fois sur deux', 'tu fais tapis', 'tu te couches'], a: 1, why: 'Hors de position, le solveur checke 54 % même sur ce flop.' }
+      { q: 'Tu as volé de la petite blinde, la grosse blinde paie, flop K♦ 8♠ 3♣ :', o: ['tu mises toujours', 'tu checkes plus d’une fois sur deux', 'tu fais tapis', 'tu te couches'], a: 1, why: 'Hors de position, le solveur checke 54 % même sur ce flop.' },
+      { q: 'La règle qui revient dans tous les cas concrets ?', o: ['Toujours miser', 'Miser quand le flop favorise ta range, checker ou abandonner quand il favorise la sienne', 'Toujours checker', 'Toujours payer'], a: 1, why: 'C’est le fil rouge du chapitre.' }
     ]
   };
 
@@ -3007,7 +3112,9 @@
       { q: 'Ouverture à 2 BB, tu 3-bet light à 6,5 BB du bouton. Il faut que l’ouvreur se couche plus de…', o: ['25 %', '45 %', '59 %', '85 %'], a: 2, why: '6,5 ÷ (6,5 + 4,5) = 59 %.' },
       { q: 'Quelle main est un bon 3-bet light au bouton contre un cut-off voleur ?', o: ['K7o', 'A4s', '66', 'Q8o'], a: 1, why: 'Bloqueur d’as et jouable si on te paie. 66 se paie, K7o et Q8o se couchent.' },
       { q: 'Contre un récréatif qui paie tous ses 3-bets, tu…', o: ['bluffes plus', 'retires les bluffs et élargis ta valeur', 'ne 3-bet plus jamais', 'relances plus petit'], a: 1, why: 'Il ne se couche pas : la valeur paie, le bluff perd.' },
-      { q: 'Tu 3-bet AA à 9 BB et A4s à 6 BB. Le problème ?', o: ['Aucun', 'Ta taille trahit ta main', 'A4s est trop fort', 'Il faut 12 BB'], a: 1, why: 'Même taille pour la valeur et le bluff.' }
+      { q: 'Tu 3-bet AA à 9 BB et A4s à 6 BB. Le problème ?', o: ['Aucun', 'Ta taille trahit ta main', 'A4s est trop fort', 'Il faut 12 BB'], a: 1, why: 'Même taille pour la valeur et le bluff.' },
+      { q: 'Dans une range de 3-bet polarisée, que font les petites paires ?', o: ['Elles relancent', 'Elles paient ou se couchent', 'Elles font tapis', 'Elles limpent'], a: 1, why: 'Les mains du milieu ne relancent pas.' },
+      { q: 'Contre une ouverture d’UTG, le 3-bet light est…', o: ['idéal', 'presque à éviter : sa range est forte', 'obligatoire', 'réservé aux petites paires'], a: 1, why: 'Contre UTG à MP, les ranges de l’appli réservent le 3-bet à QQ+ et AK.' }
     ]
   };
 
@@ -3059,7 +3166,10 @@
       { q: 'La meilleure place pour cold call ?', o: ['La petite blinde', 'UTG', 'Le bouton', 'Le hijack face à UTG'], a: 2, why: 'En position, avec seulement les blindes derrière.' },
       { q: 'Depuis la petite blinde, face à une ouverture du bouton, avec 98s…', o: ['tu paies', 'tu 3-bet ou tu te couches', 'tu limpes', 'tu fais tapis'], a: 1, why: 'Payer hors de position avec la grosse blinde derrière est un piège.' },
       { q: 'À 100 BB, ton 5-bet se fait…', o: ['à 25 BB', 'à 40 BB', 'à tapis', 'jamais'], a: 2, why: 'Toute relance engagerait la moitié du tapis.' },
-      { q: 'À 40 BB, tu 3-bet à 8 BB, il fait tapis avec QQ+ et AK. Avec JJ…', o: ['tu paies, 50 %', 'tu te couches : environ 36 % pour 39 % nécessaires', 'tu relances', 'ça dépend de la couleur'], a: 1, why: 'Contre une range serrée, JJ n’a pas assez d’équité.' }
+      { q: 'À 40 BB, tu 3-bet à 8 BB, il fait tapis avec QQ+ et AK. Avec JJ…', o: ['tu paies, 50 %', 'tu te couches : environ 36 % pour 39 % nécessaires', 'tu relances', 'ça dépend de la couleur'], a: 1, why: 'Contre une range serrée, JJ n’a pas assez d’équité.' },
+      { q: 'Pour payer une ouverture avec une petite paire (le brelan), il faut au moins…', o: ['5 fois la mise dans les tapis', '15 fois la mise dans les tapis', 'tout le tapis', 'rien de spécial'], a: 1, why: 'Le brelan ne touche qu’une fois sur huit : il faut pouvoir gagner gros ensuite.' },
+      { q: 'Face à un 4-bet d’un nit qui veut dire KK+, coucher QQ est…', o: ['une faute grave', 'acceptable', 'impossible', 'obligatoire à 100 BB seulement'], a: 1, why: 'Contre KK+, QQ est loin derrière.' },
+      { q: 'Que fais-tu de tes 3-bets light face à un 4-bet ?', o: ['Tu paies', 'Tu fais tapis', 'Tu les couches', 'Tu click-back'], a: 2, why: 'Ils ont fait leur travail : on les lâche.' }
     ]
   };
 
@@ -3082,7 +3192,10 @@
       { q: 'Avec l’avantage de range sur un flop sec, tu mises…', o: ['rarement et gros', 'souvent et petit', 'jamais', 'toujours à tapis'], a: 1, why: 'Le solveur mise 77 % sur A72, surtout un tiers du pot.' },
       { q: 'Face à une mise de la moitié du pot, la défense minimale est…', o: ['33 %', '50 %', '67 %', '90 %'], a: 2, why: 'Pot ÷ (pot + mise) = 1 ÷ 1,5 = 67 %.' },
       { q: 'Ton bluff de la taille du pot est rentable si l’adversaire se couche plus de…', o: ['25 %', '33 %', '50 %', '75 %'], a: 2, why: 'Mise ÷ (pot + mise) = 1 ÷ 2.' },
-      { q: 'Flop 8♥7♥4♦, tu as AA au bouton. Le solveur…', o: ['checke toujours', 'mise un tiers du pot', 'mise gros, souvent 1,25 fois le pot', 'se couche'], a: 2, why: 'Overpaire sur flop dangereux : il fait payer les tirages.' }
+      { q: 'Flop 8♥7♥4♦, tu as AA au bouton. Le solveur…', o: ['checke toujours', 'mise un tiers du pot', 'mise gros, souvent 1,25 fois le pot', 'se couche'], a: 2, why: 'Overpaire sur flop dangereux : il fait payer les tirages.' },
+      { q: 'Pas d’avantage de range ni de nuts : tu…', o: ['mises souvent petit', 'checkes beaucoup et mises seulement tes meilleures mains et tirages', 'fais toujours tapis', 'surmises'], a: 1, why: 'C’est la troisième règle de la taille.' },
+      { q: 'Ton bluff d’un tiers du pot est rentable si l’adversaire se couche plus de…', o: ['10 %', '25 %', '50 %', '75 %'], a: 1, why: 'Mise ÷ (pot + mise) = 1 ÷ 4 = 25 %.' },
+      { q: 'Où la fréquence minimale de défense sert-elle vraiment ?', o: ['Au flop', 'À la river', 'Avant le flop', 'Nulle part'], a: 1, why: 'Plus de cartes à venir : les mains sont faites ou ratées.' }
     ]
   };
 
@@ -3105,7 +3218,10 @@
       { q: 'Contre qui ne faut-il jamais floater ?', o: ['Un joueur qui mise souvent au flop puis abandonne', 'Une calling station', 'Un nit', 'Le bouton'], a: 1, why: 'Elle ne se couche pas : ton vol ne marche jamais.' },
       { q: 'La mise sonde se fait quand…', o: ['l’ouvreur a misé le flop', 'l’ouvreur a checké le flop, et tu mises la turn en premier', 'tu as relancé avant le flop', 'à la river seulement'], a: 1, why: 'Son check au flop montre souvent une main moyenne.' },
       { q: 'Tu as checké le flop au bouton, la grosse blinde checke la turn. Le solveur…', o: ['checke toujours', 'mise le plus souvent (c-bet retardé)', 'se couche', 'fait tapis'], a: 1, why: 'Il mise 65 à 75 % du temps selon le flop.' },
-      { q: 'Un récréatif mise petit en premier au flop. Le plus souvent, il a…', o: ['les nuts', 'une main moyenne qui teste', 'rien du tout', 'un brelan'], a: 1, why: 'Relance tes mains fortes, paie tes mains moyennes.' }
+      { q: 'Un récréatif mise petit en premier au flop. Le plus souvent, il a…', o: ['les nuts', 'une main moyenne qui teste', 'rien du tout', 'un brelan'], a: 1, why: 'Relance tes mains fortes, paie tes mains moyennes.' },
+      { q: 'Bonne main pour floater ?', o: ['Rien du tout, sans tirage', 'Des cartes hautes avec une porte arrière ou un tirage ventral', 'AA', '72o'], a: 1, why: 'Tu gardes un peu d’équité si on te paie.' },
+      { q: 'Taille d’une mise sonde à la turn ?', o: ['Un dixième du pot', 'La moitié du pot à la taille du pot', 'Toujours tapis', 'Le minimum'], a: 1, why: 'Repère du chapitre.' },
+      { q: 'Un joueur passif mise soudain gros en premier à la turn. C’est souvent…', o: ['un bluff', 'une main forte (double paire, brelan)', 'un tirage raté', 'une erreur'], a: 1, why: 'Ralentis.' }
     ]
   };
 
@@ -3128,7 +3244,10 @@
       { q: 'Brelan de huit sur 8♥7♥4♦. Tu…', o: ['slowplay', 'mises à chaque fois', 'checkes et paies', 'te couches'], a: 1, why: 'Tableau humide : le solveur mise toujours, les tirages doivent payer.' },
       { q: 'Meilleur check-raise semi-bluff sur 8♥7♥4♦ ?', o: ['Q♠J♣', 'T♥9♥', 'A♣2♦', 'K♠Q♦'], a: 1, why: 'Tirage couleur + tirage quinte : énormément d’outs.' },
       { q: 'Face à une mise d’un tiers du pot, taille de check-raise ?', o: ['Une fois la mise', '2,2 à 4 fois la mise selon le tableau', '10 fois', 'Tapis toujours'], a: 1, why: '2,2 à 2,5 fois sur tableau sec, 3 à 4 fois sur tableau humide.' },
-      { q: 'Un joueur passif du club te check-raise. Avec une paire simple…', o: ['tu relances', 'tu te couches le plus souvent', 'tu paies toujours', 'tu fais tapis'], a: 1, why: 'Chez un passif, le check-raise = main très forte.' }
+      { q: 'Un joueur passif du club te check-raise. Avec une paire simple…', o: ['tu relances', 'tu te couches le plus souvent', 'tu paies toujours', 'tu fais tapis'], a: 1, why: 'Chez un passif, le check-raise = main très forte.' },
+      { q: 'Contre une calling station, avec une très grosse main, tu…', o: ['slowplay', 'mises : elle paie de toute façon', 'checkes jusqu’à la river', 'te couches'], a: 1, why: 'Jamais de slowplay contre une station.' },
+      { q: 'Q♥J♥ sur K♦8♠3♣ face à une petite mise : check-raise ?', o: ['Oui, en bluff', 'Non : sans outs, tu te couches', 'Oui, tapis', 'Tu paies toujours'], a: 1, why: 'Un check-raise sans outs, c’est jeter des jetons.' },
+      { q: 'À plusieurs joueurs, avec un brelan, tu…', o: ['slowplay', 'mises', 'te couches', 'checkes toujours'], a: 1, why: 'Quelqu’un a souvent touché quelque chose qui paiera.' }
     ]
   };
 
@@ -3317,7 +3436,7 @@
       { ask: 'Et le resteal ?', h: 'Le resteal : reprendre le vol', p: ['Un joueur ouvre au cut-off ou au bouton pour voler les blindes. Tu es derrière lui, souvent en petite ou grosse blinde, et tu relances : tu lui « re-voles » le pot.', 'Avec 15 à 25 BB, le resteal se fait à tapis (re-shove, chapitre 21). Exemple : le bouton ouvre à 2 BB, tu as 15 BB en grosse blinde. Il y a 4,5 BB au milieu (son ouverture, les blindes, l’ante). Tu risques 14 BB pour les prendre : sans compter ton équité, il faudrait qu’il se couche 76 % du temps. Avec ton équité quand il paie, beaucoup moins.', 'Range à 15 BB contre une ouverture tardive : 12 à 21 % des mains, par exemple 44+, A9s+, KTs+, QJs, ATo+, KQo. Contre une ouverture d’UTG : 3 à 4 % seulement (99+, AQs+, AKo).', 'Avec 40 BB et plus, le resteal est un 3-bet normal, souvent un 3-bet light (chapitre 39) : 3 fois l’ouverture en position, 4 fois depuis les blindes.', 'Au club : vise les joueurs qui ouvrent beaucoup au bouton et se couchent face à une relance. Contre celui qui paie tout, ne resteal qu’avec de la valeur.'] },
       { ask: 'Et le cold 4-bet ?', h: 'Le cold 4-bet', p: ['Un joueur ouvre, un autre fait un 3-bet, et toi, qui n’as encore rien mis, tu fais un 4-bet. « Cold », parce que tu entres dans le coup à froid. Exemple : le cut-off ouvre à 2 BB, le bouton relance à 6,5 BB, tu 4-bet en petite blinde.', 'Taille : environ 2,5 fois le 3-bet hors position, soit 16 BB dans l’exemple. En position, 2,2 fois.', 'Range : très serrée, QQ+ et AK. Deux joueurs ont déjà montré de la force, et l’ouvreur parle encore après toi. Le bluff (A5s, qui bloque les as) seulement contre un joueur qui 3-bet très souvent au bouton.', 'À 40 BB et moins, le cold 4-bet est un tapis.', 'Au club, c’est rare : quand un joueur prudent fait un cold 4-bet, c’est presque toujours AA ou KK.'] },
       { ask: 'Compléter en petite blinde, ça se fait ?', h: 'Compléter en petite blinde', p: ['Tout le monde s’est couché jusqu’à toi en petite blinde. Tu mets juste 0,5 BB de plus pour égaliser la grosse blinde, sans relancer : tu complètes.', 'Le prix est très bon : 0,5 BB pour un pot de 3 BB (avec l’ante), soit environ 17 % d’équité. Mais la grosse blinde peut relancer, et tu joueras tout le coup hors position.', 'Quand compléter : contre une grosse blinde passive, qui relance rarement les limps, avec des mains trop faibles pour relancer mais jouables : petites assorties (J5s, T6s, 85s), petites paires, connecteurs.', 'Contre une grosse blinde agressive, relance à 3 BB ou couche. Et si tu complètes souvent, glisse quelques grosses mains dans tes limps (chapitre 34) : la grosse blinde ne pourra plus te relancer sans risque.'] },
-      { ask: 'Et l’over-limp ?', h: 'L’over-limp : limper derrière un limper', p: ['Un joueur a limpé, et tu paies simplement 1 BB à ton tour au lieu de l’isoler. Tu entres dans un pot à plusieurs, pas cher.', 'Avec quelles mains : celles qui gagnent gros quand elles touchent, et ne perdent pas grand-chose sinon. Petites paires (22 à 66) pour le brelan, connecteurs assortis (76s, 65s), As assortis faibles au bouton.', 'Les mains fortes s’isolent (chapitre 7) : 3 BB plus 1 BB par limper en position, 4 BB plus 1 depuis les blindes. Les mains dépareillées moyennes (K8o, Q9o) se couchent : à plusieurs, elles font des paires dominées.', 'L’over-limp est meilleur au bouton et au cut-off, où tu joueras en position. En début de table, préfère isoler ou coucher : trop de joueurs parlent encore derrière toi.'] },
+      { ask: 'Et l’over-limp ?', h: 'L’over-limp : limper derrière un limper', p: ['Un joueur a limpé, et tu paies simplement 1 BB à ton tour au lieu de l’isoler. Tu entres dans un pot à plusieurs, pas cher. Au club, le limp est interdit sauf en tête-à-tête : ce coup sert en ligne et dans d’autres clubs.', 'Avec quelles mains : celles qui gagnent gros quand elles touchent, et ne perdent pas grand-chose sinon. Petites paires (22 à 66) pour le brelan, connecteurs assortis (76s, 65s), As assortis faibles au bouton.', 'Les mains fortes s’isolent (chapitre 7) : 3 BB plus 1 BB par limper en position, 4 BB plus 1 depuis les blindes. Les mains dépareillées moyennes (K8o, Q9o) se couchent : à plusieurs, elles font des paires dominées.', 'L’over-limp est meilleur au bouton et au cut-off, où tu joueras en position. En début de table, préfère isoler ou coucher : trop de joueurs parlent encore derrière toi.'] },
       { ask: 'Le min-raise, c’est notre ouverture du club ?', h: 'Le min-raise', p: ['Relancer du minimum : 2 BB quand la grosse blinde vaut 1 BB. C’est exactement l’ouverture du club.', 'Ça marche parce que le vol est bon marché : à 2 BB, il suffit que tout le monde se couche 44 % du temps pour qu’il soit rentable (avec l’ante de grosse blinde). En échange, la grosse blinde reçoit une belle cote : 18 % d’équité lui suffisent pour payer, elle défend donc large.', 'Contre une grosse blinde qui défend tout, ouvre un peu plus gros (2,5 BB) avec tes mains fortes, et un peu moins large avec tes mains faibles.', 'Le min-raise en retour (face à une mise ou une relance) s’appelle le click back : voir le chapitre 9.'] },
       { ask: 'Et payer un 3-bet au lieu de 4-bet ?', h: 'Le flat call d’un 3-bet', p: ['Tu as ouvert, on te 3-bet, et tu paies simplement : c’est un flat call (payer « à plat », sans relancer).', 'Il marche en position, avec des mains qui jouent bien après le flop. Au bouton face aux blindes, le profil TAG paie JJ à 55, ATs à AQs, KJs, KQs, QJs, JTs, T9s, 98s, 87s et AQo, et réserve le 4-bet à QQ+, AK et A5s-A4s.', 'Hors position, paie moins : au cut-off face au bouton, JJ à 77, ATs à AQs, KJs, KQs, QJs, JTs, AQo.', 'À éviter : payer avec des mains dominées (AJo, KQo contre un 3-bet serré d’UTG), et payer souvent quand il te reste moins de 40 BB. Le 4-bet serait déjà un tapis, et payer te laisse un pot énorme hors position.', 'Après le flat call, le SPR tourne autour de 5 (chapitre 17) : une top paire forte ou une overpaire s’engage, une paire moyenne contrôle le pot.'] }
     ],
@@ -3328,7 +3447,10 @@
       { q: 'Le resteal, c’est…', o: ['ouvrir à tapis en début de table', 'relancer pour reprendre le pot d’un voleur', 'payer une ouverture', 'limper en petite blinde'], a: 1, why: 'Le voleur ouvre large au cut-off ou au bouton : tu lui reprends le pot, à tapis avec 15 à 25 BB.' },
       { q: 'Le cut-off ouvre, le bouton 3-bet, tu es en petite blinde. Quelle main pour un cold 4-bet ?', o: ['AJo', 'QQ', '77', 'KQs'], a: 1, why: 'La range du cold 4-bet est très serrée : QQ+ et AK.' },
       { q: 'Quand compléter en petite blinde ?', o: ['Contre une grosse blinde passive, avec une main jouable trop faible pour relancer', 'Toujours avec AA', 'Contre une grosse blinde agressive', 'Jamais'], a: 0, why: 'Le prix est bon (environ 17 %), mais une grosse blinde agressive relancerait tes limps.' },
-      { q: 'Tu as 35 BB au cut-off, le bouton te 3-bet. Avec AJo, tu…', o: ['paies', 'ne paies pas : tapis ou couche selon le joueur', '4-bet à 18 BB', 'complètes'], a: 1, why: 'Sous 40 BB, payer un 3-bet hors position avec une main dominée laisse un gros pot difficile à jouer. Et un 4-bet à 18 BB engagerait la moitié de ton tapis : c’est tapis ou couche.' }
+      { q: 'Tu as 35 BB au cut-off, le bouton te 3-bet. Avec AJo, tu…', o: ['paies', 'ne paies pas : tapis ou couche selon le joueur', '4-bet à 18 BB', 'complètes'], a: 1, why: 'Sous 40 BB, payer un 3-bet hors position avec une main dominée laisse un gros pot difficile à jouer. Et un 4-bet à 18 BB engagerait la moitié de ton tapis : c’est tapis ou couche.' },
+      { q: 'Ouvrir à 2 BB avec 10 BB, le problème ?', o: ['C’est trop petit', 'Si on te relance à tapis, tu es obligé de payer avec presque tout', 'C’est interdit', 'Personne ne paie'], a: 1, why: 'Tu perds ta fold equity : mieux vaut faire tapis toi-même.' },
+      { q: 'Taille d’un cold 4-bet hors de position ?', o: ['Environ 1,5 fois le 3-bet', 'Environ 2,5 fois le 3-bet', 'Le minimum', '4 fois l’ouverture'], a: 1, why: 'Environ 2,5 fois hors position, 2,2 fois en position.' },
+      { q: 'Au club, un joueur prudent fait un cold 4-bet. Il a presque toujours…', o: ['un bluff', 'AA ou KK', 'une petite paire', 'un as faible'], a: 1, why: 'C’est rare au club, et presque toujours très fort.' }
     ]
   };
 
@@ -3352,7 +3474,10 @@
       { q: 'Quand le range bet marche-t-il ?', o: ['Sur un flop bas et connecté', 'Avec un gros avantage de range, comme un pot 3-bet sur A♠7♦2♣', 'Toujours', 'À plusieurs'], a: 1, why: 'L’adversaire a peu de mains qui supportent la mise.' },
       { q: 'Le hijack fait son c-bet sur K♦8♠3♣, tu es au bouton avec une paire de 8. Tu…', o: ['relances', 'paies', 'te couches', 'fais tapis'], a: 1, why: 'Une main moyenne paie : relancer ferait coucher pire et payer mieux.' },
       { q: 'Pot de 5,5 BB, 38 BB derrière. Pour arriver à tapis en trois mises égales, tu mises environ…', o: ['un tiers du pot', '73 % du pot', 'deux fois le pot', 'tapis au flop'], a: 1, why: '(1 + 2 × 0,73)³ ≈ 15 : le pot passe de 5,5 à environ 81,5 BB, tout le tapis.' },
-      { q: 'Tu as 9♠9♦ sur 8♥7♥4♦ face à une range avec beaucoup d’overcards et de tirages. Tu…', o: ['checkes pour piéger', 'mises pour protéger et pour la valeur', 'te couches', 'mises un dixième du pot'], a: 1, why: 'Tableau humide : chaque carte gratuite donne de l’équité à l’adversaire.' }
+      { q: 'Tu as 9♠9♦ sur 8♥7♥4♦ face à une range avec beaucoup d’overcards et de tirages. Tu…', o: ['checkes pour piéger', 'mises pour protéger et pour la valeur', 'te couches', 'mises un dixième du pot'], a: 1, why: 'Tableau humide : chaque carte gratuite donne de l’équité à l’adversaire.' },
+      { q: 'Face à un range bet d’un tiers du pot, tu…', o: ['défends large : tu gardes environ 75 % de ta range', 'te couches souvent', 'relances tout', 'fais tapis'], a: 0, why: 'La mise est petite et l’adversaire mise beaucoup de mains faibles.' },
+      { q: 'Taille d’une relance de c-bet en position ?', o: ['Le minimum', 'Environ 3 fois sa mise', '10 fois sa mise', 'Tapis toujours'], a: 1, why: 'Un peu plus sur un tableau humide.' },
+      { q: 'Le contrôle du pot, c’est surtout pour…', o: ['les très grosses mains', 'les mains moyennes', 'les bluffs', 'les tirages'], a: 1, why: 'Avec une main forte, contrôler le pot laisse filer de la valeur.' }
     ]
   };
 
@@ -3377,7 +3502,10 @@
       { q: 'Contre une calling station à la river, ta range de mise est…', o: ['polarisée, avec beaucoup de bluffs', 'fusionnée : valeur et mains moyennes, sans bluffs', 'vide', 'composée de bluffs seulement'], a: 1, why: 'Elle paie avec pire et ne se couche pas.' },
       { q: 'Tu mises top paire à la river, un récréatif passif relance. Tu…', o: ['relances', 'te couches le plus souvent', 'paies toujours', 'fais tapis'], a: 1, why: 'C’est le plan mise puis couche : sa relance est presque toujours deux paires ou mieux.' },
       { q: 'Pot de 12 BB, il fait tapis pour 12 BB. Pour un hero call, il doit bluffer plus de…', o: ['10 %', '33 %', '50 %', '75 %'], a: 1, why: '12 ÷ (12 + 12 + 12) = 33 %.' },
-      { q: 'KK perd contre AA à tapis avant le flop. C’est…', o: ['une erreur', 'un cooler', 'un bad beat', 'un hero call'], a: 1, why: 'Deux très grosses mains : la perte était inévitable. Le bad beat, c’est quand KK gagne.' }
+      { q: 'KK perd contre AA à tapis avant le flop. C’est…', o: ['une erreur', 'un cooler', 'un bad beat', 'un hero call'], a: 1, why: 'Deux très grosses mains : la perte était inévitable. Le bad beat, c’est quand KK gagne.' },
+      { q: 'La block bet se fait…', o: ['en position avec une grosse main', 'hors de position avec une main moyenne, 20 à 30 % du pot', 'avec rien', 'toujours à tapis'], a: 1, why: 'Tu fixes le prix au lieu de subir une grosse mise.' },
+      { q: 'Contre un joueur passif, induire un bluff en checkant ta grosse main…', o: ['marche très bien', 'ne marche pas : il checkera derrière', 'est obligatoire', 'se fait à tapis'], a: 1, why: 'Contre un passif, mise toi-même.' },
+      { q: 'Hero fold : un nit qui n’a jamais relancé te relance la river. Avec top paire bon kicker…', o: ['tu paies', 'tu te couches', 'tu relances', 'tu fais tapis'], a: 1, why: 'Tu lis la valeur.' }
     ]
   };
 
@@ -3493,12 +3621,14 @@
       { q: 'Quelles mains disparaissent en premier de tes ouvertures en début de table ?', o: ['AA, KK', 'Les petites paires, les as faibles et les dépareillées comme KJ ou QJ', 'AK et AQ', 'Aucune'], a: 1, why: 'Elles gagnent de petits pots et perdent les gros : à la bulle, elles ne valent plus le risque.' },
       { q: 'Tu es le plus gros tapis, au bouton, deux tapis moyens en blinde. Tu…', o: ['ouvres plus large qu’à l’habitude', 'te couches avec tout sauf les paires', 'limpes', 'attends la fin de la bulle'], a: 0, why: 'Les tapis moyens ne peuvent pas te payer : c’est le moment de voler.' },
       { q: 'En tapis moyen à la bulle, ton 3-bet de bluff avec A5s…', o: ['reste une bonne idée', 'disparaît : tu ne sur-relances plus que pour la valeur', 'devient un tapis', 'devient une paye'], a: 1, why: 'Si on te 4-bet, tu dois te coucher et tu as perdu des jetons précieux ; la bulle supprime ces bluffs.' },
-      { q: 'Ce que la bulle touche le moins, c’est…', o: ['payer un tapis', 'défendre sa grosse blinde', 'ouvrir au bouton', 'répondre à un 3-bet'], a: 2, why: 'Au bouton, les blindes ont peur elles aussi : le vol reste rentable.' }
+      { q: 'Ce que la bulle touche le moins, c’est…', o: ['payer un tapis', 'défendre sa grosse blinde', 'ouvrir au bouton', 'répondre à un 3-bet'], a: 2, why: 'Au bouton, les blindes ont peur elles aussi : le vol reste rentable.' },
+      { q: 'Tapis moyen à la bulle, face au 3-bet : tu paies…', o: ['toutes tes paires', 'JJ, TT, AQs, et c’est presque tout', 'rien', 'tout ce qui est assorti'], a: 1, why: 'Et 4-bet seulement QQ+, AK.' },
+      { q: 'Petit tapis à la bulle : attendre d’avoir 3 BB pour pousser…', o: ['est la bonne stratégie', 'est une erreur : pousse à 8 BB plutôt', 'est obligatoire', 'dépend de la couleur'], a: 1, why: 'À 3 BB, plus personne ne se couche.' }
     ]
   };
 
   L[48].podcast = [
-    ['J', 'Salut Yo ! Ce soir, je veux parler de la bulle. Au club comme sur Winamax, quand on approche des places payées, je ne sais jamais quoi jeter. Je joue soit trop serré, soit comme d’habitude.'],
+    ['J', 'Salut Yo ! Ce soir, je veux parler de la bulle. Au club comme en ligne, quand on approche des places payées, je ne sais jamais quoi jeter. Je joue soit trop serré, soit comme d’habitude.'],
     ['Y', 'Salut ! Bonne question, parce que c’est là que beaucoup de joueurs perdent leur tournoi. On va voir pourquoi la bulle change tout, puis ce que tu fais selon ton tapis, et surtout quelles mains tu jettes.'],
     ['J', 'Alors, pourquoi ça change tout ?'],
     ['Y', 'Parce qu’à la bulle, tes jetons ne valent plus des euros. Si tu sautes juste avant les places payées, tu perds tout ce que tu pouvais toucher. Si tu doubles, tu ne doubles pas ce que tu vas gagner. Un jeton perdu vaut plus qu’un jeton gagné.'],
@@ -3561,6 +3691,70 @@
     ['P', 5],
     ['J', 'J’ouvre plus large que d’habitude.'],
     ['Y', 'Exactement. On résume. Le tapis moyen serre le plus. On resserre d’abord les payes de tapis, les défenses et les réponses au trois-bet. On jette les petites paires, les as faibles, les assorties moyennes et les dépareillées jolies. Le gros tapis attaque, le petit tapis pousse. Et dans Ma range, le bouton Bulle te montre exactement les mains qui changent. À bientôt !']
+  ];
+
+  L[49] = {
+    minutes: 12,
+    links: [{ href: '#classement', label: 'Club › Championnat' }, { href: '#tournoi', label: 'Club › Tournoi du club (tête mise à prix)' }, { href: '#mainsclub', label: 'Club › Mains du club' }, { href: '#lecon-3', label: 'Chapitre 3 : Le club' }],
+    key: ['Deux tournois comptent pour le championnat : le mercredi, chaque semaine, et le deep du vendredi, une fois par mois, avec des points multipliés par 1,5.', 'Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Qui sort la tête mise à prix gagne 2 points de plus.', 'Les règles du club changent ta façon de jouer : pas de limp sauf en tête-à-tête, pas de défense de blinde sous 40 BB, et la range d’ouverture du club.'],
+    sections: [
+      { ask: 'Quels tournois comptent ?', h: 'Le mercredi et le deep du vendredi', p: ['Le tournoi du mercredi se joue chaque semaine. Le deep du vendredi se joue une fois par mois, avec des tapis plus profonds : on joue plus de coups après le flop, et la range d’ouverture du club (40 BB et plus) sert plus longtemps.', 'Les deux comptent pour le championnat. Au deep, les points de place sont multipliés par 1,5. Un tournoi « hors championnat » ne rapporte aucun point.', 'Les jetons du club : 25, 100, 500, 1 000 et 5 000. Il n’y a pas de jeton de 50 : les blindes sont arrondies au plus petit jeton encore en jeu. Le minuteur du club règle la structure niveau par niveau.'] },
+      { ask: 'Comment se comptent les points ?', h: 'Le barème du championnat', p: ['Le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins, et ainsi de suite jusqu’au dernier, qui marque 1 point. Exemple à 14 joueurs : le 1er marque 14 points, le 3e 12, le 14e 1.', 'Au deep, on multiplie par 1,5 : à 14 joueurs, le 1er marque 21 points, le 3e 18.', 'Chaque place gagnée ne vaut qu’un point (1,5 au deep). Gagner rapporte beaucoup plus que grappiller des places : à 16 joueurs, le vainqueur marque 16 points, le 8e seulement 9. Joue pour gagner, pas pour survivre.', 'Les 3 premiers du classement de l’année sont récompensés. Si la saison a commencé avant l’appli, le classement se reprend à la main (Club › Championnat).'] },
+      { ask: 'Et la tête mise à prix ?', h: 'La tête mise à prix', p: ['Celui qui élimine la tête mise à prix gagne 2 points de plus. La tête mise à prix, c’est le vainqueur du tournoi précédent du même type : celui du dernier mercredi pour le mercredi, celui du dernier deep pour le deep.', 'S’il est absent, c’est le 2e de ce tournoi, puis le 3e, et ainsi de suite. L’appli la choisit toute seule d’après les inscrits et l’affiche en haut du tournoi.', 'Quand la tête mise à prix fait tapis sur toi, les 2 points valent deux places (un peu plus d’une au deep) : tu peux payer d’un cran plus large qu’en temps normal, pas davantage. Une main qui se couche largement reste un fold.', 'Si c’est toi la tête mise à prix, attends-toi à être payé plus large : pousse un peu plus serré, et mise plus gros pour la valeur.'] },
+      { ask: 'Quelles règles du club changent mon jeu ?', h: 'Les règles du club', p: ['Pas de limp, sauf en tête-à-tête ; la petite blinde peut compléter. On ouvre en relançant, ou on se couche.', 'Pas de défense de blinde sous 40 BB : sous 40 BB, en grosse blinde, tu fais tapis avec tes grosses mains ou tu te couches ; payer le tapis d’un adversaire reste possible.', 'L’ouverture suit la range du club (une range de table à 6) : la 1re place à parler joue la range de la photo, puis un cran plus large à chaque place jusqu’au bouton ; la petite blinde ouvre comme le bouton. Entre 20 et 40 BB, un cran plus serré.'] },
+      { ask: 'Comment progresser entre deux tournois ?', h: 'Les mains du club et les adversaires', p: ['Après un tournoi, note un coup intéressant dans Club › Mains du club, avec la question à te poser. Lionel y ajoute son commentaire : la main sert ensuite d’exercice à tout le monde.', 'Note aussi trois choses sur les habitués dans le carnet des adversaires : s’ils jouent beaucoup de mains, s’ils sont agressifs, et une habitude marquante (chapitre 28).'] }
+    ],
+    mistake: 'Jouer pour « finir dans les points » : chaque place ne vaut qu’un point, alors que la victoire en vaut beaucoup plus. Survivre sans jetons ne rapporte presque rien.',
+    retain: ['Points : 1er = nombre de joueurs, puis un de moins par place ; deep ×1,5.', 'Tête mise à prix : +2 points ; c’est le vainqueur du tournoi précédent du même type, sinon le 2e, le 3e…', 'Contre la tête mise à prix, paie un tapis d’un cran plus large, pas plus.', 'Pas de limp (sauf tête-à-tête), pas de défense de blinde sous 40 BB, range d’ouverture du club.'],
+    quiz: [
+      { q: 'Mercredi, 14 joueurs, tu finis 3e : combien de points ?', o: ['10', '11', '12', '14'], a: 2, why: '14 − 3 + 1 = 12 points.' },
+      { q: 'Même place au deep du vendredi (14 joueurs, 3e) ?', o: ['12', '15', '18', '24'], a: 2, why: '12 × 1,5 = 18 points.' },
+      { q: 'Tu élimines la tête mise à prix : combien de points en plus ?', o: ['1', '2', '3', '5'], a: 1, why: 'La prime vaut 2 points.' },
+      { q: 'Le vainqueur du dernier mercredi est absent. Qui est la tête mise à prix ?', o: ['Personne', 'Le 2e du dernier mercredi', 'Le 1er du championnat', 'Le vainqueur du dernier deep'], a: 1, why: 'Absent : le 2e de ce tournoi, puis le 3e, et ainsi de suite.' },
+      { q: 'À 16 joueurs, combien de points sépare le vainqueur du 8e ?', o: ['1', '4', '7', '16'], a: 2, why: '16 contre 9 : 7 points. Jouer pour gagner rapporte plus que grappiller des places.' },
+      { q: 'Au club, tu as 9-9 en UTG. Tu peux limper ?', o: ['Oui', 'Non, le limp est interdit sauf en tête-à-tête', 'Seulement au deep', 'Seulement avec une paire'], a: 1, why: 'On ouvre en relançant, ou on se couche.' },
+      { q: '30 BB en grosse blinde, le bouton ouvre, tu as K-J dépareillé. Tu paies ?', o: ['Oui, c’est une bonne défense', 'Non : sous 40 BB, pas de défense de blinde', 'Oui, mais seulement au deep', 'Oui, si la tête mise à prix ouvre'], a: 1, why: 'Sous 40 BB : tapis avec les grosses mains, ou fold.' },
+      { q: 'La tête mise à prix fait tapis sur toi. Comment tu paies ?', o: ['Avec n’importe quoi, pour les 2 points', 'D’un cran plus large qu’en temps normal', 'Plus serré', 'Jamais'], a: 1, why: 'Les 2 points valent deux places : un cran plus large, pas davantage.' },
+      { q: 'Quel jeton n’existe pas au club ?', o: ['25', '50', '100', '500'], a: 1, why: 'Pas de jeton de 50 : les blindes sont arrondies au plus petit jeton en jeu.' }
+    ]
+  };
+
+  L[49].podcast = [
+    ['J', 'Salut Yo ! Aujourd’hui, je veux parler de nos tournois à nous. Le mercredi, le deep du vendredi, les points, la tête mise à prix. Je ne suis pas sûr de tout bien compter.'],
+    ['Y', 'Salut ! On va faire simple. D’abord les deux tournois, puis le barème, puis la tête mise à prix, et enfin les règles du club qui changent ta façon de jouer.'],
+    ['J', 'Alors, les deux tournois ?'],
+    ['Y', 'Le mercredi, chaque semaine. Et le deep, un vendredi par mois, avec des tapis plus profonds. Au deep, on joue plus de coups après le flop, et la range d’ouverture du club sert plus longtemps.'],
+    ['J', 'Et les deux comptent pour le championnat ?'],
+    ['Y', 'Oui. Avec une différence : au deep, les points de place sont multipliés par un et demi.'],
+    ['J', 'Comment on compte les points ?'],
+    ['Y', 'Le premier marque autant de points qu’il y a de joueurs. Le deuxième, un de moins. Et ainsi de suite jusqu’au dernier, qui marque un point.'],
+    ['J', 'Donc à quatorze joueurs, si je finis troisième ?'],
+    ['Y', 'Douze points. Et au deep, douze fois un et demi : dix-huit.'],
+    ['J', 'Alors je devrais jouer pour survivre, pour gagner des places ?'],
+    ['Y', 'Non, et c’est le piège. Chaque place ne vaut qu’un point. À seize joueurs, le vainqueur marque seize points, le huitième seulement neuf. Sept points d’écart. Survivre sans jetons ne rapporte presque rien. Joue pour gagner.'],
+    ['J', 'Et la tête mise à prix ?'],
+    ['Y', 'Celui qui l’élimine gagne deux points de plus. La tête mise à prix, c’est le vainqueur du tournoi précédent du même type. Le vainqueur du dernier mercredi pour le mercredi, celui du dernier deep pour le deep.'],
+    ['J', 'Et s’il n’est pas là ?'],
+    ['Y', 'Alors c’est le deuxième de ce tournoi. S’il est absent aussi, le troisième, et ainsi de suite. L’appli la choisit toute seule d’après les inscrits.'],
+    ['J', 'Si la tête mise à prix fait tapis sur moi, je paie avec n’importe quoi pour les deux points ?'],
+    ['Y', 'Non. Les deux points valent deux places. C’est bien, mais ce n’est pas un trésor. Tu paies d’un cran plus large qu’en temps normal, pas davantage. Une main qui se couche largement reste un fold.'],
+    ['J', 'Et si c’est moi, la tête mise à prix ?'],
+    ['Y', 'Attends-toi à être payé plus large. Alors tu pousses un peu plus serré, et tu mises plus gros pour la valeur : ils vont payer.'],
+    ['J', 'Et les règles du club ?'],
+    ['Y', 'Trois règles qui changent ton jeu. Un : pas de limp, sauf en tête-à-tête, et la petite blinde peut compléter. Deux : pas de défense de blinde sous quarante grosses blindes. Là, tu fais tapis avec tes grosses mains ou tu te couches. Trois : tu ouvres avec la range du club.'],
+    ['J', 'Et entre deux tournois, je fais quoi ?'],
+    ['Y', 'Tu notes un coup intéressant dans les mains du club, avec la question à te poser. Lionel y met son commentaire, et tout le monde peut s’entraîner dessus.'],
+    ['J', 'Le quiz ?'],
+    ['Y', 'Première question. Mercredi, quatorze joueurs, tu finis troisième. Combien de points ?'],
+    ['P', 5],
+    ['J', 'Douze.'],
+    ['Y', 'Oui. Deuxième question. Tu élimines la tête mise à prix. Combien de points en plus ?'],
+    ['P', 5],
+    ['J', 'Deux.'],
+    ['Y', 'Exact. Troisième question. Trente grosses blindes en grosse blinde, le bouton ouvre, tu as roi-valet. Tu paies ?'],
+    ['P', 5],
+    ['J', 'Non. Sous quarante blindes, pas de défense : tapis ou fold.'],
+    ['Y', 'Parfait. On résume. Le mercredi et le deep comptent, le deep vaut une fois et demie. Une place vaut un point, la victoire en vaut beaucoup plus : joue pour gagner. La tête mise à prix vaut deux points : un cran plus large, pas plus. Et les règles du club : pas de limp, pas de défense sous quarante blindes, la range du club. À bientôt !']
   ];
 
   var CHAPTERS = PLAN.map(function (c) {

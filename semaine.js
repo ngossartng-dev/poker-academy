@@ -2,11 +2,11 @@
 (function () {
   'use strict';
   function U() { return window.PA_UI; }
-  var EXTRA = { taille: 'Tailles de mise au flop', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
+  var EXTRA = { taille: 'Tailles de mise au flop', facemise: 'Face à une mise', turnriver: 'Turn et river', lecture: 'Lire la range adverse', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
   // notion → leçons à relire et exercice ciblé
   var MAP = {
     open_early: { ch: [5], go: 'open_early' }, open_mid: { ch: [5], go: 'open_mid' }, open_late: { ch: [5, 37], go: 'open_late' }, open_sb: { ch: [5, 37], go: 'open_sb' },
-    bb_def: { ch: [6], go: 'bb_def' }, taille: { ch: [13], href: '#taille' }, cold: { ch: [41, 8], go: 'cold' }, vs3bet: { ch: [8, 39], go: 'vs3bet' }, push: { ch: [21, 22], go: 'push' },
+    bb_def: { ch: [6], go: 'bb_def' }, taille: { ch: [13], href: '#taille' }, facemise: { ch: [14, 42], href: '#facemise' }, turnriver: { ch: [15, 16], href: '#turnriver' }, lecture: { ch: [12], href: '#lecture' }, cold: { ch: [41, 8], go: 'cold' }, vs3bet: { ch: [8, 39], go: 'vs3bet' }, push: { ch: [21, 22], go: 'push' },
     callshove: { ch: [22, 23], go: 'callshove' }, mid: { ch: [20], go: 'mid' }, icm: { ch: [23], go: 'icm' }, pko: { ch: [25], go: 'pko' }, bulle: { ch: [48], go: 'bulle' }, iso: { ch: [7], go: 'iso' }, squeeze: { ch: [40], go: 'squeeze' }, postflop: { ch: [14, 15], go: 'postflop' }, hu: { ch: [36, 24], go: 'hu' }, outs: { ch: [10], go: 'outs' }
   };
   var DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -19,7 +19,7 @@
   function since(start) { return Math.round((noon() - noon(start)) / 864e5); }
   // les points faibles : niveau le plus bas d'abord, une notion jamais travaillée compte comme faible
   function weak(p) {
-    var keys = Object.keys(window.PA.NOTIONS || {}).concat(Object.keys(EXTRA).filter(function (k) { return (k === 'taille' && window.PA_TAILLE) || (window.PA_SIT && window.PA_SIT.kinds.indexOf(k) >= 0); }));
+    var keys = Object.keys(window.PA.NOTIONS || {}).concat(Object.keys(EXTRA).filter(function (k) { return (/^(taille|facemise|turnriver)$/.test(k) && window.PA_TAILLE) || (k === 'lecture' && window.PA_LECTURE) || (window.PA_SIT && window.PA_SIT.kinds.indexOf(k) >= 0); }));
     return keys.map(function (k) { var st = p.notions[k] || { r: 1350, n: 0, ok: 0 }; return { k: k, r: st.r, n: st.n, lvl: window.PA.level(st.r), score: st.r + (st.n < 3 ? -120 : 0) }; }).sort(function (a, b) { return a.score - b.score; });
   }
   function build(p) {
