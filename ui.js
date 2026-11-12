@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.36.1';
+  var VERSION = '2.37.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -323,6 +323,7 @@
     } else out += '<div class="banner">' + ctxTxt.charAt(0).toUpperCase() + ctxTxt.slice(1) + ' : ' + Object.keys(acts).filter(function (k) { return k !== 'fold'; }).map(function (k) { return actName(k, s) + ' ' + String(PA.pct(acts[k])).replace('.', ',') + ' %'; }).join(' · ') + '</div>';
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
     out += rangeGrid(cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
+    if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club (UTG = la range vue au club, un cran plus large à chaque place, bouton et petite blinde identiques). Face à un 3-bet : 4-bet ou tapis avec TT+, AK, AQs ; payer avec 99, AJs, ATs, KQs à KTs, QJs, QTs, JTs, AQo.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
     if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">Touchez une case pour changer son action.</span>' : '') + '</div>';
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
@@ -805,7 +806,7 @@
     if (errors.length) out += '<div class="card stack"><b>Erreurs à corriger</b>' + errors.map(function (e) { return '<div>' + handText(e.a.q.cards) + ' — ' + describeSit(e.a.q.sit) + ' : tu as choisi « ' + (e.a.given ? actName(e.a.given, e.a.q.sit) : 'rien') + ' », ton profil joue « ' + actName(e.right, e.a.q.sit) + ' ».</div>'; }).join('') + '</div>';
     if (window.PA_PERSO) {
       var nA = d.answers.length;
-      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : ' + pr.name + '. Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, je prends le profil voisin. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
+      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : la range du club (celle de Lionel : UTG, puis un cran plus large à chaque place). Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, j’élargis ou je resserre d’un ou deux crans. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
     }
     out += '<div class="row"><button class="btn gold" data-act="adopt" data-v="' + best + '" style="flex:1">Adopter le profil ' + pr.short + '</button><button class="btn" data-act="nav" data-v="home">Garder mon profil (' + PA.PROFILES[p.profile || 'tag'].short + ')</button></div></div>';
     return out;
@@ -989,6 +990,7 @@
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
       case 'toggleEdit': RS.edit = !RS.edit; rerenderRange(); break;
+      case 'persoClub': if (typeof confirm === 'function' && !confirm('Repartir de la range du club ? Tes modifications actuelles du profil Perso seront effacées.')) break; p.perso = {}; p.persoBase = 'club'; p.persoFrom = null; PA.save(); RS.edit = false; rerenderRange(); break;
       case 'cell': zoomCell(v); break;
       case 'editCell': editCell(v); break;
       case 'print': window.print(); break;
@@ -1011,7 +1013,7 @@
       case 'adopt': p.profile = v; PA.save(); go('home'); render(); break;
       case 'mkPerso': {
         var r = window.PA_PERSO.build(ui.drill.answers, v);
-        p.perso = r.perso; p.profile = 'perso'; p.persoFrom = { at: Date.now(), n: ui.drill.answers.length, base: r.base, groups: r.groups, hands: r.hands }; PA.save();
+        p.perso = r.perso; p.profile = 'perso'; p.persoBase = 'club'; p.persoFrom = { at: Date.now(), n: ui.drill.answers.length, base: r.base, groups: r.groups, hands: r.hands }; PA.save();
         RS.profile = 'perso'; RS.tab = 'glob'; ui.persoMsg = r; go('ranges'); render(); break;
       }
       case 'setProf': p.profile = v; PA.save(); render(); break;

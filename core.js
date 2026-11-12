@@ -11,7 +11,7 @@
     tag: { id: 'tag', name: 'Serré-agressif', short: 'TAG', vpip: '~16-20 %', desc: 'Le standard solide en tournoi. Recommandé.', reco: true },
     equilibre: { id: 'equilibre', name: 'Équilibré', short: 'Équilibré', vpip: '~20-24 %', desc: 'Plus de vols et de défenses.' },
     lag: { id: 'lag', name: 'Large-agressif', short: 'LAG', vpip: '~26-32 %', desc: 'Met la pression, demande de l’expérience.' },
-    perso: { id: 'perso', name: 'Personnalisé', short: 'Perso', vpip: '—', desc: 'Part du profil TAG ; vous modifiez les cases.' }
+    perso: { id: 'perso', name: 'Personnalisé', short: 'Perso', vpip: '—', desc: 'Part de la range du club ; vous modifiez les cases.' }
   };
   var BASE_PROFILES = ['nit', 'tag', 'equilibre', 'lag'];
 
@@ -50,7 +50,30 @@
   function wipeTraining(p) { p.notions = {}; p.srs = {}; p.sessions = []; p.consult = 0; p.last = null; save(); }
 
   /* ---------- Ranges ---------- */
-  function prof(id) { return D.profiles[id === 'perso' ? 'tag' : id]; }
+  /* ---------- Range du club (Lionel) : base du profil Perso ----------
+     Photo du 11/11/2026 : range « MP en 6-max », utilisée pour UTG à 9 ou 10 joueurs, à 40 BB.
+     À chaque place suivante, chaque ligne de la grille descend d'un cran ; le bouton et la petite blinde ont la même range. */
+  var CLUB_STEP = { UTG: 0, 'UTG+1': 1, MP: 2, LJ: 3, HJ: 4, CO: 5, BTN: 6, SB: 6 }, CLUB_MAX = 6, RK = 'AKQJT98765432';
+  // [carte haute, kicker le plus bas au départ, cran où la ligne apparaît, kicker le plus bas possible]
+  var CLUB_S = [['A', '2', 0, '2'], ['K', '8', 0, '2'], ['Q', '8', 0, '2'], ['J', '8', 0, '4'], ['T', '8', 0, '6'], ['9', '8', 0, '5'], ['8', '7', 0, '4'], ['7', '6', 1, '4'], ['6', '5', 2, '3'], ['5', '4', 3, '2'], ['4', '3', 4, '3']];
+  var CLUB_O = [['A', '9', 0, '2'], ['K', 'T', 0, '7'], ['Q', 'J', 0, '8'], ['J', 'T', 1, '8'], ['T', '9', 2, '8'], ['9', '8', 3, '7'], ['8', '7', 4, '7'], ['7', '6', 5, '6']];
+  function clubOpen(st) {
+    st = Math.max(0, Math.min(CLUB_MAX, st)); var out = [], i;
+    for (i = 0; i < 13; i++) out.push(RK[i] + RK[i]);
+    function rows(T, suf) { T.forEach(function (r) { if (st < r[2]) return; var hi = RK.indexOf(r[0]), lo = Math.min(RK.indexOf(r[1]) + (st - r[2]), RK.indexOf(r[3])); for (var k = hi + 1; k <= lo; k++) out.push(r[0] + RK[k] + suf); }); }
+    rows(CLUB_S, 's'); rows(CLUB_O, 'o');
+    return out;
+  }
+  // face à un 3-bet : orange = 4-bet ou tapis, vert = payer, le reste se couche (TT en orange, 99 en vert : variante la plus courante)
+  var CLUB_4B = ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AKo'], CLUB_CALL = ['99', 'AJs', 'ATs', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'AQo'];
+  (function () {
+    var t = D.profiles.tag, deep = {}; Object.keys(CLUB_STEP).forEach(function (pos) { deep[pos] = clubOpen(CLUB_STEP[pos]); });
+    var v = { call: CLUB_CALL, fourbet: CLUB_4B };
+    D.profiles.club = { open: { deep: deep, mid: t.open.mid }, bb: t.bb, vsOpen: t.vsOpen, mid3b: t.mid3b, vs3bet: { ip: v, oop: v, early: v, bvb: t.vs3bet.bvb } };
+  })();
+  // la base du profil Perso : la range du club, sauf pour un profil Perso créé avant (il reste sur TAG tant qu'on ne le refait pas)
+  function persoBase() { var p = player(); if (!p) return 'club'; if (p.persoBase) return p.persoBase === 'club' ? 'club' : 'tag'; return (p.perso && Object.keys(p.perso).length) || p.persoFrom ? 'tag' : 'club'; }
+  function prof(id) { return D.profiles[id === 'perso' ? persoBase() : id]; }
   function depthKey(bb) { return bb > 40 ? 'deep' : (bb >= 20 ? 'mid' : 'push'); }
   function nearestPush(bb) { var best = 15; PUSH_DEPTHS.forEach(function (d) { if (Math.abs(d - bb) < Math.abs(best - bb)) best = d; }); return best; }
   // situation : {type:'open'|'def'|'vs3bet'|'push'|'callshove', pos, opener, bb, scen}
@@ -477,7 +500,7 @@
     chart: chart, actionFor: actionFor, firstOpenPos: firstOpenPos, validOpeners: validOpeners, shoveSituations: shoveSituations,
     depthKey: depthKey, nearestPush: nearestPush, sitKey: sitKey, NOTIONS: NOTIONS, notionOf: notionOf, notionState: notionState,
     bubbleChart: bubbleChart, isoGroup: isoGroup, sqzGroup: sqzGroup, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
-    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB, VS_PROF: VS_PROF, vsOn: vsOn, noVs: noVs,
+    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB, clubOpen: clubOpen, CLUB_STEP: CLUB_STEP, persoBase: persoBase, VS_PROF: VS_PROF, vsOn: vsOn, noVs: noVs,
     ORDER_IDX: ORDER_IDX
   };
 })();
