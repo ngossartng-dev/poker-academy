@@ -863,3 +863,6 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .lg-crow input[data-f="name"]{text-transform:uppercase}
 .lg-crow .btn{min-height:44px;padding:0}
 .lg-crh span{font-size:13px;color:var(--muted)}
+
+.tl-sp{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}.tl-sp b{color:var(--gold,#d4af37)}
+.tl-row{padding:6px 0;border-top:1px solid rgba(212,175,55,.2);font-size:16px;line-height:1.45}
