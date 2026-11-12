@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.37.1';
+  var VERSION = '2.37.2';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -182,6 +182,7 @@
     var p = PA.player(); RS.profile = p.profile || 'tag'; RS.edit = false;
     if (ctx && ctx.sit) {
       var s = ctx.sit; RS.tab = 'sit'; RS.type = s.type === 'push' ? 'open' : s.type; RS.pos = s.pos; RS.opener = s.opener || RS.opener; RS.scen = s.scen || 'ip'; if (s.caller) RS.caller = s.caller;
+      if (s.type === 'vs3bet') RS.v3pos = !s.pos || PA.POS.slice(0, 8).indexOf(s.pos) < 0 || ({ early: ['UTG', 'UTG+1', 'MP'], ip: ['BTN'], bvb: ['SB'], oop: ['LJ', 'HJ', 'CO'] }[s.scen] || []).indexOf(s.pos) < 0;
       if (s.type === 'def' && s.pos === 'BB') { RS.type = 'bbdef'; RS.vp = s.vp || 'std'; RS.sz = s.sz || 2.5; }
       var dk = PA.depthKey(s.bb); RS.depth = dk; if (s.type === 'iso') RS.depth = s.bb <= 20 ? 'push' : 'deep'; if (s.type === 'squeeze') RS.depth = s.bb <= 30 ? 'mid' : 'deep'; if (dk === 'push') RS.bb = PA.nearestPush(s.bb); RS.hero = ctx.hand;
     } else RS.hero = null;
@@ -247,9 +248,11 @@
       out += '<div class="glob-wrap">' + rangeGrid(map, 'open', RS.hero, false) + '</div>';
       return out;
     }
-    var s = rsSit(), cm = PA.chart(prof, s);
     if (RS.type === 'def' && RS.pos === 'BB') RS.type = 'bbdef';
-    out += '<div class="seg">' + [['open', 'Ouvrir'], ['bbdef', 'Défendre ma BB'], ['def', 'Face à une relance'], ['iso', 'Face à un limper'], ['squeeze', 'Squeeze'], ['vs3bet', 'Face à un 3-bet'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    // « Face à un 3-bet » est maintenant dans « Ouvrir » : les couleurs disent la suite si on te relance
+    if (RS.type === 'vs3bet') { RS.type = 'open'; RS.depth = 'deep'; if (PA.POS.slice(0, 8).indexOf(RS.pos) < 0 || RS.v3pos) RS.pos = { ip: 'BTN', oop: 'CO', early: 'UTG', bvb: 'SB' }[RS.scen] || 'BTN'; RS.v3pos = false; }
+    var s = rsSit(), cm = PA.chart(prof, s);
+    out += '<div class="seg">' + [['open', 'Ouvrir'], ['bbdef', 'Défendre ma BB'], ['def', 'Face à une relance'], ['iso', 'Face à un limper'], ['squeeze', 'Squeeze'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     if (RS.type === 'iso' || RS.type === 'squeeze') {
       if (RS.depth === 'mid' && RS.type === 'iso') RS.depth = 'push'; if (RS.depth === 'push' && RS.type === 'squeeze') RS.depth = 'mid';
       out += '<div class="seg">' + (RS.type === 'iso' ? [['deep', 'Plus de 20 BB'], ['push', '12 à 20 BB (iso-tapis)']] : [['deep', 'Plus de 30 BB'], ['mid', '20 à 30 BB (squeeze à tapis)']]).map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
@@ -338,7 +341,7 @@
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
     out += rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
     if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club (UTG = la range vue au club, un cran plus large à chaque place, bouton et petite blinde identiques). Face à un 3-bet : 4-bet ou tapis avec TT+, AK, AQs ; payer avec 99, AJs, ATs, KQs à KTs, QJs, QTs, JTs, AQo.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
-    if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">Touchez une case pour changer son action.</span>' : '') + '</div>';
+    if (prof === 'perso' && full) out += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit ? '<span class="muted small">' + (plan3 ? 'Touche une case pour changer sa couleur : gris, rose, vert, orange. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
@@ -1062,6 +1065,14 @@
     var p = PA.player(), s = rsSit(), key = PA.sitKey(s);
     var cycle = s.type === 'open' ? (PA.depthKey(s.bb) === 'push' ? ['fold', 'allin'] : ['fold', 'raise']) : (s.type === 'vs3bet' ? ['fold', 'call', 'fourbet'] : (s.type === 'callshove' ? ['fold', 'call'] : ['fold', 'call', 'raise']));
     var cur = PA.chart('perso', s)[h], nx = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+    if (s.type === 'open' && PA.depthKey(s.bb) === 'deep' && !s.bubble) {
+      // ouverture à 40 BB et plus : gris → rose (ouvrir, se coucher si relance) → vert (payer) → orange (4-bet ou tapis) → gris
+      var sc = ['UTG', 'UTG+1', 'MP'].indexOf(s.pos) >= 0 ? 'early' : (s.pos === 'BTN' ? 'ip' : (s.pos === 'SB' ? 'bvb' : 'oop')), s3 = { type: 'vs3bet', scen: sc, bb: 100 }, k3 = PA.sitKey(s3);
+      var v = PA.chart('perso', s3)[h], st = cur !== 'raise' ? 0 : (v === 'call' ? 2 : (v === 'fourbet' || v === 'allin' ? 3 : 1)), n2 = (st + 1) % 4;
+      p.perso[key] = p.perso[key] || {}; p.perso[key][h] = n2 === 0 ? 'fold' : 'raise';
+      if (n2 > 0) { p.perso[k3] = p.perso[k3] || {}; p.perso[k3][h] = ['', 'fold', 'call', 'fourbet'][n2]; }
+      PA.save(); rerenderRange(); return;
+    }
     p.perso[key] = p.perso[key] || {}; p.perso[key][h] = nx; PA.save(); rerenderRange();
   }
   window.addEventListener('hashchange', function () { ui.sheet = null; renderSheet(); render(); });
