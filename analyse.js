@@ -690,13 +690,14 @@
     var big = H.filter(function (x) { return x.log; }).sort(function (a, b) { return Math.abs(b.net) - Math.abs(a.net); }).slice(0, 30);
     if (!big.length) return U().yo('Pas encore de gros coup (10 BB ou plus) dans ces mains.') + exchangeBlock(db0) + receivedBlock(db0);
     return U().yo('Les coups où tu as engagé ou gagné le plus. Ouvre-les pour les rejouer dans ta tête : qu’aurais-tu fait autrement ?') +
-      big.map(function (x) {
+      big.map(handCard).join('') + exchangeBlock(db0) + receivedBlock(db0);
+  }
+  function handCard(x) {
         var open = AV.open === x.id;
         var c = compare(window.PA.player().profile || 'tag', { hand: x.h }, { pos: x.p, ctx: x.cx, act: x.a, openerPos: x.op, bbStack: x.st });
         var note = c ? (c.verdict === 'ok' || c.verdict === 'other' ? 'Préflop conforme à ta range.' : 'Préflop : ta range dit « ' + actFr(c.want, c.s.type) + ' », tu as choisi « ' + actFr(c.mine, c.s.type) + ' ».') : '';
         return '<div class="card stack"><button class="row" data-hact="open" data-v="' + x.id + '" style="justify-content:space-between;background:none;border:0;color:inherit;padding:0;text-align:left;width:100%"><span><b>' + showHand(x) + '</b> · ' + window.PA.POS_LABEL[x.p] + ' · ' + String(x.st).replace('.', ',') + ' BB</span><span style="color:' + (x.net >= 0 ? '#4fe08f' : '#ff8080') + ';font-weight:700">' + fmtBB(x.net) + '</span></button>' +
-          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div><div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' + (note ? U().yo(note) : '') + '<button class="btn" data-hact="share" data-v="' + x.id + '">Partager en image</button>' + notesBlock(x) : '') + '</div>';
-      }).join('') + exchangeBlock(db0) + receivedBlock(db0);
+          (open ? '<div class="small muted">' + U().esc(x.t) + ' · ' + x.d.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*/, '$3/$2/$1 $4') + '</div>' + (x.log ? '<div class="stack" style="gap:2px">' + x.log.map(function (l) { return l[0] === '#' ? '<div style="margin-top:6px"><b>' + ({ flop: 'Flop', turn: 'Turn', river: 'River' }[l.slice(1).split(' ')[0]]) + '</b> ' + boardTxt(l.split(' ').slice(1).join(' ')) + '</div>' : '<div>' + boardTxt(U().esc(l)) + '</div>'; }).join('') + '</div>' : '<div class="small muted">Petit coup : le déroulé n’est gardé que pour les coups de 10 BB ou plus.</div>') + (note ? U().yo(note) : '') + (x.log ? '<button class="btn" data-hact="share" data-v="' + x.id + '">Partager en image</button>' : '') + notesBlock(x) : '') + '</div>';
   }
   /* ---------- Commentaires et échange de mains (avec Lionel ou un autre joueur) ---------- */
   function notesBlock(x) {
@@ -753,8 +754,74 @@
     return '<div class="card stack"><b>Par tournoi</b><table class="tbl"><tr><th>Tournoi</th><th>Mains</th><th>Jetons</th><th>Place</th></tr>' + T.map(function (t) {
       var sm = t.ti && sum[t.ti];
       var place = sm && sm.place ? sm.place + '<sup>e</sup>' + (sm.players ? ' / ' + sm.players : '') + (sm.won ? '<div class="small" style="color:#4fe08f">+' + String(sm.won).replace('.', ',') + ' €</div>' : '') : '<span class="muted">—</span>';
-      return '<tr><td>' + U().esc(t.name) + '<div class="small muted">' + t.d.slice(0, 10).split('-').reverse().join('/') + (t.bi ? ' · ' + String(t.bi).replace('.', ',') + ' €' : '') + (sm && sm.dur ? ' · ' + U().esc(sm.dur.replace(/\s*\d+s\s*$/, '')) : '') + '</div></td><td>' + t.n + '</td><td style="color:' + (t.net >= 0 ? '#4fe08f' : '#ff8080') + '">' + fmtBB(t.net) + '</td><td>' + place + '</td></tr>';
-    }).join('') + '</table><div class="small muted">Jetons gagnés ou perdus, en BB, sur les mains jouées. La place vient du fichier « summary » de Winamax : importe-le avec les mains.</div></div>';
+      return '<tr data-hact="tour" data-v="' + U().esc(t.ti || t.name) + '" style="cursor:pointer"><td><b style="color:var(--gold)">›</b> ' + U().esc(t.name) + '<div class="small muted">' + t.d.slice(0, 10).split('-').reverse().join('/') + (t.bi ? ' · ' + String(t.bi).replace('.', ',') + ' €' : '') + (sm && sm.dur ? ' · ' + U().esc(sm.dur.replace(/\s*\d+s\s*$/, '')) : '') + '</div></td><td>' + t.n + '</td><td style="color:' + (t.net >= 0 ? '#4fe08f' : '#ff8080') + '">' + fmtBB(t.net) + '</td><td>' + place + '</td></tr>';
+    }).join('') + '</table><div class="small muted">Touche un tournoi pour ouvrir son bilan détaillé. Jetons gagnés ou perdus, en BB, sur les mains jouées. La place vient du fichier « summary » de Winamax : importe-le avec les mains.</div></div>';
+  }
+  /* ---------- Bilan détaillé d'un tournoi ---------- */
+  function tourHands(db, k) { return db.hands.filter(function (x) { return (x.ti || x.t) === k; }).sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }); }
+  function phaseOf(st) { return st >= 40 ? 'deep' : st >= 20 ? 'mid' : 'short'; }
+  var PH = { deep: '40 BB et plus', mid: '20 à 40 BB', short: 'Moins de 20 BB' };
+  function tourBilan(db, k, prof) {
+    var H = tourHands(db, k); if (!H.length) return null;
+    var S = stats(H, prof), first = H[0], last = H[H.length - 1], sm = (db.sum || {})[first.ti] || null;
+    var cmp = 0, ok = 0; Object.keys(S.byPos).forEach(function (p) { cmp += S.byPos[p].cmp; ok += S.byPos[p].ok; });
+    var conf = cmp ? Math.round(ok / cmp * 100) : null, vp = pctOf(S.v, S.n), pr = pctOf(S.r, S.n), tg = TARGET[prof] || TARGET.tag;
+    // tapis en jetons au début de chaque main, puis après la dernière
+    var chips = H.map(function (x) { return x.st * x.bb; }); chips.push(Math.max(0, last.st * last.bb + last.net * last.bb));
+    var worst = null, best = null; H.forEach(function (x) { if (!worst || x.net * x.bb < worst.net * worst.bb) worst = x; if (!best || x.net * x.bb > best.net * best.bb) best = x; });
+    var peak = 0, peakI = 0; chips.forEach(function (c, i) { if (c > peak) { peak = c; peakI = i; } });
+    var ph = {}; H.forEach(function (x) { var q = ph[phaseOf(x.st)] || (ph[phaseOf(x.st)] = { n: 0, v: 0, r: 0, cmp: 0, ok: 0, net: 0 }); q.n++; q.v += x.v; q.r += x.r; q.net += x.net; var c = compare(prof, { hand: x.h }, { pos: x.p, ctx: x.cx, act: x.a, openerPos: x.op, bbStack: x.st }); if (c) { q.cmp++; if (c.verdict === 'ok' || c.verdict === 'other') q.ok++; } });
+    var L = leaks(S).filter(function (l) { return l.n >= 2; });
+    var luck = S.evN ? Math.round(S.evAdj * 10) / 10 : null;
+    // ce que Yo en retient
+    var com = [];
+    if (conf !== null) com.push(conf + ' % de tes décisions avant le flop suivent ta range (' + cmp + ' décisions).' + (conf >= 85 ? ' C’est propre.' : conf >= 70 ? ' Correct, mais il y a des écarts à revoir ci-dessous.' : ' Trop d’écarts : c’est là qu’il faut travailler.'));
+    if (L.length) com.push('L’écart qui revient : ' + L[0].txt.charAt(0).toLowerCase() + L[0].txt.slice(1) + ' (' + L[0].n + ' fois).');
+    if (S.n >= 40 && vp !== null) { if (vp > tg[1] + 4) com.push('Tu as joué ' + fmtPct(vp) + ' de tes mains, plus que ta cible (' + tg[0] + ' à ' + tg[1] + ' %).'); else if (vp < tg[0] - 4) com.push('Tu as joué ' + fmtPct(vp) + ' de tes mains, moins que ta cible (' + tg[0] + ' à ' + tg[1] + ' %) : tu as peut-être attendu les cartes.'); }
+    if (S.n >= 40 && vp && pr !== null && vp - pr > 6) com.push('Tu as souvent payé au lieu de relancer (' + fmtPct(vp) + ' joué, ' + fmtPct(pr) + ' relancé).');
+    if (S.bbDefO >= 4 && S.bbDef / S.bbDefO > 0.7) com.push('En grosse blinde, tu as défendu ' + S.bbDef + ' fois sur ' + S.bbDefO + ' face à un vol : beaucoup.');
+    if (worst && worst.net < -5) com.push('Le coup qui t’a coûté le plus : ' + worst.h + ' ' + PA.POS_LABEL[worst.p] + ', ' + fmtBB(worst.net) + (worst.eq !== undefined ? ' (tapis à ' + worst.eq + ' % d’équité' + (worst.eq >= 50 ? ' : pas de chance' : '') + ')' : '') + '.');
+    if (luck !== null && Math.abs(luck) >= 10) com.push(luck > 0 ? 'Sur les tapis, tu as été malchanceux d’environ ' + fmtBB(luck).replace('+', '') + ' : ton jeu valait mieux que ton résultat.' : 'Sur les tapis, la chance t’a donné environ ' + fmtBB(-luck).replace('+', '') + ' de plus que ce que valait ton jeu.');
+    return { H: H, S: S, sm: sm, first: first, last: last, conf: conf, cmp: cmp, vp: vp, pr: pr, chips: chips, worst: worst, best: best, peak: peak, peakI: peakI, ph: ph, L: L, luck: luck, com: com };
+  }
+  function sparkSVG(chips, mark) {
+    var W = 320, Hh = 90, max = Math.max.apply(null, chips) || 1, n = chips.length - 1 || 1;
+    var pts = chips.map(function (c, i) { return (i / n * W).toFixed(1) + ',' + (Hh - c / max * (Hh - 6) - 3).toFixed(1); }).join(' ');
+    var mk = mark >= 0 ? '<circle cx="' + (mark / n * W).toFixed(1) + '" cy="' + (Hh - chips[mark] / max * (Hh - 6) - 3).toFixed(1) + '" r="5" fill="#ff8080"/>' : '';
+    return '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block" role="img" aria-label="Ton tapis au fil des mains"><polyline points="' + pts + '" fill="none" stroke="#d4af37" stroke-width="2.5"/>' + mk + '</svg>';
+  }
+  function tourText(B, k) {
+    var t = 'Bilan du tournoi ' + B.first.t + ' (' + B.first.d.slice(0, 10).split('-').reverse().join('/') + ')\n' + B.H.length + ' mains · résultat ' + fmtBB(B.S.net) + (B.sm && B.sm.place ? ' · ' + B.sm.place + 'e' + (B.sm.players ? ' / ' + B.sm.players : '') : '') + '\n';
+    t += B.com.join('\n') + '\n';
+    if (B.L.length) t += 'Écarts qui reviennent : ' + B.L.slice(0, 3).map(function (l) { return l.txt + ' (' + l.n + ')'; }).join(' ; ') + '\n';
+    return t + '— Poker Academy';
+  }
+  function tourView(db, k, prof) {
+    var ui = U(), B = tourBilan(db, k, prof), back = '<button class="back" data-hact="tourback">‹ Tous les tournois</button>';
+    if (!B) return back + ui.yo('Je ne retrouve plus les mains de ce tournoi.');
+    AV.S = B.S; AV.B = { k: k, txt: tourText(B, k) };
+    var sm = B.sm, out = back + '<h2>' + ui.esc(B.first.t) + '</h2><div class="small muted">' + B.first.d.slice(0, 10).split('-').reverse().join('/') + (B.first.bi ? ' · ' + String(B.first.bi).replace('.', ',') + ' €' : '') + (sm && sm.dur ? ' · ' + ui.esc(sm.dur.replace(/\s*\d+s\s*$/, '')) : '') + '</div>';
+    out += '<div class="grid2">' + stat('Place', sm && sm.place ? sm.place + (sm.players ? ' / ' + sm.players : '') : '—', sm && sm.won ? 'gain ' + String(sm.won).replace('.', ',') + ' €' : (sm ? '' : 'importe le fichier « summary »')) + stat('Mains', B.H.length, '') +
+      stat('Résultat', fmtBB(B.S.net), 'jetons en BB', B.S.net >= 0 ? '#4fe08f' : '#ff8080') + stat('Suivi de ta range', B.conf === null ? '—' : B.conf + ' %', 'décisions avant le flop') +
+      stat('VPIP', fmtPct(B.vp), 'cible ' + (TARGET[prof] || TARGET.tag)[0] + '-' + (TARGET[prof] || TARGET.tag)[1] + ' %') + stat('PFR', fmtPct(B.pr), '') + '</div>';
+    out += ui.yo(B.com.join(' ') || 'Rien de marquant sur ce tournoi.');
+    // le tapis au fil des mains
+    var drop = B.H.indexOf(B.worst);
+    out += '<div class="card stack"><b>Ton tapis au fil des mains</b>' + sparkSVG(B.chips, B.worst && B.worst.net < 0 ? drop + 1 : -1) +
+      '<div class="small muted">Plus haut : ' + Math.round(B.peak).toLocaleString('fr-FR') + ' jetons, main ' + (B.peakI + 1) + '. ' + (B.worst && B.worst.net < 0 ? 'Point rouge : ta plus grosse perte, ' + showHand(B.worst) + ' ' + PA.POS_LABEL[B.worst.p] + ' (' + fmtBB(B.worst.net) + ').' : '') + '</div></div>';
+    // par phase de tapis
+    out += '<div class="card stack"><b>Selon ton tapis</b><table class="tbl"><tr><th></th><th>Mains</th><th>VPIP</th><th>Range suivie</th><th>BB</th></tr>' + ['deep', 'mid', 'short'].filter(function (q) { return B.ph[q]; }).map(function (q) { var o = B.ph[q]; return '<tr><td>' + PH[q] + '</td><td>' + o.n + '</td><td>' + fmtPct(pctOf(o.v, o.n)) + '</td><td>' + (o.cmp ? Math.round(o.ok / o.cmp * 100) + ' %' : '—') + '</td><td style="color:' + (o.net >= 0 ? '#4fe08f' : '#ff8080') + '">' + fmtBB(o.net) + '</td></tr>'; }).join('') + '</table></div>';
+    // écarts avec la range
+    if (B.S.dev.length) out += '<div class="card stack"><b>Tes écarts avec ta range (' + B.S.dev.length + ')</b>' + (B.S.dev.length > 15 ? '<div class="small muted">Les 15 derniers du tournoi. Tous les écarts : onglet Fuites.</div>' : '') + B.S.dev.map(function (d, i) { if (i < B.S.dev.length - 15) return '';
+      var where = d.c.s.type === 'open' ? 'ouverture ' + PA.POS_LABEL[d.x.p] : PA.POS_LABEL[d.x.p] + ' face à ' + PA.POS_LABEL[d.x.op];
+      return '<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span><b>' + showHand(d.x) + '</b> · ' + where + ' · ' + Math.round(d.x.st) + ' BB<br><span class="small muted">Toi : ' + actFr(d.c.mine, d.c.s.type) + ' · ta range : ' + actFr(d.c.want, d.c.s.type) + '</span></span><button class="btn" data-hact="range" data-v="' + i + '">Ma range</button></div>';
+    }).join('') + '</div>';
+    else out += '<div class="card">Aucun écart avec ta range avant le flop sur ce tournoi.</div>';
+    // les coups clés de ce tournoi
+    var keyH = B.H.filter(function (x) { return x.log || Math.abs(x.net) >= 8; }).sort(function (a, b) { return Math.abs(b.net) - Math.abs(a.net); }).slice(0, 8);
+    if (keyH.length) out += '<h3>Les coups clés</h3><div class="small muted">Touche un coup pour le revoir et le commenter.</div>' + keyH.map(handCard).join('');
+    out += '<div class="card stack"><b>Avec Lionel</b><div class="small muted">Envoie-lui les coups clés de ce tournoi (avec tes commentaires) : il les importe dans Analyser › Coups clés, ajoute son avis et te les renvoie. Ou copie le bilan en texte pour un message.</div><button class="btn gold" data-hact="toursend">Envoyer les coups clés à Lionel</button><button class="btn" data-hact="tourcopy">Copier le bilan (texte)</button>' + (AV.xmsg ? '<div class="small">' + ui.esc(AV.xmsg) + '</div>' : '') + '</div>';
+    return out;
   }
   function view() {
     if (window.PA_STORE && !window.PA_STORE.ready()) { window.PA_STORE.whenReady(function () { U().render(); }); return U().shell('analyser', '<div class="stack"><h1>Analyser</h1><p class="muted">Chargement de tes mains…</p></div>'); }
@@ -780,7 +847,7 @@
     else if (AV.tab === 'fuites') { AV.S = S; body += fuitesTab(S); }
     else if (AV.tab === 'coups') body += coupsTab(H);
     else if (AV.tab === 'postflop') body += postflopTab(H);
-    else if (AV.tab === 'tournois') body += tournoisTab(S);
+    else if (AV.tab === 'tournois') body += AV.tour ? tourView(db, AV.tour, prof) : tournoisTab(S);
     else if (AV.tab === 'club') body += clubTab(db);
     else if (AV.tab === 'adv') body += carnetTab();
     else body += importInfo(db) + syncPanel() + importPanel(false) + '<div class="card stack"><b>Effacer les mains importées</b><p class="muted small">Supprime les mains de ce joueur sur cet appareil. Tes fichiers Winamax ne sont pas touchés.</p><button class="btn" data-hact="clear" style="border-color:#e03131;color:#ff8080">' + (AV.armClear ? 'Confirmer : effacer les mains' : 'Effacer les mains') + '</button></div>';
@@ -1090,9 +1157,13 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-hact]') : null; if (!t) return;
     var a = t.getAttribute('data-hact'), v = t.getAttribute('data-v');
-    if (a === 'tab') { AV.tab = v; AV.armClear = false; }
+    if (a === 'tab') { AV.tab = v; AV.armClear = false; AV.tour = null; }
     else if (a === 'per') AV.per = v;
     else if (a === 'open') AV.open = AV.open === v ? null : v;
+    else if (a === 'tour') { AV.tour = v; AV.open = null; AV.xmsg = null; window.scrollTo(0, 0); }
+    else if (a === 'tourback') { AV.tour = null; AV.xmsg = null; }
+    else if (a === 'toursend') { var dbt = loadDB(), kh = tourHands(dbt, AV.tour || '').filter(function (x) { return x.log; }); if (!kh.length) AV.xmsg = 'Pas de gros coup (10 BB ou plus) à envoyer dans ce tournoi.'; else { sendHands(kh); return; } }
+    else if (a === 'tourcopy') { var tx = AV.B ? AV.B.txt : ''; try { navigator.clipboard.writeText(tx).then(function () { AV.xmsg = 'Bilan copié : colle-le dans un message.'; U().render(); }, function () { AV.xmsg = tx; U().render(); }); } catch (er) { AV.xmsg = tx; } return; }
     else if (a === 'addnote') { var ta = document.getElementById('hn_' + v), txt = ta && ta.value.trim(); if (txt) { var db = loadDB(), x = findHand(db, v); if (x) { x.notes = x.notes || []; x.notes.push({ by: window.PA.player().pseudo, at: Date.now(), t: txt }); saveDB(db); } } }
     else if (a === 'sendnotes') { sendHands(loadDB().hands.filter(function (x) { return x.log && x.notes && x.notes.length; })); return; }
     else if (a === 'sendrecus') { sendHands(loadDB().recus || []); return; }
