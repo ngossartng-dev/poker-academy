@@ -494,7 +494,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 2, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
+  var AREV = { 5: 2, 6: 2, 7: 3, 8: 2, 13: 3, 14: 2, 15: 2, 33: 3, 35: 2, 37: 2, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.38.0';
+  var VERSION = '2.38.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -427,10 +427,10 @@
   }
   function coursView() {
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Le cours</h1>' +
-      yo('Le cours complet en PDF : les 35 chapitres, avec un encadré pour l’idée clé, l’erreur fréquente et ce qu’il faut retenir, le quiz de chaque chapitre et les grilles de ranges en annexe. Pratique à imprimer ou à lire sur tablette.') +
+      yo('Le cours complet en PDF, mis en page en couleurs : les ' + (window.PA_LESSONS ? window.PA_LESSONS.CHAPTERS.length : 48) + ' chapitres, avec un encadré pour l’idée clé, l’erreur fréquente et ce qu’il faut retenir, le quiz de chaque chapitre et les grilles de ranges en annexe. Pratique à imprimer ou à lire sur tablette.') +
       (EMBED ? '<div class="card muted">Le PDF du cours sera inclus dans l’appli installée (téléphone et PC). Cette version de test en ligne ne le contient pas.</div>' :
-      '<a class="btn gold" href="cours/poker-academy-cours.pdf" target="_blank" rel="noopener">Ouvrir le cours (PDF, 86 pages)</a>' +
-      '<a class="btn" href="cours/poker-academy-cours.pdf" download>Télécharger le cours complet (PDF)</a>') + '<a class="btn" href="#cours-imprimable">Version imprimable des nouvelles leçons</a></div>';
+      '<a class="btn gold" href="cours/poker-academy-cours.pdf" target="_blank" rel="noopener">Ouvrir le cours (PDF, environ 160 pages)</a>' +
+      '<a class="btn" href="cours/poker-academy-cours.pdf" download>Télécharger le cours complet (PDF)</a>') + '<a class="btn" href="#cours-imprimable">Imprimer depuis l’appli (texte seul, sans couleurs)</a><div class="small muted">Les deux contiennent les mêmes leçons, refaites à chaque mise à jour. Le PDF est mis en page (couleurs, encadrés, quiz et grilles de ranges en annexe) ; la version texte s’imprime directement depuis l’appli, avec la fiche mémo et le lexique.</div></div>';
     return shell('apprendre', body);
   }
 

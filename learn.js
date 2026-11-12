@@ -244,7 +244,7 @@
   /* ---------- Version imprimable du nouveau cours ---------- */
   function printView() {
     var ui = U();
-    var body = '<div class="stack"><button class="back" data-act="nav" data-v="cours">‹ Le cours</button><h1>Le cours (nouvelles leçons)</h1>' + (embed() ? '' : '<button class="btn gold" data-lact="print">Imprimer ou enregistrer en PDF</button>') +
+    var body = '<div class="stack"><button class="back" data-act="nav" data-v="cours">‹ Le cours</button><h1>Le cours (texte seul)</h1>' + (embed() ? '' : '<button class="btn gold" data-lact="print">Imprimer ou enregistrer en PDF</button>') +
       LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) {
         return '<div class="stack" style="page-break-before:always"><h2>' + c.n + '. ' + c.title + '</h2><p><b>L’idée clé.</b> ' + c.key.join(' ') + '</p>' + c.sections.map(function (s) { return '<h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + x + '</p>'; }).join(''); }).join('') + '<p><b>L’erreur fréquente.</b> ' + c.mistake + '</p><p><b>À retenir.</b> ' + c.retain.join(' · ') + '</p></div>';
       }).join('') +
