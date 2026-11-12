@@ -183,8 +183,36 @@
     expand(t[0]).forEach(function (h) { out[h] = 'raise'; });
     return out;
   }
+  /* ---------- Défendre ma grosse blinde : selon l'ouvreur (profil, taille de relance) et sous 20 BB ---------- */
+  // c : largeur des payes, r : largeur des 3-bets, par rapport à la range de base (ouvreur standard, relance à 2,5 BB)
+  var VS_PROF = { serre: { name: 'Serré', c: 0.72, r: 0.6 }, std: { name: 'Standard', c: 1, r: 1 }, large: { name: 'Large', c: 1.2, r: 1.25 }, mani: { name: 'Maniaque', c: 1.3, r: 1.5 } };
+  var VS_SIZE = { 2: 1.15, 2.5: 1, 3: 0.8 };
+  // moins de 20 BB : tapis par-dessus l'ouverture (resteal), selon la place de l'ouvreur
+  var RESTEAL = { early: '99+,AQs+,AKo', mid: '77+,AJs+,AQo+,KQs', CO: '55+,A9s+,AJo+,KJs+,KQo,A5s-A4s', BTN: '33+,A7s+,ATo+,KTs+,KJo+,QJs,JTs,A5s-A2s', SB: '22+,A2s+,A8o+,K9s+,KJo+,QTs+,JTs,T9s' };
+  var RANKS13 = 'AKQJT98765432';
+  // ordre « défense » : la force brute, corrigée pour les mains qui se jouent bien après le flop (assorties, connectées, paires)
+  // ordre « valeur » : les mains qu'on 3-bet pour être payé par moins bien
+  var V3 = {}; 'AA,KK,QQ,AKs,JJ,AKo,TT,AQs,AQo,99,AJs,KQs,88,ATs,KJs,AJo,KQo,77,A9s,KTs,QJs,66,ATo,A8s,JTs,KJo,QTs,55'.split(',').forEach(function (h, i) { V3[h] = i; });
+  function valScore(h) { return V3[h] !== undefined ? V3[h] : 100 + ORDER_IDX[h]; }
+  function byVal(a, b) { return valScore(a) - valScore(b); }
+  function defScore(h) { if (V3[h] !== undefined) return V3[h] - 200; var sc = ORDER_IDX[h], g = Math.abs(RANKS13.indexOf(h[0]) - RANKS13.indexOf(h[1])); if (h.length === 2) sc -= 30; else if (h[2] === 's') sc -= 25 + (g <= 2 ? 15 : 0); else if (g <= 1) sc -= 5; return sc; }
+  function byOrder(a, b) { return ORDER_IDX[a] - ORDER_IDX[b]; }
+  function byDef(a, b) { return defScore(a) - defScore(b); }
+  function vsOn(s) { return s.type === 'def' && s.pos === 'BB' && ((s.vp && s.vp !== 'std' && VS_PROF[s.vp]) || (s.sz && s.sz !== 2.5 && VS_SIZE[s.sz])); }
+  function noVs(s) { var o = {}, k; for (k in s) if (k !== 'vp' && k !== 'sz') o[k] = s[k]; return o; }
+  function restealGroup(op) { return ['UTG', 'UTG+1', 'MP'].indexOf(op) >= 0 ? 'early' : (op === 'LJ' || op === 'HJ' ? 'mid' : op); }
+  function bbVsAdjust(base, s) {
+    var v = VS_PROF[s.vp] || VS_PROF.std, f = v.c * (VS_SIZE[s.sz] || 1), out = {};
+    var R = HANDS.filter(function (h) { return base[h] === 'raise' || base[h] === 'allin'; }).sort(byVal), C = HANDS.filter(function (h) { return base[h] === 'call'; });
+    var act = R.length ? base[R[0]] : 'raise', nR = R.length ? Math.max(1, Math.round(R.length * v.r)) : 0, keep, demoted = [];
+    if (nR <= R.length) { keep = R.slice(0, nR); demoted = R.slice(nR); } else keep = R.concat(C.slice().sort(byVal).slice(0, nR - R.length));
+    var ks = toSet(keep), C2 = C.concat(demoted).filter(function (h) { return !ks[h]; }).sort(byDef), nC = Math.min(Math.round(C.length * f), Math.max(C.length, 108 - keep.length)); // jamais plus de deux mains sur trois
+    if (nC <= C2.length) C2 = C2.slice(0, nC); else { var cs = toSet(C2); C2 = C2.concat(HANDS.filter(function (h) { return !ks[h] && !cs[h]; }).sort(byDef).slice(0, nC - C2.length)); }
+    HANDS.forEach(function (h) { out[h] = 'fold'; }); C2.forEach(function (h) { out[h] = 'call'; }); keep.forEach(function (h) { out[h] = act; });
+    return out;
+  }
   var BUBBLE_NAME = { gros: 'gros tapis', moyen: 'tapis moyen', court: 'petit tapis' };
-  function sitKey(s) { return (s.bubble ? 'bulle-' + s.bubble + '|' : '') + [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : (s.type === 'iso' ? (s.bb <= 20 ? 'court' : 'deep') : s.type === 'squeeze' ? (s.bb <= 30 ? 'court' : 'deep') : depthKey(s.bb)), s.scen || ''].join('|') + (s.caller ? '|' + s.caller : ''); }
+  function sitKey(s) { return (s.bubble ? 'bulle-' + s.bubble + '|' : '') + [s.type, s.pos || '', s.opener || '', s.type === 'push' || s.type === 'callshove' ? nearestPush(s.bb) : (s.type === 'iso' ? (s.bb <= 20 ? 'court' : 'deep') : s.type === 'squeeze' ? (s.bb <= 30 ? 'court' : 'deep') : depthKey(s.bb)), s.scen || ''].join('|') + (s.caller ? '|' + s.caller : '') + (vsOn(s) ? (s.vp && s.vp !== 'std' ? '|vs-' + s.vp : '') + (s.sz && s.sz !== 2.5 ? '|x' + s.sz : '') : ''); }
   function shoveKey(pos, opener) { return pos + ' vs shove ' + opener; }
   function chart(profileId, s) {
     // renvoie {hand: action} avec action ∈ raise, call, fold, allin, fourbet
@@ -206,8 +234,15 @@
           callL = src.call.filter(function (h) { return !rs[h]; }).sort(function (a, b) { return ORDER_IDX[a] - ORDER_IDX[b]; });
           callL = callL.slice(0, Math.round(callL.length * 0.8));
         }
+        if (dk === 'push' && s.pos === 'BB') {
+          // moins de 20 BB : tapis par-dessus l'ouverture, payer les mains qui se jouent bien, jeter le reste
+          var bp = baseProfile(profileId), rl = expand(RESTEAL[restealGroup(s.opener)] || RESTEAL.CO).sort(byVal);
+          if (bp === 'nit') rl = rl.slice(0, Math.max(1, Math.round(rl.length * 0.8)));
+          var rset = toSet(rl); raiseL = rl;
+          callL = src.call.concat(src.raise).filter(function (h) { return !rset[h]; }).sort(byDef); callL = callL.slice(0, Math.round(src.call.length * (bp === 'lag' ? 0.8 : 0.7)));
+        }
         callL.forEach(function (h) { out[h] = 'call'; });
-        raiseL.forEach(function (h) { out[h] = dk === 'mid' && s.bb <= 30 ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 41)
+        raiseL.forEach(function (h) { out[h] = (dk === 'push' && s.pos === 'BB') || (dk === 'mid' && s.bb <= 30) ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 41)
       }
     } else if (s.type === 'vs3bet') {
       var v = s.scen === 'bvb' ? (P.vs3bet.bvb || bvbChart(profileId, P)) : P.vs3bet[s.scen || 'ip'];
@@ -221,10 +256,12 @@
     } else if (s.type === 'push') {
       (D.pushfold[String(nearestPush(s.bb))].push[s.pos] || []).forEach(function (h) { out[h] = 'allin'; });
     }
+    var vs = vsOn(s);
     if (profileId === 'perso') {
-      var p = player(), s1 = s; if (s.bubble) { s1 = {}; for (var kk in s) if (kk !== 'bubble') s1[kk] = s[kk]; } var ov = p && p.perso && p.perso[sitKey(s1)]; // ta range Perso, puis l'effet de la bulle
+      var p = player(), s1 = s; if (s.bubble) { s1 = {}; for (var kk in s) if (kk !== 'bubble') s1[kk] = s[kk]; } var ov = p && p.perso && p.perso[sitKey(vs ? noVs(s1) : s1)]; // ta range Perso, puis l'effet de la bulle
       if (ov) for (i in ov) out[i] = ov[i];
-    }
+      if (vs) { out = bbVsAdjust(out, s); var ov2 = p && p.perso && p.perso[sitKey(s1)]; if (ov2) for (i in ov2) out[i] = ov2[i]; }
+    } else if (vs) out = bbVsAdjust(out, s);
     if (s.bubble) return bubbleChart(profileId, s, out);
     return out;
   }
@@ -325,6 +362,8 @@
       pos = rnd(['BB', 'BB', 'BB', 'BTN', 'CO', 'SB', 'HJ']); var ops = validOpeners(pos);
       if (pos !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; });
       s = { type: 'def', pos: pos, opener: rnd(ops), bb: rnd([100, 100, 30]) };
+      // en grosse blinde : une fois sur deux, l'ouvreur a un profil ou une taille de relance particuliers ; parfois un tapis court
+      if (pos === 'BB' && Math.random() < 0.5) { s.vp = rnd(['serre', 'large', 'mani', 'std']); s.sz = rnd([2, 2.5, 3]); if (s.vp === 'std') delete s.vp; if (s.sz === 2.5) delete s.sz; if (Math.random() < 0.25) s.bb = rnd([12, 15, 18]); }
     } else if (k === 'push') { s = { type: 'push', pos: rnd(POS.slice(0, 8)), bb: rnd(PUSH_DEPTHS) }; }
     else if (k === 'hu') { bb = rnd(PUSH_DEPTHS); s = Math.random() < 0.5 ? { type: 'push', pos: 'SB', bb: bb, hu: true } : { type: 'callshove', pos: 'BB', opener: 'SB', bb: bb, hu: true }; }
     else if (k === 'callshove') { bb = rnd(PUSH_DEPTHS); var sk = rnd(shoveSituations(bb)); var m = sk.split(' vs shove '); s = { type: 'callshove', pos: m[0], opener: m[1], bb: bb }; }
@@ -360,6 +399,7 @@
     if (s.type === 'callshove') return ['fold', 'call'];
     if (s.type === 'vs3bet') return ['fold', 'call', 'fourbet', 'allin'];
     if (s.type === 'iso' && s.pos === 'BB') return ['call', 'raise', 'allin'];
+    if (s.type === 'def' && s.pos === 'BB' && depthKey(s.bb) === 'push') return ['fold', 'call', 'allin'];
     return ['fold', 'call', 'raise', 'allin'];
   }
   var SBLIMP = toSet(D.sbLimp || []);
@@ -381,6 +421,7 @@
       }
     }
     if (s.type === 'def') {
+      if (dk === 'push' && given === 'raise') return { kind: answer === 'allin' ? 'style' : 'error', note: 'Sous 20 BB, un petit 3-bet engage déjà une grosse part de ton tapis : c’est tapis, payer ou jeter.' };
       if (given === 'raise' && answer === 'allin') return { kind: 'style', note: 'À 20-40 BB, le 3-bet devient le plus souvent un tapis : un 3-bet plus petit te laisse sans bonne option face à une 4-bet.' };
       if (given === 'allin' && dk === 'deep') return { kind: answer === 'raise' ? 'style' : 'error', note: answer === 'raise' ? 'La main se sur-relance, mais pas à tapis : à 100 BB, un 3-bet de 3 fois la relance suffit et garde les mains plus faibles en jeu.' : 'Pousser 100 BB en 3-bet : seules les mains qui te battent paient.' };
     }
@@ -418,7 +459,8 @@
     var best = levels[0]; levels.forEach(function (l) { if (Math.abs(stack / l[1] - bb) < Math.abs(stack / best[1] - bb)) best = l; });
     return { sb: best[0], bb: best[1], ante: best[1], stack: bb * best[1] };
   }
-  function openBB(pos, bb) {
+  function openBB(pos, bb, s) {
+    if (s && s.sz && VS_SIZE[s.sz]) return s.sz;
     var p = player(), mode = (p && p.settings && p.settings.openSize) || 'club';
     if (pos === 'SB') return 3;
     if (mode === 'club') return 2;
@@ -435,7 +477,7 @@
     chart: chart, actionFor: actionFor, firstOpenPos: firstOpenPos, validOpeners: validOpeners, shoveSituations: shoveSituations,
     depthKey: depthKey, nearestPush: nearestPush, sitKey: sitKey, NOTIONS: NOTIONS, notionOf: notionOf, notionState: notionState,
     bubbleChart: bubbleChart, isoGroup: isoGroup, sqzGroup: sqzGroup, BUBBLE_NAME: BUBBLE_NAME, expand: expand, level: level, updateNotion: updateNotion, srsMiss: srsMiss, srsHit: srsHit, srsDue: srsDue, makeQuestion: makeQuestion,
-    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB,
+    randomSituation: randomSituation, choicesFor: choicesFor, judge: judge, difficulty: difficulty, blindsFor: blindsFor, fmt: fmt, openBB: openBB, VS_PROF: VS_PROF, vsOn: vsOn, noVs: noVs,
     ORDER_IDX: ORDER_IDX
   };
 })();

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.35.1';
+  var VERSION = '2.36.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -176,12 +176,13 @@
   }
 
   /* ---------- Ma range (panneau) ---------- */
-  var RS = { tab: 'sit', type: 'open', pos: 'UTG', opener: 'UTG', depth: 'deep', bb: 10, scen: 'ip', hero: null, profile: null, edit: false };
+  var RS = { tab: 'sit', type: 'open', pos: 'UTG', opener: 'UTG', depth: 'deep', bb: 10, scen: 'ip', hero: null, profile: null, edit: false, vp: 'std', sz: 2.5 };
   try { if (localStorage.getItem('pa2pips') === '0') RS.pips = false; } catch (e) {}
   function openRange(ctx) {
     var p = PA.player(); RS.profile = p.profile || 'tag'; RS.edit = false;
     if (ctx && ctx.sit) {
       var s = ctx.sit; RS.tab = 'sit'; RS.type = s.type === 'push' ? 'open' : s.type; RS.pos = s.pos; RS.opener = s.opener || RS.opener; RS.scen = s.scen || 'ip'; if (s.caller) RS.caller = s.caller;
+      if (s.type === 'def' && s.pos === 'BB') { RS.type = 'bbdef'; RS.vp = s.vp || 'std'; RS.sz = s.sz || 2.5; }
       var dk = PA.depthKey(s.bb); RS.depth = dk; if (s.type === 'iso') RS.depth = s.bb <= 20 ? 'push' : 'deep'; if (s.type === 'squeeze') RS.depth = s.bb <= 30 ? 'mid' : 'deep'; if (dk === 'push') RS.bb = PA.nearestPush(s.bb); RS.hero = ctx.hand;
     } else RS.hero = null;
     ui.sheet = 'range'; renderSheet();
@@ -194,6 +195,7 @@
     var t = RS.type;
     if (t === 'open') return { type: 'open', pos: RS.pos, bb: bb };
     if (t === 'def') return { type: 'def', pos: RS.pos, opener: RS.opener, bb: bb };
+    if (t === 'bbdef') { var bs = { type: 'def', pos: 'BB', opener: RS.opener, bb: RS.depth === 'push' ? 15 : bb }; if (RS.vp && RS.vp !== 'std') bs.vp = RS.vp; if (RS.sz && RS.sz !== 2.5) bs.sz = RS.sz; return bs; }
     if (t === 'vs3bet') return { type: 'vs3bet', scen: RS.scen, bb: 100 };
     if (t === 'iso') return { type: 'iso', pos: RS.pos, opener: RS.opener, bb: RS.depth === 'deep' ? 100 : 18 };
     if (t === 'squeeze') return { type: 'squeeze', pos: RS.pos, opener: RS.opener, caller: RS.caller || 'CO', bb: RS.depth === 'deep' ? 100 : 25 };
@@ -246,7 +248,8 @@
       return out;
     }
     var s = rsSit(), cm = PA.chart(prof, s);
-    out += '<div class="seg">' + [['open', 'Ouvrir'], ['def', 'Face à une relance'], ['iso', 'Face à un limper'], ['squeeze', 'Squeeze'], ['vs3bet', 'Face à un 3-bet'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    if (RS.type === 'def' && RS.pos === 'BB') RS.type = 'bbdef';
+    out += '<div class="seg">' + [['open', 'Ouvrir'], ['bbdef', 'Défendre ma BB'], ['def', 'Face à une relance'], ['iso', 'Face à un limper'], ['squeeze', 'Squeeze'], ['vs3bet', 'Face à un 3-bet'], ['callshove', 'Payer un tapis']].map(function (t) { return '<button class="' + (RS.type === t[0] ? 'on' : '') + '" data-act="rsType" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
     if (RS.type === 'iso' || RS.type === 'squeeze') {
       if (RS.depth === 'mid' && RS.type === 'iso') RS.depth = 'push'; if (RS.depth === 'push' && RS.type === 'squeeze') RS.depth = 'mid';
       out += '<div class="seg">' + (RS.type === 'iso' ? [['deep', 'Plus de 20 BB'], ['push', '12 à 20 BB (iso-tapis)']] : [['deep', 'Plus de 30 BB'], ['mid', '20 à 30 BB (squeeze à tapis)']]).map(function (t) { return '<button class="' + (RS.depth === t[0] ? 'on' : '') + '" data-act="rsDepth" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
@@ -257,11 +260,26 @@
     if (RS.type === 'open') {
       if (PA.POS.slice(0, 8).indexOf(RS.pos) < 0) { RS.pos = 'BTN'; s = rsSit(); cm = PA.chart(prof, s); }
       out += '<div class="seg" aria-label="Ma position">' + PA.POS.slice(0, 8).map(function (p) { return '<button class="' + (RS.pos === p ? 'on' : '') + '" data-act="rsPos" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
+    } else if (RS.type === 'bbdef') {
+      // défendre ma grosse blinde : qui ouvre, son profil, la taille de sa relance
+      var opsB = PA.validOpeners('BB'); if (opsB.indexOf(RS.opener) < 0) RS.opener = 'BTN';
+      if (!PA.VS_PROF[RS.vp]) RS.vp = 'std'; if ([2, 2.5, 3].indexOf(RS.sz) < 0) RS.sz = 2.5;
+      out += '<div class="small muted">La relance vient de :</div><div class="seg">' + opsB.map(function (p) { return '<button class="' + (RS.opener === p ? 'on' : '') + '" data-act="rsOp" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
+      out += '<div class="small muted">Le profil de l’ouvreur :</div><div class="seg">' + [['serre', 'Serré'], ['std', 'Standard'], ['large', 'Large'], ['mani', 'Maniaque']].map(function (t) { return '<button class="' + (RS.vp === t[0] ? 'on' : '') + '" data-act="rsVp" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+      out += '<div class="small muted">La taille de sa relance :</div><div class="seg">' + [[2, '2 BB'], [2.5, '2,5 BB'], [3, '3 BB et plus']].map(function (t) { return '<button class="' + (RS.sz === t[0] ? 'on' : '') + '" data-act="rsSz" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+      s = rsSit(); cm = PA.chart(prof, s);
+      if (PA.vsOn(s)) {
+        var cmB = PA.chart(prof, PA.noVs(s)), vIn = 0, vOut = 0, vUp = 0, vDn = 0;
+        PA.HANDS.forEach(function (h) { var a0 = cmB[h], a1 = cm[h]; if (a0 === a1) return; if (a1 === 'fold') vOut++; else if (a0 === 'fold') vIn++; else if (a1 === 'call') vDn++; else vUp++; });
+        var pl = function (n, w) { return n + ' main' + (n > 1 ? 's' : '') + ' ' + w + (n > 1 ? 's' : ''); };
+        out += '<div class="banner bubble-ban">🎯 <b>Par rapport à un ouvreur standard à 2,5 BB</b> : ' + [vIn ? '<span class="bd-k bd-in">' + pl(vIn, 'défendue') + ' en plus</span>' : '', vOut ? '<span class="bd-k bd-out">' + pl(vOut, 'jetée') + '</span>' : '', vUp ? '<span class="bd-k bd-in">' + pl(vUp, '3-bettée') + ' en plus</span>' : '', vDn ? '<span class="bd-k bd-out">' + pl(vDn, 'payée') + ' au lieu de 3-better</span>' : ''].filter(Boolean).join(' ') + '</div>';
+      }
+      out += '<div class="small muted">' + bbDefWhy(s) + ' <i>Ces ajustements sont des repères de bon sens à partir de ta range de base, pas des résultats de solveur.</i></div>';
     } else if (RS.type === 'def') {
-      var heroes = ['BB', 'SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1'];
-      if (heroes.indexOf(RS.pos) < 0) RS.pos = 'BB';
+      var heroes = ['SB', 'BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1'];
+      if (heroes.indexOf(RS.pos) < 0) RS.pos = 'BTN';
       out += '<div class="small muted">Je suis en :</div><div class="seg">' + heroes.map(function (p) { return '<button class="' + (RS.pos === p ? 'on' : '') + '" data-act="rsPos" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
-      var ops = PA.validOpeners(RS.pos); if (RS.pos !== 'BB') ops = ops.filter(function (o) { return o !== 'SB'; });
+      var ops = PA.validOpeners(RS.pos).filter(function (o) { return o !== 'SB'; });
       if (ops.indexOf(RS.opener) < 0) RS.opener = ops[ops.length - 1];
       out += '<div class="small muted">La relance vient de :</div><div class="seg">' + ops.map(function (p) { return '<button class="' + (RS.opener === p ? 'on' : '') + '" data-act="rsOp" data-v="' + p + '">' + p + '</button>'; }).join('') + '</div>';
       s = rsSit(); cm = PA.chart(prof, s);
@@ -310,11 +328,24 @@
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';
     return out;
   }
+  // pourquoi la défense de grosse blinde change selon l'ouvreur
+  function bbDefWhy(s) {
+    var t = [];
+    if (PA.depthKey(s.bb) === 'push') t.push('Sous 20 BB, plus de petit 3-bet : tu fais tapis par-dessus l’ouverture avec tes mains fortes et celles qui bloquent les siennes, tu paies les mains qui se jouent bien après le flop, tu jettes le reste.');
+    if (s.vp === 'serre') t.push('Un joueur serré ouvre peu de mains, donc des mains fortes : tu jettes tes mains dominées (petits as et rois dépareillés), tu arrêtes les 3-bets de bluff et tu paies même avec de bonnes mains.');
+    else if (s.vp === 'large') t.push('Un joueur large ouvre beaucoup de mains faibles : tu défends plus et tu 3-bets plus souvent pour la valeur, car il paie avec moins bien.');
+    else if (s.vp === 'mani') t.push('Un maniaque ouvre presque tout et paie les 3-bets trop large : tu défends très large et tu 3-bets pour la valeur avec toutes tes bonnes mains, sans bluffer.');
+    if (s.sz === 2) t.push('Relance à 2 BB : tu paies 1 BB pour un pot de 4,5 BB avec les antes, la cote est excellente, tu défends plus de mains.');
+    else if (s.sz === 3) t.push('Relance à 3 BB ou plus : la cote est moins bonne, tu jettes tes mains les plus faibles.');
+    if (!t.length) t.push('En grosse blinde, tu as déjà mis 1 BB : la cote te permet de défendre large. Règle le profil de l’ouvreur et la taille de sa relance pour voir ta range s’adapter.');
+    return t.join(' ');
+  }
+  function vsTxt(s) { return PA.vsOn(s) ? ' (' + [s.vp && s.vp !== 'std' ? 'ouvreur ' + PA.VS_PROF[s.vp].name.toLowerCase() : '', s.sz && s.sz !== 2.5 ? 'relance à ' + (s.sz === 3 ? '3 BB ou plus' : '2 BB') : ''].filter(Boolean).join(', ') + ')' : ''; }
   function describeSit(s) {
     if (s.bubble) { var s1 = {}, k1; for (k1 in s) if (k1 !== 'bubble') s1[k1] = s[k1]; return describeSit(s1) + ' (bulle, ' + PA.BUBBLE_NAME[s.bubble] + ')'; }
     if (s.hu) return s.type === 'push' ? 'en heads-up au bouton (petite blinde) à ' + PA.nearestPush(s.bb) + ' BB' : 'en heads-up en grosse blinde, face au tapis du bouton à ' + PA.nearestPush(s.bb) + ' BB';
     if (s.type === 'open') { var first = s.pos === 'UTG' ? 'premier à parler' : 'personne n’a ouvert avant toi'; return PA.depthKey(s.bb) === 'push' ? 'en ' + s.pos + ' à ' + PA.nearestPush(s.bb) + ' BB, ' + first : 'en ' + s.pos + ', ' + first; }
-    if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener;
+    if (s.type === 'def') return 'en ' + s.pos + ' face à une relance ' + s.opener + (s.pos === 'BB' && PA.depthKey(s.bb) === 'push' ? ' à ' + Math.round(s.bb) + ' BB' : '') + vsTxt(s);
     if (s.type === 'iso') return 'en ' + s.pos + ' face au limp ' + s.opener + (s.bb <= 20 ? ' (12 à 20 BB)' : '');
     if (s.type === 'squeeze') return 'en ' + s.pos + ' : ' + s.opener + ' ouvre, ' + s.caller + ' paie' + (s.bb <= 30 ? ' (20 à 30 BB)' : '');
     if (s.type === 'vs3bet') return { ip: 'au bouton face au 3-bet des blindes', oop: 'au CO face au 3-bet du bouton', early: 'en début de table face à un 3-bet tardif', bvb: 'en petite blinde face au 3-bet de la grosse blinde' }[s.scen];
@@ -536,7 +567,7 @@
         if (opts.pos && opts.pos !== 'all' && s3.type === 'open') s3.pos = opts.pos;
         if (opts.depth && opts.depth !== 'any' && (s3.type === 'open' || s3.type === 'def')) {
           if (opts.depth === 'deep') s3.bb = 100; else if (opts.depth === 'mid') s3.bb = 30;
-          else { if (s3.type === 'def') { s3 = null; continue; } s3.bb = PA.PUSH_DEPTHS[Math.floor(Math.random() * 6)]; }
+          else { if (s3.type === 'def') { if (s3.pos !== 'BB') { s3 = null; continue; } s3.bb = [12, 15, 18][Math.floor(Math.random() * 3)]; continue; } s3.bb = PA.PUSH_DEPTHS[Math.floor(Math.random() * 6)]; }
         }
       } while (!s3 && tries3 < 30);
       if (!s3) s3 = PA.randomSituation('push');
@@ -574,7 +605,7 @@
     bets.SB = 0.5; bets.BB = 1;
     var acted = POS.slice(0, POS.indexOf(heroPos) < 0 ? 0 : POS.indexOf(heroPos));
     if (s.type === 'open' || s.type === 'push') { acted.forEach(function (p) { if (p !== 'SB' && p !== 'BB') folded[p] = 1; }); }
-    if (s.type === 'def') { var os = PA.openBB(s.opener, s.bb); bets[s.opener] = os; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB' && s.opener !== 'SB') folded.SB = 1; }
+    if (s.type === 'def') { var os = PA.openBB(s.opener, s.bb, s); bets[s.opener] = os; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB' && s.opener !== 'SB') folded.SB = 1; }
     if (s.type === 'iso') { bets[s.opener] = 1; acted.forEach(function (p) { if (p !== s.opener && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB') folded.SB = 1; }
     if (s.type === 'squeeze') { var o2 = PA.openBB(s.opener, s.bb); bets[s.opener] = o2; bets[s.caller] = o2; acted.forEach(function (p) { if (p !== s.opener && p !== s.caller && p !== 'SB' && p !== 'BB') folded[p] = 1; }); if (heroPos === 'BB') folded.SB = 1; }
     if (s.type === 'callshove') { bets[s.opener] = PA.nearestPush(s.bb); allin[s.opener] = 1; POS.forEach(function (p) { if (p !== s.opener && p !== heroPos && !(p === 'BB' && heroPos !== 'BB') && !(p === 'SB' && heroPos === 'SB')) { if (POS.indexOf(p) < POS.indexOf(s.opener) || (POS.indexOf(p) > POS.indexOf(s.opener) && POS.indexOf(p) < POS.indexOf(heroPos))) folded[p] = 1; } }); }
@@ -600,7 +631,7 @@
     var s = q.sit, txt;
     if (s.hu) txt = s.type === 'push' ? 'Heads-up : tu es au <b>bouton</b> (petite blinde), tu parles en premier.' : 'Heads-up : tu es en <b>grosse blinde</b>. Le bouton fait tapis pour ' + PA.fmt(PA.nearestPush(s.bb) * t.BB) + ' (' + PA.nearestPush(s.bb) + ' BB).';
     else if (s.type === 'open' || s.type === 'push') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. ' + (s.pos === 'UTG' ? 'Tu parles en premier.' : 'Les joueurs avant toi se sont couchés.');
-    else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.';
+    else if (s.type === 'def') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), les autres se couchent.' + (s.vp && PA.vsOn(s) ? ' C’est un joueur <b>' + PA.VS_PROF[s.vp].name.toLowerCase() + '</b>' + { serre: ' : il ouvre peu de mains.', large: ' : il ouvre beaucoup de mains.', mani: ' : il relance presque tout.' }[s.vp] : '');
     else if (s.type === 'iso') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> limpe (il paie juste la grosse blinde), les autres se couchent.' + (s.pos === 'BB' ? ' Tu peux checker gratuitement.' : '');
     else if (s.type === 'squeeze') txt = 'Tu es en <b>' + PA.POS_LABEL[s.pos] + '</b>. <b>' + s.opener + '</b> relance à ' + PA.fmt(t.bets[s.opener] * t.BB) + ' (' + String(t.bets[s.opener]).replace('.', ',') + ' BB), <b>' + s.caller + '</b> paie, les autres se couchent.';
     else if (s.type === 'vs3bet') { var o4 = String(t.bets[s.pos]).replace('.', ','), r4 = String(t.bets[s.opener]).replace('.', ','); txt = { ip: 'Tu as ouvert au <b>bouton</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.', oop: 'Tu as ouvert au <b>CO</b> à ' + o4 + ' BB. Le <b>bouton</b> sur-relance à ' + r4 + ' BB.', early: 'Tu as ouvert en <b>UTG</b> à ' + o4 + ' BB. Le <b>CO</b> sur-relance à ' + r4 + ' BB.', bvb: 'Tout le monde s’est couché jusqu’à toi : tu as ouvert en <b>petite blinde</b> à ' + o4 + ' BB. La <b>grosse blinde</b> sur-relance à ' + r4 + ' BB.' }[s.scen]; }
@@ -672,7 +703,7 @@
     }
     if (s.type === 'def') {
       var r = PA.HANDS.filter(function (h) { return cm[h] === 'raise' || cm[h] === 'allin'; }), c = PA.HANDS.filter(function (h) { return cm[h] === 'call'; });
-      return 'Face à ' + s.opener + ', ton profil sur-relance ' + String(PA.pct(r)).replace('.', ',') + ' % et paie ' + String(PA.pct(c)).replace('.', ',') + ' %.' + (s.pos === 'BB' ? ' En BB, tu as déjà mis 1 BB : la cote te permet de défendre large.' : ' Hors des blindes, on paie moins et on sur-relance plus.');
+      return 'Face à ' + s.opener + ', ton profil sur-relance ' + String(PA.pct(r)).replace('.', ',') + ' % et paie ' + String(PA.pct(c)).replace('.', ',') + ' %.' + (s.pos === 'BB' ? (PA.vsOn(s) || PA.depthKey(s.bb) === 'push' ? ' ' + bbDefWhy(s) : ' En BB, tu as déjà mis 1 BB : la cote te permet de défendre large.') : ' Hors des blindes, on paie moins et on sur-relance plus.');
     }
     if (s.type === 'iso' || s.type === 'squeeze') {
       var rr = PA.HANDS.filter(function (h) { return cm[h] === 'raise' || cm[h] === 'allin'; }), cc = PA.HANDS.filter(function (h) { return cm[h] === 'call'; }), pc = function (l) { return String(PA.pct(l)).replace('.', ','); };
@@ -945,13 +976,15 @@
         dz.innerHTML = '<div style="max-width:420px;margin:0 16px"><span class="disp" style="display:block;font-size:64px;line-height:1">' + (v === 'TT' ? '10-10' : v.replace(/T/g, '10')) + '</span><span class="pill" style="display:inline-block;margin:14px 0;font-size:17px;background:' + L.color[0] + ';color:' + L.color[1] + '">' + L.text + '</span><p style="font-size:18px;line-height:1.5;text-align:left;margin:0">' + window.PA_PLAN.detail(v) + '</p><button class="btn" style="margin-top:16px">Fermer</button></div>';
         dz.addEventListener('click', function () { dz.remove(); }); document.body.appendChild(dz); break;
       }
-      case 'rsType': RS.type = v; if (v === 'callshove' && PA.PUSH_DEPTHS.indexOf(RS.bb) < 0) RS.bb = 10; rerenderRange(); break;
+      case 'rsType': if (v === 'bbdef' && RS.type !== 'bbdef') RS.opener = 'BTN'; RS.type = v; if (v === 'callshove' && PA.PUSH_DEPTHS.indexOf(RS.bb) < 0) RS.bb = 10; rerenderRange(); break;
       case 'rsDepth': RS.depth = v; rerenderRange(); break;
       case 'rsBB': RS.bb = parseInt(v, 10); rerenderRange(); break;
       case 'rsPos': RS.pos = v; rerenderRange(); break;
       case 'rsOp': RS.opener = v; rerenderRange(); break;
       case 'rsCaller': RS.caller = v; rerenderRange(); break;
       case 'rsBubble': RS.bubble = v || null; rerenderRange(); break;
+      case 'rsVp': RS.vp = v; rerenderRange(); break;
+      case 'rsSz': RS.sz = +v; rerenderRange(); break;
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;

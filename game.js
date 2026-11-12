@@ -639,7 +639,17 @@
         if ((PA.D.pushfold[String(d)].call[key])) return { sit: { type: 'callshove', pos: p, opener: op, bb: d }, hand: code };
         return null;
       }
-      if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) return { sit: { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : (eff > 30 ? Math.round(eff) : 30) }, hand: code };
+      if (PA.POS.indexOf(op) < PA.POS.indexOf(p) && !shove) {
+        var ds = { type: 'def', pos: p, opener: op, bb: eff > 40 ? 100 : (eff > 30 ? Math.round(eff) : 30) };
+        if (p === 'BB') {
+          // défense de grosse blinde : selon le profil de l'ouvreur, la taille de sa relance, et ton tapis sous 20 BB
+          var ok = OPP[G.players[H.opener].prof] ? OPP[G.players[H.opener].prof].key : 'reg', xs = H.bets[H.opener] / L.bb;
+          var vp = ok === 'nit' || ok === 'surv' ? 'serre' : (ok === 'maniac' ? 'mani' : (ok === 'lag' || ok === 'fan' ? 'large' : 'std'));
+          if (vp !== 'std') ds.vp = vp; if (xs <= 2.2) ds.sz = 2; else if (xs > 2.75) ds.sz = 3;
+          if (eff < 20 && eff >= 8) ds.bb = Math.round(eff);
+        }
+        return { sit: ds, hand: code };
+      }
     }
     // tu as ouvert et un seul joueur te 3-bet (tapis profonds) : les quatre cas de « Face à un 3-bet »
     if (H.preRaises === 2 && H.opener === 0 && H.pfa !== 0 && H.pfa !== null && eff >= 40 && H.order.length > 2) {
@@ -650,6 +660,15 @@
       if (sc) return { sit: { type: 'vs3bet', scen: sc, pos: p, opener: tb, bb: 100 }, hand: code };
     }
     return null;
+  }
+  // défense de grosse blinde : pourquoi la range change face à cet ouvreur
+  function bbWhy(s) {
+    if (!s || s.type !== 'def' || s.pos !== 'BB') return '';
+    var t = [];
+    if (s.vp) t.push({ serre: 'un ouvreur serré (mains fortes, tu défends moins)', large: 'un ouvreur large (tu défends plus)', mani: 'un maniaque (tu défends très large)' }[s.vp]);
+    if (s.sz === 2) t.push('une petite relance (bonne cote)'); else if (s.sz === 3) t.push('une grosse relance (moins bonne cote)');
+    if (PA.depthKey(s.bb) === 'push') t.push('un tapis sous 20 BB (tapis, payer ou jeter)');
+    return t.length ? ' <span class="muted">Ta range de grosse blinde tient compte de : ' + t.join(', ') + '.</span>' : '';
   }
   // lire une mise selon le profil de celui qui la fait
   function readBet(pl, tc, potBefore, street) {
@@ -793,7 +812,7 @@
         var ph = H.phase || 'Début et milieu'; G.stats.phase[ph] = G.stats.phase[ph] || { n: 0, ok: 0 }; G.stats.phase[ph].n++; if (r.j.ok) G.stats.phase[ph].ok++;
         var pl = PA.player(); PA.updateNotion(pl, PA.notionOf(r.q.sit), 1350, r.j.ok ? 1 : (r.j.kind === 'style' ? 0.5 : 0)); if (!r.j.ok) PA.srsMiss(pl, PA.sitKey(r.q.sit) + '#' + r.q.hand, { sit: r.q.sit, hand: r.q.hand }); PA.save();
         if (!r.j.ok) G.stats.notes.push({ hand: G.handNo, code: r.q.hand, cards: H.hole[0].slice(), sit: r.q.sit, given: r.given, answer: r.q.answer, kind: r.j.kind, note: r.j.note || '', profs: r.j.profiles || null, lvl: H.L.sb + '/' + H.L.bb, bb: Math.round((G.players[0].stack + H.bets[0]) / H.L.bb) });
-        if (G.opts.coach) G.coachMsg = (r.q.sit.bubble ? '🫧 <b>Bulle, ' + PA.BUBBLE_NAME[r.q.sit.bubble] + '</b> : ' : '') + (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : ''));
+        if (G.opts.coach) G.coachMsg = (r.q.sit.bubble ? '🫧 <b>Bulle, ' + PA.BUBBLE_NAME[r.q.sit.bubble] + '</b> : ' : '') + (r.j.ok ? 'Bonne décision préflop.' : (r.j.kind === 'style' ? 'Écart de style : ton profil jouerait plutôt' : 'Erreur : ici ton profil joue') + ' « ' + U().actName(r.q.answer, r.q.sit) + ' ».' + (r.j.note ? ' ' + r.j.note : '') + bbWhy(r.q.sit));
       } else if (G.opts.coach) G.coachMsg = null;
     } else {
       var tc = toCall(0), pot = potTotal(), opp0 = Math.max(1, activeCount() - 1), eq = equity(H.hole[0], H.board, opp0, 400), need = tc > 0 ? tc / (pot + tc) : 0;
