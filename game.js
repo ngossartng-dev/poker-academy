@@ -157,7 +157,7 @@
       cell('⏱', 'Temps', clockTxt(G.played || 0), 'niveau ' + L.n, 'ghClock') +
       cell('🔺', 'Blindes', PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb), (L.ante ? 'ante ' + PA.fmt(L.ante) + ' · ' : '') + '<span id="ghNext">' + nx.txt + '</span>') +
       cell('👥', 'Joueurs', rem + '<small> / ' + start + '</small>', G.opts.mtt ? MTT_PAID + ' payés' : (paidPlaces() + ' payé' + (paidPlaces() > 1 ? 's' : ''))) +
-      cell('🪙', 'Moyen', PA.fmt(Math.round(avg)), Math.round(avg / L.bb) + ' BB (toi ' + Math.round(me.stack / L.bb) + ')') +
+      (inBB() ? cell('🪙', 'Moyen', Math.round(avg / L.bb) + ' BB', 'toi ' + Math.round(me.stack / L.bb) + ' BB · ' + PA.fmt(Math.round(avg))) : cell('🪙', 'Moyen', PA.fmt(Math.round(avg)), Math.round(avg / L.bb) + ' BB (toi ' + Math.round(me.stack / L.bb) + ')')) +
       '<div class="gh-bar"><i id="ghBar" style="width:' + nx.pct + '%"></i></div></div>';
   }
   function nextLvlInfo() {
@@ -1005,6 +1005,10 @@
   function chipList(x) { var r = x / G.hand.L.bb, out = []; CHIPC.forEach(function (c) { while (r >= c[0] - 1e-9 && out.length < 12) { out.push(c); r -= c[0]; } }); if (!out.length) out.push(CHIPC[4]); return out; }
   function pileHtml(L) { return '<span class="cpile" style="height:' + (13 + L.length * 3.2) + 'px">' + L.map(function (c, i) { return '<i style="--i:' + i + ';--k:' + c[1] + ';--e:' + c[2] + '"></i>'; }).join('') + '</span>'; }
   function chipPiles(x, max, per) { var L = chipList(x).slice(0, max), P = []; for (var i = 0; i < L.length; i += per) P.push(pileHtml(L.slice(i, i + per))); return '<span class="cpiles">' + P.join('') + '</span>'; }
+  // montants affichés en BB (par défaut) ou en jetons, au choix du joueur (bouton à la table)
+  function inBB() { var st = PA.player().settings || {}; return st.tableUnit !== 'jetons'; }
+  function money(x) { return inBB() ? bbTxt(x) + ' BB' : PA.fmt(x); }
+  function money2(x) { return inBB() ? PA.fmt(x) + ' jetons' : bbTxt(x) + ' BB'; } // l'autre unité, en complément
   function bbTxt(x) { var H = G.hand; return String(Math.round(x / H.L.bb * 10) / 10).replace('.', ','); }
   /* ---------- Animations et sons de la table (distribution, mises, pot) ---------- */
   var FX = { hand: -1, board: 0, bets: {}, pot: 0, done: false };
@@ -1074,7 +1078,7 @@
     var H = G.hand, B = G.bsz, bbs = String(Math.round(v / H.L.bb * 10) / 10).replace('.', ',');
     var verb = v >= B.max ? 'Tapis' : H.street > 0 ? (H.cur > 0 ? 'Relancer à' : 'Miser') : (H.cur > H.L.bb ? 'Relancer à' : H.limpers > 0 ? 'Isoler à' : 'Ouvrir à');
     var add = v - (H.bets[0] || 0), pp = Math.round(add / Math.max(1, B.pot) * 100), sp = Math.round(add / Math.max(1, B.stack) * 100);
-    return { go: verb + (v >= B.max ? ' (' + PA.fmt(B.stack) + ')' : ' ' + PA.fmt(v)), val: PA.fmt(v), sub: bbs + ' BB' + (H.street > 0 ? ' · ' + pp + ' % du pot' : '') + ' · ' + sp + ' % de ton tapis' };
+    return { go: verb + (v >= B.max ? ' (' + money(B.stack) + ')' : ' ' + money(v)), val: money(v), sub: money2(v) + (H.street > 0 ? ' · ' + pp + ' % du pot' : '') + ' · ' + sp + ' % de ton tapis' };
   }
   function bszPaint() {
     var B = G.bsz, lb = bszLabel(B.to), e;
@@ -1138,12 +1142,12 @@
       h += '<button class="seat2' + (k === 0 ? ' hero' : '') + ((fold || out) ? ' out' : '') + (H.toAct === k && !H.done ? ' turn' : '') + '" data-gact="seat" data-v="' + k + '" style="left:' + x + '%;top:' + y + '%">';
       if (inH && !fold && k !== 0) h += '<span class="mc' + (dealing ? ' fx-dealo' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(k, 0) || '-9s') + ';--d2:' + (dealD(k, 1) || '-9s') + '"' : '') + '>' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</span>';
       h += '<span class="av">' + ui.esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm2">' + ui.esc(nm) + '</span><span class="ps' + (k === G.button ? ' btn-d' : '') + '">' + (H.pos[k] || '') + '</span>' +
-        '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>' + (out ? '' : hudLine(p)) + (p.fresh && p.fresh >= G.handNo && k !== 0 && !out ? '<span class="new2">nouveau</span>' : '');
+        '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : money(p.stack))) + '</span>' + (out ? '' : hudLine(p)) + (p.fresh && p.fresh >= G.handNo && k !== 0 && !out ? '<span class="new2">nouveau</span>' : '');
       if (G.opts.bounty !== 'classique' && !out) h += '<span class="bty">' + (G.opts.bounty === 'space' && k !== 0 ? '?' : p.bounty.toFixed(0) + ' €') + '</span>';
       h += '</button>';
-      if (H.bets[k]) { var bp = BETXY[n] && BETXY[n][k], bx = bp ? bp[0] : 50 + RX * 0.62 * Math.cos(a), by = bp ? bp[1] : 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2' + (FXV && fxDelay('c' + k, 0, 0.38) ? ' fx-chip' : '') + '" style="--cd:' + (fxDelay('c' + k, 0, 0.38) || '0s') + ';left:' + bx + '%;top:' + by + '%;--sx:' + x + '%;--sy:' + y + '%;--bx:' + bx + '%;--by:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + PA.fmt(H.bets[k]) + '</div>'; }
+      if (H.bets[k]) { var bp = BETXY[n] && BETXY[n][k], bx = bp ? bp[0] : 50 + RX * 0.62 * Math.cos(a), by = bp ? bp[1] : 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2' + (FXV && fxDelay('c' + k, 0, 0.38) ? ' fx-chip' : '') + '" style="--cd:' + (fxDelay('c' + k, 0, 0.38) || '0s') + ';left:' + bx + '%;top:' + by + '%;--sx:' + x + '%;--sy:' + y + '%;--bx:' + bx + '%;--by:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + money(H.bets[k]) + '</div>'; }
     }
-    h += '<div class="pot2' + (FXV && fxDelay('pot', 0, 0.55) ? ' fx-pot' : '') + '" style="--pd:' + (fxDelay('pot', 0, 0.55) || '0s') + '">' + (potTotal() > 0 ? chipPiles(potTotal(), 8, 4) : '') + 'Pot ' + PA.fmt(potTotal()) + ' <small>' + bbTxt(potTotal()) + ' BB</small></div>';
+    h += '<div class="pot2' + (FXV && fxDelay('pot', 0, 0.55) ? ' fx-pot' : '') + '" style="--pd:' + (fxDelay('pot', 0, 0.55) || '0s') + '">' + (potTotal() > 0 ? chipPiles(potTotal(), 8, 4) : '') + 'Pot ' + money(potTotal()) + ' <small>' + money2(potTotal()) + '</small></div>';
     h += '<div class="board2">' + [0, 1, 2, 3, 4].map(function (i) { var bd = FXV ? fxDelay('b' + i, 0, 0.5) : null; return H.board[i] !== undefined ? (bd ? '<div class="fx-board" style="--d:' + bd + '">' + cardMid(H.board[i]) + '</div>' : cardMid(H.board[i])) : '<div class="slot"></div>'; }).join('') + '</div>';
     if (H.inHand[0] && !H.folded[0]) h += '<div class="mine2' + (dealing ? ' fx-dealme' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(0, 0) || '-9s') + ';--d2:' + (dealD(0, 1) || '-9s') + '"' : '') + '>' + H.hole[0].map(cardMid).join('') + '</div>';
     // les sons suivent les animations
@@ -1156,7 +1160,7 @@
     }
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
       var q = G.players[G.pop];
-      h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' + '<br>' + hudFull(q) +
+      h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + money(q.stack) + ' (' + money2(q.stack) + ')' + '<br>' + hudFull(q) +
         (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span><br><span class="small">Ses mises : ' + ST(OPP[q.prof]).txt + '.</span>' : '') +
         (G.pop !== 0 && q.note ? '<br><span class="small">Ta note : ' + ui.esc(q.note.slice(0, 120)) + '</span>' : '') +
         (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
@@ -1165,23 +1169,23 @@
     var hasHud = G.opts.format !== 'hu';
     var info = '<div class="small muted" style="text-align:center">' + (hasHud ? 'Main ' + G.handNo : 'Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
       (G.keyMsg ? U().yo(G.keyMsg) : '') + (!H.done && G.arrivals && G.arrivals.length ? '<div class="small" style="text-align:center;color:var(--gold)">🪑 Nouveau' + (G.arrivals.length > 1 ? 'x joueurs' : ' joueur') + ' à ta table, venu' + (G.arrivals.length > 1 ? 's' : '') + ' d’une autre table pour remplacer ' + (G.arrivals.length > 1 ? 'les éliminés' : 'l’éliminé') + ' : ' + G.arrivals.map(function (x) { return U().esc(x); }).join(', ') + '</div>' : '');
-    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + ({ sng: 'Sit &amp; Go', sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] || '') + (G.opts.format === 'hu' ? '' : ' · ' + G.opts.seats + ' max') + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
+    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + ({ sng: 'Sit &amp; Go', sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] || '') + (G.opts.format === 'hu' ? '' : ' · ' + G.opts.seats + ' max') + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><span class="row" style="gap:6px;flex-wrap:nowrap"><button class="rbtn unit-btn" data-gact="unit" title="Afficher les tapis et les mises en BB ou en jetons">' + (inBB() ? '⇄ BB' : '⇄ Jetons') + '</button><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></span></div>';
     var me = G.players[0];
     var legend = '<div class="small muted hd-leg">Sous chaque joueur : <b>mains</b> · <b>V</b> = VPIP (% de mains jouées) · <b>P</b> = % payées sans relancer · <b>R</b> = % relancées avant le flop, depuis le début de la partie.</div>';
-    var mine = H.inHand[0] ? '<div class="small" style="text-align:center">Ton tapis : <b>' + PA.fmt(me.stack) + '</b> (' + bbTxt(me.stack) + ' BB)' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
+    var mine = H.inHand[0] ? '<div class="small" style="text-align:center">Ton tapis : <b>' + money(me.stack) + '</b> (' + money2(me.stack) + ')' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
     var bottom = '';
     if (H.done) {
-      var ws = Object.keys(H.winners).map(function (w) { return (w === '0' ? 'Tu gagnes' : G.players[w].name + ' gagne') + ' ' + PA.fmt(H.winners[w]) + (H.showdown && H.scores ? ' (' + handName(H.scores[w]) + ')' : ''); }).join(' · ');
+      var ws = Object.keys(H.winners).map(function (w) { return (w === '0' ? 'Tu gagnes' : G.players[w].name + ' gagne') + ' ' + money(H.winners[w]) + (H.showdown && H.scores ? ' (' + handName(H.scores[w]) + ')' : ''); }).join(' · ');
       // plusieurs tapis de tailles différentes : pot principal et pots secondaires, chacun avec ses joueurs
       var cp = (H.pots || []).filter(function (x) { return x.elig.length > 1; });
       if (H.showdown && cp.length > 1) {
         var who = function (k) { return k === 0 ? 'toi' : G.players[k].name; };
         ws = (H.pots || []).map(function (x, j) {
           var nmP = j === 0 ? 'Pot principal' : 'Pot secondaire' + (cp.length > 2 ? ' ' + j : '');
-          if (x.elig.length < 2) return 'Rendu à ' + who(x.elig[0]) + ' : ' + PA.fmt(x.amt) + ' (personne ne pouvait suivre)';
+          if (x.elig.length < 2) return 'Rendu à ' + who(x.elig[0]) + ' : ' + money(x.amt) + ' (personne ne pouvait suivre)';
           var w2 = x.ws.map(function (k) { return '<b>' + who(k) + '</b> (' + handName(H.scores[k]) + ')'; }).join(' et ');
           var los = x.elig.filter(function (k) { return x.ws.indexOf(k) < 0; }).map(function (k) { return who(k) + ' (' + handName(H.scores[k]) + ')'; });
-          return nmP + ' ' + PA.fmt(x.amt) + ' entre ' + x.elig.map(who).join(', ') + ' : ' + w2 + (x.ws.length > 1 ? ' se le partagent' : ' le gagne') + (los.length ? ', contre ' + los.join(', ') : '') + '.';
+          return nmP + ' ' + money(x.amt) + ' entre ' + x.elig.map(who).join(', ') + ' : ' + w2 + (x.ws.length > 1 ? ' se le partagent' : ' le gagne') + (los.length ? ', contre ' + los.join(', ') : '') + '.';
         }).join('<br>') + '<div class="small muted" style="margin-top:4px">Un joueur à tapis ne peut gagner que ce qu’il a misé, multiplié par le nombre de joueurs qui l’ont suivi : le reste forme un pot secondaire entre ceux qui avaient plus de jetons.</div>';
       }
       bottom = '<div class="banner">' + ws + (H.koMsg ? '<br><b>' + H.koMsg + '</b>' : '') + '</div>' + (G.arrivals && G.arrivals.length ? '<div class="small muted" style="text-align:center">🪑 Arrivée' + (G.arrivals.length > 1 ? 's' : '') + ' à la table (joueurs d’autres tables, pour remplacer les éliminés) : ' + G.arrivals.map(function (x) { return U().esc(x); }).join(', ') + '</div>' : '') + (G.coachMsg && G.opts.coach ? ui.yo(G.coachMsg) : '') + '<button class="btn gold block" data-gact="next">Main suivante</button>';
@@ -1190,7 +1194,7 @@
       var btns = [];
       btns.push(['fold', tc === 0 ? 'Parole' : 'Se coucher', 'a-fold', tc === 0 ? 'check' : 'fold']);
       var limpNow = H.street === 0 && H.preRaises === 0 && H.pos[0] !== 'BB';
-      if (tc > 0 && !(limpNow && noLimp())) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : limpNow ? (H.pos[0] === 'SB' ? 'Compléter (limp) ' : 'Limper ') : 'Payer ') + PA.fmt(tc), 'a-call', 'call']);
+      if (tc > 0 && !(limpNow && noLimp())) btns.push(['call', (tc >= me.stack ? 'Payer tapis ' : limpNow ? (H.pos[0] === 'SB' ? 'Compléter (limp) ' : 'Limper ') : 'Payer ') + money(tc), 'a-call', 'call']);
       var sizes = [], blind = H.pos[0] === 'SB' || H.pos[0] === 'BB';
       if (H.street === 0) {
         // tailles du cours : isolement 3 BB en position, 4 BB des blindes, +1 par limper ; 3-bet ×3 en position, ×4 hors position (+1 ouverture par payeur) ; 4-bet ×2,2 à ×2,5
@@ -1206,7 +1210,7 @@
       }
       if (!canRaise(0)) sizes = [];
       var raiseBtns = sizes.filter(function (s) { return s[0] >= minTo && s[0] < maxTo; }).map(function (s) { return '<button class="a-raise" data-gact="raise" data-v="' + Math.round(s[0]) + '">' + (H.cur > 0 && H.street > 0 ? 'Relancer ' : (H.street === 0 && H.cur > L.bb ? '' : (H.street === 0 ? (H.limpers > 0 ? 'Isoler ' : 'Ouvrir ') : 'Miser '))) + s[1] + '</button>'; });
-      if (maxTo > H.cur && canRaise(0)) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + PA.fmt(me.stack) + ')</button>');
+      if (maxTo > H.cur && canRaise(0)) raiseBtns.push('<button class="a-three" data-gact="allin">Tapis (' + money(me.stack) + ')</button>');
       var bsz = canRaise(0) && maxTo > minTo ? betSizer(H, L, me, minTo, maxTo, pot, tc, sizes) : '';
       if (bsz && raiseBtns.length && /data-gact="allin"/.test(raiseBtns[raiseBtns.length - 1])) btns.push(['allin', 'Tapis', 'a-three', 'allin']), raiseBtns.pop(); // Tapis sur la même ligne que Se coucher / Payer
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="actions act-main n' + btns.length + '" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + btns.map(function (b) { return '<button class="' + b[2] + '" style="color:#fff" data-gact="' + b[3] + '">' + b[1] + '</button>'; }).join('') + '</div><div class="actions act-q' + (bsz ? ' has-bsz' : '') + '" style="grid-template-columns:repeat(2,minmax(0,1fr))">' + raiseBtns.join('') + '</div>' + bsz;
@@ -1293,6 +1297,7 @@
     else if (a === 'bszGo' && G.bsz) { if (G.bsz.to >= G.bsz.max) heroAct('allin'); else heroAct('raise', G.bsz.to); }
     else if (a === 'postSol') { var pn = noteOf(v, 'postNotes'); if (pn && window.PA_APF) window.PA_APF.open({ pos: pn.pos, spot: pn.spot.replace(/-(25|20|60|nit|lag)$/, ''), side: pn.side, d25: pn.d25, flop: pn.flop, hand: pn.hole }); }
     else if (a === 'noteRange') { var nt = noteOf(v, 'notes'); if (nt && window.PA_UI_openRange) window.PA_UI_openRange({ sit: nt.sit, hand: nt.code }); }
+    else if (a === 'unit') { var pu = PA.player(); pu.settings = pu.settings || {}; pu.settings.tableUnit = inBB() ? 'jetons' : 'bb'; PA.save(); U().render(); }
     else if (a === 'seat') { var sk = parseInt(v, 10); G.pop = sk < 0 || G.pop === sk ? null : sk; U().render(); }
   });
   function fastForward() {
