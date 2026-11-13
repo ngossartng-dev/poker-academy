@@ -8,10 +8,10 @@
   var PUSH_DEPTHS = [15, 12, 10, 8, 5, 3];
   var PROFILES = {
     nit: { id: 'nit', name: 'Très serré', short: 'Nit', vpip: '~10-13 %', desc: 'Prudent, peu de bluffs. Ranges « tight » du livre.' },
-    tag: { id: 'tag', name: 'Serré-agressif', short: 'TAG', vpip: '~16-20 %', desc: 'Le standard solide en tournoi. Recommandé.', reco: true },
+    tag: { id: 'tag', name: 'Serré-agressif', short: 'TAG', vpip: '~16-20 %', desc: 'Le standard des livres en tournoi, pour comparer.' },
     equilibre: { id: 'equilibre', name: 'Équilibré', short: 'Équilibré', vpip: '~20-24 %', desc: 'Plus de vols et de défenses.' },
     lag: { id: 'lag', name: 'Large-agressif', short: 'LAG', vpip: '~26-32 %', desc: 'Met la pression, demande de l’expérience.' },
-    perso: { id: 'perso', name: 'Personnalisé', short: 'Perso', vpip: '—', desc: 'Part de la range du club ; tu modifies les cases après le test de profil.' }
+    perso: { id: 'perso', name: 'Range du club (Lionel)', short: 'Club', vpip: '~22 %', desc: 'La range standard, fournie par Lionel (Yo). Elle ne change que si tu modifies toi-même des cases, après le test de profil.', reco: true }
   };
   var BASE_PROFILES = ['nit', 'tag', 'equilibre', 'lag'];
 
@@ -42,7 +42,7 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
   // appli PC : « Ma range » peut s'ouvrir dans une fenêtre à part, qui partage les mêmes données.
   // La fenêtre Ma range relit tout ; la fenêtre principale ne reprend que la range (Perso, profil), pour ne rien perdre en cours de route.
-  window.addEventListener('storage', function (e) {
+  if (window.addEventListener) window.addEventListener('storage', function (e) {
     if (e.key !== KEY || !e.newValue) return;
     if ((location.hash || '').indexOf('#rangewin') === 0) mem = null;
     else {
@@ -53,7 +53,12 @@
     }
     if (window.PA_UI && window.PA_UI.onStorage) window.PA_UI.onStorage();
   });
-  function player() { var s = load(); return s.current ? s.players[s.current] : null; }
+  function player() {
+    var s = load(), p = s.current ? s.players[s.current] : null;
+    // la range standard est celle du club : un joueur resté sur un profil de comparaison (TAG, LAG…) passe sur la range du club, une seule fois
+    if (p && !p.migClub) { p.migClub = 1; if (p.profile !== 'perso') { p.profile = 'perso'; if (!p.perso || !Object.keys(p.perso).length) { p.perso = {}; p.persoBase = 'club'; } } try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
+    return p;
+  }
   function newPlayer(pseudo, age) {
     var s = load(); var id = 'p' + Date.now();
     s.players[id] = { id: id, pseudo: pseudo, age: age, profile: null, created: Date.now(), perso: {}, notions: {}, srs: {}, sessions: [], consult: 0, settings: { text: 1, chrono: false, vibrate: true }, testDone: false, last: null };
@@ -516,7 +521,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 2: 2, 3: 2, 4: 2, 5: 2, 6: 3, 7: 4, 8: 2, 13: 3, 14: 2, 15: 2, 17: 2, 18: 2, 20: 3, 25: 2, 27: 2, 29: 2, 30: 2, 31: 2, 33: 3, 34: 2, 35: 2, 37: 3, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2, 48: 2 };
+  var AREV = { 2: 2, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 2, 13: 3, 14: 2, 15: 2, 17: 2, 18: 2, 20: 3, 25: 2, 27: 2, 29: 2, 30: 2, 31: 2, 33: 3, 34: 2, 35: 2, 37: 3, 38: 2, 39: 2, 40: 2, 43: 2, 46: 2, 47: 2, 48: 2 };
   function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,

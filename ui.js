@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.43.0';
+  var VERSION = '2.44.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -152,8 +152,9 @@
     } else if (st.step === 0) {
       body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:40px">' + yo('Désolé, Poker Academy est réservée aux personnes majeures. Reviens nous voir à tes 18 ans !') + '<button class="btn" data-act="onbBack">Retour</button></div>';
     } else if (st.step === 2) {
-      body = '<div class="stack" style="max-width:640px;margin:0 auto">' + yo('Choisis le style qui te ressemble le plus. Pas d’inquiétude : le test de profil te dira ensuite si c’est le bon, et tu pourras en changer à tout moment. Ta range ne sera personnalisable (case par case) qu’après le test de profil.') +
-        Object.keys(PA.PROFILES).map(function (k) { var pr = PA.PROFILES[k]; return '<button class="prof-card' + (st.profile === k ? ' on' : '') + '" data-act="pickProf" data-v="' + k + '"><div class="row" style="justify-content:space-between"><b>' + pr.name + '</b>' + (pr.reco ? '<span class="chip">Recommandé</span>' : '') + '</div><div class="muted">Mains jouées : ' + pr.vpip + '</div><div>' + pr.desc + '</div></button>'; }).join('') +
+      if (!st.profile) st.profile = 'perso';
+      body = '<div class="stack" style="max-width:640px;margin:0 auto">' + yo('Ta range de départ, c’est celle du club, que je t’ai préparée : je te la conseille. Les autres profils servent surtout à comparer. Ta range ne sera modifiable (case par case, par toi seul) qu’après le test de profil ; le test, lui, ne la change jamais : il te propose des changements, que tu acceptes ou non.') +
+        ['perso', 'nit', 'tag', 'equilibre', 'lag'].map(function (k) { var pr = PA.PROFILES[k]; return '<button class="prof-card' + (st.profile === k ? ' on' : '') + '" data-act="pickProf" data-v="' + k + '"><div class="row" style="justify-content:space-between"><b>' + pr.name + '</b>' + (pr.reco ? '<span class="chip">Recommandé</span>' : '') + '</div><div class="muted">Mains jouées : ' + pr.vpip + '</div><div>' + pr.desc + '</div></button>'; }).join('') +
         '<button class="btn gold block" data-act="onb2"' + (st.profile ? '' : ' disabled') + '>Valider ce profil</button></div>';
     } else {
       body = '<div class="stack" style="max-width:560px;margin:0 auto;padding-top:16px">' + yo('Parfait. Maintenant, le test de profil : je te sers des mains, tu décides comme à la table, sans aide. À la fin, je te dis ton vrai style et tes erreurs à corriger. 30 mains, c’est environ 5 minutes. Une fois le test fait, tu pourras personnaliser ta range : Ma range › « Modifier cette range ».') +
@@ -180,14 +181,22 @@
   var RS = { tab: 'sit', type: 'open', pos: 'UTG', opener: 'UTG', depth: 'deep', bb: 10, scen: 'ip', hero: null, profile: null, edit: false, vp: 'std', sz: 2.5 };
   try { if (localStorage.getItem('pa2pips') === '0') RS.pips = false; } catch (e) {}
   function openRange(ctx) {
-    var p = PA.player(); RS.profile = p.profile || 'tag'; RS.edit = false;
+    // appli PC : Ma range s'ouvre toujours dans sa propre fenêtre (avec la situation en cours)
+    if (PC_FULL && (location.hash || '').indexOf('#rangewin') !== 0 && !ui.rwFail) {
+      try { localStorage.setItem('pa2rwctx', JSON.stringify({ sit: ctx && ctx.sit || null, hand: ctx && ctx.hand || null, at: Date.now() })); } catch (e) {}
+      var pr = pcRange('open');
+      if (pr && pr.then) { pr.then(function (r) { if (!r.ok) throw 0; }).catch(function () { ui.rwFail = true; openRange(ctx); }); return; }
+    }
+    applyCtx(ctx); ui.sheet = 'range'; renderSheet();
+  }
+  function applyCtx(ctx) {
+    var p = PA.player(); RS.profile = p.profile || 'perso'; RS.edit = false;
     if (ctx && ctx.sit) {
       var s = ctx.sit; RS.tab = 'sit'; RS.type = s.type === 'push' ? 'open' : s.type; RS.pos = s.pos; RS.opener = s.opener || RS.opener; RS.scen = s.scen || 'ip'; if (s.caller) RS.caller = s.caller;
       if (s.type === 'vs3bet') RS.v3pos = !s.pos || PA.POS.slice(0, 8).indexOf(s.pos) < 0 || ({ early: ['UTG', 'UTG+1', 'MP'], ip: ['BTN'], bvb: ['SB'], oop: ['LJ', 'HJ', 'CO'] }[s.scen] || []).indexOf(s.pos) < 0;
       if (s.type === 'def' && s.pos === 'BB') { RS.type = 'bbdef'; RS.vp = s.vp || 'std'; RS.sz = s.sz || 2.5; }
       var dk = PA.depthKey(s.bb); RS.depth = dk; if (s.type === 'iso') RS.depth = s.bb <= 20 ? 'push' : 'deep'; if (s.type === 'squeeze') RS.depth = s.bb <= 30 ? 'mid' : 'deep'; if (dk === 'push') RS.bb = PA.nearestPush(s.bb); RS.hero = ctx.hand;
     } else RS.hero = null;
-    ui.sheet = 'range'; renderSheet();
   }
   function rsSit() {
     var r = rsSit0(); if (RS.bubble) r.bubble = RS.bubble; return r;
@@ -203,16 +212,33 @@
     if (t === 'squeeze') return { type: 'squeeze', pos: RS.pos, opener: RS.opener, caller: RS.caller || 'CO', bb: RS.depth === 'deep' ? 100 : 25 };
     return { type: 'callshove', pos: RS.pos, opener: RS.opener, bb: RS.bb };
   }
-  function rangeGrid(map, type, hero, editable, diff) {
+  function rangeGrid(map, type, hero, editable, diff, prop) {
     var h = '<div class="rg' + (diff ? ' rg-diff' : '') + '" role="grid" aria-label="Grille des 169 mains">';
     PA.HANDS.forEach(function (x) {
       var a = map[x];
       var cls = typeof a === 'string' ? actColor(a, type) : '';
       var style = typeof a === 'string' ? '' : ' style="background:' + a.bg + ';color:' + a.fg + '"';
       var pips = typeof a === 'object' && a.pips && a.pips.length ? '<span class="pips">' + a.pips.map(function (k) { return '<i class="pip-' + k + '"></i>'; }).join('') + '</span>' : '';
-      h += '<button class="' + cls + (x === hero ? ' hero' : '') + (diff && diff[x] ? ' bd-' + diff[x] : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + (a && a.lbl ? ', ' + a.lbl : '') + '">' + x + pips + '</button>';
+      h += '<button class="' + cls + (x === hero ? ' hero' : '') + (diff && diff[x] ? ' bd-' + diff[x] : '') + (prop && prop[x] ? ' prop' : '') + '"' + style + ' data-act="' + (editable ? 'editCell' : 'cell') + '" data-v="' + x + '" aria-label="' + x + (a && a.lbl ? ', ' + a.lbl : '') + (prop && prop[x] ? ', changement proposé par le test' : '') + '">' + x + pips + '</button>';
     });
     return h + '</div>';
+  }
+  /* Le test de profil ne change jamais ta range : il propose des changements (cases entourées de bleu), que tu acceptes ou refuses. */
+  function propKeys(s) {
+    var ks = [PA.sitKey(s)];
+    if (s.type === 'open' && PA.depthKey(s.bb) === 'deep' && !s.bubble) ks.push(PA.sitKey({ type: 'vs3bet', scen: ['UTG', 'UTG+1', 'MP'].indexOf(s.pos) >= 0 ? 'early' : (s.pos === 'BTN' ? 'ip' : (s.pos === 'SB' ? 'bvb' : 'oop')), bb: 100 }));
+    return ks;
+  }
+  function propCount(p) { var n = 0, C = p.persoProp && p.persoProp.cells || {}; Object.keys(C).forEach(function (k) { n += Object.keys(C[k]).length; }); return n; }
+  function propMap(s) {
+    var p = PA.player(), C = p && p.persoProp && p.persoProp.cells, m = {}, any = false; if (!C || RS.profile !== 'perso') return null;
+    propKeys(s).forEach(function (k) { if (C[k]) Object.keys(C[k]).forEach(function (h) { m[h] = 1; any = true; }); });
+    return any ? m : null;
+  }
+  function propTake(p, keys, h, accept) {
+    var C = p.persoProp && p.persoProp.cells; if (!C) return;
+    keys.forEach(function (k) { if (C[k] && C[k][h] !== undefined) { if (accept) { p.perso[k] = p.perso[k] || {}; p.perso[k][h] = C[k][h]; } delete C[k][h]; if (!Object.keys(C[k]).length) delete C[k]; } });
+    if (!Object.keys(C).length) delete p.persoProp;
   }
   var GLOBAL_COLORS = [['#26215C', '#fff'], ['#3C3489', '#fff'], ['#534AB7', '#fff'], ['#7F77DD', '#fff'], ['#854F0B', '#fff'], ['#BA7517', '#fff'], ['#EF9F27', '#1a1400'], ['#FAC775', '#1a1400']];
   function rangeBody(full) {
@@ -344,13 +370,15 @@
       if (RS.hero && plan3[RS.hero] && plan3[RS.hero].lbl) out += '<div class="small" style="color:var(--gold)">' + RS.hero + ' : ' + plan3[RS.hero].lbl + '.</div>';
     } else
     out += '<div class="legend">' + Object.keys(acts).sort().map(function (k) { return '<span><i style="background:' + CSSVAR[actColor(k, s.type)] + '"></i>' + actName(k, s) + '</span>'; }).join('') + '</div>';
-    out += '@@EDIT@@' + rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff);
-    if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Base de ton profil Perso : la range du club, une range 6-max. La 1re place à parler (LJ, et aussi UTG à MP sur une table à 9 ou 10) joue la range vue au club ; HJ, CO et le bouton s’élargissent d’un cran à chaque place ; la petite blinde ouvre comme le bouton. Les couleurs disent quoi faire si on te relance.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
+    var pmap = propMap(s);
+    out += '@@EDIT@@' + rangeGrid(plan3 || cm, s.type, RS.hero, RS.edit && !RS.bubble, bdiff, pmap);
+    if (prof === 'perso') out += PA.persoBase() === 'club' ? '<div class="small muted">Ta range : celle du club (Lionel), une range 6-max. La 1re place à parler (LJ, et aussi UTG à MP sur une table à 9 ou 10) joue la range vue au club ; HJ, CO et le bouton s’élargissent d’un cran à chaque place ; la petite blinde ouvre comme le bouton. Les couleurs disent quoi faire si on te relance.</div>' : '<div class="banner">Ton profil Perso a été créé avant la range du club : il part encore du profil TAG. <button class="btn gold" data-act="persoClub" style="margin-top:6px">Repartir de la range du club</button></div>';
     var plr = PA.player();
     var ed = '';
     if (plr && !plr.testDone && !CLUB) ed += '<div class="banner">Ta range sera personnalisable après le test de profil : il faut d’abord savoir comment tu joues. Ensuite, tu pourras changer la couleur de chaque case (ouvrir, payer, relancer, se coucher).</div><a class="btn block" href="#testmenu">Faire le test de profil</a>';
-    else if (prof !== 'perso' && !CLUB) ed += '<div class="row"><button class="btn gold" data-act="persoStart">Personnaliser ma range</button><span class="muted small">Ta range devient ton profil Perso (base : la range du club), et tu changes la couleur des cases une par une.</span></div>';
+    else if (prof !== 'perso' && !CLUB) ed += '<div class="row"><button class="btn gold" data-act="persoStart">Personnaliser ma range</button><span class="muted small">Tu repasses sur la range du club, et tu changes la couleur des cases une par une.</span></div>';
     if (prof === 'perso' && plr && plr.testDone) ed += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
+    if (plr && RS.profile === 'perso' && plr.persoProp && propCount(plr)) ed = '<div class="prop-bar"><div><b>Le test de profil te propose ' + propCount(plr) + ' changement' + (propCount(plr) > 1 ? 's' : '') + '</b>' + (pmap ? ' (' + Object.keys(pmap).length + ' sur cette grille, entouré' + (Object.keys(pmap).length > 1 ? 's' : '') + ' de pointillés bleus)' : ' (aucun sur cette grille)') + '. Ta range ne change que si tu acceptes : touche une case entourée pour accepter son changement.</div><div class="row"><button class="btn" data-act="propAll">Tout accepter</button><button class="btn" data-act="propNone">Tout refuser</button></div></div>' + ed;
     out = out.replace('@@EDIT@@', ed);
     if (PC_FULL && (location.hash || '').indexOf('#rangewin') !== 0) out += '<button class="btn block" data-act="rwOpen">🪟 Ouvrir Ma range dans une fenêtre à part</button>';
     // rappel discret : les tailles du club après le flop (repliable)
@@ -432,9 +460,14 @@
     return shell('apprendre', body);
   }
   function rangesView() {
-    var p = PA.player(); if (!RS.profile) RS.profile = p.profile || 'tag';
+    var p = PA.player(); if (!RS.profile) RS.profile = p.profile || 'perso';
+    if (PC_FULL && !ui.rwHere && !ui.rwFail) {
+      if (!ui.rwShown) { ui.rwShown = true; openRange(null); }
+      return shell('apprendre', '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button><h1>Ma range</h1>' + yo('Sur PC, Ma range s’ouvre dans sa propre fenêtre : pose-la où tu veux, à côté d’un autre jeu ou sur un deuxième écran.') + '<button class="btn gold block" data-act="rwOpen">Afficher la fenêtre Ma range</button><button class="btn block" data-act="rwHere">Afficher Ma range ici</button></div>');
+    }
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="apprendre">‹ Apprendre</button>' +
       '<div class="seg">' + Object.keys(PA.PROFILES).map(function (k) { return '<button class="' + (RS.profile === k ? 'on' : '') + '" data-act="rsProf" data-v="' + k + '">' + PA.PROFILES[k].short + '</button>'; }).join('') + '</div>' +
+      (ui.propMsg !== undefined && ui.propMsg !== null ? yo(ui.propMsg ? 'Le test te propose ' + ui.propMsg + ' changement' + (ui.propMsg > 1 ? 's' : '') + ' : ils sont entourés de pointillés bleus. Ta range ne change que si tu les acceptes.' : 'Le test ne propose aucun changement : tes choix suivent ta range.') : '') +
       (ui.persoMsg && RS.profile === 'perso' ? yo('Ton profil Perso est prêt. Il est maintenant ton profil actif : Ma range, le plan de jeu, les exercices et le tracker l’utilisent. Tu peux encore modifier chaque case.') + '<div class="card stack"><b>Ce que j’ai construit</b>' + window.PA_PERSO.summary(ui.persoMsg) + '</div>' : '') +
       '<div class="stack" id="rangeFull">' + rangeBody(true) + '</div>' +
       (EMBED ? '' : '<div class="row"><button class="btn" data-act="print">Imprimer cette range</button><a class="btn gold" href="#plan-imprimable">Plan de jeu à imprimer</a></div>') + '</div>';
@@ -567,7 +600,7 @@
 
   /* ---------- Séances (moteur commun) ---------- */
   function buildQuestions(mode, opts) {
-    var p = PA.player(), prof = p.profile || 'tag', qs = [], i;
+    var p = PA.player(), prof = p.profile || 'perso', qs = [], i;
     if (mode === 'test') {
       var kinds = ['open', 'open', 'open', 'def', 'def', 'def'];
       for (i = 0; i < opts.n; i++) {
@@ -768,7 +801,7 @@
     return '';
   }
   function feedbackHtml(q, fb) {
-    var p = PA.player(), prof = p.profile || 'tag', s = q.sit;
+    var p = PA.player(), prof = p.profile || 'perso', s = q.sit;
     var right = '<span class="pill" style="background:' + CSSVAR[actColor(q.answer, s.type)] + '">' + actName(q.answer, s) + '</span>';
     var cls, title;
     if (fb.timeout) { cls = 'fb-err'; title = 'Temps écoulé. La bonne décision : ' + right + '.'; }
@@ -799,7 +832,7 @@
   }
   function answer(given) {
     clearInterval(timerH);
-    var d = ui.drill, q = d.qs[d.i], p = PA.player(), prof = p.profile || 'tag';
+    var d = ui.drill, q = d.qs[d.i], p = PA.player(), prof = p.profile || 'perso';
     var j = !given ? { ok: false, kind: 'error' } : (q.custom ? { ok: given === q.answer, kind: given === q.answer ? null : 'error' } : PA.judge(prof, q, given));
     var fb = { given: given, ok: j.ok, kind: j.kind, profiles: j.profiles, note: j.note, timeout: !given };
     d.answers.push({ q: q, given: given, ok: j.ok, kind: j.kind || null, profiles: j.profiles || null });
@@ -852,9 +885,9 @@
     if (errors.length) out += '<div class="card stack"><b>Erreurs à corriger</b>' + errors.map(function (e) { return '<div>' + handText(e.a.q.cards) + ' — ' + describeSit(e.a.q.sit) + ' : tu as choisi « ' + (e.a.given ? actName(e.a.given, e.a.q.sit) : 'rien') + ' », ton profil joue « ' + actName(e.right, e.a.q.sit) + ' ».</div>'; }).join('') + '</div>';
     if (window.PA_PERSO) {
       var nA = d.answers.length;
-      out += '<div class="card stack"><b>Créer mon profil Perso à partir de ce test</b>' + (nA >= 60 ? '<div class="small muted">Base : la range du club (celle de Lionel, en 6-max : la 1re place à parler, puis un cran plus large jusqu’au bouton). Pour chaque groupe de positions où tu joues nettement plus large ou plus serré, j’élargis ou je resserre d’un ou deux crans. Puis je reprends tes vrais choix du test, sauf les erreurs. ' + (nA < 90 ? 'Avec 90 mains, le résultat est plus fiable. ' : '') + ((p.perso && Object.keys(p.perso).length) ? '<b>Attention :</b> cela remplace tes modifications actuelles du profil Perso.' : '') + '</div><button class="btn gold" data-act="mkPerso" data-v="' + best + '">Créer mon profil Perso</button>' : '<div class="small muted">Il faut au moins 60 mains, idéalement 90 : refais le test en 90 mains pour construire un profil Perso fiable.</div>') + '</div>';
+      out += '<div class="card stack"><b>Ta range</b><div class="small muted">Le test ne modifie jamais ta range (la range du club, plus tes propres changements). Il peut te <b>proposer</b> des changements : ils apparaissent dans Ma range, entourés de pointillés bleus, et tu les acceptes ou les refuses case par case.' + (nA < 60 ? ' Avec 60 à 90 mains, les propositions sont plus fiables.' : '') + '</div><button class="btn gold" data-act="mkProp" data-v="' + best + '">Voir les changements proposés dans Ma range</button></div>';
     }
-    out += '<div class="row"><button class="btn gold" data-act="adopt" data-v="' + best + '" style="flex:1">Adopter le profil ' + pr.short + '</button><button class="btn" data-act="nav" data-v="home">Garder mon profil (' + PA.PROFILES[p.profile || 'tag'].short + ')</button></div></div>';
+    out += '<button class="btn block" data-act="nav" data-v="home">Retour à l’accueil</button></div>';
     return out;
   }
 
@@ -866,7 +899,7 @@
 
   /* ---------- Moi ---------- */
   function moiView() {
-    var p = PA.player(), pr = PA.PROFILES[p.profile || 'tag'];
+    var p = PA.player(), pr = PA.PROFILES[p.profile || 'perso'];
     var notions = Object.keys(PA.NOTIONS).map(function (k) { var st = p.notions[k]; return '<tr><td>' + PA.NOTIONS[k] + '</td><td>' + (st ? 'Niveau ' + PA.level(st.r) + '/5 <span class="muted small">(' + st.ok + '/' + st.n + ')</span>' : '<span class="muted">pas encore travaillé</span>') + '</td></tr>'; }).join('');
     var sess = p.sessions.slice(0, 8).map(function (s) { return '<tr><td>' + new Date(s.at).toLocaleDateString('fr-FR') + '</td><td>' + esc(s.label) + '</td><td>' + s.ok + '/' + s.n + '</td></tr>'; }).join('') || '<tr><td class="muted">Aucune séance pour l’instant.</td></tr>';
     var body = '<div class="stack"><h1>Moi</h1>' +
@@ -954,9 +987,14 @@
   function rangeWinView() {
     var p = PA.player();
     if (!p) return '<div class="stack" style="padding:16px">' + yo('Crée d’abord ton joueur dans la fenêtre principale de Poker Academy.') + '</div>';
-    if (!RS.profile) RS.profile = p.profile || 'tag';
+    if (!ui.rwInit) { ui.rwInit = true; try { var c0 = JSON.parse(localStorage.getItem('pa2rwctx') || 'null'); applyCtx(c0 && Date.now() - c0.at < 60000 ? c0 : null); } catch (e) { applyCtx(null); } }
+    if (!RS.profile) RS.profile = p.profile || 'perso';
     return '<div class="rangewin"><div class="row rw-bar"><button class="btn' + (ui.rwTop ? ' gold' : '') + '" data-act="rwTop">' + (ui.rwTop ? '📌 Toujours devant : oui' : '📌 Garder devant les autres fenêtres') + '</button></div><div class="stack" id="rangeFull">' + rangeBody(true) + '</div></div>';
   }
+  if (window.addEventListener) window.addEventListener('storage', function (e) {
+    if (e.key !== 'pa2rwctx' || !e.newValue || (location.hash || '').indexOf('#rangewin') !== 0) return;
+    try { applyCtx(JSON.parse(e.newValue)); } catch (x) {} render(); window.scrollTo(0, 0);
+  });
   function pcRange(act, on) { try { return fetch('/api/rangewin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ act: act, on: !!on }) }); } catch (e) { return null; } }
   function render() {
     applySettings();
@@ -968,7 +1006,7 @@
     function top() { window.scrollTo(0, keepY); }
     if (CLUB) {
       if (!p) { p = PA.newPlayer('Club', 0); }
-      if (!p.profile) { p.profile = 'tag'; p.testDone = true; PA.save(); }
+      if (!p.profile) { p.profile = 'perso'; p.persoBase = 'club'; p.testDone = true; PA.save(); }
       ui.welcomed = true;
       var ALLOW = { mainsclub: 1, home: 1, tournoi: 1, minuteur: 1, classement: 1, ecran: 1, reglages: 1, sauvegarde: 1, maj: 1, merci: 1, guide: 1, recherche: 0 };
       if (!ALLOW[r]) r = 'home';
@@ -1011,7 +1049,7 @@
       }
       case 'onbBack': ui.onb.step = 1; render(); break;
       case 'pickProf': ui.onb.profile = v; render(); break;
-      case 'onb2': p.profile = ui.onb.profile; PA.save(); ui.onb.step = 3; render(); break;
+      case 'onb2': p.profile = ui.onb.profile || 'perso'; if (p.profile === 'perso' && !p.persoBase) { p.perso = p.perso || {}; p.persoBase = 'club'; } p.migClub = 1; PA.save(); ui.onb.step = 3; render(); break;
       case 'onbLater': ui.onbActive = false; ui.onb = { step: 1 }; go('home'); render(); break;
       case 'startTest': ui.onbActive = false; ui.onb = { step: 1 }; startDrill('test', { n: parseInt(v, 10) }, 'Test de profil'); render(); break;
       case 'testMenu': go('testmenu'); break;
@@ -1045,14 +1083,17 @@
       case 'rsScen': RS.scen = v; rerenderRange(); break;
       case 'rsShove': var m = v.split(' vs shove '); RS.pos = m[0]; RS.opener = m[1]; rerenderRange(); break;
       case 'rsProf': RS.profile = v; RS.edit = false; render(); break;
-      case 'rwOpen': pcRange('open'); break;
+      case 'rwOpen': openRange(null); break;
+      case 'rwHere': ui.rwHere = true; render(); break;
       case 'rwTop': ui.rwTop = !ui.rwTop; pcRange('top', ui.rwTop); render(); break;
       case 'szmToggle': RS.szm = !RS.szm; rerenderRange(); break;
       case 'toggleEdit': RS.edit = !RS.edit; RS.brush = null; rerenderRange(); break;
       case 'persoStart': p.profile = 'perso'; if (!p.persoBase) p.persoBase = 'club'; PA.save(); RS.profile = 'perso'; RS.edit = true; RS.brush = null; RS.tab = 'sit'; rerenderRange(); break;
       case 'rsBrush': RS.brush = RS.brush === v ? null : v; rerenderRange(); break;
-      case 'persoClub': if (typeof confirm === 'function' && !confirm('Repartir de la range du club ? Tes modifications actuelles du profil Perso seront effacées.')) break; p.perso = {}; p.persoBase = 'club'; p.persoFrom = null; PA.save(); RS.edit = false; rerenderRange(); break;
-      case 'cell': zoomCell(v); break;
+      case 'persoClub': if (typeof confirm === 'function' && !confirm('Repartir de la range du club ? Tes propres modifications de cases seront effacées.')) break; p.perso = {}; p.persoBase = 'club'; p.persoFrom = null; PA.save(); RS.edit = false; rerenderRange(); break;
+      case 'cell': { var sp = RS.tab === 'sit' ? rsSit() : null, pm = sp && propMap(sp); if (pm && pm[v]) { propTake(p, propKeys(sp), v, true); PA.save(); rerenderRange(); break; } zoomCell(v); break; }
+      case 'propAll': { var C0 = p.persoProp && p.persoProp.cells || {}; Object.keys(C0).forEach(function (k) { p.perso[k] = p.perso[k] || {}; Object.keys(C0[k]).forEach(function (h) { p.perso[k][h] = C0[k][h]; }); }); delete p.persoProp; PA.save(); rerenderRange(); break; }
+      case 'propNone': delete p.persoProp; PA.save(); rerenderRange(); break;
       case 'editCell': editCell(v); break;
       case 'print': window.print(); break;
       case 'seance': startDrill('seance', {}, 'Séance du jour'); render(); break;
@@ -1072,10 +1113,14 @@
       case 'quitDrill': clearInterval(timerH); ui.drill = null; go('entrainer'); break;
       case 'again': { var d = ui.drill; startDrill(d.mode, d.opts, d.label); render(); break; }
       case 'adopt': p.profile = v; PA.save(); go('home'); render(); break;
-      case 'mkPerso': {
-        var r = window.PA_PERSO.build(ui.drill.answers, v);
-        p.perso = r.perso; p.profile = 'perso'; p.persoBase = 'club'; p.persoFrom = { at: Date.now(), n: ui.drill.answers.length, base: r.base, groups: r.groups, hands: r.hands }; PA.save();
-        RS.profile = 'perso'; RS.tab = 'glob'; ui.persoMsg = r; go('ranges'); render(); break;
+      case 'mkProp': {
+        // le test propose, il n'impose rien : seules les cases que tu n'as pas modifiées toi-même peuvent recevoir une proposition
+        var r = window.PA_PERSO.build(ui.drill.answers, v), cells = {}, n = 0;
+        p.perso = p.perso || {}; if (!p.persoBase) p.persoBase = 'club';
+        Object.keys(r.perso).forEach(function (k) { Object.keys(r.perso[k]).forEach(function (h) { if (p.perso[k] && p.perso[k][h] !== undefined) return; cells[k] = cells[k] || {}; cells[k][h] = r.perso[k][h]; n++; }); });
+        if (n) p.persoProp = { at: Date.now(), n: ui.drill.answers.length, cells: cells }; else delete p.persoProp;
+        p.profile = 'perso'; PA.save(); RS.profile = 'perso'; RS.tab = 'sit'; RS.type = 'open'; RS.depth = 'deep';
+        ui.persoMsg = null; ui.propMsg = n; go('ranges'); render(); break;
       }
       case 'setProf': p.profile = v; PA.save(); render(); break;
       case 'set': { var k2 = t.getAttribute('data-k'); p.settings[k2] = JSON.parse(v); PA.save(); if (window.PA_SEASON) window.PA_SEASON.apply(); render(); break; }
@@ -1107,6 +1152,7 @@
   }
   function editCell(h) {
     var p = PA.player(), s = rsSit(), key = PA.sitKey(s);
+    propTake(p, propKeys(s), h, false);
     var cycle = s.type === 'open' ? (PA.depthKey(s.bb) === 'push' ? ['fold', 'allin'] : ['fold', 'raise']) : (s.type === 'vs3bet' ? ['fold', 'call', 'fourbet'] : (s.type === 'callshove' ? ['fold', 'call'] : ['fold', 'call', 'raise']));
     var cur = PA.chart('perso', s)[h], nx = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
     if (s.type === 'open' && PA.depthKey(s.bb) === 'deep' && !s.bubble) {
@@ -1119,7 +1165,7 @@
     }
     p.perso[key] = p.perso[key] || {}; p.perso[key][h] = nx; PA.save(); rerenderRange();
   }
-  window.addEventListener('hashchange', function () { ui.sheet = null; renderSheet(); render(); });
+  window.addEventListener('hashchange', function () { ui.sheet = null; ui.rwShown = false; ui.rwHere = false; renderSheet(); render(); });
   // date de naissance : les barres s'ajoutent toutes seules (JJ/MM/AAAA)
   document.addEventListener('input', function (e) {
     if (!e.target || e.target.id !== 'ag') return;

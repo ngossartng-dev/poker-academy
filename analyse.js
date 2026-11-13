@@ -826,7 +826,7 @@
   function view() {
     if (window.PA_STORE && !window.PA_STORE.ready()) { window.PA_STORE.whenReady(function () { U().render(); }); return U().shell('analyser', '<div class="stack"><h1>Analyser</h1><p class="muted">Chargement de tes mains…</p></div>'); }
     var qm = /[?&](club|adv)\b/.exec(location.hash); if (qm && AV._q !== location.hash) { AV.tab = qm[1]; } if (/[?&]app\b/.test(location.hash) && AV._q !== location.hash) { AV.src = 'app'; AV.tab = 'resume'; } AV._q = location.hash;
-    var ui = U(), db = loadDB(), p = window.PA.player(), prof = p.profile || 'tag';
+    var ui = U(), db = loadDB(), p = window.PA.player(), prof = p.profile || 'perso';
     var body = '<div class="stack"><h1>Analyser</h1>';
     body += '<a class="card row" href="#bankroll" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>Bankroll</b><span class="small muted"> · résultats, ROI, variance</span></span><span style="color:var(--gold)">›</span></a>';
     body += '<a class="card row" href="#mestournois" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>📈 Mes tournois d’entraînement</b><span class="small muted"> · les parties jouées dans l’appli</span></span><span style="color:var(--gold)">›</span></a>';
@@ -1198,5 +1198,5 @@
   document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-hfile') === 'mains' && t.files && t.files[0]) { var r = new FileReader(); r.onload = function () { importHands(String(r.result)); U().render(); }; r.readAsText(t.files[0]); } });
   if (window.PA_STORE) window.PA_STORE.whenReady(function () { setTimeout(function () { if (U() && U().render && window.PA.player()) U().render(); }, 0); });
   window.PA_HH = { addAppHands: addAppHands, appHand: appHand, moves: moves, flopInfo: flopInfo, parseFile: parseFile, parseHand: parseHand, preflopInfo: preflopInfo, compare: compare, importTexts: importTexts, loadDB: loadDB, saveDB: saveDB, stats: stats, leaks: leaks, pctOf: pctOf, positions: positions, handCode: handCode, ACT_FR: ACT_FR,
-    view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'tag')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'tag') : null; }, clear: function () { if (window.PA_STORE) window.PA_STORE.del(key()); try { localStorage.removeItem(key()); } catch (e) {} } };
+    view: view, opps: opps, OPP: OPP, leaksFor: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? leaks(stats(db.hands, p.profile || 'perso')) : []; }, statsAll: function () { var db = loadDB(), p = window.PA.player(); return db.hands.length ? stats(db.hands, p.profile || 'perso') : null; }, clear: function () { if (window.PA_STORE) window.PA_STORE.del(key()); try { localStorage.removeItem(key()); } catch (e) {} } };
 })();

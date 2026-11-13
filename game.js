@@ -124,7 +124,7 @@
     if (opts.mtt) opts.chips = 20000;
     var p = PA.player(), n = opts.seats, players = [], names = NAMES.slice().sort(function () { return Math.random() - 0.5; });
     var mix = TABLES[opts.table].mix;
-    if (!mix) { var mp = { nit: 'nit', tag: 'reg', equilibre: 'reg', lag: 'lag', perso: 'reg' }[p.profile || 'tag']; mix = [mp, mp, mp, mp, mp, mp, mp, mp]; }
+    if (!mix) { var mp = { nit: 'nit', tag: 'reg', equilibre: 'reg', lag: 'lag', perso: 'reg' }[p.profile || 'perso']; mix = [mp, mp, mp, mp, mp, mp, mp, mp]; }
     mix = mix.slice().sort(function () { return Math.random() - 0.5; });
     // « Mes adversaires du club » : les fiches du carnet (Analyser › Adversaires) prennent place à la table, avec leur profil
     var mine = opts.table === 'monclub' ? (p.opps || []).filter(function (o) { return o.name && OPP[o.prof]; }).slice().sort(function () { return Math.random() - 0.5; }) : [];
