@@ -884,3 +884,4 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .rg button.prop::after{content:'';position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#4da3ff}
 .prop-bar{border:2px dashed #4da3ff;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;flex-direction:column;gap:8px;font-size:16px;line-height:1.4}
 .prop-bar .row{gap:8px}.prop-bar .btn{flex:1}
+.lc-deep{padding-left:18px!important}.lc-deep>span:first-child{color:#d8d8de}.lc-tag{display:block;font-size:13px;color:#4da3ff;margin-bottom:2px}.lc-step{color:var(--gold,#d4af37)}
