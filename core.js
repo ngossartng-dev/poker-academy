@@ -536,7 +536,7 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 2: 2, 3: 3, 4: 2, 5: 4, 6: 3, 7: 3, 8: 4, 9: 2, 10: 2, 11: 3, 12: 3, 14: 2, 15: 2, 16: 2, 18: 2, 20: 4, 21: 3, 22: 2, 23: 3, 24: 3, 25: 2, 26: 3, 27: 3, 29: 2, 30: 3, 31: 2, 32: 2, 34: 2, 35: 4, 36: 2, 37: 3, 39: 3, 43: 2, 45: 2, 46: 2, 47: 2, 48: 2, 49: 2 };
+  var AREV = { 2: 2, 3: 3, 4: 2, 5: 4, 6: 3, 7: 3, 8: 4, 9: 2, 10: 2, 11: 3, 12: 3, 14: 2, 15: 2, 16: 2, 18: 2, 20: 4, 21: 3, 22: 2, 23: 3, 24: 3, 25: 2, 26: 3, 27: 3, 29: 2, 30: 3, 31: 2, 32: 2, 34: 2, 35: 4, 36: 2, 37: 3, 39: 4, 43: 2, 45: 2, 46: 2, 47: 2, 48: 2, 49: 2 };
   function audioFile(n) { return 'audio/v4/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
