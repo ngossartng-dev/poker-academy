@@ -107,7 +107,7 @@
       var tot = I.res.stacks.reduce(function (a, b) { return a + b; }, 0), pool = I.res.pays.reduce(function (a, b) { return a + b; }, 0);
       out = '<div class="card stack"><b>Valeur de chaque tapis</b><table class="tbl"><tr><th>Joueur</th><th>Tapis</th><th>Jetons</th><th>Valeur</th><th>Part des prix</th></tr>' +
         I.res.stacks.map(function (s, i) { return '<tr><td>' + (i + 1) + '</td><td>' + String(s).replace('.', ',') + '</td><td>' + pct(s / tot) + '</td><td><b>' + I.res.ev[i].toFixed(2).replace('.', ',') + ' €</b></td><td>' + pct(I.res.ev[i] / pool) + '</td></tr>'; }).join('') + '</table>' +
-        '<div class="small muted">Quand la part des prix est plus petite que la part des jetons, le tapis vaut moins que ses jetons : c’est l’effet ICM (chapitre 23).</div></div>';
+        '<div class="small muted">Quand la part des prix est plus petite que la part des jetons, le tapis vaut moins que ses jetons : c’est l’effet ICM (chapitre 38).</div></div>';
     }
     return '<div class="card stack"><b>Calculateur ICM</b><div class="small muted">Modèle de Malmuth-Harville, jusqu’à 10 joueurs. Entre les tapis (en jetons ou en BB) et les prix restants, séparés par des espaces.</div>' +
       field('Tapis des joueurs restants', 'icmS', I.stacks, 180) + field('Prix restants (€)', 'icmP', I.pays, 180) +
@@ -134,7 +134,7 @@
         '<tr><td>Équité requise avec la prime</td><td><b style="color:#4fe08f">' + pct(K.res.need1) + '</b></td></tr></table>' +
         '<div class="small muted">La prime ne compte que si tu couvres l’adversaire. En Space KO, prends la valeur moyenne de la prime. Près de la bulle, l’ICM tire dans l’autre sens.</div></div>';
     }
-    return '<div class="card stack"><b>Convertisseur de prime PKO</b><div class="small muted">Chapitre 25 : jetons par euro = tapis de départ ÷ part du buy-in qui va aux prix ; équité requise = paye ÷ (pot final + prime en jetons).</div>' +
+    return '<div class="card stack"><b>Convertisseur de prime PKO</b><div class="small muted">Chapitre 43 : jetons par euro = tapis de départ ÷ part du buy-in qui va aux prix ; équité requise = paye ÷ (pot final + prime en jetons).</div>' +
       field('Tapis de départ', 'pkS', K.start) + field('Part du buy-in pour les prix (€)', 'pkP', K.prize) + field('Prime de l’adversaire (€)', 'pkB', K.bounty, 120, 'tu en encaisses la moitié') +
       field('Pot final si tu paies', 'pkPot', K.pot, 120, 'en jetons, ta paye comprise') + field('Ta paye', 'pkC', K.call, 120, 'en jetons') +
       '<button class="btn gold" data-tact="calcPko">Calculer</button></div>' + out;
@@ -153,7 +153,7 @@
       out = '<div class="grid2"><div class="card"><div class="muted small">Ton M</div><div class="disp" style="font-size:40px;color:' + z[1] + '">' + String(Math.round(M.res.m * 10) / 10).replace('.', ',') + '</div><div class="small muted">zone ' + z[0].toLowerCase() + '</div></div><div class="card"><div class="muted small">Ton tapis</div><div class="disp" style="font-size:40px">' + String(Math.round(M.res.bbs * 10) / 10).replace('.', ',') + ' BB</div><div class="small muted">un tour coûte ' + f0(M.res.orbit) + ' jetons</div></div></div>' +
         U().yo('Zone ' + z[0].toLowerCase() + ' : ' + z[2] + ' Tu peux encore faire environ ' + Math.floor(M.res.m) + ' tours de table sans jouer.');
     }
-    return '<div class="card stack"><b>Compteur de M</b><div class="small muted">Chapitre 20 : M = ton tapis ÷ coût d’un tour de table (petite blinde + grosse blinde + antes).</div>' +
+    return '<div class="card stack"><b>Compteur de M</b><div class="small muted">Chapitre 35 : M = ton tapis ÷ coût d’un tour de table (petite blinde + grosse blinde + antes).</div>' +
       field('Ton tapis', 'mS', M.stack) + field('Petite blinde', 'mSB', M.sb) + field('Grosse blinde', 'mBB', M.bb) +
       seg('bbante', [['true', 'Ante de la grosse blinde'], ['false', 'Ante par joueur']], M.bbante) +
       field(M.bbante ? 'Ante (payée une fois)' : 'Ante par joueur', 'mA', M.ante) + (M.bbante ? '' : field('Joueurs à la table', 'mN', M.n)) +

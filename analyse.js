@@ -142,7 +142,7 @@
   }
 
 
-  /* ---------- Coups des chapitres 39 à 44 : squeeze, cold call, 3-bet par position, coups après le flop ---------- */
+  /* ---------- Coups des chapitres d’approfondissement (11 à 26) : squeeze, cold call, 3-bet par position, coups après le flop ---------- */
   function moves(h) {
     var hero = h.hero, pre = h.acts.filter(function (a) { return a.s === 'pre' && !a.blind; }), m = {};
     var raises = 0, callersAfter = 0, done = false, lastRaiser = null;
@@ -567,24 +567,24 @@
     var com = [], rows = [];
     function line(label, a, b, tgt, ch) { var p = pctOf(a, b); rows.push('<tr><td>' + label + '</td><td style="text-align:right"><b>' + fmtPct(p) + '</b></td><td class="small muted" style="text-align:right">' + b + ' fois</td><td class="small muted">' + tgt + '</td><td class="small"><a href="#lecon-' + ch + '">ch. ' + ch + '</a></td></tr>'); return p; }
     var sq = line('Squeeze', M.sq, M.sqO, 'repère 6-10 %', 40);
-    if (M.sqO >= 25 && sq < 3) com.push('Tu ne squeezes presque jamais (' + fmtPct(sq) + ' sur ' + M.sqO + ' occasions) : une ouverture et un call devant toi, c’est 6,5 BB d’argent mort. Relis le chapitre 40.');
+    if (M.sqO >= 25 && sq < 3) com.push('Tu ne squeezes presque jamais (' + fmtPct(sq) + ' sur ' + M.sqO + ' occasions) : une ouverture et un call devant toi, c’est 6,5 BB d’argent mort. Relis le chapitre 14.');
     if (M.sqO >= 25 && sq > 16) com.push('Tu squeezes beaucoup (' + fmtPct(sq) + ') : vérifie que tes bluffs sont des As assortis, pas des KJo ou QJo.');
     ['HJ', 'CO', 'BTN', 'SB', 'BB'].forEach(function (pos) {
       var Q = M.pos[pos]; if (!Q || !Q.o) return;
       var t = MV_T.b3[pos], p = line('3-bet ' + PA.POS_LABEL[pos], Q.b3, Q.o, 'repère ' + t[0] + '-' + t[1] + ' %', 39);
-      if (Q.o >= 25 && p < t[0] - 3) com.push(AUPOS[pos] + ', tu 3-bet ' + fmtPct(p) + ' face à une ouverture (repère ' + t[0] + '-' + t[1] + ' %) : ajoute des 3-bets light avec les As assortis (chapitre 39).');
+      if (Q.o >= 25 && p < t[0] - 3) com.push(AUPOS[pos] + ', tu 3-bet ' + fmtPct(p) + ' face à une ouverture (repère ' + t[0] + '-' + t[1] + ' %) : ajoute des 3-bets light avec les As assortis (chapitre 11).');
       if (MV_T.cc[pos]) {
         var c = MV_T.cc[pos], pc = line('Cold call ' + PA.POS_LABEL[pos], Q.cc, Q.o, 'repère ' + c[0] + '-' + c[1] + ' %', 41);
-        if (Q.o >= 20 && pc > c[1] + 5) com.push(pos === 'SB' ? 'En petite blinde, tu paies ' + fmtPct(pc) + ' des ouvertures : c’est 3-bet ou couche (chapitres 39 et 41).' : AUPOS[pos] + ', tu paies ' + fmtPct(pc) + ' des ouvertures : beaucoup de cold calls, souvent dominés ou squeezés (chapitre 41).');
+        if (Q.o >= 20 && pc > c[1] + 5) com.push(pos === 'SB' ? 'En petite blinde, tu paies ' + fmtPct(pc) + ' des ouvertures : c’est 3-bet ou couche (chapitres 11 et 15).' : AUPOS[pos] + ', tu paies ' + fmtPct(pc) + ' des ouvertures : beaucoup de cold calls, souvent dominés ou squeezés (chapitre 15).');
       }
     });
     var xr = line('Check-raise au flop', M.xr, M.xrO, 'repère 12-20 %', 44);
-    if (M.xrO >= 20 && xr < 6) com.push('Tu ne check-raises presque jamais (' + fmtPct(xr) + ') : tes brelans et tes gros tirages devraient relancer plus souvent (chapitre 44).');
-    if (M.xrO >= 20 && xr > 30) com.push('Tu check-raises beaucoup (' + fmtPct(xr) + ') : garde-le pour les mains fortes et les tirages avec des outs (chapitre 44).');
+    if (M.xrO >= 20 && xr < 6) com.push('Tu ne check-raises presque jamais (' + fmtPct(xr) + ') : tes brelans et tes gros tirages devraient relancer plus souvent (chapitre 22).');
+    if (M.xrO >= 20 && xr > 30) com.push('Tu check-raises beaucoup (' + fmtPct(xr) + ') : garde-le pour les mains fortes et les tirages avec des outs (chapitre 22).');
     var dc = line('C-bet retardé', M.dc, M.dcO, 'repère 55-70 %', 43);
-    if (M.dcO >= 15 && dc < 35) com.push('Quand tu as checké le flop et qu’il checke la turn, tu ne mises que ' + fmtPct(dc) + ' : le solveur mise 65 à 75 % du temps (c-bet retardé, chapitre 43).');
+    if (M.dcO >= 15 && dc < 35) com.push('Quand tu as checké le flop et qu’il checke la turn, tu ne mises que ' + fmtPct(dc) + ' : le solveur mise 65 à 75 % du temps (c-bet retardé, chapitre 26).');
     var pr = line('Mise sonde', M.pr, M.prO, 'repère 35-50 %', 43);
-    if (M.prO >= 15 && pr < 20) com.push('Quand l’ouvreur checke le flop, tu ne sondes la turn que ' + fmtPct(pr) + ' du temps (repère 35-50 %, chapitre 43).');
+    if (M.prO >= 15 && pr < 20) com.push('Quand l’ouvreur checke le flop, tu ne sondes la turn que ' + fmtPct(pr) + ' du temps (repère 35-50 %, chapitre 26).');
     line('Float (mise à la turn après avoir payé)', M.fl, M.flO, 'repère 45-55 %', 43);
     return '<div class="card stack"><b>Squeeze, 3-bet, coups après le flop</b><div class="small muted">Sur ' + M.n + ' mains Winamax. Repères : profil TAG, ranges de l’appli et solveur.</div>' + (com.length ? ui.yo(com.join('<br><br>')) : '') +
       '<div style="overflow-x:auto"><table class="small" style="width:100%;border-collapse:collapse"><tbody>' + rows.join('') + '</tbody></table></div></div>';

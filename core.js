@@ -53,16 +53,31 @@
     }
     if (window.PA_UI && window.PA_UI.onStorage) window.PA_UI.onStorage();
   });
+  var CH_RENUM = {1:1,2:2,3:3,4:4,5:5,6:7,7:8,8:10,9:13,10:16,11:17,12:19,13:20,14:21,15:25,16:28,17:31,18:32,19:33,20:35,21:36,22:37,23:38,24:41,25:43,26:44,27:45,28:46,29:47,30:48,31:49,32:50,33:23,34:9,35:29,36:42,37:6,38:24,39:11,40:14,41:15,42:18,43:26,44:22,45:12,46:27,47:30,48:39,49:40,50:34};
+  function renumCh(p) {
+    ['lessons', 'podPos', 'podDone', 'podSec'].forEach(function (f) { var o = p[f]; if (!o) return; var n = {}; Object.keys(o).forEach(function (k) { n[CH_RENUM[k] || k] = o[k]; }); p[f] = n; });
+    var walk = function (x) {
+      if (!x || typeof x !== 'object') return;
+      if (Array.isArray(x)) { x.forEach(walk); return; }
+      if (typeof x.ch === 'number' && CH_RENUM[x.ch]) x.ch = CH_RENUM[x.ch];
+      if (Array.isArray(x.ch)) x.ch = x.ch.map(function (c) { return CH_RENUM[c] || c; });
+      if (typeof x.label === 'string') x.label = x.label.replace(/(Leçon |chapitre )(\d+)/g, function (m, w, n) { return w + (CH_RENUM[n] || n); });
+      Object.keys(x).forEach(function (k) { if (k !== 'ch' && typeof x[k] === 'object') walk(x[k]); });
+    };
+    if (p.week) walk(p.week);
+  }
   function player() {
     var s = load(), p = s.current ? s.players[s.current] : null;
     // la range standard est celle du club : un joueur resté sur un profil de comparaison (TAG, LAG…) passe sur la range du club, une seule fois
+    // les chapitres ont été renumérotés dans l'ordre de lecture (v2.46) : on suit la progression du joueur une seule fois
+    if (p && p.chNum !== 2) { renumCh(p); p.chNum = 2; try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
     if (p && !p.migClub) { p.migClub = 1; if (p.profile !== 'perso') { p.profile = 'perso'; if (!p.perso || !Object.keys(p.perso).length) { p.perso = {}; p.persoBase = 'club'; } } try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
     return p;
   }
   function newPlayer(pseudo, age) {
     var s = load(); var id = 'p' + Date.now();
     s.players[id] = { id: id, pseudo: pseudo, age: age, profile: null, created: Date.now(), perso: {}, notions: {}, srs: {}, sessions: [], consult: 0, settings: { text: 1, chrono: false, vibrate: true }, testDone: false, last: null };
-    s.current = id; save(); return s.players[id];
+    s.players[id].chNum = 2; s.current = id; save(); return s.players[id];
   }
   function wipeAll() { try { localStorage.removeItem(KEY); } catch (e) {} mem = null; }
   function wipeTraining(p) { p.notions = {}; p.srs = {}; p.sessions = []; p.consult = 0; p.last = null; save(); }
@@ -184,7 +199,7 @@
     return out;
   }
 
-  /* ---------- Isoler un limper, squeezer (chapitres 7 et 40) ----------
+  /* ---------- Isoler un limper, squeezer (chapitres 8 et 14) ----------
      Un seul limper devant toi (iso) ; une ouverture puis un payeur devant toi (squeeze). Les mains dépendent de TA position :
      plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Groupes : early (UTG+1 à LJ), HJ, CO, BTN, SB, BB.
      raise = isoler / squeezer, call = sur-limper (compléter en SB, checker en BB) / payer, allin = iso-tapis ou squeeze à tapis (tapis courts). */
@@ -198,7 +213,7 @@
     lag: { early: ['66+,A9s+,KTs+,QJs,ATo+,KQo', '55-22,T9s,98s,87s,76s'], HJ: ['55+,A8s+,K9s+,Q9s+,J9s+,T9s,ATo+,KJo+,QJo', '44-22,A7s-A2s,87s,76s,65s'], CO: ['33+,A2s+,K8s+,Q9s+,J9s+,T9s,98s,A8o+,KTo+,QTo+,JTo', '22,87s,76s,65s,54s'],
       BTN: ['22+,A2s+,K4s+,Q6s+,J7s+,T7s+,97s+,86s+,76s,65s,A4o+,K8o+,Q9o+,J9o+,T9o', '54s,43s'], SB: ['44+,A7s+,K9s+,Q9s+,J9s+,T9s,A9o+,KTo+,QJo', '33-22,A6s-A2s,K8s-K2s,Q8s-Q6s,J8s,T8s,97s,87s,76s,65s,54s,K9o,QTo,JTo,T9o'], BB: ['66+,A8s+,KTs+,QTs+,JTs,ATo+,KJo+,A5s-A2s,K9s', ''] }
   };
-  // iso-tapis entre 12 et 20 BB (chapitre 7) : on pousse directement sur le limper
+  // iso-tapis entre 12 et 20 BB (chapitre 8) : on pousse directement sur le limper
   var ISO_SHOVE = { early: '88+,AJs+,AQo+,KQs', HJ: '77+,ATs+,AJo+,KQs', CO: '66+,A9s+,A9o+,KQs,KQo', BTN: '44+,A7s+,A8o+,KJs+,KQo,QJs', SB: '55+,A8s+,A9o+,KJs+,KQo', BB: '77+,ATs+,ATo+,KQs,KQo' };
   var SQZ = {
     nit: { mid: ['QQ+,AKs,AKo', 'JJ-99,AQs'], CO: ['QQ+,AKs,AKo', 'JJ-66,AQs,AJs,KQs'], BTN: ['JJ+,AKs,AKo,AQs', 'TT-22,AJs-ATs,KQs-KJs,QJs,JTs,T9s'], SB: ['QQ+,AKs,AKo', ''],
@@ -210,7 +225,7 @@
     lag: { mid: ['JJ+,AQs+,AKo,A5s', 'TT-66,AJs,KQs,QJs,JTs'], CO: ['TT+,AQs+,AKo,AQo,A5s-A3s,K9s', '99-44,AJs-ATs,KJs-KTs,QJs,JTs,T9s,98s'], BTN: ['99+,AJs+,AQo+,KQs,A5s-A2s,K9s-K8s,Q9s,J9s,T8s,97s,86s', '88-22,ATs-A6s,KJs-KTs,QJs-QTs,JTs,T9s,98s,87s,76s,65s'],
       SB: ['TT+,AJs+,AQo+,KQs,A5s-A3s,K9s', ''], BB: ['TT+,AJs+,AQo+,KQs,A9s-A7s,A5s-A2s,K9s,Q9s', '99-22,A6s,KJs-K7s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,97s,87s,86s,76s,65s,54s,AJo-ATo,KQo-KJo,QJo,JTo'] }
   };
-  // squeeze à tapis de 20 à 30 BB (chapitre 40)
+  // squeeze à tapis de 20 à 30 BB (chapitre 14)
   var SQZ_SHOVE = { nit: 'TT+,AQs+,AKo', tag: '99+,AJs+,AQo+,KQs', equilibre: '99+,AJs+,AQo+,KQs,A5s-A4s', lag: '88+,ATs+,AJo+,KQs,A5s-A3s' };
   function isoGroup(pos) { return ['UTG', 'UTG+1', 'MP', 'LJ'].indexOf(pos) >= 0 ? 'early' : pos; }
   function sqzGroup(pos) { return ['UTG+1', 'MP', 'LJ', 'HJ'].indexOf(pos) >= 0 ? 'mid' : pos; }
@@ -293,7 +308,7 @@
           callL = src.call.concat(src.raise).filter(function (h) { return !rset[h]; }).sort(byDef); callL = callL.slice(0, Math.round(src.call.length * (bp === 'lag' ? 0.8 : 0.7)));
         }
         callL.forEach(function (h) { out[h] = 'call'; });
-        raiseL.forEach(function (h) { out[h] = (dk === 'push' && s.pos === 'BB') || (dk === 'mid' && s.bb <= 30) ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 41)
+        raiseL.forEach(function (h) { out[h] = (dk === 'push' && s.pos === 'BB') || (dk === 'mid' && s.bb <= 30) ? 'allin' : 'raise'; }); // 20-30 BB : 3-bet à tapis ; 31-40 BB : 3-bet normal (chapitre 15)
       }
     } else if (s.type === 'vs3bet') {
       var v = s.scen === 'bvb' ? (P.vs3bet.bvb || bvbChart(profileId, P)) : P.vs3bet[s.scen || 'ip'];
@@ -492,8 +507,8 @@
   // classement d'une erreur : écart de style ou erreur que tous les profils évitent
   function judge(profileId, q, given) {
     if (given === q.answer) return { ok: true };
-    // 16 à 19 BB : ouvrir petit puis tapis ou fold est aussi le plan du cours (chapitre 21)
-    if (q.sit.type === 'open' && q.sit.bb >= 16 && q.sit.bb < 20 && q.answer === 'allin' && given === 'raise') return { ok: true, note: 'Entre 16 et 20 BB, ouvrir petit puis tapis ou fold est aussi une bonne ligne (chapitre 21).' };
+    // 16 à 19 BB : ouvrir petit puis tapis ou fold est aussi le plan du cours (chapitre 36)
+    if (q.sit.type === 'open' && q.sit.bb >= 16 && q.sit.bb < 20 && q.answer === 'allin' && given === 'raise') return { ok: true, note: 'Entre 16 et 20 BB, ouvrir petit puis tapis ou fold est aussi une bonne ligne (chapitre 36).' };
     var others = BASE_PROFILES.map(function (id) { return { id: id, a: actionFor(id, q.sit, q.hand) }; });
     var same = others.filter(function (o) { return o.a === given; });
     if (same.length) return { ok: false, kind: 'style', profiles: same.map(function (o) { return o.id; }) };
@@ -521,8 +536,8 @@
   function fmt(n) { return Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ').replace(/ /g, ' '); }
 
   // révisions des podcasts réenregistrés : un nouveau nom force le re-téléchargement sur PC et Android
-  var AREV = { 2: 2, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 2, 10: 2, 13: 3, 14: 2, 15: 2, 17: 2, 18: 2, 20: 4, 21: 2, 22: 2, 25: 2, 27: 2, 28: 2, 29: 2, 30: 2, 31: 2, 33: 3, 34: 2, 35: 2, 37: 3, 38: 3, 39: 3, 40: 2, 41: 2, 42: 2, 43: 3, 44: 2, 45: 2, 46: 3, 47: 3, 48: 2 };
-  function audioFile(n) { return 'audio/v3/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
+  var AREV = { 2: 2, 3: 3, 4: 2, 5: 4, 6: 3, 7: 3, 8: 4, 9: 2, 10: 2, 11: 3, 12: 3, 14: 2, 15: 2, 16: 2, 18: 2, 20: 4, 21: 3, 22: 2, 23: 3, 24: 3, 25: 2, 26: 3, 27: 3, 29: 2, 30: 3, 31: 2, 32: 2, 34: 2, 35: 4, 36: 2, 37: 3, 39: 3, 43: 2, 45: 2, 46: 2, 47: 2, 48: 2, 49: 2 };
+  function audioFile(n) { return 'audio/v4/pod' + (n < 10 ? '0' : '') + n + (AREV[n] ? '-r' + AREV[n] : '') + '.m4a'; }
   window.PA = {
     audioFile: audioFile, D: D, RANKS: RANKS, POS: POS, POS_LABEL: POS_LABEL, HANDS: HANDS, PROFILES: PROFILES, BASE_PROFILES: BASE_PROFILES, PUSH_DEPTHS: PUSH_DEPTHS,
     combos: combos, pct: pct, load: load, save: save, player: player, newPlayer: newPlayer, wipeAll: wipeAll, wipeTraining: wipeTraining,

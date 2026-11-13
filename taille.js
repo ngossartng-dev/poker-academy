@@ -1,5 +1,5 @@
 /* Poker Academy — exercice « Quelle taille au flop ? » : une position, un flop, une main de ta range → check ou quelle taille.
-   Les réponses suivent les tailles du club du chapitre 13. À la fin, un bilan par type de flop et par type de main
+   Les réponses suivent les tailles du club du chapitre 20. À la fin, un bilan par type de flop et par type de main
    pour voir si tu es cohérent. */
 (function () {
   'use strict';
@@ -47,7 +47,7 @@
   }
   var CR_OPTS = [['fold', 'Se coucher'], ['call', 'Payer'], ['crs', 'Relancer 2,2 à 2,5 fois (environ 5 BB)'], ['crb', 'Relancer 3 à 4 fois (6 à 8 BB)']];
 
-  // ---- la réponse du club (chapitre 13) ----
+  // ---- la réponse du club (chapitre 20) ----
   function decide(q) {
     var wet = !!WET[q.tex], c = q.cat;
     if (q.spot === 'cbet') {
@@ -179,16 +179,16 @@
     spots: { cbet: 'Continuation bet', multi: 'À trois joueurs', donk: 'Donk bet', cr: 'Check-raise' },
     group: function (x) { return (x.s === 'cr' ? 'Check-raise' : x.s === 'donk' ? 'Donk bet' : x.s === 'multi' ? 'À trois joueurs' : TGROUP[x.t]) + ' · ' + CAT[x.c]; },
     tipUp: 'trop agressif : tu mises trop gros ou tu relances trop', tipDown: 'trop passif : tu mises trop petit, tu checkes ou tu te couches trop',
-    intro: 'Une position, un flop, ta main : check ou quelle taille ? Les réponses suivent les tailles du club (chapitre 13). Tapis de 40 BB et plus. À la fin, un bilan te montre où tu n’es pas cohérent.',
-    good: 'Tes tailles suivent bien le board et ta main.', bad: 'Relis « Les tailles du club au flop » au chapitre 13 : la taille dépend du board, de ta main et du nombre d’adversaires.',
-    links: '<a class="btn block" href="#lecon-13">Relire le chapitre 13</a>' };
+    intro: 'Une position, un flop, ta main : check ou quelle taille ? Les réponses suivent les tailles du club (chapitre 20). Tapis de 40 BB et plus. À la fin, un bilan te montre où tu n’es pas cohérent.',
+    good: 'Tes tailles suivent bien le board et ta main.', bad: 'Relis « Les tailles du club au flop » au chapitre 20 : la taille dépend du board, de ta main et du nombre d’adversaires.',
+    links: '<a class="btn block" href="#lecon-20">Relire le chapitre 20</a>' };
 
   // ---- 2. Face à une mise : se coucher, payer ou relancer ----
   var FSZ = { tiers: [2, 'un tiers du pot', 20, 75], moitie: [3, 'la moitié du pot', 25, 67], troisq: [4.5, 'trois quarts du pot', 30, 57], pot: [6, 'la taille du pot', 33, 50] };
   var FCAT = { monstre: 'Très grosse main', forte: 'Main forte', moyenne: 'Main moyenne', tirage: 'Tirage', ventral: 'Tirage ventral', rien: 'Rien' };
   function faceDecide(q) {
     var z = FSZ[q.sz], wet = !!WET[q.tex], need = 'Il te faut ' + z[2] + ' % d’équité pour payer ' + z[1] + ', et tu dois garder environ ' + z[3] + ' % de ta range.';
-    if (q.cat === 'monstre') return { a: 'raise', why: 'Très grosse main : tu relances (check-raise ' + (wet ? '3 à 4 fois sa mise sur ce board à tirages' : '2,2 à 2,5 fois sa mise sur ce board sec') + ', chapitre 14). Payer seulement laisse les tirages venir gratuitement.' };
+    if (q.cat === 'monstre') return { a: 'raise', why: 'Très grosse main : tu relances (check-raise ' + (wet ? '3 à 4 fois sa mise sur ce board à tirages' : '2,2 à 2,5 fois sa mise sur ce board sec') + ', chapitre 21). Payer seulement laisse les tirages venir gratuitement.' };
     if (q.cat === 'forte') return { a: 'call', why: 'Main forte : tu paies. ' + need + ' Relancer ne fait coucher que les mains plus faibles et fait payer les meilleures.' };
     if (q.cat === 'moyenne') {
       if (q.sz === 'pot' && wet) return { a: 'fold', why: 'Main moyenne face à une mise du pot sur un board à tirages : tu te couches. ' + need + ' Ici, une grosse mise d’un joueur du club, c’est souvent une vraie main, et ta paire est loin devant rarement.' };
@@ -196,7 +196,7 @@
     }
     if (q.cat === 'ventral') return { a: 'fold', why: 'Un tirage ventral, c’est 4 outs : environ 17 % sur deux cartes. ' + need + ' Ça ne suffit pas seul : tu te couches.' };
     if (q.cat === 'tirage') {
-      if (q.sz === 'tiers' && wet) return { a: 'raise', why: 'Tirage face à une petite mise sur un board à tirages : tu relances (semi-bluff). Il peut se coucher tout de suite, et sinon tu as encore tes outs. Le solveur relance ces tirages très souvent (chapitre 14).' };
+      if (q.sz === 'tiers' && wet) return { a: 'raise', why: 'Tirage face à une petite mise sur un board à tirages : tu relances (semi-bluff). Il peut se coucher tout de suite, et sinon tu as encore tes outs. Le solveur relance ces tirages très souvent (chapitre 21).' };
       return { a: 'call', why: 'Un tirage couleur ou par les deux bouts, c’est 8 à 9 outs : environ 32 à 35 % sur deux cartes. ' + need + ' Tu paies.' };
     }
     return { a: 'fold', why: 'Rien, sans tirage : tu te couches. ' + need + ' Ta main ne gagne presque jamais.' };
@@ -214,9 +214,9 @@
     spots: { tiers: 'Face à un tiers du pot', moitie: 'Face à la moitié du pot', troisq: 'Face à trois quarts du pot', pot: 'Face à la taille du pot' },
     group: function (x) { return TGROUP[x.t] + ' · ' + FCAT[x.c]; },
     tipUp: 'trop agressif : tu relances ou tu paies trop', tipDown: 'trop passif : tu te couches trop, ou tu paies au lieu de relancer',
-    intro: 'On te mise dessus au flop : tu te couches, tu paies ou tu relances ? Ça dépend de la taille de la mise, de ta main et du board (chapitres 14 et 42). À la fin, un bilan te dit si tu te couches trop ou si tu paies trop.',
-    good: 'Tu défends comme il faut selon la taille de la mise.', bad: 'Relis « Défendre : la cote et la défense minimale » au chapitre 14 et « Combien de mains garder face à une mise ? » au chapitre 42.',
-    links: '<a class="btn block" href="#lecon-14">Relire le chapitre 14</a>' };
+    intro: 'On te mise dessus au flop : tu te couches, tu paies ou tu relances ? Ça dépend de la taille de la mise, de ta main et du board (chapitres 21 et 18). À la fin, un bilan te dit si tu te couches trop ou si tu paies trop.',
+    good: 'Tu défends comme il faut selon la taille de la mise.', bad: 'Relis « Défendre : la cote et la défense minimale » au chapitre 21 et « Combien de mains garder face à une mise ? » au chapitre 18.',
+    links: '<a class="btn block" href="#lecon-21">Relire le chapitre 21</a>' };
 
   // ---- 3. Turn et river : continuer, ralentir, quelle taille ----
   var TURNS = [
@@ -237,7 +237,7 @@
     var c = q.cat;
     if (q.spot === 'turn') {
       if (c === 'monstre') return { a: 'gros', why: 'Très grosse main : 66 à 75 % du pot, ou la taille du pot à 40 BB, pour préparer le tapis à la river.' };
-      if (c === 'forte') return q.tc === 'complete' ? { a: 'check', why: 'Ta paire haute ralentit : la turn complète une couleur ou une quinte. Check, tu contrôles le pot (chapitre 15).' } : { a: 'gros', why: 'Main forte et ' + TCARD[q.tc] + ' : 66 à 75 % du pot, pour faire payer les tirages et préparer la river.' };
+      if (c === 'forte') return q.tc === 'complete' ? { a: 'check', why: 'Ta paire haute ralentit : la turn complète une couleur ou une quinte. Check, tu contrôles le pot (chapitre 25).' } : { a: 'gros', why: 'Main forte et ' + TCARD[q.tc] + ' : 66 à 75 % du pot, pour faire payer les tirages et préparer la river.' };
       if (c === 'moyenne') return { a: 'check', why: 'Main moyenne : check. Une deuxième mise ne fait payer que les mains meilleures, et ta main gagne souvent au check.' };
       if (c === 'tirage') return { a: 'moyen', why: 'Tirage qui garde beaucoup d’outs : deuxième mise en semi-bluff, 50 à 66 % du pot. Il peut se coucher, et sinon tu as encore tes outs.' };
       return q.tc === 'aide' ? { a: 'moyen', why: 'Rien, mais ' + TCARD.aide + ' : c’est le bon moment pour une deuxième mise (double barrel), 50 à 66 % du pot.' } : { a: 'check', why: 'Rien, et ' + TCARD[q.tc] + ' : ton bluff passe trop rarement. Check, et tu abandonnes si elle mise.' };
@@ -284,9 +284,9 @@
     spots: { turn: 'Deuxième mise à la turn', delayed: 'Mise retardée à la turn', river: 'River en position', riverOop: 'River hors de position' },
     group: function (x) { return (x.t || EX.turnriver.spots[x.s]) + ' · ' + RCAT[x.c]; },
     tipUp: 'trop agressif : tu mises trop gros ou tu bluffes trop', tipDown: 'trop passif : tu checkes trop ou tu mises trop petit',
-    intro: 'La suite du coup : à la turn, tu continues ou tu ralentis selon la carte ; à la river, valeur forte, valeur fine, mise de blocage ou bluff. Les réponses suivent les repères du club des chapitres 15 et 16.',
-    good: 'Tu lis bien la turn et la river.', bad: 'Relis « Les tailles du club à la turn » (chapitre 15) et « Les tailles du club à la river » (chapitre 16).',
-    links: '<a class="btn block" href="#lecon-15">Relire le chapitre 15</a><a class="btn block" href="#lecon-16">Relire le chapitre 16</a>' };
+    intro: 'La suite du coup : à la turn, tu continues ou tu ralentis selon la carte ; à la river, valeur forte, valeur fine, mise de blocage ou bluff. Les réponses suivent les repères du club des chapitres 25 et 28.',
+    good: 'Tu lis bien la turn et la river.', bad: 'Relis « Les tailles du club à la turn » (chapitre 25) et « Les tailles du club à la river » (chapitre 28).',
+    links: '<a class="btn block" href="#lecon-25">Relire le chapitre 25</a><a class="btn block" href="#lecon-28">Relire le chapitre 28</a>' };
 
   window.PA_TAILLE = { view: function () { return exView('taille'); }, faceView: function () { return exView('facemise'); }, trView: function () { return exView('turnriver'); },
     decide: decide, makeQ: makeQ, faceMake: faceMake, trMake: trMake, BOARDS: BOARDS, TURNS: TURNS, RIVERS: RIVERS, EX: EX, reset: function () { Object.keys(EX).forEach(function (k) { EX[k].Q = null; }); } };

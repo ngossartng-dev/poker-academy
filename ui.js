@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.45.0';
+  var VERSION = '2.46.0';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -44,8 +44,8 @@
     if (a === 'allin') return (type === 'def' || type === 'squeeze') ? 'a-three' : 'a-allin';
     return 'a-fold';
   }
-  function isoSize(s) { var ip = s.pos !== 'SB' && s.pos !== 'BB'; return (ip ? 3 : 4) + 1; } // chapitre 7 : 3 BB en position, 4 BB des blindes, +1 BB par limper
-  function sqzSize(s) { var o = PA.openBB(s.opener, s.bb), v = 4 * o + 1 + (s.pos === 'SB' || s.pos === 'BB' ? 1.5 : 0); return Math.round(v * 2) / 2; } // chapitre 40 : 4 fois l'ouverture + 1 BB par payeur, plus hors position
+  function isoSize(s) { var ip = s.pos !== 'SB' && s.pos !== 'BB'; return (ip ? 3 : 4) + 1; } // chapitre 8 : 3 BB en position, 4 BB des blindes, +1 BB par limper
+  function sqzSize(s) { var o = PA.openBB(s.opener, s.bb), v = 4 * o + 1 + (s.pos === 'SB' || s.pos === 'BB' ? 1.5 : 0); return Math.round(v * 2) / 2; } // chapitre 14 : 4 fois l'ouverture + 1 BB par payeur, plus hors position
   function actName(a, s) {
     if (a === 'fold') return 'Se coucher';
     if (a === 'call' && s && s.type === 'iso') return s.pos === 'BB' ? 'Checker' : s.pos === 'SB' ? 'Compléter (limp)' : 'Sur-limper (1 BB)';
@@ -387,7 +387,7 @@
       out += '<div class="szm"><button class="szm-h" data-act="szmToggle" aria-expanded="' + (RS.szm ? 'true' : 'false') + '">📏 Après le flop : les tailles du club <span>' + (RS.szm ? '▴' : '▾') + '</span></button>' +
         (RS.szm ? '<div class="szm-b">' + (s.type === 'open' ? '<div class="small muted">Tu as ouvert : si on te paie, c’est toi qui mises en premier (c-bet).</div>' : (s.type === 'bbdef' || s.type === 'def' ? '<div class="small muted">Tu as payé : le donk bet (50 %) se garde pour les boards bas et connectés qui t’aident.</div>' : '')) +
           ['flop', 'turn', 'river'].map(function (k) { return '<div class="szm-s">' + { flop: 'Flop', turn: 'Turn', river: 'River' }[k] + '</div>' + CZ[k].map(szLine).join(''); }).join('') +
-          '<div class="small muted">En % du pot. Turn et river : à valider par Lionel. Exemples : <a href="#lecon-13">chapitre 13</a>, <a href="#lecon-15">15</a> et <a href="#lecon-16">16</a> · fiche mémo · exercice <a href="#taille">Quelle taille au flop ?</a></div></div>' : '') + '</div>';
+          '<div class="small muted">En % du pot. Turn et river : à valider par Lionel. Exemples : <a href="#lecon-20">chapitre 20</a>, <a href="#lecon-25">15</a> et <a href="#lecon-28">16</a> · fiche mémo · exercice <a href="#taille">Quelle taille au flop ?</a></div></div>' : '') + '</div>';
     }
     if (s.type === 'callshove' || (s.type === 'open' && PA.depthKey(s.bb) === 'push')) out += '<p class="muted small">Tables d’équilibre en jetons (antes de 0,125 BB), calculées pour le cours. Près d’une bulle, resserre tes payes.</p>';
     if (prof !== 'nit' && prof !== 'tag' && (s.type === 'def')) out += '<p class="muted small">Ranges construites à partir du livre ; vérification au solveur prévue.</p>';

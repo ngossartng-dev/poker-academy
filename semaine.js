@@ -5,9 +5,9 @@
   var EXTRA = { taille: 'Tailles de mise au flop', facemise: 'Face à une mise', turnriver: 'Turn et river', lecture: 'Lire la range adverse', icm: 'Bulle et ICM', pko: 'PKO et Space KO', hu: 'Tapis ou fold en heads-up', outs: 'Outs et cote' };
   // notion → leçons à relire et exercice ciblé
   var MAP = {
-    open_early: { ch: [5], go: 'open_early' }, open_mid: { ch: [5], go: 'open_mid' }, open_late: { ch: [5, 37], go: 'open_late' }, open_sb: { ch: [5, 37], go: 'open_sb' },
-    bb_def: { ch: [6], go: 'bb_def' }, taille: { ch: [13], href: '#taille' }, facemise: { ch: [14, 42], href: '#facemise' }, turnriver: { ch: [15, 16], href: '#turnriver' }, lecture: { ch: [12], href: '#lecture' }, cold: { ch: [41, 8], go: 'cold' }, vs3bet: { ch: [8, 39], go: 'vs3bet' }, push: { ch: [21, 22], go: 'push' },
-    callshove: { ch: [22, 23], go: 'callshove' }, mid: { ch: [20], go: 'mid' }, icm: { ch: [23], go: 'icm' }, pko: { ch: [25], go: 'pko' }, bulle: { ch: [48], go: 'bulle' }, iso: { ch: [7], go: 'iso' }, squeeze: { ch: [40], go: 'squeeze' }, postflop: { ch: [14, 15], go: 'postflop' }, hu: { ch: [36, 24], go: 'hu' }, outs: { ch: [10], go: 'outs' }
+    open_early: { ch: [5], go: 'open_early' }, open_mid: { ch: [5], go: 'open_mid' }, open_late: { ch: [5, 6], go: 'open_late' }, open_sb: { ch: [5, 6], go: 'open_sb' },
+    bb_def: { ch: [7], go: 'bb_def' }, taille: { ch: [20], href: '#taille' }, facemise: { ch: [21, 18], href: '#facemise' }, turnriver: { ch: [25, 28], href: '#turnriver' }, lecture: { ch: [19], href: '#lecture' }, cold: { ch: [15, 10], go: 'cold' }, vs3bet: { ch: [10, 11], go: 'vs3bet' }, push: { ch: [36, 37], go: 'push' },
+    callshove: { ch: [37, 38], go: 'callshove' }, mid: { ch: [35], go: 'mid' }, icm: { ch: [38], go: 'icm' }, pko: { ch: [43], go: 'pko' }, bulle: { ch: [39], go: 'bulle' }, iso: { ch: [8], go: 'iso' }, squeeze: { ch: [14], go: 'squeeze' }, postflop: { ch: [21, 25], go: 'postflop' }, hu: { ch: [42, 41], go: 'hu' }, outs: { ch: [16], go: 'outs' }
   };
   var DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   function notionName(k) { return (window.PA.NOTIONS || {})[k] || EXTRA[k] || k; }
@@ -47,9 +47,9 @@
     var h = D.hist.filter(function (x) { return x.tn.type !== 'libre'; }), n = h.length;
     var early = h.filter(function (x) { return x.r.place / x.tn.n > 0.6; }).length, deepRun = h.filter(function (x) { return x.r.place <= 3; }).length, wins = h.filter(function (x) { return x.r.place === 1; }).length;
     var tips = [];
-    if (n >= 3 && early / n >= 0.5) tips.push({ txt: 'Tu sors souvent tôt (' + early + ' fois sur ' + n + ' dans la première moitié des éliminés) : revois les ouvertures et la gestion des tapis de 25 à 40 BB.', ch: [5, 20] });
-    if (deepRun >= 2 && wins === 0) tips.push({ txt: 'Tu vas souvent au podium (' + deepRun + ' fois) sans gagner : le heads-up et la table finale sont ta marge.', ch: [36, 24] });
-    if (n >= 3 && h.filter(function (x) { var lv = parseInt(String(x.r.koLevel || '').replace(/\D+/g, ' ').trim().split(' ')[0], 10); return lv >= 6 && x.r.place > 3; }).length / n >= 0.4) tips.push({ txt: 'Beaucoup de sorties en milieu de tournoi, tapis courts : travaille le tapis ou fold et payer un tapis.', ch: [21, 22] });
+    if (n >= 3 && early / n >= 0.5) tips.push({ txt: 'Tu sors souvent tôt (' + early + ' fois sur ' + n + ' dans la première moitié des éliminés) : revois les ouvertures et la gestion des tapis de 25 à 40 BB.', ch: [5, 35] });
+    if (deepRun >= 2 && wins === 0) tips.push({ txt: 'Tu vas souvent au podium (' + deepRun + ' fois) sans gagner : le heads-up et la table finale sont ta marge.', ch: [42, 41] });
+    if (n >= 3 && h.filter(function (x) { var lv = parseInt(String(x.r.koLevel || '').replace(/\D+/g, ' ').trim().split(' ')[0], 10); return lv >= 6 && x.r.place > 3; }).length / n >= 0.4) tips.push({ txt: 'Beaucoup de sorties en milieu de tournoi, tapis courts : travaille le tapis ou fold et payer un tapis.', ch: [36, 37] });
     if (D.nemesis && D.nemesis.n >= 2) tips.push({ txt: D.nemesis.name + ' t’a sorti ' + D.nemesis.n + ' fois : crée-lui une fiche dans Adversaires et note comment il joue.', href: '#analyser?adv' });
     if (!tips.length) tips.push({ txt: 'Rien d’inquiétant dans tes résultats : continue le plan de la semaine.', ch: [] });
     return { year: year, D: D, n: n, tips: tips };

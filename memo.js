@@ -5,7 +5,7 @@
     return '<table class="memo-t"><thead><tr>' + head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>' +
       rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td' + (i ? ' class="n"' : '') + '>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
   }
-  // les tailles du club après le flop (chapitres 13, 15 et 16) : servent ici et dans le rappel de Ma range
+  // les tailles du club après le flop (chapitres 20, 25 et 28) : servent ici et dans le rappel de Ma range
   var CLUB_SZ = {
     flop: [['C-bet sur board sec, pairé ou d’une couleur', '25 à 33 %'], ['Tirage, bluff ou semi-bluff', '25 à 35 %'], ['Main forte sur board à tirages', '66 à 75 %'], ['Très grosse main sur board sec', '25 à 33 %, puis plus gros'], ['Donk bet (board bas et connecté)', '50 %'], ['À 3 joueurs ou plus', '50 à 66 %'], ['Check-raise', '× 2,2 à 2,5 (sec) · × 3 à 4 (tirages)']],
     turn: [['Deuxième mise, la carte t’aide', '50 à 75 %'], ['Valeur sur board à tirages', '66 à 75 % (ou le pot à 40 BB)'], ['Tirage avec beaucoup d’outs', '50 à 66 %'], ['Mise retardée (flop checké)', '50 %'], ['Main moyenne, ou la carte complète un tirage', 'check']],
@@ -62,7 +62,7 @@
       '<section><h2>Les seuils</h2>' + seuils + '</section>' +
       '<section><h2>Défense minimale et bluff</h2>' + mdf + '<div class="small muted">Défense = pot ÷ (pot + mise) · bluff = mise ÷ (pot + mise)</div></section>' +
       '<section><h2>Les outs</h2>' + outs + '<div class="small muted">Règle du 4 au flop (avec deux cartes à venir), du 2 à la turn.</div></section>' +
-      '<section class="wide"><h2>Après le flop : les tailles du club</h2><div class="memo-grid">' + ['flop', 'turn', 'river'].map(function (k) { return '<div><b>' + { flop: 'Flop', turn: 'Turn', river: 'River' }[k] + '</b>' + tbl(['Coup', '% du pot'], CLUB_SZ[k]) + '</div>'; }).join('') + '</div><div class="small muted">Turn et river : repères à valider par Lionel. Détails et exemples : chapitres 13, 15 et 16.</div></section>' +
+      '<section class="wide"><h2>Après le flop : les tailles du club</h2><div class="memo-grid">' + ['flop', 'turn', 'river'].map(function (k) { return '<div><b>' + { flop: 'Flop', turn: 'Turn', river: 'River' }[k] + '</b>' + tbl(['Coup', '% du pot'], CLUB_SZ[k]) + '</div>'; }).join('') + '</div><div class="small muted">Turn et river : repères à valider par Lionel. Détails et exemples : chapitres 20, 25 et 28.</div></section>' +
       '<section class="wide"><h2>Après le flop</h2>' + post + '</section></div>';
   }
   function view() {

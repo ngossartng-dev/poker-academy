@@ -497,7 +497,7 @@
         if (inFront >= 2) need *= inFront >= 3 ? 0.3 : 0.45; // deux tapis devant : quelqu'un a souvent une très grosse main, on ne paie qu'avec le haut du haut
         if (G.opts.bounty !== 'classique' && H.opener !== null && G.players[H.opener] && G.players[H.opener].bounty > 0 && p.stack >= G.players[H.opener].stack) need += 0.07;
         if (bubble && rem > 2) need *= 0.6; return hp < need + (price < 0.35 ? 0.05 : 0) ? ['call'] : ['fold']; }
-      // chapitres 39 à 41 : squeeze, 3-bet light des positions tardives, « 3-bet ou couche » en petite blinde, moins de cold calls
+      // chapitres 11, 14 et 15 : squeeze, 3-bet light des positions tardives, « 3-bet ou couche » en petite blinde, moins de cold calls
       var callers = 0; if (H.preRaises === 1) Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== i && k !== H.opener && !H.folded[k] && H.bets[k] === H.cur) callers++; });
       var opPos = H.opener !== null && H.opener !== undefined ? H.pos[H.opener] : null, lateOp = opPos === 'CO' || opPos === 'BTN' || opPos === 'SB' || opPos === 'HJ';
       var lightOK = H.preRaises === 1 && !hu && (P.light || 0) > 0 && effBB >= 20 && LIGHT[code] && (pos === 'BTN' || pos === 'SB' || pos === 'BB' || (pos === 'CO' && opPos === 'HJ')) && (lateOp || LIGHT[code] === 2);
@@ -545,7 +545,7 @@
     var size = Math.max(L.bb, Math.round(pot * betFrac));
     if (eq > 0.62 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack + H.bets[i]] : ['raise', size];
     var isAggressor = H.lastAggressor === i;
-    // chapitre 43 : après un tour checké, le relanceur fait son c-bet retardé, l’autre sonde
+    // chapitre 26 : après un tour checké, le relanceur fait son c-bet retardé, l’autre sonde
     if (opp === 1 && H.street >= 2 && H.prevChecked) {
       var pfaMe = H.pfa === i, firstToAct = Object.keys(H.acted).length === 0;
       if (pfaMe && !firstToAct && Math.random() < 0.25 + P.agg * 0.45) return ['raise', Math.min(p.stack, Math.max(L.bb, Math.round(pot * Z.bet[0] * 1.2)))];
@@ -619,7 +619,7 @@
       map9 = { BTN: 'SB', BB: 'BB' }; p = map9[pos];
     }
     if (H.preRaises === 0 && H.limpers === 0 && p !== 'BB') return { sit: { type: 'open', pos: p, bb: eff > 40 ? 100 : (eff >= 20 ? 30 : eff) }, hand: code };
-    // un seul limper devant toi (chapitre 7) : isoler, sur-limper ou se coucher ; iso-tapis entre 12 et 20 BB
+    // un seul limper devant toi (chapitre 8) : isoler, sur-limper ou se coucher ; iso-tapis entre 12 et 20 BB
     if (H.preRaises === 0 && H.limpers === 1 && H.order.length > 2 && eff >= 12) {
       var lk = Object.keys(H.inHand).map(Number).filter(function (k) { return k !== 0 && k !== H.sb && k !== H.bbSeat && !H.folded[k] && H.bets[k] >= L.bb; })[0];
       if (lk !== undefined && map9[H.pos[lk]] && map9[H.pos[lk]] !== 'SB') return { sit: { type: 'iso', pos: p, opener: map9[H.pos[lk]], bb: eff > 20 ? 100 : 18 }, hand: code };
@@ -627,7 +627,7 @@
     if (H.preRaises === 1 && H.opener !== null) {
       var op = map9[H.pos[H.opener]], others = 0;
       Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] > 0 && k !== H.sb && k !== H.bbSeat) others++; });
-      // une ouverture et un seul payeur devant toi (chapitre 40) : squeeze, payer ou se coucher
+      // une ouverture et un seul payeur devant toi (chapitre 14) : squeeze, payer ou se coucher
       if (H.limpers === 0 && others === 1 && eff >= 20 && H.order.length > 2 && G.players[H.opener].stack > 0) {
         var ck = Object.keys(H.inHand).map(Number).filter(function (k) { return k !== 0 && k !== H.opener && !H.folded[k] && H.bets[k] > 0 && k !== H.sb && k !== H.bbSeat; })[0];
         if (ck !== undefined && G.players[ck].stack > 0 && map9[H.pos[ck]] && PA.POS.indexOf(map9[H.pos[ck]]) < PA.POS.indexOf(p)) return { sit: { type: 'squeeze', pos: p, opener: op, caller: map9[H.pos[ck]], bb: eff > 30 ? 100 : 25 }, hand: code };

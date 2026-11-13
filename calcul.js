@@ -10,32 +10,32 @@
   var GEN = [
     function () { // cote du pot
       var pot = pick([6, 8, 10, 12, 15, 20, 24, 30]), fr = pick(FRAC.slice(0, 6)), bet = Math.round(pot * fr[0] * 2) / 2, ans = bet / (pot + 2 * bet);
-      return { t: 'Cote du pot', q: 'Il y a ' + f1(pot) + ' BB au milieu, il mise ' + f1(bet) + ' BB. Quelle équité te faut-il pour payer ?', ans: pc(ans), why: 'Équité requise = ce que tu paies ÷ le pot final = ' + f1(bet) + ' ÷ (' + f1(pot) + ' + ' + f1(bet) + ' + ' + f1(bet) + ') ≈ ' + pc(ans) + ' %.', ch: 10 };
+      return { t: 'Cote du pot', q: 'Il y a ' + f1(pot) + ' BB au milieu, il mise ' + f1(bet) + ' BB. Quelle équité te faut-il pour payer ?', ans: pc(ans), why: 'Équité requise = ce que tu paies ÷ le pot final = ' + f1(bet) + ' ÷ (' + f1(pot) + ' + ' + f1(bet) + ' + ' + f1(bet) + ') ≈ ' + pc(ans) + ' %.', ch: 16 };
     },
     function () { // défense minimale
       var fr = pick(FRAC), ans = 1 / (1 + fr[0]);
-      return { t: 'Défense minimale', q: 'Il mise ' + fr[1] + '. Quelle part de ta range dois-tu garder au minimum pour que son bluff ne soit pas rentable ?', ans: pc(ans), why: 'Défense minimale = pot ÷ (pot + mise) = 1 ÷ (1 + ' + f1(fr[0]) + ') ≈ ' + pc(ans) + ' %.', ch: 42 };
+      return { t: 'Défense minimale', q: 'Il mise ' + fr[1] + '. Quelle part de ta range dois-tu garder au minimum pour que son bluff ne soit pas rentable ?', ans: pc(ans), why: 'Défense minimale = pot ÷ (pot + mise) = 1 ÷ (1 + ' + f1(fr[0]) + ') ≈ ' + pc(ans) + ' %.', ch: 18 };
     },
     function () { // bluff rentable
       var fr = pick(FRAC), ans = fr[0] / (1 + fr[0]);
-      return { t: 'Bluff rentable', q: 'Tu bluffes de ' + fr[1] + '. Combien de fois l’adversaire doit-il se coucher pour que ce soit rentable ?', ans: pc(ans), why: 'Seuil du bluff = mise ÷ (pot + mise) = ' + f1(fr[0]) + ' ÷ (1 + ' + f1(fr[0]) + ') ≈ ' + pc(ans) + ' %.', ch: 42 };
+      return { t: 'Bluff rentable', q: 'Tu bluffes de ' + fr[1] + '. Combien de fois l’adversaire doit-il se coucher pour que ce soit rentable ?', ans: pc(ans), why: 'Seuil du bluff = mise ÷ (pot + mise) = ' + f1(fr[0]) + ' ÷ (1 + ' + f1(fr[0]) + ') ≈ ' + pc(ans) + ' %.', ch: 18 };
     },
     function () { // outs, règle du 2 et du 4
       var o = pick([[4, 'un tirage quinte ventral'], [8, 'un tirage quinte par les deux bouts'], [9, 'un tirage couleur'], [12, 'un tirage couleur avec une overcard'], [15, 'un tirage couleur et quinte']]), flop = Math.random() < 0.5;
       var ans = Math.min(60, flop ? o[0] * 4 - (o[0] > 8 ? o[0] - 8 : 0) : o[0] * 2);
-      return { t: 'Outs', q: 'Tu as ' + o[1] + ' (' + o[0] + ' outs). ' + (flop ? 'Au flop, tout le monde est à tapis : quelle est à peu près ton équité jusqu’à la river ?' : 'À la turn : quelle est à peu près ton équité pour la river ?'), ans: ans, why: flop ? 'Règle du 4 au flop (deux cartes à venir) : ' + o[0] + ' × 4' + (o[0] > 8 ? ', moins ' + (o[0] - 8) + ' au-delà de 8 outs' : '') + ' ≈ ' + ans + ' %.' : 'Règle du 2 à la turn (une carte à venir) : ' + o[0] + ' × 2 ≈ ' + ans + ' %.', ch: 10 };
+      return { t: 'Outs', q: 'Tu as ' + o[1] + ' (' + o[0] + ' outs). ' + (flop ? 'Au flop, tout le monde est à tapis : quelle est à peu près ton équité jusqu’à la river ?' : 'À la turn : quelle est à peu près ton équité pour la river ?'), ans: ans, why: flop ? 'Règle du 4 au flop (deux cartes à venir) : ' + o[0] + ' × 4' + (o[0] > 8 ? ', moins ' + (o[0] - 8) + ' au-delà de 8 outs' : '') + ' ≈ ' + ans + ' %.' : 'Règle du 2 à la turn (une carte à venir) : ' + o[0] + ' × 2 ≈ ' + ans + ' %.', ch: 16 };
     },
     function () { // grosse blinde avec ante
       var x = pick([2, 2.2, 2.5, 3, 4]), ans = (x - 1) / (2 * x + 1.5);
-      return { t: 'Grosse blinde', q: 'Tournoi avec ante de grosse blinde. Le bouton ouvre à ' + f1(x) + ' BB, la petite blinde se couche. En grosse blinde, quelle équité te faut-il pour payer ?', ans: pc(ans), why: 'Tu paies ' + f1(x - 1) + ' BB pour un pot final de ' + f1(2 * x + 1.5) + ' BB (2 × ' + f1(x) + ' + 0,5 + 1 d’ante) : ' + f1(x - 1) + ' ÷ ' + f1(2 * x + 1.5) + ' ≈ ' + pc(ans) + ' %.', ch: 6 };
+      return { t: 'Grosse blinde', q: 'Tournoi avec ante de grosse blinde. Le bouton ouvre à ' + f1(x) + ' BB, la petite blinde se couche. En grosse blinde, quelle équité te faut-il pour payer ?', ans: pc(ans), why: 'Tu paies ' + f1(x - 1) + ' BB pour un pot final de ' + f1(2 * x + 1.5) + ' BB (2 × ' + f1(x) + ' + 0,5 + 1 d’ante) : ' + f1(x - 1) + ' ÷ ' + f1(2 * x + 1.5) + ' ≈ ' + pc(ans) + ' %.', ch: 7 };
     },
     function () { // 3-bet light
       var y = pick([6, 6.5, 7, 8, 9]), ans = y / (y + 4.5);
-      return { t: '3-bet light', q: 'Ouverture à 2 BB, ante de grosse blinde (4,5 BB au milieu). Tu 3-bet en bluff à ' + f1(y) + ' BB au bouton. L’ouvreur doit se coucher plus de…', ans: pc(ans), why: y + ' ÷ (' + f1(y) + ' + 4,5) ≈ ' + pc(ans) + ' % (chapitre 39).', ch: 39 };
+      return { t: '3-bet light', q: 'Ouverture à 2 BB, ante de grosse blinde (4,5 BB au milieu). Tu 3-bet en bluff à ' + f1(y) + ' BB au bouton. L’ouvreur doit se coucher plus de…', ans: pc(ans), why: y + ' ÷ (' + f1(y) + ' + 4,5) ≈ ' + pc(ans) + ' % (chapitre 11).', ch: 11 };
     },
     function () { // tapis à payer
       var c = pick([10, 12, 15, 20, 25, 30]), dead = pick([3, 4.5, 6, 8, 10]), ans = c / (2 * c + dead);
-      return { t: 'Payer un tapis', q: 'Il fait tapis : tu dois payer ' + c + ' BB. Il y a déjà ' + f1(dead) + ' BB d’argent mort (blindes, ante, mises couchées). Quelle équité te faut-il ?', ans: pc(ans), why: c + ' ÷ (' + c + ' + ' + c + ' + ' + f1(dead) + ') ≈ ' + pc(ans) + ' %.', ch: 22 };
+      return { t: 'Payer un tapis', q: 'Il fait tapis : tu dois payer ' + c + ' BB. Il y a déjà ' + f1(dead) + ' BB d’argent mort (blindes, ante, mises couchées). Quelle équité te faut-il ?', ans: pc(ans), why: c + ' ÷ (' + c + ' + ' + c + ' + ' + f1(dead) + ') ≈ ' + pc(ans) + ' %.', ch: 37 };
     }
   ];
   function opts(a) {
@@ -58,7 +58,7 @@
     var ui = window.PA_UI; stopTimer();
     if (!Q) Q = newSeries();
     var head = '<div class="stack"><button class="back" data-act="nav" data-v="situations">‹ Situations</button><h1>Calcul rapide</h1>';
-    if (Q.i >= Q.list.length) return ui.shell('entrainer', head + ui.yo(Q.ok + (Q.ok > 1 ? ' bonnes réponses' : ' bonne réponse') + ' sur ' + Q.list.length + (Q.fast ? ', dont ' + Q.fast + ' en moins de 8 secondes' : '') + '. ' + (Q.ok >= 8 ? 'Ces calculs deviennent des réflexes : c’est ce qu’il faut à la table.' : 'Refais une série : à la table, tu n’as que quelques secondes. Les formules sont au chapitre 10 et au chapitre 42.')) + '<button class="btn gold block" data-calc="again">Nouvelle série</button><a class="btn block" href="#memo">La fiche mémo (toutes les formules)</a></div>');
+    if (Q.i >= Q.list.length) return ui.shell('entrainer', head + ui.yo(Q.ok + (Q.ok > 1 ? ' bonnes réponses' : ' bonne réponse') + ' sur ' + Q.list.length + (Q.fast ? ', dont ' + Q.fast + ' en moins de 8 secondes' : '') + '. ' + (Q.ok >= 8 ? 'Ces calculs deviennent des réflexes : c’est ce qu’il faut à la table.' : 'Refais une série : à la table, tu n’as que quelques secondes. Les formules sont au chapitre 16 et au chapitre 18.')) + '<button class="btn gold block" data-calc="again">Nouvelle série</button><a class="btn block" href="#memo">La fiche mémo (toutes les formules)</a></div>');
     var q = Q.list[Q.i], out = head + (Q.i === 0 && Q.ans === null ? '<div class="small muted">' + N + ' questions, ' + LIMIT + ' secondes chacune. Cote du pot, défense minimale, bluff, outs, grosse blinde, 3-bet light, tapis.</div>' : '') +
       '<div class="small muted">Question ' + (Q.i + 1) + ' sur ' + Q.list.length + ' · ' + Q.ok + ' bonne' + (Q.ok > 1 ? 's' : '') + ' réponse' + (Q.ok > 1 ? 's' : '') + '</div>' +
       '<div class="card stack"><div class="small muted">' + q.t + '</div><div style="font-size:1.15em">' + q.q + '</div></div>';

@@ -13,53 +13,53 @@
     [3, 'I', 'Le club', 13],
     [4, 'I', 'Bankroll', 17],
     [5, 'II', 'Ouvrir : ranges par profil, position et profondeur', 23],
-    [37, 'II', 'Le vol de blindes', 0],
-    [6, 'II', 'Défendre les blindes', 32],
-    [7, 'II', 'Face aux limpers', 55],
-    [34, 'II', 'Le limp-trap et le limp-shove', 0],
-    [8, 'II', 'Le 3-bet et face au 3-bet', 148],
-    [39, 'II', '3-bet linéaire, polarisé et 3-bet light', 0],
-    [45, 'II', 'Open shove, resteal, cold 4-bet et autres coups avant le flop', 0],
-    [9, 'II', 'Squeeze, 4-bet et click back', 145],
-    [40, 'II', 'Le squeeze en détail', 0],
-    [41, 'II', 'Cold call, 4-bet et 5-bet', 0],
-    [10, 'III', 'Outils de calcul', 67],
-    [11, 'III', 'Lire un board', 75],
-    [42, 'III', 'Avantage de range, avantage de nuts et défense', 0],
-    [12, 'III', 'Lecture de main', 0],
-    [13, 'III', 'Le sizing', 77],
-    [14, 'III', 'Le flop : c-bet et défense', 91],
-    [44, 'III', 'Le slowplay et le check-raise', 0],
-    [33, 'III', 'Jouer les paires et les as forts après le flop', 0],
-    [38, 'III', 'Cas concrets après le flop', 0],
-    [15, 'III', 'La turn', 0],
-    [43, 'III', 'Float, mise sonde, c-bet retardé et donk bet', 0],
-    [46, 'III', 'Check derrière, range bet, barrels, contrôle du pot et protection', 0],
-    [16, 'III', 'La river', 102],
-    [35, 'III', 'La river avec le solveur', 0],
-    [47, 'III', 'Valeur fine, block bet, hero call et autres coups à la river', 0],
-    [17, 'III', 'SPR et pots 3-bet', 100],
-    [18, 'III', 'Pots multiway', 0],
-    [19, 'IV', 'Les phases d’un tournoi et le gros tapis', 0],
-    [50, 'IV', 'Re-entry, recave et add-on', 0],
-    [20, 'IV', 'Tapis de 25 à 40 BB', 113],
-    [21, 'IV', 'Tapis de 15 à 25 BB', 117],
-    [22, 'IV', 'Tables de push/fold', 123],
-    [23, 'IV', 'L’ICM complet', 134],
-    [48, 'IV', 'Jouer la bulle et les places payées', 0],
-    [49, 'IV', 'Les tournois du club', 0],
-    [24, 'IV', 'Table finale et heads-up', 136],
-    [36, 'IV', 'Le heads-up', 0],
-    [25, 'IV', 'PKO et Space KO', 137],
-    [26, 'V', 'Profils adverses', 161],
-    [27, 'V', 'Exploiter les récréatifs et les joueurs larges', 0],
-    [28, 'V', 'Image de table et lecture au club', 162],
-    [29, 'VI', 'Mental et tilt', 172],
-    [30, 'VI', 'Revue de sessions', 175],
-    [31, 'VI', 'Mains commentées', 176],
-    [32, 'VI', 'Plan de progression', 189]
+    [6, 'II', 'Le vol de blindes', 0],
+    [7, 'II', 'Défendre les blindes', 32],
+    [8, 'II', 'Face aux limpers', 55],
+    [9, 'II', 'Le limp-trap et le limp-shove', 0],
+    [10, 'II', 'Le 3-bet et face au 3-bet', 148],
+    [11, 'II', '3-bet linéaire, polarisé et 3-bet light', 0],
+    [12, 'II', 'Open shove, resteal, cold 4-bet et autres coups avant le flop', 0],
+    [13, 'II', 'Squeeze, 4-bet et click back', 145],
+    [14, 'II', 'Le squeeze en détail', 0],
+    [15, 'II', 'Cold call, 4-bet et 5-bet', 0],
+    [16, 'III', 'Outils de calcul', 67],
+    [17, 'III', 'Lire un board', 75],
+    [18, 'III', 'Avantage de range, avantage de nuts et défense', 0],
+    [19, 'III', 'Lecture de main', 0],
+    [20, 'III', 'Le sizing', 77],
+    [21, 'III', 'Le flop : c-bet et défense', 91],
+    [22, 'III', 'Le slowplay et le check-raise', 0],
+    [23, 'III', 'Jouer les paires et les as forts après le flop', 0],
+    [24, 'III', 'Cas concrets après le flop', 0],
+    [25, 'III', 'La turn', 0],
+    [26, 'III', 'Float, mise sonde, c-bet retardé et donk bet', 0],
+    [27, 'III', 'Check derrière, range bet, barrels, contrôle du pot et protection', 0],
+    [28, 'III', 'La river', 102],
+    [29, 'III', 'La river avec le solveur', 0],
+    [30, 'III', 'Valeur fine, block bet, hero call et autres coups à la river', 0],
+    [31, 'III', 'SPR et pots 3-bet', 100],
+    [32, 'III', 'Pots multiway', 0],
+    [33, 'IV', 'Les phases d’un tournoi et le gros tapis', 0],
+    [34, 'IV', 'Re-entry, recave et add-on', 0],
+    [35, 'IV', 'Tapis de 25 à 40 BB', 113],
+    [36, 'IV', 'Tapis de 15 à 25 BB', 117],
+    [37, 'IV', 'Tables de push/fold', 123],
+    [38, 'IV', 'L’ICM complet', 134],
+    [39, 'IV', 'Jouer la bulle et les places payées', 0],
+    [40, 'IV', 'Les tournois du club', 0],
+    [41, 'IV', 'Table finale et heads-up', 136],
+    [42, 'IV', 'Le heads-up', 0],
+    [43, 'IV', 'PKO et Space KO', 137],
+    [44, 'V', 'Profils adverses', 161],
+    [45, 'V', 'Exploiter les récréatifs et les joueurs larges', 0],
+    [46, 'V', 'Image de table et lecture au club', 162],
+    [47, 'VI', 'Mental et tilt', 172],
+    [48, 'VI', 'Revue de sessions', 175],
+    [49, 'VI', 'Mains commentées', 176],
+    [50, 'VI', 'Plan de progression', 189]
   ];
-  var DEEP = { 37: 5, 34: 7, 39: 8, 45: 8, 40: 9, 41: 9, 42: 11, 44: 14, 33: 14, 38: 14, 43: 15, 46: 15, 35: 16, 47: 16, 48: 23, 36: 24, 27: 26, 31: 30, 49: 3 };
+  var DEEP = { 6: 5, 9: 8, 11: 10, 12: 10, 14: 13, 15: 13, 18: 17, 22: 21, 23: 21, 24: 21, 26: 25, 27: 25, 29: 28, 30: 28, 39: 38, 42: 41, 45: 44, 49: 48, 40: 3 };
 
   // Leçons rédigées au nouveau format. sections : {ask: question du joueur (podcast), h: titre, p: [paragraphes]}
   var L = {};
@@ -260,7 +260,7 @@
         "h": "Les blindes : la place où l’on perd le moins possible",
         "p": [
           "Avant le flop, les blindes parlent en dernier et ont déjà mis des jetons : elles ont une bonne cote pour payer. Mais après le flop, elles parlent en premier pendant tout le coup.",
-          "Résultat : sur le long terme, presque tous les joueurs perdent de l’argent en petite et en grosse blinde. Ce n’est pas grave, c’est la règle du jeu. Le but n’est pas d’y gagner, mais d’y perdre le moins possible, grâce à une bonne défense (chapitre 6).",
+          "Résultat : sur le long terme, presque tous les joueurs perdent de l’argent en petite et en grosse blinde. Ce n’est pas grave, c’est la règle du jeu. Le but n’est pas d’y gagner, mais d’y perdre le moins possible, grâce à une bonne défense (chapitre 7).",
           "La petite blinde est la pire place de la table : elle a mis une demi-blinde, elle parle en premier après le flop, et la grosse blinde parle encore après elle avant le flop. C’est pour cela qu’on y joue presque toujours « relance ou couche »."
         ]
       },
@@ -414,7 +414,7 @@
         "h": "Les tendances d’une table de club",
         "p": [
           "Plus de payes, des relances souvent petites (2 BB), peu de sur-relances en bluff. Une relance ou une grosse mise d’un récréatif, c’est souvent une vraie main.",
-          "Au club, le limp est interdit, sauf en tête-à-tête (la petite blinde peut compléter) : on ouvre en relançant ou on se couche. Le chapitre 7, sur les limpers, sert en ligne et dans d’autres clubs.",
+          "Au club, le limp est interdit, sauf en tête-à-tête (la petite blinde peut compléter) : on ouvre en relançant ou on se couche. Le chapitre 8, sur les limpers, sert en ligne et dans d’autres clubs.",
           "Ajustements : mise gros pour la valeur, réduis tes bluffs, respecte les grosses mises."
         ]
       },
@@ -438,9 +438,9 @@
         "ask": "Concrètement, une soirée au club, ça se passe comment pour mes jetons ?",
         "h": "Ton tapis au fil d’une soirée",
         "p": [
-          "Au club, avec 20 000 jetons au départ et des blindes à 50/100 au premier niveau, tu commences avec 200 BB : c’est le début de tournoi « profond », celui des chapitres 5 à 16.",
-          "Les blindes montent d’environ un tiers à chaque niveau. Si ton tapis ne bouge pas, il vaut la moitié moins en grosses blindes au bout de trois niveaux, soit une heure. Vers le milieu de soirée, beaucoup de joueurs sont entre 20 et 40 BB : c’est la zone des chapitres 20 et 21.",
-          "En fin de soirée, la plupart des tapis sont sous 25 BB : on joue surtout tapis ou fold (chapitres 21 et 22). C’est pour cela que ces chapitres sont si importants pour les tournois du club.",
+          "Au club, avec 20 000 jetons au départ et des blindes à 50/100 au premier niveau, tu commences avec 200 BB : c’est le début de tournoi « profond », celui des chapitres 5 à 28.",
+          "Les blindes montent d’environ un tiers à chaque niveau. Si ton tapis ne bouge pas, il vaut la moitié moins en grosses blindes au bout de trois niveaux, soit une heure. Vers le milieu de soirée, beaucoup de joueurs sont entre 20 et 40 BB : c’est la zone des chapitres 35 et 36.",
+          "En fin de soirée, la plupart des tapis sont sous 25 BB : on joue surtout tapis ou fold (chapitres 36 et 37). C’est pour cela que ces chapitres sont si importants pour les tournois du club.",
           "Regarde le tapis moyen sur l’écran de l’horloge à chaque pause, et compare-le au tien : il te dit si tu dois accélérer (voler plus) ou si tu peux rester patient."
         ]
       }
@@ -574,7 +574,7 @@
         "h": "La variance",
         "p": [
           "Oui. En MTT, même un bon joueur peut enchaîner 30, 50 tournois, voire plus, sans grosse place payée : la majorité des gains vient de quelques résultats rares.",
-          "Une série sans gain ne prouve pas que tu joues mal ; c’est la revue de tes décisions (chapitre 30) qui le dit, pas le résultat."
+          "Une série sans gain ne prouve pas que tu joues mal ; c’est la revue de tes décisions (chapitre 48) qui le dit, pas le résultat."
         ]
       },
       {
@@ -589,7 +589,7 @@
         "ask": "Quels signaux d’alerte ?",
         "h": "Les signes d’alerte",
         "p": [
-          "Jouer pour « se refaire », monter de niveau après une perte, piocher hors de la bankroll, jouer fatigué ou énervé : ce sont les premiers signes de tilt (chapitre 29). Dans ces cas, on arrête la session."
+          "Jouer pour « se refaire », monter de niveau après une perte, piocher hors de la bankroll, jouer fatigué ou énervé : ce sont les premiers signes de tilt (chapitre 47). Dans ces cas, on arrête la session."
         ]
       },
       {
@@ -597,7 +597,7 @@
         "h": "La bankroll au club",
         "p": [
           "Au club, les buy-ins sont petits et le plaisir compte autant que le gain. Le principe reste le même : décide à l’avance le budget du mois (inscriptions, re-entries, add-ons), et ne le dépasse pas.",
-          "Les re-entries sont le premier piège : une soirée à trois entrées coûte trois fois le prix. Fixe ta règle avant de t’asseoir, par exemple « une entrée, plus une re-entry au maximum » (chapitre 50).",
+          "Les re-entries sont le premier piège : une soirée à trois entrées coûte trois fois le prix. Fixe ta règle avant de t’asseoir, par exemple « une entrée, plus une re-entry au maximum » (chapitre 34).",
           "Si tu joues aussi en ligne, sépare les deux budgets : une mauvaise série en ligne ne doit pas t’empêcher de venir au club, et inversement."
         ]
       }
@@ -711,7 +711,7 @@
     ]
   };
 
-  L[10] = {
+  L[16] = {
     "minutes": 18,
     "key": [
       "Toute décision de paye se résume à comparer ton équité à l’équité requise par la cote.",
@@ -960,7 +960,7 @@
     ]
   };
 
-  L[11] = {
+  L[17] = {
     "minutes": 14,
     "key": [
       "Lire un board, c’est se demander qui a le plus de mains fortes sur ces trois cartes : toi ou ton adversaire.",
@@ -999,7 +999,7 @@
           "2. Les cartes se suivent-elles ? Trois cartes à moins de cinq rangs d’écart (9-8-6, 7-6-5) permettent des quintes et des tirages : les mains vont changer à la turn.",
           "3. Combien de couleurs ? Trois couleurs différentes (« rainbow ») : pas de tirage couleur. Deux cartes de la même couleur : tirages couleur possibles. Trois de la même couleur : la couleur est peut-être déjà faite.",
           "4. Y a-t-il une paire au tableau ? Un board pairé (8-8-3) touche peu de mains : brelans et fulls sont rares, et la plupart des joueurs n’ont rien.",
-          "Avec ces réponses, tu sais qui est favorisé et si le board est sec (les mains changent peu) ou mouillé (beaucoup de tirages). C’est ce qui décide ta taille de mise (chapitre 13)."
+          "Avec ces réponses, tu sais qui est favorisé et si le board est sec (les mains changent peu) ou mouillé (beaucoup de tirages). C’est ce qui décide ta taille de mise (chapitre 20)."
         ]
       },
       {
@@ -1166,7 +1166,7 @@
     ]
   };
 
-  L[13] = {
+  L[20] = {
     minutes: 10,
     key: ['La taille d’une mise fixe le prix que paie l’adversaire et la part de bluffs que tu peux te permettre.', 'Elle dépend du board, de la position, de la profondeur et de l’adversaire ; au club, on l’adapte aussi au type de main, avec des repères simples.'],
     sections: [
@@ -1175,7 +1175,7 @@
       { ask: 'Quelles tailles au flop, concrètement ?', h: 'Les tailles du club au flop', p: ['Dans les exemples, le pot fait 6 BB au flop (une ouverture à 2 BB payée par la grosse blinde, avec les antes).', '• Donk bet ou reprise de lead (repère du club) : <b>50 % du pot</b>. Tu as payé avant le flop et tu mises en premier vers le relanceur, ou tu reprends l’initiative quand il a checké. À réserver aux boards bas et connectés qui t’aident plus que lui (6-5-4, 9-8-4) ; jamais sur un board qui l’aide, comme K-7-2. Exemple : tu as payé en grosse blinde, flop 9♠ 8♦ 4♣, tu as 9-8 : tu mises 3 BB.', '• Tirage, bluff ou semi-bluff (repère du club) : <b>25 à 35 % du pot</b>. Exemple : tu as relancé au bouton avec Q♥ J♥, flop T♥ 7♥ 2♣ (tirage couleur) : tu mises 1,5 à 2 BB. Ça coûte peu, et si on te paie tu gardes tes outs. La théorie mise les tirages aussi gros que les mains fortes sur un board à tirages (66 à 80 %) pour ne pas être lisible : c’est un choix du club, efficace contre les joueurs qui ne lisent pas les tailles.', '• C-bet sur un board sec avec une carte haute (K♠ 7♦ 2♣, A♥ 8♣ 3♦), sur un board pairé (8♠ 8♦ 3♣) ou de trois cartes de la même couleur : <b>25 à 33 %</b>, avec presque toute ta range. Exemple : 2 BB.', '• Main forte sur un board connecté ou à tirages (top paire bon kicker, overpaire, deux paires sur J♥ T♥ 8♣ ou 9♠ 8♠ 6♦) : <b>66 à 75 %</b>, pour faire payer cher les tirages. Exemple : 4 à 4,5 BB.', '• Très grosse main sur un board sec (brelan, quinte faite) : <b>25 à 33 %</b> au flop pour le garder dans le coup, puis tu grossis à la turn et à la river. Exemple : 7♣ 7♦ sur K♠ 7♥ 2♣, 2 BB.', '• À trois adversaires ou plus (repère du club) : <b>50 à 66 %</b>, plus gros qu’à deux pour faire payer les tirages, surtout pour la valeur ; presque pas de bluffs, sauf les gros tirages. Exemple : 3 à 4 BB.', '• Check-raise : <b>2,2 à 2,5 fois la mise</b> sur un board sec, pour garder les mains plus faibles dans le coup ; <b>3 à 4 fois</b> sur un board à tirages, pour les faire payer cher. Exemple : il mise 2 BB ; sur K-7-2, tu relances à 5 BB ; sur 9-8-6 avec deux cœurs, à 6 à 8 BB.', '• Surmise (plus que le pot) : <b>100 à 125 %</b>, rare au flop (quelques coups sur cent), quand tu as les meilleures mains possibles et l’adversaire peu de mains fortes. Le solveur de l’appli le fait avec une overpaire sur 8♥ 7♥ 4♦. Exemple : 6 à 7,5 BB. Les sources ne s’accordent pas sur cette taille : garde-la pour plus tard.', 'Pour t’entraîner : S’entraîner › Après le flop › « Quelle taille au flop ? ». Une position, un flop, ta main : tu choisis la taille, et le bilan te dit si tu es trop passif ou trop agressif selon le board.'] },
       { ask: 'Mais une taille selon ma main, ça ne se lit pas ?', h: 'Quand adapter la taille à ta main', p: ['Au club, la plupart des joueurs ne lisent pas les tailles : les repères ci-dessus rapportent plus qu’une taille unique. Contre un joueur attentif qui remarque que tes tirages misent petit, garde une même taille sur un board donné pour tes mains fortes et tes tirages.'] },
       { ask: 'Comment arriver au tapis ?', h: 'Le sizing géométrique', p: ['Avec une main très forte, choisis une taille constante qui t’amène au tapis en trois mises. Exemple : pot de 10 BB, 90 BB derrière : environ 83 % du pot à chaque rue donne 8,3 BB au flop, 22 BB à la turn, puis les 59 BB restants à la river.', 'Plus le SPR est bas, plus les tailles peuvent être grandes : à SPR 2, une surmise met simplement tapis.'] },
-      { ask: 'Pourquoi ne pas adapter la taille à ma main ?', h: 'Une taille qui ne trahit pas ta main', p: ['Si tu mises petit avec tes bluffs et gros avec ta valeur, un adversaire attentif te lit. Choisis la taille selon le board, et mets dans cette taille à la fois des mains fortes et des bluffs.', 'Exception : contre les récréatifs qui ne lisent pas les tailles, grossis tes mises de valeur (chapitre 27).'] }
+      { ask: 'Pourquoi ne pas adapter la taille à ma main ?', h: 'Une taille qui ne trahit pas ta main', p: ['Si tu mises petit avec tes bluffs et gros avec ta valeur, un adversaire attentif te lit. Choisis la taille selon le board, et mets dans cette taille à la fois des mains fortes et des bluffs.', 'Exception : contre les récréatifs qui ne lisent pas les tailles, grossis tes mises de valeur (chapitre 45).'] }
     ],
     mistake: 'Miser petit avec les bluffs et gros avec les mains fortes : les tailles deviennent un panneau indicateur.',
     retain: ['Équité requise = B ÷ (1 + 2B) ; défense minimale = 1 ÷ (1 + B).', 'Repères du club : donk bet ou reprise de lead 50 % du pot ; tirage, bluff ou semi-bluff 25 à 35 % ; board sec 25 à 33 % ; main forte sur board à tirages 66 à 75 %.', 'À plusieurs : 50 à 66 % pour la valeur ; check-raise 2,2 à 2,5 fois la mise sur board sec, 3 à 4 fois sur board à tirages.'],
@@ -1191,7 +1191,7 @@
     ]
   };
 
-  L[16] = {
+  L[28] = {
     "minutes": 15,
     "key": [
       "À la river, chaque main est de valeur, bluff-catcher ou bluff : la décision dépend de ce classement.",
@@ -1247,7 +1247,7 @@
         "h": "Décider à la river en trois questions",
         "p": [
           "À la river, il n’y a plus de carte à venir : ta main ne s’améliorera plus. Toute la décision tient en trois questions.",
-          "1. Que bat ma main ? Liste les mains qu’il peut avoir (chapitre 12), puis sépare celles que tu bats et celles qui te battent.",
+          "1. Que bat ma main ? Liste les mains qu’il peut avoir (chapitre 19), puis sépare celles que tu bats et celles qui te battent.",
           "2. S’il paie, avec quoi paie-t-il ? Si la plupart des mains qui paieraient sont moins bonnes que la tienne, mise pour la valeur. Si seules des mains meilleures paieraient, ne mise pas.",
           "3. Si je checke, que va-t-il faire ? S’il mise souvent ses bluffs quand tu checkes, checker puis payer peut rapporter plus que miser toi-même.",
           "Ces trois questions te disent si ta main est une main de valeur, un bluff-catcher ou un bluff, et donc la taille (repères du club ci-dessus)."
@@ -1406,7 +1406,7 @@
     ]
   };
 
-  L[20] = {
+  L[35] = {
     "minutes": 16,
     "range": {
       "type": "open",
@@ -1447,8 +1447,8 @@
         "h": "Pourquoi 40 BB change tout : le rapport tapis-pot",
         "p": [
           "Prenons un coup normal au club. Tu ouvres à 2 BB, la grosse blinde paie. Avec la petite blinde (0,5 BB) et l’ante de la grosse blinde (1 BB), le pot au flop vaut environ 5,5 BB.",
-          "Avec 100 BB de tapis, il te reste 98 BB derrière : presque dix-huit fois le pot. Tu peux miser au flop, à la turn, à la river, te coucher sur une grosse relance : tu as de la marge. C’est le monde des chapitres 13 à 16.",
-          "Avec 30 BB, il te reste 28 BB pour un pot de 5,5 BB : à peine cinq fois le pot. Une mise de la moitié du pot au flop, une autre à la turn, et tout ton tapis est au milieu. On appelle ce rapport le SPR (chapitre 17). Plus il est petit, plus une simple paire forte suffit pour s’engager, et moins on peut « voir venir ».",
+          "Avec 100 BB de tapis, il te reste 98 BB derrière : presque dix-huit fois le pot. Tu peux miser au flop, à la turn, à la river, te coucher sur une grosse relance : tu as de la marge. C’est le monde des chapitres 20 à 28.",
+          "Avec 30 BB, il te reste 28 BB pour un pot de 5,5 BB : à peine cinq fois le pot. Une mise de la moitié du pot au flop, une autre à la turn, et tout ton tapis est au milieu. On appelle ce rapport le SPR (chapitre 31). Plus il est petit, plus une simple paire forte suffit pour s’engager, et moins on peut « voir venir ».",
           "Et si quelqu’un sur-relance (3-bet) à 6 ou 7 BB avant le flop ? Avec 30 BB, payer met déjà un quart de ton tapis au milieu, pour un pot d’environ 16 BB et 23 BB derrière : tu es engagé dès le flop. C’est pour cela qu’entre 20 et 40 BB, la vraie question avant le flop devient : « suis-je prêt à mettre tout mon tapis avec cette main ? »"
         ]
       },
@@ -1652,7 +1652,7 @@
     ]
   };
 
-  L[21] = {
+  L[36] = {
     "minutes": 16,
     "key": [
       "Entre 15 et 25 BB, chaque ouverture est presque un engagement : on choisit entre ouvrir puis tapis ou fold, le tapis direct, et le fold.",
@@ -1663,7 +1663,7 @@
         "ask": "Quelles options quand personne n’a ouvert ?",
         "h": "Les trois options",
         "p": [
-          "Tapis direct : vers 15 BB et moins en fin de table (tables du chapitre 22). Ouverture à 2 BB puis tapis ou fold : de 18 à 25 BB. Fold : les mains marginales en début de table.",
+          "Tapis direct : vers 15 BB et moins en fin de table (tables du chapitre 37). Ouverture à 2 BB puis tapis ou fold : de 18 à 25 BB. Fold : les mains marginales en début de table.",
           "Se coucher après avoir ouvert face à un tapis, c’est le prix normal de la fold equity, pas une erreur."
         ]
       },
@@ -1878,7 +1878,7 @@
     ]
   };
 
-  L[22] = {
+  L[37] = {
     "minutes": 15,
     "range": {
       "type": "open",
@@ -1911,7 +1911,7 @@
         "h": "Les limites",
         "p": [
           "Ce sont des ranges d’équilibre : contre un joueur qui paie trop peu, pousse plus large ; contre un joueur qui paie tout, resserre.",
-          "Près d’une bulle ou en table finale, l’ICM resserre surtout tes payes (chapitre 23) ; tes tapis en premier restent proches des tables."
+          "Près d’une bulle ou en table finale, l’ICM resserre surtout tes payes (chapitre 38) ; tes tapis en premier restent proches des tables."
         ]
       },
       {
@@ -1951,7 +1951,7 @@
           "Ces tables supposent des adversaires qui paient « juste ». Au club, ce n’est pas le cas, et c’est là que tu gagnes.",
           "Contre le joueur qui paie trop peu (il attend les as) : pousse plus large que la table, surtout depuis le bouton et la petite blinde. Il se couche avec des mains qui devraient payer.",
           "Contre le joueur qui paie tout (« je ne me couche pas, j’ai payé la blinde ») : pousse plus serré, mais avec plus de valeur. Les mains comme 9-6 assortis sortent ; les A-x et les paires restent, car il les paiera avec pire.",
-          "Contre un très gros tapis derrière toi qui ne risque rien à payer : resserre un peu. Contre un tapis moyen qui a peur d’être éliminé avant les places payées : élargis (chapitre 48)."
+          "Contre un très gros tapis derrière toi qui ne risque rien à payer : resserre un peu. Contre un tapis moyen qui a peur d’être éliminé avant les places payées : élargis (chapitre 39)."
         ]
       }
     ],
@@ -2097,7 +2097,7 @@
     ]
   };
 
-  L[25] = {
+  L[43] = {
     "minutes": 11,
     "key": [
       "En PKO, éliminer un joueur rapporte de l’argent tout de suite : sa prime se convertit en jetons et améliore ta cote.",
@@ -2140,7 +2140,7 @@
         "ask": "Et la tête mise à prix du club, c’est un PKO ?",
         "h": "La tête mise à prix du club : un petit PKO",
         "p": [
-          "Au club, la tête mise à prix rapporte 2 points à celui qui l’élimine (chapitre 49). Le raisonnement est le même qu’en PKO : la prime fait baisser l’équité qu’il te faut pour payer son tapis.",
+          "Au club, la tête mise à prix rapporte 2 points à celui qui l’élimine (chapitre 40). Le raisonnement est le même qu’en PKO : la prime fait baisser l’équité qu’il te faut pour payer son tapis.",
           "Mais 2 points ne valent que deux places : c’est une petite prime. Paie son tapis d’un cran plus large qu’en temps normal, pas avec n’importe quoi.",
           "Si c’est toi, la tête mise à prix : on te paiera plus large. Pousse un peu plus serré, et mise plus gros pour la valeur quand tu as une vraie main."
         ]
@@ -2255,7 +2255,7 @@
     ]
   };
 
-  L[26] = {
+  L[44] = {
     "minutes": 13,
     "key": [
       "Chaque adversaire s’écarte de l’équilibre dans un sens précis : le repérer, c’est savoir comment l’exploiter.",
@@ -2429,7 +2429,7 @@
     ]
   };
 
-  L[28] = {
+  L[46] = {
     "minutes": 16,
     "key": [
       "Ton image de table, c’est ce que les autres croient de toi : elle se dépense en bluffant et se reconstruit en jouant solide.",
@@ -2647,7 +2647,7 @@
     ]
   };
 
-  L[29] = {
+  L[47] = {
     "minutes": 12,
     "key": [
       "Le tilt est une perte de jugement causée par une émotion : on le reconnaît à ses signes avant qu’il coûte cher.",
@@ -2673,7 +2673,7 @@
         "h": "Les outils",
         "p": [
           "Avant la session : une limite de perte (par exemple trois buy-ins) et une durée maximale. Pendant : une pause de cinq minutes dès qu’un signe apparaît, trois respirations lentes avant chaque grosse décision.",
-          "Après : écris la main qui t’a énervé et analyse la décision, pas le résultat (chapitre 30). Ta range du livre est ton garde-fou : si tu t’en écartes sans raison, tu es en tilt."
+          "Après : écris la main qui t’a énervé et analyse la décision, pas le résultat (chapitre 48). Ta range du livre est ton garde-fou : si tu t’en écartes sans raison, tu es en tilt."
         ]
       },
       {
@@ -2789,7 +2789,7 @@
           "se raconte à la table"
         ],
         "a": 1,
-        "why": "C’est la revue du chapitre 30."
+        "why": "C’est la revue du chapitre 48."
       },
       {
         "q": "Ton garde-fou contre le tilt pendant la partie ?",
@@ -2827,7 +2827,7 @@
     ]
   };
 
-  L[31] = {
+  L[49] = {
     minutes: 10, links: [{ href: '#mainsclub', label: 'Club › Mains du club' }],
     key: ['Une main se relit en quatre temps : préflop, flop, turn, river, en se demandant à chaque fois quelle est la range de chacun.', 'Voici cinq mains typiques de tournoi, du préflop à la river.'],
     sections: [
@@ -2835,7 +2835,7 @@
       { ask: 'Première main ?', h: 'Main 1 : AQo en UTG', p: ['100 BB, tu es UTG avec A♠ Q♦. Tu ouvres à 2 BB (la main est dans toutes les ranges). Le bouton paie. Flop Q♣ 8♥ 3♦ : top paire bon kicker sur board sec, c-bet d’un tiers du pot, il paie.', 'Turn 2♠ : carte blanche, tu mises encore deux tiers pour la valeur. River 9♣ : un récréatif paie souvent avec une dame plus faible ou un 8 : mise la moitié du pot. Leçon : la main qu’on a peur d’ouvrir est une machine à valeur.'] },
       { ask: 'Deuxième main ?', h: 'Main 2 : défense de grosse blinde', p: ['Le bouton ouvre à 2 BB, tu as K♥ 9♦ en grosse blinde. Il te faut 22 % d’équité : tu paies. Flop 9♠ 6♥ 2♣ : top paire, tu checkes, il mise un tiers, tu paies.', 'Turn A♦ : mauvaise carte pour toi, elle améliore sa range. Il mise deux tiers : contre un régulier, tu te couches souvent ; contre un maniac, tu paies. Leçon : la turn change la hiérarchie.'] },
       { ask: 'Troisième main ?', h: 'Main 3 : 12 BB au CO', p: ['Blindes 500/1 000, ante 1 000, tu as 12 BB au CO avec K♠ T♠. Les tables donnent un tapis : tu pousses. Le bouton paie avec A♥ J♣ : tu as environ 41 %, tu perds parfois, mais la décision est rentable car tout le monde se couche souvent.', 'Leçon : à 12 BB, on juge la décision sur l’ensemble des réponses adverses, pas sur cette main.'] },
-      { ask: 'Quatrième main ?', h: 'Main 4 : la bulle', p: ['Quatre joueurs, trois payés (50/30/20 €), tapis de 40, 14, 9 et 21 BB. Tu as 21 BB en grosse blinde, la SB pousse 9 BB. Tu as J♦ 7♣, environ 45 % contre sa range de tapis, pour 42 % requis : en jetons, la paye est rentable. Avec l’ICM, se coucher vaut 25,51 € et payer 25,10 € : fold.', 'Leçon : à la bulle avec un tapis moyen, on paie moins (chapitre 23).'] },
+      { ask: 'Quatrième main ?', h: 'Main 4 : la bulle', p: ['Quatre joueurs, trois payés (50/30/20 €), tapis de 40, 14, 9 et 21 BB. Tu as 21 BB en grosse blinde, la SB pousse 9 BB. Tu as J♦ 7♣, environ 45 % contre sa range de tapis, pour 42 % requis : en jetons, la paye est rentable. Avec l’ICM, se coucher vaut 25,51 € et payer 25,10 € : fold.', 'Leçon : à la bulle avec un tapis moyen, on paie moins (chapitre 38).'] },
       { ask: 'Cinquième main ?', h: 'Main 5 : value bet contre une station', p: ['Club, tu ouvres à 2 BB au bouton avec J♥ J♣, une calling station paie en grosse blinde. Flop T♦ 7♠ 3♣ : mise deux tiers. Turn 4♥ : mise deux tiers. River 2♦ : mise encore deux tiers.', 'Elle paie trois rues avec 9-8 ou une paire de 7 : tu prends le maximum. Leçon : contre une station, la valeur se prend en grosses mises sur trois rues.'] }
     ],
     mistake: 'Juger une main sur son résultat (« j’ai perdu, donc c’était mauvais ») au lieu de la décision prise avec l’information disponible.',
@@ -2852,7 +2852,7 @@
     ]
   };
 
-  L[32] = {
+  L[50] = {
     "minutes": 12,
     "key": [
       "On progresse par répétition courte et régulière, pas par de longues séances rares.",
@@ -2863,7 +2863,7 @@
         "ask": "Quelle routine ?",
         "h": "La routine de la semaine",
         "p": [
-          "Chaque jour : la Séance du jour, 10 minutes. Deux fois par semaine : une leçon et son quiz, ou un podcast. Après chaque tournoi ou soirée au club : la revue de deux ou trois mains (chapitre 30).",
+          "Chaque jour : la Séance du jour, 10 minutes. Deux fois par semaine : une leçon et son quiz, ou un podcast. Après chaque tournoi ou soirée au club : la revue de deux ou trois mains (chapitre 48).",
           "Une fois par semaine : un Sit & Go ou un tournoi « Moments clés » dans l’appli, sans coach, pour mesurer tes progrès."
         ]
       },
@@ -2871,7 +2871,7 @@
         "ask": "Par où commencer ?",
         "h": "L’ordre de priorité",
         "p": [
-          "1. Les ranges d’ouverture et de défense (chapitres 5 et 6) : ce sont les décisions les plus fréquentes. 2. Le tapis ou fold (chapitres 21 et 22) : décisif en tournoi. 3. Le flop et la turn (chapitres 14 et 15). 4. L’ICM et la bulle (chapitre 23).",
+          "1. Les ranges d’ouverture et de défense (chapitres 5 et 7) : ce sont les décisions les plus fréquentes. 2. Le tapis ou fold (chapitres 36 et 37) : décisif en tournoi. 3. Le flop et la turn (chapitres 21 et 25). 4. L’ICM et la bulle (chapitre 38).",
           "Le test de profil, refait chaque mois, montre où tu en es."
         ]
       },
@@ -2888,9 +2888,9 @@
         "h": "L’ordre de lecture conseillé",
         "p": [
           "Le cours suit un ordre précis : la liste des leçons le montre étape par étape, de 1 à 50. Les chapitres marqués « Pour aller plus loin » approfondissent le chapitre de base juste au-dessus : lis-les après l’avoir acquis, pas avant.",
-          "Premier mois (les fondations) : les étapes 1 à 7 (chapitres 1 à 6 et 37), puis le chapitre 49 pour les tournois du club. Objectif : ouvrir et défendre sans regarder Ma range.",
-          "Deuxième mois (le tapis court) : chapitres 19 à 22 et 50. Ce sont les décisions qui comptent le plus dans les tournois du club, où l’on passe vite sous 30 BB.",
-          "Troisième mois (après le flop) : chapitres 10 à 14, puis 15 et 16. Ajoute les exercices « Quelle taille au flop ? » et « Face à une mise ».",
+          "Premier mois (les fondations) : les chapitres 1 à 7, puis le chapitre 40 pour les tournois du club. Objectif : ouvrir et défendre sans regarder Ma range.",
+          "Deuxième mois (le tapis court) : chapitres 33 à 37 et 50. Ce sont les décisions qui comptent le plus dans les tournois du club, où l’on passe vite sous 30 BB.",
+          "Troisième mois (après le flop) : chapitres 16 à 21, puis 15 et 16. Ajoute les exercices « Quelle taille au flop ? » et « Face à une mise ».",
           "Ensuite : la bulle et l’ICM (23, 48), puis les approfondissements dans l’ordre de la liste, et l’adversaire (26 à 28)."
         ]
       },
@@ -3031,8 +3031,8 @@
       { ask: 'C’est quoi, la range du club ?', h: 'La range du club', p: ['C’est la range travaillée avec Lionel : la range standard de l’appli, celle de ton profil. C’est une range de table à 6 joueurs : la première place à parler (MP en 6-max, LJ dans l’appli) ouvre 50 mains, soit 22,5 %. On ne la resserre pas pour les tables à 9 ou 10 : UTG, UTG+1 et MP jouent la même range.', 'Puis à chaque place, chaque ligne de la grille descend d’un cran : en HJ, K8s devient K7s, A9o devient A8o, 76s s’ajoute ; en CO encore un cran ; au bouton encore un. La petite blinde ouvre comme le bouton.', 'Les couleurs disent la suite si on te relance (3-bet) : orange, tu sur-relances (4-bet) ou tu fais tapis (AA à TT, AK, AQs) ; vert, tu paies (99, AJs, ATs, KQs, KJs, KTs, QJs, QTs, JTs, AQo) ; rose, tu te couches (les autres mains ouvertes).', 'Chaque joueur peut ensuite élargir sa range au cas par cas : dans Ma range, « Modifier cette range », choisis une couleur et touche les cases. Le test de profil (30, 60 ou 90 mains) ne la change jamais : il propose des changements, entourés de bleu, que tu acceptes ou non.'] },
       { ask: 'Et selon les profils ?', h: 'Les quatre profils', p: ['Ta range de travail est celle du club. Les autres profils servent de comparaison : très serré, UTG 8,7 % et bouton 29,7 % ; TAG, UTG 12,7 % et bouton 46,6 % ; équilibré, UTG 15 % et bouton 55 % ; large-agressif, UTG 17 % et bouton 56 %.', 'Pour défendre ta grosse blinde, sur-relancer ou squeezer, le profil du club reprend pour l’instant les repères TAG : c’est pour cela que plusieurs chapitres les citent.', 'Les écarts sont faibles en début de table et grands en fin de table : c’est là que se joue le style.'] },
       { ask: 'Faut-il vraiment ouvrir As-Dame en UTG ?', h: 'Les mains qu’on n’a pas le droit de jeter', p: ['Oui. AQo s’ouvre en UTG dans tous les profils, même le plus serré. Se coucher par peur d’une relance, c’est jeter une main qui bat largement la range des joueurs qui paient derrière.', 'Dans la range du club, toutes les paires, tous les as assortis, KQo, KJo, QJo et AJo à A9o s’ouvrent dès la première place.'] },
-      { ask: 'Quelle taille d’ouverture ?', h: 'Les tailles', p: ['Au club, l’habitude est la relance à 2 BB (deux fois la grosse blinde) : elle coûte peu, et c’est aussi le standard de nombreux tournois en ligne avec antes. Les manuels citent souvent 2,5 BB sans ante et 2,2 BB avec ante : tu peux choisir ta taille dans les réglages.', 'Depuis la SB : 3 BB, car tu seras hors position. Avec un tapis court (moins de 20 BB) : 2 BB, ou directement tapis selon les tables du chapitre 22.', 'Exemple : blindes 100/200, tu ouvres à 400 au club ; à 500/1 000 avec ante, à 2 000 ou 2 200.', 'Conséquence : face à des relances à 2 BB, les blindes défendent plus large (chapitre 6), car le prix est plus bas.'] },
-      { ask: 'Et quand mon tapis baisse ?', h: 'Selon la profondeur', p: ['De 20 à 40 BB, chaque place ouvre un cran plus serré : 17,6 % aux premières places, 22,5 % au hijack, 28,2 % au cut-off, 35,1 % au bouton et en petite blinde. Et on ouvre plus petit. Sous 20 BB, on passe en tapis ou fold (chapitres 21 et 22).', 'Dans « Ma range », choisis la profondeur : 40 BB et plus, 20 à 40 BB, ou moins de 20 BB.'] }
+      { ask: 'Quelle taille d’ouverture ?', h: 'Les tailles', p: ['Au club, l’habitude est la relance à 2 BB (deux fois la grosse blinde) : elle coûte peu, et c’est aussi le standard de nombreux tournois en ligne avec antes. Les manuels citent souvent 2,5 BB sans ante et 2,2 BB avec ante : tu peux choisir ta taille dans les réglages.', 'Depuis la SB : 3 BB, car tu seras hors position. Avec un tapis court (moins de 20 BB) : 2 BB, ou directement tapis selon les tables du chapitre 37.', 'Exemple : blindes 100/200, tu ouvres à 400 au club ; à 500/1 000 avec ante, à 2 000 ou 2 200.', 'Conséquence : face à des relances à 2 BB, les blindes défendent plus large (chapitre 7), car le prix est plus bas.'] },
+      { ask: 'Et quand mon tapis baisse ?', h: 'Selon la profondeur', p: ['De 20 à 40 BB, chaque place ouvre un cran plus serré : 17,6 % aux premières places, 22,5 % au hijack, 28,2 % au cut-off, 35,1 % au bouton et en petite blinde. Et on ouvre plus petit. Sous 20 BB, on passe en tapis ou fold (chapitres 36 et 37).', 'Dans « Ma range », choisis la profondeur : 40 BB et plus, 20 à 40 BB, ou moins de 20 BB.'] }
     ],
     mistake: 'Ouvrir la même range en UTG et au bouton, ou jeter des mains obligatoires comme AQo en UTG par peur.',
     retain: ['Moins il reste de joueurs derrière toi, plus tu ouvres large.', 'Range du club : 22,5 % à la première place, un cran de plus par place jusqu’au bouton (43 %) ; la petite blinde comme le bouton.', 'Si on te relance : orange 4-bet ou tapis, vert payer, rose se coucher.', 'Taille : 2 BB au club (2,2 à 2,5 BB selon les manuels), 3 BB depuis la SB.'],
@@ -3048,7 +3048,7 @@
     ]
   };
 
-  L[6] = {
+  L[7] = {
     minutes: 10, range: { type: 'def', pos: 'BB', opener: 'BTN', bb: 100 },
     key: ['En grosse blinde, tu as déjà payé 1 BB : la cote te permet de défendre large, surtout contre les relances de fin de table.', 'On défend en payant beaucoup et en sur-relançant avec la valeur et quelques bluffs à bloqueurs.'],
     sections: [
@@ -3057,7 +3057,7 @@
       { ask: 'Contre quelle position défendre le plus ?', h: 'Selon la position du relanceur', p: ['Au club, la défense se pense comme l’ouverture, pour une table à 6 : UTG, UTG+1 et MP ouvrent la même range que le LJ, donc tu défends contre eux comme contre le LJ, environ 21 % (dont 5 % en 3-bet). Contre le HJ, 23 % ; contre le CO, 29 % ; contre le bouton, 51 % (dont 11 % en 3-bet) ; contre la petite blinde, 33 %.', 'Le bouton ouvre près de la moitié de ses mains : sa range est faible, ta défense s’élargit.'] },
       { ask: 'Avec quoi sur-relancer ?', h: 'Le 3-bet depuis la grosse blinde', p: ['Valeur : les grosses paires, AK, AQ, AJs contre le bouton. Bluffs : A5s à A2s, qui bloquent les as adverses et ont de l’équité quand ils sont payés.', 'Taille : 4 fois l’ouverture environ, car tu joueras hors position. Contre 2,5 BB, 10 à 11 BB.'] },
       { ask: 'Est-ce que je défends pareil contre tout le monde ?', h: 'Selon le profil de l’ouvreur', p: ['Non : la position donne une première idée de sa range, son profil la corrige. Contre un joueur serré, qui ouvre peu, ses mains sont fortes : jette tes mains dominées (petits as et rois dépareillés, figures dépareillées faibles), arrête les 3-bets de bluff, et paie même avec JJ ou AK contre son ouverture de début de table.', 'Contre un joueur large, défends environ un cinquième de mains en plus et 3-bet plus souvent pour la valeur : il paie avec moins bien. Contre un maniaque, va encore plus loin : 3-bet toutes tes bonnes mains (AT, KJ, les paires moyennes), et ne bluffe pas, il ne se couche pas.', 'Dans l’appli : Ma range › « Défendre ma BB ». Tu choisis qui ouvre, son profil et la taille de sa relance ; ta range s’adapte et l’appli compte les mains ajoutées ou jetées. Ce sont des repères de bon sens à partir de ta range de base, pas des résultats de solveur.'] },
-      { ask: 'Et quand mon tapis est court ?', h: 'Sous 40 BB : pas de défense au club', p: ['La règle du club, pour le moment : les blindes se défendent à 40 BB et plus. En dessous, on ne paie pas une relance depuis les blindes et on ne fait pas de petit 3-bet : tu fais tapis avec tes grosses mains (les premiums, et le resteal à tapis contre un voleur, chapitres 21 et 45), et tu jettes le reste. Payer le tapis d’un adversaire reste possible : c’est l’onglet « Payer un tapis » de Ma range.', 'Dans l’appli, Ma range et les exercices ne montrent la défense des blindes qu’à 40 BB et plus, et Yo ne juge pas ces coups aux tables d’entraînement quand ton tapis est plus court.'] },
+      { ask: 'Et quand mon tapis est court ?', h: 'Sous 40 BB : pas de défense au club', p: ['La règle du club, pour le moment : les blindes se défendent à 40 BB et plus. En dessous, on ne paie pas une relance depuis les blindes et on ne fait pas de petit 3-bet : tu fais tapis avec tes grosses mains (les premiums, et le resteal à tapis contre un voleur, chapitres 36 et 12), et tu jettes le reste. Payer le tapis d’un adversaire reste possible : c’est l’onglet « Payer un tapis » de Ma range.', 'Dans l’appli, Ma range et les exercices ne montrent la défense des blindes qu’à 40 BB et plus, et Yo ne juge pas ces coups aux tables d’entraînement quand ton tapis est plus court.'] },
       { ask: 'Et la petite blinde ?', h: 'La petite blinde', p: ['En SB, tu as moins payé et tu joueras hors position contre le relanceur et la BB derrière : on préfère le 3-bet ou le fold, avec peu de calls (petites paires).', 'Quand tout le monde se couche jusqu’à toi en SB, c’est la bataille des blindes : relance environ 40 % des mains à 3 BB sans ante, avec un limp possible d’une partie des mains faibles (repères du livre).'] }
     ],
     mistake: 'Se coucher en grosse blinde face à une relance minimum du bouton avec des mains comme K9o ou J8s : la cote est trop bonne.',
@@ -3074,7 +3074,7 @@
     ]
   };
 
-  L[8] = {
+  L[10] = {
     "minutes": 13,
     "range": {
       "type": "vs3bet",
@@ -3105,7 +3105,7 @@
         "ask": "Et le 3-bet light ?",
         "h": "Le 3-bet léger (resteal)",
         "p": [
-          "Contre un voleur qui ouvre large au CO ou au bouton, sur-relancer avec des mains moyennes à bloqueurs (A8s, KTs) lui reprend le pot. C’est encore plus fort à 20-35 BB, où le 3-bet devient un tapis (chapitres 20 et 21)."
+          "Contre un voleur qui ouvre large au CO ou au bouton, sur-relancer avec des mains moyennes à bloqueurs (A8s, KTs) lui reprend le pot. C’est encore plus fort à 20-35 BB, où le 3-bet devient un tapis (chapitres 35 et 36)."
         ]
       },
       {
@@ -3116,7 +3116,7 @@
           "Orange, 4-bet ou tapis : AA, KK, QQ, JJ, TT, AK, AQs.",
           "Vert, tu paies : 99, AJs, ATs, KQs, KJs, KTs, QJs, QTs, JTs, AQo.",
           "Rose, tu te couches : toutes les autres mains que tu as ouvertes, même les petites paires, les as assortis faibles ou 98s.",
-          "Variantes du club : certains jouent TT en vert (payer) ou 99 en orange (tapis) ; tu peux changer la couleur de ces cases dans ton profil Perso. En petite blinde contre la grosse blinde, c’est le chapitre 37."
+          "Variantes du club : certains jouent TT en vert (payer) ou 99 en orange (tapis) ; tu peux changer la couleur de ces cases dans ton profil Perso. En petite blinde contre la grosse blinde, c’est le chapitre 6."
         ]
       },
       {
@@ -3131,15 +3131,15 @@
         "h": "Les tailles de 3-bet au club",
         "p": [
           "Au club, on ouvre à 2 BB. En position (tu es après l’ouvreur, au bouton par exemple), sur-relance à environ 3 fois : 6 BB. Hors de position (depuis les blindes), environ 4 fois : 8 BB.",
-          "S’il y a déjà un joueur qui a payé l’ouverture, ajoute environ 1 BB par payeur : c’est un squeeze (chapitres 9 et 40).",
-          "Sous 40 BB, au club, la grosse blinde ne fait pas de petit 3-bet : c’est tapis ou fold. En position, à 25-35 BB, le 3-bet à 6 BB t’engage déjà fortement : on préfère souvent le tapis direct (chapitre 20)."
+          "S’il y a déjà un joueur qui a payé l’ouverture, ajoute environ 1 BB par payeur : c’est un squeeze (chapitres 13 et 14).",
+          "Sous 40 BB, au club, la grosse blinde ne fait pas de petit 3-bet : c’est tapis ou fold. En position, à 25-35 BB, le 3-bet à 6 BB t’engage déjà fortement : on préfère souvent le tapis direct (chapitre 35)."
         ]
       },
       {
         "ask": "Ce chapitre suffit-il pour le 3-bet ?",
         "h": "Pour aller plus loin",
         "p": [
-          "Ce chapitre donne les bases. Trois chapitres les approfondissent, à lire une fois celui-ci acquis : le chapitre 39 (3-bet linéaire, polarisé et 3-bet light), le chapitre 41 (cold call, 4-bet et 5-bet) et le chapitre 45 (tapis direct, resteal et cold 4-bet)."
+          "Ce chapitre donne les bases. Trois chapitres les approfondissent, à lire une fois celui-ci acquis : le chapitre 11 (3-bet linéaire, polarisé et 3-bet light), le chapitre 15 (cold call, 4-bet et 5-bet) et le chapitre 12 (tapis direct, resteal et cold 4-bet)."
         ]
       }
     ],
@@ -3252,7 +3252,7 @@
     ]
   };
 
-  L[9] = {
+  L[13] = {
     "minutes": 12,
     "key": [
       "Le squeeze, c’est une sur-relance après une ouverture et au moins un call : l’argent mort la rend très rentable.",
@@ -3295,7 +3295,7 @@
         "ask": "Ce chapitre suffit-il pour le squeeze ?",
         "h": "Pour aller plus loin",
         "p": [
-          "Le chapitre 40 détaille le squeeze (ranges par position, tailles, réaction face au squeeze), et le chapitre 41 le 4-bet et le 5-bet. Lis-les une fois ce chapitre acquis.",
+          "Le chapitre 14 détaille le squeeze (ranges par position, tailles, réaction face au squeeze), et le chapitre 15 le 4-bet et le 5-bet. Lis-les une fois ce chapitre acquis.",
           "Au club, avec moins de 40 BB, le squeeze devient un tapis : un joueur ouvre à 2 BB, un autre paie, tu fais tapis avec 20-30 BB. Les deux joueurs devant toi doivent avoir une vraie main pour payer, et le pot contient déjà plus de 6 BB : c’est l’un des coups les plus rentables du tapis court."
         ]
       }
@@ -3409,7 +3409,7 @@
     ]
   };
 
-  L[7] = {
+  L[8] = {
     minutes: 12, range: { type: 'iso', pos: 'BTN', opener: 'UTG+1', bb: 100 },
     links: [{ href: '#ranges', label: 'Ma range › Face à un limper (selon ta position)' }, { href: '#situations', label: 'Exercices : Isoler un limper' }],
     key: ['Face à un ou plusieurs limpers, on relance pour isoler avec les mains fortes, on suit derrière avec les mains spéculatives, et on se couche avec le reste.', 'La taille d’isolement monte d’une grosse blinde par limper.'],
@@ -3417,10 +3417,10 @@
       { ask: 'Pourquoi les limpers sont-ils une bonne nouvelle ?', h: 'Le limper est souvent faible', p: ['Un joueur qui se contente de payer la grosse blinde sans relancer annonce une main moyenne : avec une grosse main, la plupart des joueurs relancent. Là où le limp est permis (en ligne, dans d’autres clubs), les limpers sont surtout des joueurs récréatifs et larges-passifs. Au club, il est interdit sauf en tête-à-tête.', 'Relancer pour l’isoler, c’est jouer le pot seul contre lui, souvent en position, avec l’initiative et une meilleure main.'] },
       { ask: 'Quelle taille pour isoler ?', h: 'La taille : 3 à 4 BB, plus 1 BB par limper', p: ['En position, relance à 3 BB plus 1 BB par limper ; depuis les blindes, 4 BB plus 1 BB par limper, car tu joueras hors position.', 'Exemple : blindes 100/200, deux limpers, tu es au bouton : 3 + 2 = 5 BB, soit 1 000 jetons. Plus petit, les limpers paient tous et tu te retrouves en pot à plusieurs joueurs.'] },
       { ask: 'Avec quelles mains ?', h: 'Isoler, suivre ou se coucher', p: ['Isoler : les mains qui jouent bien seules et dominent la range du limper. Au CO, à peu près 55+, A9s+, KTs+, QJs, ATo+, KQo. Au bouton, beaucoup plus large.', 'Suivre (sur-limper) : les petites paires et les connecteurs assortis, qui cherchent un brelan ou une couleur à plusieurs, pas cher.', 'Se coucher : les mains offsuit moyennes (K8o, Q9o, J9o), qui perdent de l’argent dans les pots à plusieurs.'] },
-      { ask: 'Et si je ne suis ni au cut-off ni au bouton ?', h: 'Isoler selon ta position', p: ['On peut isoler de partout, mais plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Un limper de début de table cache aussi plus souvent un piège (limp-trap, chapitre 34).', 'Profil TAG à 100 BB, face à un seul limper : en début de table (UTG+1 à LJ), 88+, AJs+, KQs, AQo+ (environ 6 % des mains) ; au hijack, 77+, ATs+, KJs+, QJs, AJo+, KQo (9 %) ; au cut-off, 55+, A9s+, KTs+, QJs, ATo+, KQo (12 %) ; au bouton, toutes les paires, tous les as assortis, K8s+, Q9s+, J9s+, T9s, 98s, A8o+, KTo+, QJo (22 %).', 'Depuis les blindes, tu joueras hors de position : isolement à 4 BB + 1 et plus serré. En petite blinde, à peu près les mains du cut-off, et tu complètes avec les petites paires, les as assortis faibles et les connecteurs assortis. En grosse blinde, 88+, ATs+, KJs+, AJo+, KQo pour la valeur, et tu checkes gratuitement tout le reste.', 'Les profils serré, équilibré et large-agressif décalent ces listes d’un cran. Tout est dans Ma range › Face à un limper, avec ta place et celle du limper ; entraîne-toi avec l’exercice « Isoler un limper ».'] },
+      { ask: 'Et si je ne suis ni au cut-off ni au bouton ?', h: 'Isoler selon ta position', p: ['On peut isoler de partout, mais plus il reste de joueurs derrière toi et moins tu as la position, plus tu serres. Un limper de début de table cache aussi plus souvent un piège (limp-trap, chapitre 9).', 'Profil TAG à 100 BB, face à un seul limper : en début de table (UTG+1 à LJ), 88+, AJs+, KQs, AQo+ (environ 6 % des mains) ; au hijack, 77+, ATs+, KJs+, QJs, AJo+, KQo (9 %) ; au cut-off, 55+, A9s+, KTs+, QJs, ATo+, KQo (12 %) ; au bouton, toutes les paires, tous les as assortis, K8s+, Q9s+, J9s+, T9s, 98s, A8o+, KTo+, QJo (22 %).', 'Depuis les blindes, tu joueras hors de position : isolement à 4 BB + 1 et plus serré. En petite blinde, à peu près les mains du cut-off, et tu complètes avec les petites paires, les as assortis faibles et les connecteurs assortis. En grosse blinde, 88+, ATs+, KJs+, AJo+, KQo pour la valeur, et tu checkes gratuitement tout le reste.', 'Les profils serré, équilibré et large-agressif décalent ces listes d’un cran. Tout est dans Ma range › Face à un limper, avec ta place et celle du limper ; entraîne-toi avec l’exercice « Isoler un limper ».'] },
       { ask: 'Et après le flop ?', h: 'Le plan après le flop', p: ['Contre un seul limper qui paie ton isolement, mise souvent au flop (c-bet) : il a manqué le flop deux fois sur trois.', 'S’il paie encore à la turn, ralentis avec les mains moyennes : un limper passif qui paie deux rues a souvent une paire.'] },
       { ask: 'Et contre une calling station qui limpe ?', h: 'Isoler une calling station', p: ['Elle paie ton isolement presque à chaque fois, et encore au flop. Alors : uniquement des mains de valeur (paires moyennes et hautes, as forts, figures assorties), plus de bluff.', 'Relance un peu plus gros (1 BB de plus) : elle paiera quand même, et tes mains fortes gagnent plus.', 'Après le flop, mise gros quand tu as touché, et arrête de bluffer : elle ne se couche pas.'] },
-      { ask: 'Et avec un tapis court ?', h: 'L’iso-tapis entre 12 et 20 BB', p: ['Avec 15 BB, une relance à 4 BB engage plus d’un quart de ton tapis. Mieux vaut faire tapis directement sur le limper.', 'Il y a déjà 3,5 BB au milieu (le limp, les blindes et l’ante). Le limper paie rarement un tapis avec sa main moyenne : tu gagnes souvent 3,5 BB sans combat, et tu as de l’équité quand il paie.', 'Range d’iso-tapis à 15-20 BB : 66+, A9+, ATs+, KQ, plus large au bouton contre un limper qui se couche beaucoup. Attention au limp-trap (chapitre 34) : contre un joueur qui limpe ses grosses mains, resserre-toi.'] },
+      { ask: 'Et avec un tapis court ?', h: 'L’iso-tapis entre 12 et 20 BB', p: ['Avec 15 BB, une relance à 4 BB engage plus d’un quart de ton tapis. Mieux vaut faire tapis directement sur le limper.', 'Il y a déjà 3,5 BB au milieu (le limp, les blindes et l’ante). Le limper paie rarement un tapis avec sa main moyenne : tu gagnes souvent 3,5 BB sans combat, et tu as de l’équité quand il paie.', 'Range d’iso-tapis à 15-20 BB : 66+, A9+, ATs+, KQ, plus large au bouton contre un limper qui se couche beaucoup. Attention au limp-trap (chapitre 9) : contre un joueur qui limpe ses grosses mains, resserre-toi.'] },
       { ask: 'Et si on isole devant moi quand je suis en grosse blinde ?', h: 'La grosse blinde face à un isolement', p: ['Un limper, puis le bouton isole à 4 BB : la range du bouton est large (il cherche à punir le limper), et le limper reste au milieu avec une main moyenne.', 'C’est une belle occasion de squeeze : avec la valeur (TT+, AQ+) et quelques bluffs à bloqueurs (A5s à A2s), sur-relance à environ 14 BB. Le limper se couche presque toujours, l’isoleur souvent.', 'Paie avec les mains qui jouent bien à plusieurs (petites paires, connecteurs assortis) si la cote est bonne ; couche les dépareillées moyennes.'] }
     ],
     mistake: 'Relancer trop petit (2 BB) face à deux limpers : tout le monde paie, tu joues hors de contrôle à quatre joueurs avec une main moyenne.',
@@ -3437,7 +3437,7 @@
     ]
   };
 
-  L[12] = {
+  L[19] = {
     "minutes": 16,
     "key": [
       "Lire une main, c’est réduire la range adverse action après action, du préflop à la river.",
@@ -3642,14 +3642,14 @@
     ]
   };
 
-  L[14] = {
+  L[21] = {
     minutes: 15, range: null,
     key: ['Au flop, l’agresseur préflop mise souvent petit sur les boards qui l’avantagent et checke davantage sur ceux qui avantagent le défenseur.', 'En défense, on paie selon la cote et on relance avec les mains fortes et les gros tirages.'],
     sections: [
       { ask: 'Quand faire un c-bet ?', h: 'Le c-bet selon le board', p: ['Sur un board sec avec une carte haute (K♠ 7♦ 2♣, A♥ 8♣ 3♦), le relanceur a plus de mains fortes : c-bet fréquent, petit, environ un tiers du pot.', 'Sur un board bas et connecté (8♥ 7♥ 5♣), la range du défenseur en BB touche davantage : check plus souvent, et mise plus gros (deux tiers du pot) avec tes vraies mains et tes gros tirages.'] },
       { ask: 'Et quand on est plusieurs ?', h: 'Le nombre d’adversaires', p: ['Contre un adversaire, tu peux miser souvent. Contre deux, réduis nettement tes bluffs. Contre trois ou plus, mise surtout pour la valeur : la probabilité qu’un des joueurs ait touché devient grande.'] },
       { ask: 'Comment défendre face à un c-bet ?', h: 'Défendre : la cote et la défense minimale', p: ['Face à une mise d’un tiers du pot, il te faut 20 % d’équité pour payer, et tu dois défendre environ 75 % de ta range pour ne pas te faire exploiter. Face à une mise du pot, 33 % et 50 %.', 'Exemple : pot 1 200, il mise 400. Tu paies 400 pour un pot final de 2 000 : 20 %. Un tirage ventre (4 outs, environ 17 % sur deux cartes) ne suffit pas seul ; une paire moyenne ou un tirage couleur, si.', 'Pour t’entraîner : S’entraîner › Après le flop › « Face à une mise » : se coucher, payer ou relancer selon la taille de la mise, ta main et le board.'] },
-      { ask: 'Quand relancer le c-bet ?', h: 'Le check-raise', p: ['Check-relance avec tes meilleures mains (double paire, brelan) et tes gros tirages (couleur + quinte), surtout sur les boards bas qui te sont favorables.', 'Taille : 2,2 à 2,5 fois la mise sur un board sec, 3 à 4 fois sur un board à tirages (chapitre 13). Garde des mains fortes dans ta range de call pour ne pas être lisible.'] },
+      { ask: 'Quand relancer le c-bet ?', h: 'Le check-raise', p: ['Check-relance avec tes meilleures mains (double paire, brelan) et tes gros tirages (couleur + quinte), surtout sur les boards bas qui te sont favorables.', 'Taille : 2,2 à 2,5 fois la mise sur un board sec, 3 à 4 fois sur un board à tirages (chapitre 20). Garde des mains fortes dans ta range de call pour ne pas être lisible.'] },
       { ask: 'Et face à une surmise ?', h: 'Face à une surmise au flop', p: ['Une mise plus grosse que le pot au flop est rare et souvent très polarisée : grosse main ou bluff. Il te faut 40 % d’équité face à deux fois le pot. Paie avec les mains fortes et les gros tirages, couche les paires moyennes, sauf contre un maniac.'] },
       { ask: 'Que fait le solveur sur un flop sec ?', h: 'En chiffres : K♦ 8♠ 3♣', p: ['Bouton contre grosse blinde, 40 BB, la grosse blinde checke. Le bouton mise 60 % du temps, le plus souvent un tiers du pot (35 %).', 'Top paire : mise 79 %. Sans rien : il mise 73 %, ce sont ses bluffs. Avec seulement la hauteur as, il checke 64 % : la main gagne souvent au check, et un bluff ne ferait coucher que des mains plus faibles.', 'Retiens : sur un flop sec avec une carte haute, petite mise fréquente, et ce sont les mains sans aucune valeur qui bluffent, pas les as hauteur.'] },
       { ask: 'Et sur un flop bas et connecté ?', h: 'En chiffres : 8♥ 7♥ 4♦', p: ['Même coup, flop 8♥ 7♥ 4♦. Le bouton checke 49 % du temps. Quand il mise, c’est surtout gros : 1,25 fois le pot (18 %) ou trois quarts du pot (14 %).', 'Overpaires : surmise 64 %. Tirages couleur : mise trois quarts ou plus 61 %. Paires moyennes et petites paires : check 60 à 80 %.', 'Retiens : sur ces flops, la grosse blinde touche beaucoup. Le relanceur checke la moitié de ses mains et mise gros avec ses meilleures mains et ses tirages forts.'] },
@@ -3671,7 +3671,7 @@
     ]
   };
 
-  L[15] = {
+  L[25] = {
     minutes: 15,
     key: ['La turn est la rue où le pot devient gros : chaque mise y engage une grande part du tapis.', 'On continue à miser quand la carte améliore notre range ou fait peur à l’adversaire, et on ralentit quand elle l’aide.'],
     sections: [
@@ -3701,7 +3701,7 @@
     ]
   };
 
-  L[17] = {
+  L[31] = {
     "minutes": 12,
     "key": [
       "Le SPR (tapis ÷ pot au flop) dit à l’avance quelles mains peuvent partir à tapis.",
@@ -3873,7 +3873,7 @@
     ]
   };
 
-  L[18] = {
+  L[32] = {
     minutes: 13,
     links: [{ href: '#apresflop', label: 'S’entraîner : après le flop' }, { href: '#solveur', label: 'Le solveur : pots avec limpers' }],
     key: ['À plusieurs, quelqu’un a souvent touché : il faut une meilleure main pour miser et pour payer.', 'Les bluffs deviennent rares, la valeur se joue plus franchement, et les tirages max prennent de la valeur.'],
@@ -3900,7 +3900,7 @@
     ]
   };
 
-  L[19] = {
+  L[33] = {
     "minutes": 13,
     "key": [
       "Un tournoi se joue en phases : on ne joue pas le début comme la bulle ou les places payées.",
@@ -3920,7 +3920,7 @@
         "h": "Le milieu : les antes changent tout",
         "p": [
           "Avec la BB ante, le pot préflop passe de 1,5 BB à 2,5 BB : voler rapporte beaucoup plus. On élargit les ouvertures en fin de table et on défend plus large en BB.",
-          "Ton tapis baisse souvent vers 25-40 BB : c’est la zone des chapitres 20 et 21, où le 3-bet devient un tapis."
+          "Ton tapis baisse souvent vers 25-40 BB : c’est la zone des chapitres 35 et 36, où le 3-bet devient un tapis."
         ]
       },
       {
@@ -3928,7 +3928,7 @@
         "h": "L’approche de la bulle et la bulle",
         "p": [
           "Avant les places payées, les tapis moyens se crispent : c’est le moment de les voler. Les petits tapis doivent pousser avant d’être trop courts ; les gros tapis attaquent.",
-          "Payer un tapis devient plus cher (chapitre 23) : resserre tes calls, sauf si tu es gros tapis face à un petit."
+          "Payer un tapis devient plus cher (chapitre 38) : resserre tes calls, sauf si tu es gros tapis face à un petit."
         ]
       },
       {
@@ -3952,7 +3952,7 @@
         "h": "Se situer : ton tapis compte plus que l’heure",
         "p": [
           "Les phases d’un tournoi ne se lisent pas à la pendule mais à ton tapis en grosses blindes. Au même moment, un joueur à 60 BB joue encore « au deep » pendant qu’un autre à 15 BB est déjà en push/fold.",
-          "Regarde ton tapis divisé par la grosse blinde à chaque niveau. 40 BB et plus : jeu normal, chapitres 5 à 16. Entre 20 et 40 BB : chapitre 20. Entre 15 et 25 : chapitre 21. Sous 15 : chapitre 22. L’horloge du club affiche le tapis moyen : compare-toi à lui.",
+          "Regarde ton tapis divisé par la grosse blinde à chaque niveau. 40 BB et plus : jeu normal, chapitres 5 à 28. Entre 20 et 40 BB : chapitre 35. Entre 15 et 25 : chapitre 36. Sous 15 : chapitre 37. L’horloge du club affiche le tapis moyen : compare-toi à lui.",
           "Au club, avec des niveaux de 20 minutes et des blindes qui montent d’environ un tiers à chaque niveau, un tapis qui ne gagne aucun pot perd la moitié de sa valeur en grosses blindes en trois niveaux, soit une heure. C’est pour cela qu’il faut voler et défendre (au-dessus de 40 BB) avant d’être court."
         ]
       },
@@ -4095,7 +4095,7 @@
     ]
   };
 
-  L[23] = {
+  L[38] = {
     "minutes": 14,
     "key": [
       "En tournoi, un jeton perdu vaut plus qu’un jeton gagné : la valeur en euros d’un tapis n’est pas proportionnelle aux jetons.",
@@ -4131,7 +4131,7 @@
         "h": "Pousser reste rentable",
         "p": [
           "L’ICM resserre tes calls mais beaucoup moins tes tapis en premier : à la bulle, les autres joueurs se couchent davantage, ta fold equity augmente.",
-          "Les tables du chapitre 22 sont calculées en jetons : près d’un palier, resserre tes calls de quelques points, garde tes tapis."
+          "Les tables du chapitre 37 sont calculées en jetons : près d’un palier, resserre tes calls de quelques points, garde tes tapis."
         ]
       },
       {
@@ -4139,7 +4139,7 @@
         "h": "L’ICM au club : points ou prix ?",
         "p": [
           "L’ICM sert quand chaque place rapporte une somme très différente : en tournoi à prix, la 3e place peut valoir trois fois la 8e. Il pousse alors à survivre.",
-          "Au championnat du club, chaque place vaut un point de plus que la suivante (chapitre 49). Monter d’une place ne rapporte qu’un point, alors que la victoire en rapporte beaucoup plus que la 8e place. La pression ICM est donc faible : on peut jouer presque comme en jetons, et chercher la victoire.",
+          "Au championnat du club, chaque place vaut un point de plus que la suivante (chapitre 40). Monter d’une place ne rapporte qu’un point, alors que la victoire en rapporte beaucoup plus que la 8e place. La pression ICM est donc faible : on peut jouer presque comme en jetons, et chercher la victoire.",
           "Si un tournoi du club distribue en plus des lots ou des prix aux premiers, l’ICM revient pour les places qui les reçoivent : à l’approche de ces places, resserre tes calls comme expliqué ci-dessus."
         ]
       }
@@ -4251,17 +4251,17 @@
     ]
   };
 
-  L[24] = {
+  L[41] = {
     minutes: 15,
     key: ['En table finale, chaque place vaut de l’argent : on pense ICM avant chaque gros call.', 'En heads-up, les ranges s’élargissent énormément et la position décide de tout.'],
     sections: [
       { ask: 'Comment aborder la table finale ?', h: 'Les paliers de gains', p: ['Chaque élimination fait monter les gains des autres : la pression de la bulle revient à chaque palier. Repère qui est le plus petit tapis : tant qu’il est là, les tapis moyens doivent éviter les gros coups entre eux.'] },
       { ask: 'Que faire selon son tapis ?', h: 'Jouer selon son tapis', p: ['Petit tapis : cherche le bon spot pour pousser avant d’être trop court ; sous 10 BB, ta fold equity fond.', 'Tapis moyen : vole les blindes des gros tapis qui jouent serré, évite de payer les tapis des autres moyens.', 'Gros tapis : presse les moyens par des relances fréquentes et petites, évite le duel avec l’autre gros tapis.'] },
       { ask: 'Et le deal ?', h: 'Le deal ICM', p: ['Les joueurs peuvent s’accorder pour partager les gains selon les tapis (deal ICM ou chip chop). C’est ton choix : un deal réduit la variance, mais si tu es meilleur que tes adversaires, continuer peut rapporter plus.'] },
-      { ask: 'Comment jouer le heads-up ?', h: 'Le heads-up', p: ['Le bouton est aussi la petite blinde : il parle en premier préflop et en dernier après le flop. Joue 75 à 85 % des mains au bouton à 25 BB et plus, et défends la grosse blinde très large (plus de 60 % face à une relance minimum).', 'Sous 15 BB, le heads-up se joue en tapis ou fold : les tables du chapitre 22 pour la SB et la BB sont exactes en heads-up.', 'Tout le détail du heads-up (préflop selon le tapis, grosse blinde, jeu après le flop, adaptation à l’adversaire, deal) est au chapitre 36.'] },
+      { ask: 'Comment jouer le heads-up ?', h: 'Le heads-up', p: ['Le bouton est aussi la petite blinde : il parle en premier préflop et en dernier après le flop. Joue 75 à 85 % des mains au bouton à 25 BB et plus, et défends la grosse blinde très large (plus de 60 % face à une relance minimum).', 'Sous 15 BB, le heads-up se joue en tapis ou fold : les tables du chapitre 37 pour la SB et la BB sont exactes en heads-up.', 'Tout le détail du heads-up (préflop selon le tapis, grosse blinde, jeu après le flop, adaptation à l’adversaire, deal) est au chapitre 42.'] },
       { ask: 'Et les surmises qu’on voit en heads-up ?', h: 'La surmise en heads-up', p: ['En heads-up, les ranges sont si larges que les surmises sont beaucoup plus fréquentes : relance préflop au tapis à 15-20 BB, surmise au flop sur un board qui te favorise, surmise à la river avec les nuts ou un bluff à bloqueurs.', 'Pour te défendre, compte : face à une surmise de 1,5 pot, il te faut 37,5 %. Contre une range très large, une paire moyenne suffit souvent. Ne te couche pas par réflexe : en heads-up, la main moyenne est souvent la meilleure.'] },
       { ask: 'Comment jouer à trois joueurs ?', h: 'À trois joueurs', p: ['À trois, le bouton n’a que les deux blindes derrière lui : c’est exactement la situation du bouton à neuf quand tout le monde s’est couché. Il ouvre donc sa range de bouton : environ 43 % des mains à 40 BB et plus (range du club), 35 % entre 20 et 40 BB.', 'La petite blinde ouvre environ un tiers de ses mains face à la grosse blinde seule. Et les blindes reviennent tous les trois coups : attendre coûte trois fois plus cher qu’à neuf, alors élargis un peu.', 'En tapis ou fold, prends les tables du bouton et de la petite blinde : à 10 BB, le bouton pousse 44 % et la petite blinde 74 %.'] },
-      { ask: 'Quels chiffres retenir en heads-up ?', h: 'Le heads-up en chiffres', p: ['En heads-up à moins de 15 BB, la petite blinde pousse : 65 % des mains à 15 BB, 74 % à 10 BB, 83 % à 5 BB. Roi-sept et dame-cinq dépareillés partent à tapis à 10 BB.', 'La grosse blinde paie le tapis : 41 % des mains à 15 BB, 56 % à 10 BB, 86 % à 5 BB. À 10 BB, roi-deux dépareillé paie ; valet-six se couche.', 'Ce sont les mêmes tables que « petite blinde contre grosse blinde » du chapitre 22 : en heads-up, elles s’appliquent telles quelles.'] },
+      { ask: 'Quels chiffres retenir en heads-up ?', h: 'Le heads-up en chiffres', p: ['En heads-up à moins de 15 BB, la petite blinde pousse : 65 % des mains à 15 BB, 74 % à 10 BB, 83 % à 5 BB. Roi-sept et dame-cinq dépareillés partent à tapis à 10 BB.', 'La grosse blinde paie le tapis : 41 % des mains à 15 BB, 56 % à 10 BB, 86 % à 5 BB. À 10 BB, roi-deux dépareillé paie ; valet-six se couche.', 'Ce sont les mêmes tables que « petite blinde contre grosse blinde » du chapitre 37 : en heads-up, elles s’appliquent telles quelles.'] },
       { ask: 'Et l’ICM à trois ?', h: 'L’ICM à trois joueurs', p: ['À trois, l’écart de prix entre la 3e et la 2e place pèse lourd. Le tapis moyen doit éviter de payer le tapis du gros quand le petit tapis risque de sauter : c’est là qu’il perd le plus.', 'Le gros tapis, lui, pousse très large sur le moyen. Utilise l’outil ICM de l’appli pour vérifier tes coups après la partie.'] }
     ],
     mistake: 'Jouer le heads-up comme une table pleine : se coucher trop souvent et laisser l’adversaire voler les blindes à chaque main.',
@@ -4278,13 +4278,13 @@
     ]
   };
 
-  L[27] = {
+  L[45] = {
     minutes: 14,
     key: ['Contre les récréatifs, le profit vient de la valeur, pas du bluff : ils paient trop.', 'On ajuste chaque profil : on mise gros contre ceux qui paient, on vole ceux qui se couchent.'],
     sections: [
       { ask: 'Comment gagner contre un récréatif qui paie tout ?', h: 'La calling station : de la valeur, encore de la valeur', p: ['Elle paie avec n’importe quelle paire jusqu’à la river. Mise pour la valeur sur trois rues avec top paire et mieux, et grossis tes mises : deux tiers du pot à la place d’un tiers.', 'Ne la bluffe jamais : elle paiera. Et quand elle relance, crois-la : une station qui relance a une grosse main.'] },
       { ask: 'Et contre le récréatif fantasque ?', h: 'Le fantasque : rester simple', p: ['Il limpe, relance au minimum, mise des tailles bizarres. Ses tailles parlent souvent : grosse mise, grosse main ; petite mise, main moyenne ou tirage.', 'Joue des ranges un peu plus serrées et simples, isole ses limps, mise pour la valeur, évite les bluffs élaborés en plusieurs rues qu’il ne comprendra pas.'] },
-      { ask: 'Contre un large-passif ?', h: 'Le large-passif : isoler et miser', p: ['Il entre dans beaucoup de pots sans relancer. Isole ses limps (chapitre 7) et mise ensuite : il se couche quand il manque le flop, paie quand il touche.', 'Ses rares relances sont fortes : respecte-les.'] },
+      { ask: 'Contre un large-passif ?', h: 'Le large-passif : isoler et miser', p: ['Il entre dans beaucoup de pots sans relancer. Isole ses limps (chapitre 8) et mise ensuite : il se couche quand il manque le flop, paie quand il touche.', 'Ses rares relances sont fortes : respecte-les.'] },
       { ask: 'Et contre les joueurs larges et agressifs ?', h: 'Le large-agressif et le maniac', p: ['Ils relancent et misent souvent. Paie plus large, laisse-les bluffer, piège avec tes mains fortes (check-call puis relance à la river).', 'Sur-relance (3-bet) plus pour la valeur avec une range plus large : 99+, AJ+, KQ. Ne bluffe pas un maniac : il paie par principe.'] },
       { ask: 'Comment lire une surmise au club ?', h: 'La surmise au club', p: ['Au club, une mise plus grosse que le pot est lue comme de la force : les nits et les joueurs prudents se couchent presque toujours. C’est un bon bluff contre eux, rarement contre une station.', 'Quand un récréatif surmise, c’est le plus souvent une très grosse main : couche les mains moyennes.'] },
       { ask: 'Que dit le solveur contre une calling station ?', h: 'En chiffres : contre une calling station', p: ['Dans le solveur de l’appli, coup « Bouton contre une calling station » : la grosse blinde est figée sur un jeu de station (elle paie beaucoup trop), et le solveur cherche la meilleure façon de l’exploiter. Flop K♥ Q♦ 6♠, 40 BB.', 'Contre un joueur normal, le bouton bluffe 38 % de ses mains sans rien. Contre la station : 0 %. Sa top paire part directement à tapis au flop, 100 % du temps. Ses paires moyennes aussi, une fois sur deux.', 'Face à une mise de trois quarts du pot, une grosse blinde normale paie 52 % ; la station paie 83 %. Elle paie trop : on ne bluffe jamais, et on mise le plus gros possible pour la valeur.'] },
@@ -4305,7 +4305,7 @@
     ]
   };
 
-  L[30] = {
+  L[48] = {
     "minutes": 12,
     "key": [
       "Chaque session se transforme en deux ou trois points de travail précis.",
@@ -4643,11 +4643,11 @@
     ['J', 'Donc il faut jouer plus de mains.'],
     ['Y', 'Pas n’importe lesquelles. Il faut voler et défendre plus tôt. Prendre les pots faciles. Quand tout le monde se couche jusqu’à toi au cut-off ou au bouton, tu ouvres ta range de vol.'],
     ['J', 'Et en grosse blinde ?'],
-    ['Y', 'Face à une petite relance à deux grosses blindes, tu défends plus large. Tu as une très bonne cote. On le verra au chapitre six.'],
+    ['Y', 'Face à une petite relance à deux grosses blindes, tu défends plus large. Tu as une très bonne cote. On le verra au chapitre sept.'],
     ['J', 'Et les joueurs, ils sont différents d’en ligne ?'],
     ['Y', 'Oui. En moyenne, une table de club paie plus. Et elle sur-relance rarement en bluff.'],
     ['J', 'Et chez nous, on n’a pas le droit de limper.'],
-    ['Y', 'Exact. Au club, le limp est interdit, sauf en tête-à-tête, et la petite blinde peut compléter. Donc on ouvre en relançant, ou on se couche. Le chapitre sept, sur les limpers, te servira en ligne ou dans d’autres clubs.'],
+    ['Y', 'Exact. Au club, le limp est interdit, sauf en tête-à-tête, et la petite blinde peut compléter. Donc on ouvre en relançant, ou on se couche. Le chapitre huit, sur les limpers, te servira en ligne ou dans d’autres clubs.'],
     ['Y', 'Et autre chose : quand un joueur récréatif fait une grosse relance, ou une grosse mise à la river, c’est presque toujours une vraie main.'],
     ['J', 'Alors je m’adapte comment ?'],
     ['Y', 'Trois réglages. Un : tu mises gros pour la valeur, parce qu’ils paient. Deux : tu bluffes moins, pour la même raison. Trois : tu respectes les grosses mises des joueurs prudents.'],
@@ -4763,7 +4763,7 @@
     ['J', 'Et la taille ? Au club, on ouvre à deux grosses blindes.'],
     ['Y', 'Et c’est très bien. Deux grosses blindes coûtent peu, et font le même travail. Blindes cent, deux cents : tu ouvres à quatre cents. Depuis la petite blinde, ouvre à trois : tu joueras tout le coup hors de position.'],
     ['J', 'Et quand je suis plus court ?'],
-    ['Y', 'La range du club est faite pour quarante grosses blindes et plus. Entre vingt et quarante, on resserre un peu et on ouvre toujours petit. Sous vingt, on passe en tapis ou fold. C’est le chapitre vingt-deux.'],
+    ['Y', 'La range du club est faite pour quarante grosses blindes et plus. Entre vingt et quarante, on resserre un peu et on ouvre toujours petit. Sous vingt, on passe en tapis ou fold. C’est le chapitre trente-sept.'],
     ['J', 'Tu me racontes une main ?'],
     ['Y', 'Tu es au cut-off, quarante-cinq grosses blindes. Tout le monde se couche jusqu’à toi. Tu as neuf-huit de carreau.'],
     ['J', 'Je l’ouvre : c’est rose.'],
@@ -4789,7 +4789,7 @@
     ['Y', 'Parfait. On résume. La range du club, vingt-deux et demi pour cent à la première place, un cran de plus à chaque place, quarante-trois au bouton et en petite blinde. Orange, tu relances encore. Vert, tu paies. Rose, tu te couches. Deux grosses blindes au club. À bientôt !']
   ];
 
-  L[6].podcast = [
+  L[7].podcast = [
     ['J', 'Salut Yo ! La défense des blindes. Je me couche souvent en grosse blinde. C’est mal ?'],
     ['Y', 'Salut ! Souvent, oui. On va voir pourquoi, avec un calcul tout simple.'],
     ['J', 'Aïe, des maths.'],
@@ -4873,7 +4873,7 @@
     ['Y', 'Parfait. On résume. En grosse blinde, la cote est excellente, surtout contre les ouvertures à deux du club. Défends plus large contre les positions tardives : environ la moitié des mains contre le bouton. Sur-relance à quatre fois, avec la valeur et les petits as assortis. Et en petite blinde : sur-relance ou couche-toi. À bientôt !']
   ];
 
-  L[7].podcast = [
+  L[8].podcast = [
     ['J', 'Salut Yo ! Les limpers. Chez nous, au club, c’est interdit, mais en ligne et dans d’autres clubs, il y en a partout.'],
     ['Y', 'Salut ! Et c’est une mine de jetons, si on sait quoi faire. D’abord : qu’est-ce qu’un limper nous dit ?'],
     ['J', 'Qu’il paie juste la grosse blinde, sans relancer.'],
@@ -4947,7 +4947,7 @@
     ['Y', 'Parfait. On résume. Le limper est souvent faible : on l’isole avec les mains fortes. Trois en position, quatre des blindes, plus une par limper. On suit avec les petites paires et les connecteurs assortis. On couche les dépareillées moyennes. Et contre un seul limper, on mise souvent au flop. À bientôt !']
   ];
 
-  L[8].podcast = [
+  L[10].podcast = [
     ['J', 'Salut Yo ! La sur-relance. Moi, je sur-relance avec les as et les rois. Point.'],
     ['Y', 'Salut ! Merci pour la franchise. Alors réfléchis. Si tu ne sur-relances qu’avec les as et les rois… que se passe-t-il quand tu sur-relances ?'],
     ['J', 'Tout le monde se couche ?'],
@@ -4996,7 +4996,7 @@
     ['J', 'Il bloque les as, et il peut encore gagner.'],
     ['Y', 'Parfait. On résume. Une sur-relance mélange la valeur et des bluffs qui bloquent. Trois fois en position, quatre hors de position. Et quand on te sur-relance, suis les couleurs du club : orange tu relances encore, vert tu paies, rose tu te couches. As-valet dépareillé est rose : tu le lâches. À bientôt !']
   ];
-  L[9].podcast = [
+  L[13].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui : squeeze, quatre-bet, click back. Beaucoup d’anglais.'],
     ['Y', 'Salut ! Trois armes de sur-relance. Chacune a son moment. On commence par la plus rentable : le squeeze.'],
     ['J', 'C’est quoi, exactement ?'],
@@ -5050,7 +5050,7 @@
     ['Y', 'Parfait. On résume. Le squeeze profite des jetons déjà au milieu : quatre fois l’ouverture, plus une par payeur. Valeur et petits as assortis. Le quatre-bet : deux fois et quart en position, et tapis sous quarante grosses blindes. Le click back : pour la valeur, seulement. À bientôt !']
   ];
 
-  L[10].podcast = [
+  L[16].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, les calculs. Je t’avoue que ce n’est pas mon truc."
@@ -5249,7 +5249,7 @@
    ]
   ];
 
-  L[11].podcast = [
+  L[17].podcast = [
     ['J', 'Salut Yo ! Lire un board. Moi, je regarde surtout si j’ai touché.'],
     ['Y', 'Salut ! C’est le réflexe de tout le monde. Mais la vraie question, au flop, c’est autre chose. Qui a le plus de mains fortes sur ces trois cartes ? Toi, ou lui ?'],
     ['J', 'Mais je ne vois pas ses cartes.'],
@@ -5300,7 +5300,7 @@
     ['Y', 'Parfait. On résume. Au flop, demande-toi qui a le plus de mains fortes. Les boards hauts sont pour le relanceur. Les boards bas et connectés, pour la grosse blinde. Sec : on mise souvent et petit. Connecté : on checke plus, et on mise plus gros. À bientôt !']
   ];
 
-  L[12].podcast = [
+  L[19].podcast = [
     ['J', 'Salut Yo ! La lecture de main. Le moment où je dis : il a as-roi.'],
     ['Y', 'Salut ! Et c’est justement le piège. Mettre quelqu’un sur une seule main, c’est presque toujours faux.'],
     ['J', 'Alors on fait comment ?'],
@@ -5352,7 +5352,7 @@
     ['J', 'De la valeur.'],
     ['Y', 'Parfait. On résume. Pars de la range d’avant le flop. Chaque action retire des mains. Compte les combinaisons : six pour une paire, quatre assortie, douze dépareillée. Et ajuste au profil. À bientôt !']
   ];
-  L[13].podcast = [
+  L[20].podcast = [
     ['J', 'Salut Yo ! La taille des mises. Moi, je mise gros quand j’ai une grosse main, et petit quand je bluffe.'],
     ['Y', 'Salut ! Merci pour l’honnêteté. Parce que c’est exactement ce qu’on va changer. Si tu fais ça, un adversaire attentif n’a plus besoin de lire tes cartes.'],
     ['J', 'Il lit mes jetons.'],
@@ -5374,7 +5374,7 @@
     ['J', 'Et un tableau avec des tirages ?'],
     ['Y', 'Valet, dix, huit avec deux cœurs ? Deux tiers du pot. Tu fais payer cher les tirages. Et tu protèges tes paires.'],
     ['J', 'Et à plusieurs ?'],
-    ['Y', 'La moitié, deux tiers. On en reparle au chapitre dix-huit.'],
+    ['Y', 'La moitié, deux tiers. On en reparle au chapitre trente-deux.'],
     ['J', 'Et quand j’ai une très grosse main ?'],
     ['Y', 'Là, on pense au tapis. Tu veux tout mettre au milieu en trois mises. Tu choisis une taille constante. La même fraction du pot à chaque rue.'],
     ['J', 'Un exemple ?'],
@@ -5402,7 +5402,7 @@
     ['J', 'Et à plusieurs ?'],
     ['Y', 'La moitié à deux tiers, pour la valeur. Et le check-raise : deux fois et demie sa mise sur un tableau sec, trois à quatre fois sur un tableau à tirages. Il mise deux, tu relances à cinq, ou à six ou huit.'],
     ['J', 'Je les retrouve où ?'],
-    ['Y', 'Dans le cours, chapitre treize, avec un exemple pour chaque taille. Le quiz ?'],
+    ['Y', 'Dans le cours, chapitre vingt, avec un exemple pour chaque taille. Le quiz ?'],
     ['Y', 'Première question. Mise de la moitié du pot. Quelle équité faut-il pour payer ?'],
     ['P', 5],
     ['J', 'Vingt-cinq pour cent.'],
@@ -5420,11 +5420,11 @@
     ['Y', 'Parfait. On résume. La taille fixe le prix pour l’adversaire. Les repères du club : donk bet ou reprise de lead, la moitié du pot. Tirage, bluff ou semi-bluff, vingt-cinq à trente-cinq pour cent. Tableau sec, un quart à un tiers. Main forte sur un tableau à tirages, deux tiers à trois quarts. Avec une très grosse main, une taille constante pour arriver au tapis. À bientôt !']
   ];
 
-  L[14].podcast = [
+  L[21].podcast = [
     ['J', 'Salut Yo ! Le flop. Moi, je mise à chaque fois que j’ai relancé avant.'],
     ['Y', 'Salut ! C’est ce qu’on appelle la mise de continuation. Contre un seul joueur faible, elle gagne souvent. Mais sur certains tableaux, et contre plusieurs joueurs, elle coûte cher.'],
     ['J', 'Alors quand miser ?'],
-    ['Y', 'Ça dépend du tableau. Tu te souviens du chapitre onze ? Qui a le plus de mains fortes ?'],
+    ['Y', 'Ça dépend du tableau. Tu te souviens du chapitre dix-sept ? Qui a le plus de mains fortes ?'],
     ['J', 'Sur un tableau haut, c’est moi, le relanceur.'],
     ['Y', 'Voilà. Roi, sept, deux. Ou as, huit, trois. Là, tu mises souvent. Et petit : un tiers du pot. Avec tes bonnes mains comme avec tes mains ratées.'],
     ['J', 'Et sur un tableau bas ?'],
@@ -5488,7 +5488,7 @@
     ['Y', 'Parfait. On résume. Tableau sec et haut : mise petite et fréquente. Tableau bas et connecté : check plus souvent, et mises plus grosses. Plus il y a d’adversaires, moins on bluffe. Vingt pour cent face à un tiers du pot. Et le check-raise avec les meilleures mains et les gros tirages. À bientôt !']
   ];
 
-  L[15].podcast = [
+  L[25].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, la turn. Franchement, c’est juste la quatrième carte, non ?'],
     ['Y', 'Salut ! Justement. C’est la carte que la plupart des joueurs jouent en pilote automatique. Au flop, on a des repères. À la river, on réfléchit, parce que c’est la fin. Et la turn, on la traverse sans plan.'],
     ['J', 'Et c’est grave ?'],
@@ -5560,7 +5560,7 @@
     ['Y', 'Parfait. On résume. À la turn, le pot devient gros : décide si ta main vaut trois mises. Continue sur les cartes qui aident ta range, surtout avec des tirages. Ralentis sur celles qui aident la sienne, même avec une belle paire. Et l’exercice « Outs et cote » t’attend dans S’entraîner. À bientôt !']
   ];
 
-  L[16].podcast = [
+  L[28].podcast = [
     ['J', 'Salut Yo ! La river. Le moment où je me pose le plus de questions.'],
     ['Y', 'Salut ! C’est normal. C’est la dernière décision, et souvent la plus chère. Mais la river a un avantage énorme.'],
     ['J', 'Lequel ?'],
@@ -5612,7 +5612,7 @@
     ['J', 'Je me couche.'],
     ['Y', 'Parfait. On résume. À la river, range ta main : valeur, attrape-bluff, ou bluff. Mise pour la valeur si tu bats plus de la moitié des mains qui paient. Bluffe avec des tirages ratés qui bloquent. Jamais avec une paire qui gagnait en checkant. Et avec un attrape-bluff, compare le prix aux vrais bluffs du joueur. À bientôt !']
   ];
-  L[17].podcast = [
+  L[31].podcast = [
     ['J', 'Salut Yo ! Le SPR. Encore un sigle.'],
     ['Y', 'Salut ! Celui-là est précieux. Il te dit, avant même le flop, quelles mains pourront aller à tapis.'],
     ['J', 'Ça se calcule comment ?'],
@@ -5661,7 +5661,7 @@
     ['Y', 'Parfait. On résume. Le SPR, c’est le tapis divisé par le pot au flop. Environ dix-sept, cinq, et deux, selon le pot. SPR bas : les paires fortes s’engagent. SPR haut : il faut une double paire. Et en tournoi, les tapis courts font des SPR bas : tes top paires valent plus cher. À bientôt !']
   ];
 
-  L[18].podcast = [
+  L[32].podcast = [
     ['J', 'Salut Yo ! Les pots à plusieurs. Au club, c’est presque tous les coups.'],
     ['Y', 'Salut ! Exactement. Et c’est là que beaucoup de joueurs serrés perdent leur avantage. Parce qu’ils jouent un pot à quatre comme un pot à deux.'],
     ['J', 'Qu’est-ce qui change, concrètement ?'],
@@ -5715,7 +5715,7 @@
     ['Y', 'Parfait. On résume. À plusieurs, quelqu’un a presque toujours touché : moins de bluffs, plus de valeur. Les grosses mains relancent pour réduire le nombre de joueurs. Les petites paires et les connecteurs assortis entrent pas cher. Top paire bon kicker se mise encore, une paire moyenne checke. Les tirages max paient et grossissent le pot. Et face aux limpers, isole avec les mains fortes, limpe derrière avec les mains spéculatives. À bientôt !']
   ];
 
-  L[19].podcast = [
+  L[33].podcast = [
     ['J', 'Salut Yo ! Les phases d’un tournoi. Je crois que je joue pareil du début à la fin.'],
     ['Y', 'Salut ! C’est très fréquent. Et ça coûte cher. Un tournoi, c’est une suite de phases. Chacune a ses règles.'],
     ['J', 'On commence par le début.'],
@@ -5762,7 +5762,7 @@
     ['Y', 'Parfait. On résume. Au début : serré-agressif, et la valeur contre les récréatifs. Avec les antes : on vole et on défend plus. À la bulle : les tapis moyens se crispent, le gros tapis attaque, et on paie moins. Après la bulle : on paie un peu plus. À bientôt !']
   ];
 
-  L[20].podcast = [
+  L[35].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, le tapis moyen : entre vingt-cinq et quarante grosses blindes. Au club, j’y suis très souvent."
@@ -5976,7 +5976,7 @@
     "Exact. On résume. Sous quarante grosses blindes, le rapport tapis-pot devient petit : chaque décision avant le flop pose la question du tapis. Les mains spéculatives sortent, les mains qui aiment le tapis restent. Face à un tapis, tu calcules la cote et ton équité contre sa range. Et le resteal à tapis rapporte même quand on te paie. À bientôt !"
    ]
   ];
-  L[21].podcast = [
+  L[36].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, le tapis de quinze à vingt-cinq grosses blindes."
@@ -6151,7 +6151,7 @@
    ]
   ];
 
-  L[22].podcast = [
+  L[37].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, les tables de push-fold. J’ai un peu peur, ça fait beaucoup de chiffres."
@@ -6262,7 +6262,7 @@
    ],
    [
     "Y",
-    "Un très gros tapis derrière, qui ne risque rien à payer : resserre un peu. Un tapis moyen qui a peur d’être éliminé avant les places payées : élargis. On le verra au chapitre quarante-huit."
+    "Un très gros tapis derrière, qui ne risque rien à payer : resserre un peu. Un tapis moyen qui a peur d’être éliminé avant les places payées : élargis. On le verra au chapitre trente-neuf."
    ],
    [
     "J",
@@ -6318,7 +6318,7 @@
    ]
   ];
 
-  L[23].podcast = [
+  L[38].podcast = [
     ['J', 'Salut Yo ! L’ICM. On m’en parle tout le temps, et je ne suis pas sûr de comprendre.'],
     ['Y', 'Salut ! L’idée tient en une phrase. En tournoi, un jeton perdu vaut plus qu’un jeton gagné.'],
     ['J', 'Pourquoi ?'],
@@ -6382,7 +6382,7 @@
     ['Y', 'Parfait. On résume. En tournoi, un tapis ne vaut pas ses jetons. À la bulle, les tapis moyens subissent le plus. L’ICM resserre surtout les payes ; tes tapis en premier gardent leur valeur. Et entraîne-toi avec l’exercice « Bulle et ICM ». À bientôt !']
   ];
 
-  L[24].podcast = [
+  L[41].podcast = [
     ['J', 'Salut Yo ! La table finale. J’en ai fait quelques-unes au club, et je ne sais jamais trop comment jouer.'],
     ['Y', 'Salut ! La table finale, c’est la bulle qui revient à chaque élimination. Chaque joueur qui saute fait monter les gains des autres.'],
     ['J', 'Donc je pense ICM tout le temps.'],
@@ -6445,7 +6445,7 @@
     ['J', 'Éviter les gros coups entre eux.'],
     ['Y', 'Parfait. On résume. Chaque palier réactive l’ICM : les tapis moyens évitent de s’affronter. Le deal, c’est ton choix. En face-à-face, on joue soixante-quinze à quatre-vingt-cinq pour cent au bouton, et on défend très large. Et face à une surmise, on compte. À bientôt !']
   ];
-  L[25].podcast = [
+  L[43].podcast = [
     ['J', 'Salut Yo ! Les PKO, et les Space KO. En ligne, il y en a plein.'],
     ['Y', 'Salut ! Oui, et ils changent pas mal de décisions. Le principe : une partie du buy-in forme la prime de chaque joueur.'],
     ['J', 'Et quand j’élimine quelqu’un ?'],
@@ -6502,7 +6502,7 @@
     ['Y', 'Parfait. On résume. Tu encaisses la moitié de la prime. Tu la transformes en jetons pour calculer ton prix. Elle ne compte que si tu couvres. En Space KO, tu prends la prime moyenne. Et près de la bulle, l’ICM reprend le dessus. À bientôt !']
   ];
 
-  L[26].podcast = [
+  L[44].podcast = [
     ['J', 'Salut Yo ! Les profils des adversaires. Au club, je les connais presque tous.'],
     ['Y', 'Salut ! Tu les connais de visage. Aujourd’hui, on les range dans des cases. Pour savoir tout de suite comment jouer contre chacun.'],
     ['J', 'Et on les classe comment ?'],
@@ -6557,7 +6557,7 @@
     ['Y', 'Parfait. On résume. La largeur, l’agressivité, et l’écart entre les deux. Huit profils, un ajustement chacun. Trente à cinquante mains pour une première idée. Et au club, les cartes montrées valent de l’or. À bientôt !']
   ];
 
-  L[27].podcast = [
+  L[45].podcast = [
     ['J', 'Salut Yo ! Exploiter les récréatifs. Dit comme ça, ça fait un peu méchant.'],
     ['Y', 'Salut ! Exploiter, au poker, ça veut juste dire jouer contre la vraie personne en face. Pas contre un joueur parfait imaginaire.'],
     ['J', 'Et contre les récréatifs, on fait comment ?'],
@@ -6625,7 +6625,7 @@
     ['Y', 'Parfait. On résume. Contre la station : grosse valeur sur trois rues, zéro bluff. Contre le fantasque et le large-passif : isole, reste simple, lis ses tailles. Contre les agressifs : paie plus large, piège, et sur-relance la valeur plus large. Et la surmise d’un récréatif, c’est une grosse main. À bientôt !']
   ];
 
-  L[28].podcast = [
+  L[46].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, la lecture des joueurs au club. Les tells, l’image, tout ça."
@@ -6799,7 +6799,7 @@
     "Exact. On résume. Annonce ta relance, protège tes cartes, montre-les à l’abattage. L’indice le plus fiable est le temps de décision. Ta défense : une routine. Et note des habitudes précises sur les joueurs du club. À bientôt !"
    ]
   ];
-  L[29].podcast = [
+  L[47].podcast = [
     ['J', 'Salut Yo ! Le tilt. Ça m’arrive, je l’avoue.'],
     ['Y', 'Salut ! Ça arrive à tout le monde. À moi aussi. Le tilt, c’est une perte de jugement causée par une émotion. Ce n’est pas un défaut de caractère.'],
     ['J', 'C’est quoi, alors ?'],
@@ -6849,7 +6849,7 @@
     ['Y', 'Parfait. On résume. Cinq familles : injustice, perte, revanche, fatigue, victoire. Connais tes trois signes. Limite de perte, pauses, respirations, décidées à froid. Et après, juge la décision, pas le résultat. Écris tes trois signes ce soir. À bientôt !']
   ];
 
-  L[30].podcast = [
+  L[48].podcast = [
     ['J', 'Salut Yo ! La revue de sessions. Après un tournoi, je repense surtout aux coups perdus.'],
     ['Y', 'Salut ! Comme tout le monde. Mais c’est un piège. Un gros pot perdu, c’est souvent une mauvaise carte. Pas une mauvaise décision.'],
     ['J', 'Alors je revois quoi ?'],
@@ -6899,7 +6899,7 @@
     ['Y', 'Parfait. On résume. D’abord les mains où tu as hésité, puis les gros pots, puis les écarts de range. Quatre questions : ma range, sa ligne, ce que j’aurais fait en voyant ses cartes, ma raison en une phrase. Le solveur en dernier. Et deux ou trois points de travail. À bientôt !']
   ];
 
-  L[31].podcast = [
+  L[49].podcast = [
     ['J', 'Salut Yo ! Les mains commentées. Tu me racontes des coups ?'],
     ['Y', 'Salut ! Cinq coups de tournoi. Et à chaque rue, une seule question : quelle range pour lui, quelle range pour moi ?'],
     ['J', 'Première main.'],
@@ -6953,7 +6953,7 @@
     ['Y', 'Parfait. On résume. Relis en quatre temps : avant le flop, flop, turn, river. À chaque rue, quelle range pour lui, et pour toi. On juge la décision, pas le résultat. Et tes vraies mains t’attendent dans Analyser. À bientôt !']
   ];
 
-  L[32].podcast = [
+  L[50].podcast = [
     ['J', 'Salut Yo ! Dernier épisode. Le plan de progression.'],
     ['Y', 'Salut ! Le dernier, et peut-être le plus important. Comment transformer tout ce qu’on a vu en réflexes.'],
     ['J', 'Et la règle ?'],
@@ -6999,7 +6999,7 @@
     ['Y', 'Merci à toi. On résume une dernière fois. Dix minutes par jour valent mieux qu’une longue séance. Le préflop d’abord, puis le tapis ou fold, le flop et la turn, et l’ICM. Mesure tes progrès avec le test et tes statistiques. Et quand tu n’ouvres plus ta range, elle est acquise. On se retrouve au club. À bientôt !']
   ];
 
-  L[33] = {
+  L[23] = {
     minutes: 9, link: { href: '#apresflop?paires', label: 'S’entraîner : paires et as forts' },
     key: ['Une paire servie ne se joue pas pareil selon ce qu’elle devient au flop : brelan, overpaire ou paire sous le tableau.', 'Avec un brelan, on construit le pot sur trois rues : petit au flop, gros à la turn, tapis à la river.'],
     sections: [
@@ -7024,7 +7024,7 @@
     ]
   };
 
-  L[34] = {
+  L[9] = {
     minutes: 7,
     key: ['Le limp-trap (limper une très grosse main pour sur-relancer) ne marche que s’il y a des joueurs agressifs derrière toi.', 'Sur une table passive, ouvre normalement tes as et tes rois : on paie tes relances de toute façon. Au club, le limp est interdit sauf en tête-à-tête : le limp-trap ne se joue qu’en ligne ou ailleurs, et en petite blinde contre la grosse blinde.'],
     sections: [
@@ -7048,7 +7048,7 @@
     ]
   };
 
-  L[33].podcast = [
+  L[23].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, une question que je me pose souvent : combien miser quand j’ai une paire servie ?'],
     ['Y', 'Salut ! Bonne question, parce que la réponse change complètement selon ce que la paire devient au flop. On va prendre quatre cas.'],
     ['J', 'Lesquels ?'],
@@ -7114,7 +7114,7 @@
     ['Y', 'Parfait. On résume. Brelan : petit au flop, gros à la turn, tapis à la river. Relance-le toujours en grosse blinde. Overpaire : mise souvent et gros. Top paire : petite mise, et check si une carte plus haute tombe. As-roi, as-dame, as-valet ratés : un seul tir, puis abandon. Paire sous le tableau : check, paie les petites mises, couche-toi face aux grosses. À bientôt !']
   ];
 
-  L[34].podcast = [
+  L[9].podcast = [
     ['J', 'Salut Yo ! On m’a parlé du limp-trap. Limper avec les as pour piéger. Ça marche ?'],
     ['Y', 'Salut ! Parfois. Mais beaucoup moins souvent que ce qu’on croit. On va voir quand c’est une bonne idée, et surtout quand ça ne l’est pas.'],
     ['J', 'Déjà, c’est quoi exactement ?'],
@@ -7162,7 +7162,7 @@
     ['Y', 'Parfait. On résume. Le limp-trap demande des joueurs agressifs derrière toi. Sur une table passive, ouvre normalement. Si on relance, sur-relance fort, ou tapis sous vingt-cinq blindes. Si personne ne relance, joue prudemment avec une seule paire. Et garde-le rare, sinon tu deviens lisible. À bientôt !']
   ];
 
-  L[35] = {
+  L[29] = {
     minutes: 9,
     links: [
       { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'As7d2c', line: 'x-x', card: 'Kh', tend: 'x-x', rc: '3d', rpath: 'x' })), label: 'Exemple 1 dans le solveur' },
@@ -7190,7 +7190,7 @@
     ]
   };
 
-  L[35].podcast = [
+  L[29].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, la river. Mais avec le solveur.'],
     ['Y', 'Salut ! Oui. On a enfin une river calculée exactement dans l’appli. Alors on va regarder ce qu’elle nous apprend.'],
     ['J', 'Je t’écoute.'],
@@ -7236,7 +7236,7 @@
     ['Y', 'Parfait. On résume. À la river, mise la valeur et les bluffs, checke le milieu. Après deux rues payées, tapis avec les grosses mains et les bluffs, check avec la top paire. Défends environ la moitié face au pot. Et contre les récréatifs, moins de bluffs payés, plus de valeur fine. Ouvre les exemples dans le solveur pour voir chaque famille de mains. À bientôt !']
   ];
 
-  L[36] = {
+  L[42] = {
     minutes: 18,
     links: [{ href: '#partie', label: 'Jouer un heads-up' }, { href: '#situations', label: 'S’entraîner : tapis ou fold en heads-up' }],
     key: ['À deux, presque toutes les mains ont de la valeur : le bouton joue 75 à 85 % de ses mains, la grosse blinde en défend 60 à 70 %.', 'Une top paire, même faible, est une grosse main ; celui qui mise souvent ramasse les pots que l’autre rate deux fois sur trois.', 'Sous 15 BB : tapis ou fold avec les tables petite blinde contre grosse blinde.'],
@@ -7263,7 +7263,7 @@
     ]
   };
 
-  L[36].podcast = [
+  L[42].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, le heads-up. Il ne reste que nous deux à la table finale.'],
     ['Y', 'Salut ! Le moment le plus important du tournoi. C’est là que se joue le plus gros écart de gains. Et c’est là que les joueurs serrés laissent le plus d’argent.'],
     ['J', 'Pourquoi ?'],
@@ -7317,14 +7317,14 @@
     ['Y', 'Parfait. On résume. À deux, presque toutes les mains ont de la valeur : joue trois quarts de tes mains au bouton, défends deux tiers en grosse blinde. Relance au minimum. Sous quinze blindes, tapis ou fold avec les tables. Une top paire, même faible, est une grosse main. Mise souvent : ton adversaire rate deux fois sur trois. Et adapte-toi à lui. Bon heads-up !']
   ];
 
-  L[37] = {
+  L[6] = {
     minutes: 14,
     links: [{ href: '#ranges', label: 'Ma range › Vue globale' }, { href: '#ranges', label: 'Ma range › Face à un 3-bet › J’ouvre en SB' }, { href: '#solveur', label: 'Le solveur : petite blinde contre grosse blinde' }],
     key: ['Voler les blindes, c’est ouvrir pour ramasser les blindes et les antes sans combat. Plus tu es près du bouton, moins il reste de joueurs pour te réveiller : c’est là qu’on vole.', 'Avec une ouverture à 2 BB et une ante de grosse blinde, le vol est rentable dès que tout le monde se couche 44 % du temps, sans même compter les coups gagnés après le flop.'],
     sections: [
       { ask: 'Qu’est-ce que voler les blindes ?', h: 'Le principe', p: ['Quand tout le monde s’est couché jusqu’à toi en fin de table (hijack, cut-off, bouton, petite blinde), tu ouvres une range plus large que ta « valeur » pure : ton but est souvent de ramasser les blindes et l’ante, pas de jouer un gros pot.', 'Avant que tu ouvres, il y a déjà 2,5 BB au milieu avec l’ante de grosse blinde (petite blinde 0,5 + grosse blinde 1 + ante 1). Tu risques 2 BB pour les gagner.'] },
       { ask: 'Quand est-ce rentable ?', h: 'Le calcul du vol', p: ['Tu mises 2 BB pour gagner 2,5 BB : le vol est rentable dès que tout le monde se couche plus de 44 % du temps (2 ÷ (2 + 2,5)). Et c’est un minimum : quand on te paie, tu gagnes encore une partie de ces coups après le flop.', 'Contre des joueurs qui défendent comme le profil TAG, tout le monde se couche environ 47 % du temps derrière une ouverture du hijack, 51 % derrière le cut-off, 44 % derrière le bouton (les blindes défendent beaucoup contre lui) et 67 % derrière la petite blinde. Contre des joueurs serrés, c’est 56 à 72 % : le vol rapporte encore plus.'] },
-      { ask: 'Combien de mains j’ouvre pour voler ?', h: 'Les ranges de vol par position', p: ['À 40 BB et plus, range du club : hijack 28 %, cut-off 35 %, bouton et petite blinde 43 %. Pour comparer, profil TAG : 22, 29, 47 et 32 %. Profil serré : 18, 21, 30 et 22 %. Profil large-agressif : 30, 41, 56 et 43 %.', 'Entre 20 et 40 BB, on resserre d’un cran (range du club : hijack 22,5 %, cut-off 28 %, bouton et petite blinde 35 %) : un 3-bet adverse met vite ton tapis en jeu. Sous 20 BB, le vol se fait à tapis, avec les tables du chapitre 22.', 'Tu retrouves ces ranges dans Ma range › Vue globale : survole ou touche une main pour voir à partir d’où on l’ouvre, et quoi faire si on te relance.'] },
+      { ask: 'Combien de mains j’ouvre pour voler ?', h: 'Les ranges de vol par position', p: ['À 40 BB et plus, range du club : hijack 28 %, cut-off 35 %, bouton et petite blinde 43 %. Pour comparer, profil TAG : 22, 29, 47 et 32 %. Profil serré : 18, 21, 30 et 22 %. Profil large-agressif : 30, 41, 56 et 43 %.', 'Entre 20 et 40 BB, on resserre d’un cran (range du club : hijack 22,5 %, cut-off 28 %, bouton et petite blinde 35 %) : un 3-bet adverse met vite ton tapis en jeu. Sous 20 BB, le vol se fait à tapis, avec les tables du chapitre 37.', 'Tu retrouves ces ranges dans Ma range › Vue globale : survole ou touche une main pour voir à partir d’où on l’ouvre, et quoi faire si on te relance.'] },
       { ask: 'Et depuis la petite blinde ?', h: 'Le vol depuis la petite blinde', p: ['Il ne reste que la grosse blinde. Tu as déjà mis 0,5 BB : en ouvrant à 3 BB, tu risques 2,5 BB de plus pour gagner 2,5 BB. Il faut que la grosse blinde se couche une fois sur deux ; un joueur TAG en grosse blinde ne défend qu’un tiers de ses mains face à toi.', 'Le défaut : tu joueras hors de position après le flop. Le solveur (petite blinde contre grosse blinde) checke donc plus d’une fois sur deux au flop, même sur un flop roi sec, et ne mise souvent qu’un tiers du pot.', 'Au club, beaucoup de grosses blindes défendent trop, par principe. Contre elles, vole avec des mains qui jouent bien après le flop (as, rois, mains assorties) plutôt qu’avec les pires mains.'] },
       { ask: 'Et le hijack, c’est encore du vol ?', h: 'Le hijack et le cut-off', p: ['Au cut-off, il reste trois joueurs : le bouton, qui joue en position contre toi, et les deux blindes. C’est la vraie position de vol avec le bouton : 35 % des mains avec la range du club.', 'Au hijack, il en reste quatre : le vol marche encore (47 % d’abandons contre des TAG), mais un joueur de plus peut te réveiller. On vole moins large : 28 % avec la range du club, surtout des mains qui jouent bien si on te paie (as assortis, connecteurs assortis, figures).', 'Plus il reste de joueurs derrière, plus ta range doit rester solide : un vol du hijack avec une main faible qui se fait 3-bet est un pli perdu à chaque fois.'] },
       { ask: 'Et si on me relance ?', h: 'Face au 3-bet de vol (re-steal)', p: ['Les bons joueurs en blinde savent que tu voles : ils sur-relancent plus large contre le cut-off et le bouton. Prépare ta réponse avant d’ouvrir : c’est exactement ce que montre le Plan de jeu (Ma range) pour chaque main.', 'À 40 BB, un 4-bet met tout ton tapis : tu continues avec tes mains fortes et quelques mains bloquantes, tu te couches avec le reste sans regret. Ton vol a déjà rapporté sur toutes les fois où tout le monde s’est couché.'] },
@@ -7345,7 +7345,7 @@
     ]
   };
 
-  L[37].podcast = [
+  L[6].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, voler les blindes. On en parle souvent au club, mais je ne sais pas si je le fais bien.'],
     ['Y', 'Salut ! Le vol, c’est simple : tout le monde se couche jusqu’à toi, en fin de table, et tu ouvres pour ramasser les blindes et l’ante. Pas pour jouer un gros coup.'],
     ['J', 'Et c’est rentable ?'],
@@ -7383,7 +7383,7 @@
     ['Y', 'Bravo. On résume. Vole en fin de table : quarante-quatre pour cent d’abandons suffisent. Cut-off et bouton sont les vraies places de vol, le hijack plus prudemment, la petite blinde avec une ouverture à trois et beaucoup de checks après le flop. Prépare ta réponse au trois-bet, y compris en petite blinde face à la grosse blinde : paie les mains qui jouent bien hors de position, quatre-bet la valeur et as-cinq, as-quatre. Et adapte-toi : plus contre les serrés, moins contre les stations. À bientôt !']
   ];
 
-  L[38] = {
+  L[24] = {
     minutes: 20,
     links: [{ href: '#cas', label: 'S’entraîner : cas concrets' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['Chaque cas vient du solveur de l’appli, à 40 BB : ce qu’il fait avec une main précise, pourquoi, avec quelle mise, et la suite.', 'Une règle revient partout : on mise quand le flop favorise sa range, on checke ou on abandonne quand il favorise celle de l’adversaire.'],
@@ -7412,7 +7412,7 @@
     ]
   };
 
-  L[38].podcast = [
+  L[24].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, des cas concrets après le flop. Avec de vraies mains."
@@ -7579,7 +7579,7 @@
    ]
   ];
 
-  L[39] = {
+  L[11] = {
     minutes: 15, range: { type: 'def', pos: 'SB', opener: 'BTN', bb: 100 },
     links: [{ href: '#choix3b', label: 'S’entraîner : 3-bet, squeeze ou pas ?' }, { href: '#apf', label: 'Après le flop : pots 3-bet' }],
     key: ['Un 3-bet linéaire prend tes meilleures mains dans l’ordre ; un 3-bet polarisé prend les très fortes et des bluffs choisis, et paie les mains du milieu.', 'Le 3-bet light (léger) vise les ouvreurs larges qui se couchent trop : depuis le bouton ou les blindes, avec des mains à bloqueurs qui jouent bien si on te paie.'],
@@ -7590,7 +7590,7 @@
       { ask: 'Le 3-bet light, c’est rentable ?', h: 'Le calcul du 3-bet light', p: ['Ouverture à 2 BB, petite blinde, grosse blinde et ante de grosse blinde : il y a 4,5 BB au milieu. Au bouton, tu relances à 6,5 BB : ton bluff gagne si l’ouvreur se couche plus de 59 % du temps (6,5 ÷ 11). Depuis la petite blinde à 8 BB (tu as déjà mis 0,5) : 62 %.', 'Combien se couchent vraiment ? Avec les ranges de l’appli, un TAG lâche 63 % de ses ouvertures du hijack face au 3-bet, 72 % au cut-off, 78 % au bouton. Un nit : 70 à 76 %. Contre eux, le 3-bet light rapporte avant même le flop.', 'Au club, un récréatif lâche souvent moins d’une fois sur deux. Là, ton bluff perd : reviens au linéaire.'] },
       { ask: 'D’où et contre qui ?', h: 'Les bonnes places pour le 3-bet light', p: ['Bouton contre cut-off ou hijack : tu joues en position, il ne reste que les blindes derrière.', 'Petite blinde contre bouton ou cut-off : l’ouvreur vole large, et tu ne peux pas payer de toute façon.', 'Grosse blinde contre bouton ou petite blinde : les ouvertures les plus larges du tableau.', 'Contre une ouverture d’UTG, presque pas : sa range est forte, il continue près d’une fois sur deux. Les ranges de l’appli n’y font aucun 3-bet light : contre UTG, UTG+1 et MP, le 3-bet est réservé à QQ+ et AK ; contre le lojack et le hijack, seuls A5s et A4s s’ajoutent comme bluffs. Et pas de 3-bet light contre le joueur qui paie tout.', 'Le bon client : celui qui ouvre souvent en fin de table (un voleur) et qui se couche quand on le relance. Note-le dans Analyser › Adversaires du club.'] },
       { ask: 'Avec quelles mains ?', h: 'Choisir ses mains de 3-bet light', p: ['Des mains trop faibles pour payer, mais qui ont deux qualités :', 'des bloqueurs : un as dans ta main retire des AA, AK et AQ de la range adverse (A5s à A2s, A9s à A6s) ; un roi retire des KK et AK (K9s à K6s) ;', 'de la jouabilité si on te paie : assorties, connectées, elles touchent des couleurs et des quintes (T9s, 98s, J9s).', 'Évite les mains dépareillées sans bloqueur (K7o, Q8o, J9o) : payées, elles ne valent rien. Et garde tes petites paires pour payer en position : elles sont meilleures en call qu’en bluff.'] },
-      { ask: 'Quelle taille ?', h: 'La même taille pour la valeur et le bluff', p: ['En position, 3 fois l’ouverture (6 à 6,5 BB face à 2 BB). Hors position, 4 fois (8 à 9 BB). Ajoute 1 BB par joueur qui a payé avant toi.', 'Utilise toujours la même taille pour tes 3-bets de valeur et tes 3-bets light : sinon, ta taille trahit ta main.', 'À 40 BB, un 3-bet à 6,5 BB engage déjà 16 % de ton tapis : avec une main light, tu te couches sans regret si on te fait tapis. Entre 20 et 30 BB, le 3-bet light devient un tapis direct (le resteal des chapitres 20 et 21).'] },
+      { ask: 'Quelle taille ?', h: 'La même taille pour la valeur et le bluff', p: ['En position, 3 fois l’ouverture (6 à 6,5 BB face à 2 BB). Hors position, 4 fois (8 à 9 BB). Ajoute 1 BB par joueur qui a payé avant toi.', 'Utilise toujours la même taille pour tes 3-bets de valeur et tes 3-bets light : sinon, ta taille trahit ta main.', 'À 40 BB, un 3-bet à 6,5 BB engage déjà 16 % de ton tapis : avec une main light, tu te couches sans regret si on te fait tapis. Entre 20 et 30 BB, le 3-bet light devient un tapis direct (le resteal des chapitres 35 et 36).'] },
       { ask: 'Et si on me paie ?', h: 'Après le flop, avec un 3-bet light payé', p: ['Tu as l’initiative et la range la plus forte sur les flops hauts. Le solveur, en grosse blinde après un 3-bet payé par le bouton, mise presque toujours sur A♠7♦2♣ (un tiers du pot, 78 %) et sur K♦8♠3♣ (la moitié du pot, 73 %).', 'Sur un flop bas et connecté comme 8♥7♥4♦, c’est le bouton qui a touché : le solveur checke 82 % du temps.', 'Avec ton bluff raté, mise une fois sur les flops qui t’avantagent, puis abandonne sans insister si on te paie et que tu n’as rien gagné à la turn.'] }
     ],
     mistake: '3-bet light contre un joueur qui ne se couche jamais, ou avec K7o « pour voir », puis payer son 4-bet parce que « j’ai déjà mis 8 BB ».',
@@ -7607,7 +7607,7 @@
     ]
   };
 
-  L[40] = {
+  L[14] = {
     minutes: 15, range: { type: 'squeeze', pos: 'BB', opener: 'CO', caller: 'BTN', bb: 100 },
     links: [{ href: '#ranges', label: 'Ma range › Squeeze (selon ta position)' }, { href: '#situations', label: 'Exercices : Squeezer' }, { href: '#choix3b', label: 'S’entraîner : 3-bet, squeeze ou pas ?' }],
     key: ['Le squeeze, c’est sur-relancer après une ouverture et au moins un call. L’argent mort et la range limitée du payeur le rendent très rentable.', 'On squeeze surtout depuis les blindes et le bouton, contre un ouvreur large et un payeur qui se couche ; à 20-30 BB, le squeeze devient un tapis.'],
@@ -7619,8 +7619,8 @@
       { ask: 'Contre qui ?', h: 'Le bon ouvreur et le bon payeur', p: ['L’ouvreur idéal : un voleur qui ouvre large en fin de table et se couche souvent face à une relance.', 'Le payeur idéal : un joueur serré-passif qui paie avec ses petites paires et ses mains moyennes, et qui lâche sous la pression.', 'Le mauvais client : la calling station qui paie tout. Contre elle, squeeze seulement pour la valeur, et plus gros (ajoute 2 BB) : elle paiera quand même.'] },
       { ask: 'Avec quelles mains ?', h: 'Valeur et squeeze light', p: ['Valeur depuis la grosse blinde face à une ouverture et un call (profil TAG, 100 BB) : TT+, AQs+, AKo. Contre un ouvreur très large, ajoute JJ, AJs, KQs, AQo.', 'Squeeze light : A5s à A2s (bloqueurs d’as), K9s, et contre deux joueurs larges, A9s à A6s. Les mains assorties gardent de l’équité quand on te paie.', 'Pas de KJo, QJo, ATo : payées par deux joueurs, elles sont souvent dominées et tu joues hors de position.'] },
       { ask: 'Quelle taille selon mon tapis ?', h: 'La taille du squeeze', p: ['À 100 BB : 4 fois l’ouverture plus 1 BB par payeur (9 BB en position), plus 1 à 2 BB depuis les blindes.', 'À 40 BB : même taille (9 à 11 BB, un quart de ton tapis). Avec ta valeur, tu acceptes le tapis. Avec un squeeze light, tu te couches si on te fait tapis.', 'De 20 à 30 BB : squeeze directement à tapis. 11 BB engagerait la moitié de ton tapis : autant tout mettre et priver l’adversaire de son équité. Range resserrée : 99+, AJs+, AQo+, KQs, plus quelques As assortis contre un voleur qui se couche beaucoup. À 25 BB, ton tapis-bluff doit faire coucher tout le monde 79 % du temps (25 ÷ 31,5) : réserve-le aux ouvreurs larges.'] },
-      { ask: 'Et quand c’est moi qui ai payé ?', h: 'Le payeur pris dans le squeeze', p: ['Tu as payé l’ouverture au bouton, la grosse blinde squeeze : ta range est plafonnée, tu te couches presque toujours. Continue avec QQ+ et AK, éventuellement JJ et AQs en position contre un squeezer agressif.', 'La leçon : si les blindes squeezent souvent, ne paie pas avec des mains fragiles. Relance (3-bet) ou couche-toi. C’est le piège du cold call (chapitre 41).'] },
-      { ask: 'Et si on me paie le squeeze ?', h: 'Après le flop', p: ['Le pot est gros (22 à 24 BB) et les tapis courts : à 40 BB, il te reste environ 1 fois le pot (chapitre 17, le SPR). Avec une top paire ou mieux, tu mises et tu acceptes le tapis.', 'Contre deux joueurs, mise moins souvent en bluff : l’un des deux a souvent touché. Avec un squeeze light raté, un seul c-bet sur un flop haut, puis abandon.'] }
+      { ask: 'Et quand c’est moi qui ai payé ?', h: 'Le payeur pris dans le squeeze', p: ['Tu as payé l’ouverture au bouton, la grosse blinde squeeze : ta range est plafonnée, tu te couches presque toujours. Continue avec QQ+ et AK, éventuellement JJ et AQs en position contre un squeezer agressif.', 'La leçon : si les blindes squeezent souvent, ne paie pas avec des mains fragiles. Relance (3-bet) ou couche-toi. C’est le piège du cold call (chapitre 15).'] },
+      { ask: 'Et si on me paie le squeeze ?', h: 'Après le flop', p: ['Le pot est gros (22 à 24 BB) et les tapis courts : à 40 BB, il te reste environ 1 fois le pot (chapitre 31, le SPR). Avec une top paire ou mieux, tu mises et tu acceptes le tapis.', 'Contre deux joueurs, mise moins souvent en bluff : l’un des deux a souvent touché. Avec un squeeze light raté, un seul c-bet sur un flop haut, puis abandon.'] }
     ],
     mistake: 'Squeezer KJo depuis la grosse blinde contre un ouvreur serré et une calling station : tu es payé par la station, dominé et hors de position.',
     retain: ['Squeeze = sur-relance après une ouverture et un call : 6,5 BB d’argent mort.', 'Le bluff de la grosse blinde à 11 BB gagne si tout le monde se couche plus de 61 % du temps.', 'Taille : 4 fois l’ouverture + 1 BB par payeur, +1 à 2 BB depuis les blindes ; tapis entre 20 et 30 BB.', 'Valeur TT+, AQs+, AK ; light A5s-A2s, K9s ; jamais KJo, QJo.', 'Si tu as payé et qu’on squeeze, couche-toi sauf QQ+ et AK.'],
@@ -7636,14 +7636,14 @@
     ]
   };
 
-  L[41] = {
+  L[15] = {
     minutes: 13, range: { type: 'vs3bet', scen: 'ip', bb: 100 },
     links: [{ href: '#apf', label: 'Après le flop : pot 4-bet à 100 BB' }],
     key: ['Le cold call (payer une relance sans être en blinde) marche au bouton avec des mains jouables ; ailleurs, c’est souvent un piège.', 'Face au 4-bet et au 5-bet, compte la cote : à 100 BB, le 5-bet est un tapis ; à 40 BB, le 4-bet l’est déjà.'],
     sections: [
       { ask: 'C’est quoi un cold call ?', h: 'Payer « à froid »', p: ['Payer une ouverture alors que tu n’as encore rien mis au pot (tu n’es pas en blinde). Exemple : le cut-off ouvre, tu paies au bouton.', 'Différence avec la défense de la grosse blinde : là, tu as déjà 1 BB (et l’ante) dedans, tu paies avec une bien meilleure cote.'] },
       { ask: 'Quand c’est une bonne idée ?', h: 'Le cold call au bouton', p: ['Au bouton, tu joueras en position contre l’ouvreur, et il ne reste que les blindes derrière.', 'Mains : petites paires 77 à 22 (tu cherches un brelan), assorties hautes (QJs, KTs, QTs, J9s), et contre un ouvreur large, ATo et KJo. C’est la range du profil TAG face au cut-off : 7 % des mains en call, à côté de 12 % en 3-bet.', 'Les petites paires paient pour le brelan : il touche une fois sur huit, il faut donc pouvoir gagner gros ensuite. Il faut qu’il reste au moins 15 fois la mise dans les tapis.'] },
-      { ask: 'Et quand c’est un piège ?', h: 'Les cold calls à éviter', p: ['Depuis la petite blinde : tu joues hors de position et la grosse blinde peut squeezer. Joue 3-bet ou couche (profil TAG : 1 % de calls seulement).', 'En milieu de table face à UTG : plusieurs joueurs parlent après toi, et tes mains dépareillées (AJo, KQo) sont dominées par sa range forte.', 'Quand les blindes squeezent souvent : ton call les invite à te squeezer (chapitre 40).', 'Entre 20 et 30 BB : payer 2 BB, c’est 10 % de ton tapis pour une main qui ne pourra pas continuer. Préfère tapis ou couche.'] },
+      { ask: 'Et quand c’est un piège ?', h: 'Les cold calls à éviter', p: ['Depuis la petite blinde : tu joues hors de position et la grosse blinde peut squeezer. Joue 3-bet ou couche (profil TAG : 1 % de calls seulement).', 'En milieu de table face à UTG : plusieurs joueurs parlent après toi, et tes mains dépareillées (AJo, KQo) sont dominées par sa range forte.', 'Quand les blindes squeezent souvent : ton call les invite à te squeezer (chapitre 14).', 'Entre 20 et 30 BB : payer 2 BB, c’est 10 % de ton tapis pour une main qui ne pourra pas continuer. Préfère tapis ou couche.'] },
       { ask: 'On me 4-bet à 100 BB : je fais quoi ?', h: 'Face au 4-bet', p: ['Tu as relancé à 7,5 BB, il 4-bet à 18 BB. Payer coûte 10,5 BB pour un pot de 28 BB : il te faut environ 27 % d’équité, mais tu joueras un gros pot, souvent hors de position.', 'Tapis (5-bet) : QQ+ et AK. Contre un nit dont le 4-bet veut dire KK+, coucher QQ et AK n’est pas une faute.', 'Payer en position : JJ, TT, AQs, AKs parfois, contre un joueur qui 4-bet large.', 'Coucher : tous tes 3-bets light. Ils ont fait leur travail.'] },
       { ask: 'Le 5-bet, c’est quoi ?', h: 'Le 5-bet', p: ['À 100 BB, le 5-bet se fait à tapis : une relance à 40 BB engagerait de toute façon la moitié de ton tapis.', 'Bluff de 5-bet : A5s ou A4s, qui bloquent les as, contre un joueur qui 4-bet léger. Au club, c’est rare : la plupart des 4-bets sont des mains fortes.'] },
       { ask: 'Et à 40 BB ?', h: 'Face à un tapis après ton 3-bet', p: ['À 40 BB, le 4-bet est un tapis. Tu as relancé à 8 BB, il fait tapis : tu dois payer 32 BB pour un pot de 50,5 BB. Il te faut environ 39 % d’équité.', 'Contre un tapis serré (QQ+, AK) : QQ a 42 %, tu paies ; AK environ 38 %, tu paies (c’est limite, mais le pot est déjà gros) ; JJ et TT n’ont que 36 % : tu te couches.', 'Contre un tapis plus large (TT+, AQ+, A5s) : JJ (48 %), TT (42 %), AQs (39 %) paient aussi.', 'Avant de 3-bet, prépare ta réponse : c’est ce que montre le Plan de jeu dans Ma range.'] }
@@ -7662,7 +7662,7 @@
     ]
   };
 
-  L[42] = {
+  L[18] = {
     minutes: 14,
     links: [{ href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'As7d2c', path: 'x' })), label: 'Le solveur sur A♠7♦2♣' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: '8h7h4d', path: 'x' })), label: 'Le solveur sur 8♥7♥4♦' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['L’avantage de range, c’est avoir plus de bonnes mains en moyenne ; l’avantage de nuts, c’est avoir plus de mains très fortes. Le premier fait miser souvent et petit, le second fait miser gros.', 'La fréquence minimale de défense te dit combien de mains garder face à une mise : pot ÷ (pot + mise). C’est un repère, surtout à la river.'],
@@ -7672,7 +7672,7 @@
       { ask: 'Comment ça décide ma mise ?', h: 'La règle de la taille', p: ['Avantage de range sans avantage de nuts (A72, K83 secs) : mise souvent, et petit. Tes mains moyennes gagnent encore, l’adversaire a peu de mains qui peuvent relancer.', 'Avantage de nuts (overpaires sur un flop bas, brelans) : mise moins souvent, mais gros, jusqu’à la surmise. Ta range est polarisée : très fortes ou bluffs.', 'Pas d’avantage : checke beaucoup, et mise seulement tes meilleures mains et tes meilleurs tirages.'] },
       { ask: 'Et dans les pots 3-bet ?', h: 'Le relanceur a souvent les deux avantages', p: ['Grosse blinde qui a 3-bet, bouton qui a payé : sur A♠7♦2♣, le solveur mise 99 % du temps, presque toujours un tiers du pot. Sur K♦8♠3♣, il mise toujours, surtout la moitié du pot.', 'Mais sur 8♥7♥4♦, le bouton a touché bien plus souvent avec ses connecteurs assortis : la grosse blinde checke 82 % du temps.', 'Sur 5♥4♦2♣, sa range est polarisée : elle checke 40 % et, quand elle mise, c’est très gros ou à tapis (41 % du temps). Ses overpaires veulent tout mettre avant que le tableau ne change.'] },
       { ask: 'La fréquence minimale de défense, c’est quoi ?', h: 'Combien de mains garder face à une mise ?', p: ['Si tu te couches trop souvent face à une mise, l’adversaire gagne de l’argent en bluffant avec n’importe quoi. Pour l’en empêcher, il faut garder au moins pot ÷ (pot + mise) de ta range.', 'Mise d’un tiers du pot : 75 %. La moitié : 67 %. Trois quarts : 57 %. Le pot : 50 %. Deux fois le pot : 33 %.', 'Côté bluff, c’est l’inverse : ton bluff est rentable si l’adversaire se couche plus de mise ÷ (pot + mise). Un tiers du pot : 25 % ; la moitié : 33 % ; le pot : 50 %.'] },
-      { ask: 'Je dois toujours défendre autant ?', h: 'Les limites de la fréquence de défense', p: ['Au flop, non. Sur K♦8♠3♣, face à une mise d’un tiers du pot, la grosse blinde du solveur se couche 39 % du temps, alors que la règle dirait 25 %. Pourquoi ? Les mises du bouton ne sont pas des bluffs purs : ses mains ont de l’équité, et tes mains sans rien n’en ont pas.', 'À la river, la règle sert vraiment : il n’y a plus de cartes à venir, les mains sont faites ou ratées. C’est là qu’elle te protège des bluffs (chapitre 16).', 'Au club, adapte-toi : contre un récréatif passif qui bluffe peu, couche-toi plus souvent que la règle ; contre un joueur agressif qui mise tout, défends au moins jusqu’à la règle.'] }
+      { ask: 'Je dois toujours défendre autant ?', h: 'Les limites de la fréquence de défense', p: ['Au flop, non. Sur K♦8♠3♣, face à une mise d’un tiers du pot, la grosse blinde du solveur se couche 39 % du temps, alors que la règle dirait 25 %. Pourquoi ? Les mises du bouton ne sont pas des bluffs purs : ses mains ont de l’équité, et tes mains sans rien n’en ont pas.', 'À la river, la règle sert vraiment : il n’y a plus de cartes à venir, les mains sont faites ou ratées. C’est là qu’elle te protège des bluffs (chapitre 28).', 'Au club, adapte-toi : contre un récréatif passif qui bluffe peu, couche-toi plus souvent que la règle ; contre un joueur agressif qui mise tout, défends au moins jusqu’à la règle.'] }
     ],
     mistake: 'Miser gros sur A72 sec avec toute ta range (tu fais coucher les mains qui paieraient une petite mise), ou miser petit sur 874 avec une overpaire (tu offres une cote aux tirages).',
     retain: ['Avantage de range → mise souvent et petit ; avantage de nuts → mise gros, range polarisée ; aucun → checke beaucoup.', 'Défense minimale = pot ÷ (pot + mise) : 75 % face à un tiers, 67 % face à la moitié, 50 % face au pot.', 'Un bluff est rentable si l’adversaire se couche plus de mise ÷ (pot + mise).', 'Au flop, on peut se coucher plus que la règle ; à la river, elle protège des bluffs.'],
@@ -7688,7 +7688,7 @@
     ]
   };
 
-  L[43] = {
+  L[26] = {
     minutes: 14,
     links: [{ href: '#cas', label: 'S’entraîner : cas concrets (mise sonde, c-bet retardé, float)' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'Kd8s3c', line: 'x-x', card: '2d' })), label: 'Le solveur : la mise sonde sur K♦8♠3♣' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['Le float : payer en position avec une main faible pour reprendre le pot quand l’adversaire abandonne. La mise sonde : miser la turn hors de position quand l’ouvreur n’a pas misé le flop.', 'Le c-bet retardé : checker le flop, miser la turn. La donk bet : miser en premier vers celui qui avait l’initiative ; rare au flop, plus utile à la turn.'],
@@ -7696,7 +7696,7 @@
       { ask: 'C’est quoi un float ?', h: 'Le float : payer pour voler plus tard', p: ['Tu es en position, l’adversaire fait son c-bet au flop. Tu paies avec une main faible ou moyenne, non pas pour gagner à l’abattage, mais pour miser quand il checkera la turn.', 'Exemple du solveur : le hijack ouvre, le bouton paie. Flop K♦8♠3♣, le hijack mise un tiers du pot : le bouton ne se couche que 20 % du temps, il paie 61 %. Puis, quand le hijack checke la turn, le bouton mise 53 % du temps.', 'Bonnes mains pour floater : des cartes hautes, une porte arrière de couleur ou de quinte, un tirage ventral. Tu as un peu d’équité si on te paie.', 'Quand floater : en position, contre un joueur qui mise souvent au flop et abandonne à la turn. Jamais contre une calling station (elle ne se couche pas), et rarement à plusieurs.'] },
       { ask: 'Et la mise sonde ?', h: 'La mise sonde (probe)', p: ['Le flop a été checké par tout le monde : l’ouvreur n’a pas fait son c-bet. À la turn, tu parles en premier et tu mises.', 'Pourquoi ? Son check au flop montre souvent une main moyenne ou rien : il aurait misé ses bonnes mains sur beaucoup de flops. La grosse blinde du solveur mise ainsi la turn 48 % du temps sur K♦8♠3♣, 59 % sur 8♥7♥4♦, 42 % sur A♠7♦2♣.', 'Mains : tes paires (même petites), tes tirages, et les cartes qui t’ont aidé à la turn. Taille : la moitié du pot à la taille du pot.'] },
       { ask: 'Et le c-bet retardé ?', h: 'Le c-bet retardé (delayed c-bet)', p: ['Tu as ouvert, tu as checké le flop derrière en position (sans c-bet), et l’adversaire checke encore la turn. Tu mises.', 'Le solveur le fait beaucoup : au bouton, après check-check au flop et check à la turn, il mise 65 % sur K♦8♠3♣, 75 % sur A♠7♦2♣.', 'Pourquoi ça marche : son double check montre de la faiblesse, et tes mains moyennes, que tu as protégées au flop, sont souvent devant. Tes tirages et tes cartes hautes ont aussi pris de l’équité.'] },
-      { ask: 'La donk bet, c’est quoi ?', h: 'La donk bet : miser en premier vers le relanceur', p: ['Tu as payé avant le flop, tu parles en premier, et au lieu de checker vers celui qui a relancé, tu mises.', 'Au flop, les bons joueurs le font rarement : le relanceur a souvent l’avantage de range. Le solveur de l’appli ne la propose d’ailleurs pas au flop.', 'À la turn, c’est différent : après avoir payé un c-bet, la grosse blinde du solveur mise en premier à la turn environ 38 % du temps sur K♦8♠3♣, le plus souvent petit (un tiers du pot), surtout quand la carte l’aide (une petite carte qui fait des doubles paires ou complète ses tirages).', 'Au club, la donk bet et la reprise de lead se font à 50 % du pot (repères des tailles : chapitre 13).'] },
+      { ask: 'La donk bet, c’est quoi ?', h: 'La donk bet : miser en premier vers le relanceur', p: ['Tu as payé avant le flop, tu parles en premier, et au lieu de checker vers celui qui a relancé, tu mises.', 'Au flop, les bons joueurs le font rarement : le relanceur a souvent l’avantage de range. Le solveur de l’appli ne la propose d’ailleurs pas au flop.', 'À la turn, c’est différent : après avoir payé un c-bet, la grosse blinde du solveur mise en premier à la turn environ 38 % du temps sur K♦8♠3♣, le plus souvent petit (un tiers du pot), surtout quand la carte l’aide (une petite carte qui fait des doubles paires ou complète ses tirages).', 'Au club, la donk bet et la reprise de lead se font à 50 % du pot (repères des tailles : chapitre 20).'] },
       { ask: 'Et au club, quand on me donk bet ?', h: 'Lire une donk bet au club', p: ['Un récréatif qui mise petit en premier a souvent une main moyenne qui « teste » : une paire faible ou un tirage. Relance tes mains fortes pour la valeur, paie tes mains moyennes, couche ce qui n’a rien.', 'Un joueur passif qui mise soudain gros en premier à la turn : c’est souvent une main forte, comme une double paire ou un brelan. Ralentis.'] },
       { ask: 'Et quand on me fait ces coups ?', h: 'Se défendre', p: ['Contre un joueur qui floate beaucoup : fais moins de c-bets en bluff au flop, et mise plus souvent une deuxième fois à la turn avec tes mains qui ont de l’équité.', 'Contre la mise sonde d’un joueur prudent : prends-la au sérieux. Contre celle d’un agressif : paie plus large, il sonde avec beaucoup de mains.'] }
     ],
@@ -7714,7 +7714,7 @@
     ]
   };
 
-  L[44] = {
+  L[22] = {
     minutes: 12,
     links: [{ href: '#cas', label: 'S’entraîner : cas concrets (check-raise)' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'KsKd5c', path: 'x' })), label: 'Le solveur : 55 sur K♠K♦5♣' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: '8h7h4d', path: 'x-b33' })), label: 'Le solveur : le check-raise sur 8♥7♥4♦' }],
     key: ['Le slowplay (jouer lentement une très grosse main) se fait sur les tableaux secs où l’adversaire n’a rien à payer ; sur les tableaux humides, on mise.', 'Le check-raise se joue avec les mains très fortes et les tirages qui ont des outs ; jamais avec rien du tout.'],
@@ -7740,7 +7740,7 @@
     ]
   };
 
-  L[39].podcast = [
+  L[11].podcast = [
    [
     "J",
     "Salut Yo ! On entend tout le temps parler de trois-bet light, de trois-bet polarisé. Je m’y perds un peu."
@@ -7923,7 +7923,7 @@
    ]
   ];
 
-  L[40].podcast = [
+  L[14].podcast = [
     ['J', 'Salut Yo ! Le squeeze, j’en ai parlé un peu, mais j’ai l’impression de ne jamais le faire au bon moment.'],
     ['Y', 'Salut ! Rappel : un joueur ouvre, un autre paie, et toi tu sur-relances. C’est le squeeze. Et c’est un des coups les plus rentables du préflop.'],
     ['J', 'Pourquoi ?'],
@@ -7963,7 +7963,7 @@
     ['Y', 'Bravo. À bientôt !']
   ];
 
-  L[41].podcast = [
+  L[15].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, le cold call. C’est quoi exactement ?"
@@ -8114,7 +8114,7 @@
    ]
   ];
 
-  L[42].podcast = [
+  L[18].podcast = [
    [
     "J",
     "Salut Yo ! Avantage de range, avantage de nuts : ça sonne compliqué."
@@ -8257,7 +8257,7 @@
    ]
   ];
 
-  L[43].podcast = [
+  L[26].podcast = [
    [
     "J",
     "Salut Yo ! Float, mise sonde, donk bet… on dirait des noms de cocktails."
@@ -8400,7 +8400,7 @@
    ]
   ];
 
-  L[44].podcast = [
+  L[22].podcast = [
    [
     "J",
     "Salut Yo ! Le slowplay, j’adore. Je checke mes brelans et j’attends."
@@ -8543,21 +8543,21 @@
    ]
   ];
 
-  L[45] = {
+  L[12] = {
     minutes: 14,
     links: [{ href: '#ranges', label: 'Ma range › Moins de 20 BB : les tables de tapis' }, { href: '#choix3b', label: 'S’entraîner : 3-bet, squeeze ou pas ?' }, { href: '#situations', label: 'S’entraîner : tapis ou fold' }],
     key: ['Avec un petit tapis, on ouvre à tapis (open shove) et on relance à tapis sur les voleurs (resteal). Avec un tapis profond, le cold 4-bet se garde pour les très grosses mains.', 'Compléter en petite blinde, sur-limper, ouvrir au minimum ou payer un 3-bet : des coups simples, rentables seulement à la bonne place et avec les bonnes mains.'],
     sections: [
-      { ask: 'C’est quoi un open shove ?', h: 'L’open shove : ouvrir directement à tapis', p: ['Tout le monde s’est couché avant toi, et au lieu d’ouvrir à 2 BB, tu fais tapis. C’est le coup normal sous 12 à 15 BB, surtout du cut-off, du bouton et de la petite blinde.', 'Pourquoi pas une ouverture à 2 BB ? Avec 10 BB, 2 BB font 20 % de ton tapis. Si on te relance à tapis, tu es obligé de payer avec presque tout : tu as perdu ta fold equity. En faisant tapis toi-même, c’est l’adversaire qui doit décider, et il se couche le plus souvent.', 'Le calcul : avec l’ante de grosse blinde, il y a 2,5 BB au milieu (0,5 + 1 + 1 d’ante). Tu risques 10 BB pour les gagner. Même si tu perdais toujours quand on paie, il suffirait que tout le monde se couche 80 % du temps. Avec ton équité quand on paie (souvent 30 à 50 %), il en faut bien moins.', 'Les ranges sont dans les tables du chapitre 22 : à 15 BB, UTG pousse 9 % des mains, le bouton 38 %, la petite blinde 65 %. À 8 BB : UTG 19 %, cut-off 36 %, bouton 48 %, petite blinde 78 %.'] },
-      { ask: 'Et le resteal ?', h: 'Le resteal : reprendre le vol', p: ['Un joueur ouvre au cut-off ou au bouton pour voler les blindes. Tu es derrière lui, souvent en petite ou grosse blinde, et tu relances : tu lui « re-voles » le pot.', 'Avec 15 à 25 BB, le resteal se fait à tapis (re-shove, chapitre 21). Exemple : le bouton ouvre à 2 BB, tu as 15 BB en grosse blinde. Il y a 4,5 BB au milieu (son ouverture, les blindes, l’ante). Tu risques 14 BB pour les prendre : sans compter ton équité, il faudrait qu’il se couche 76 % du temps. Avec ton équité quand il paie, beaucoup moins.', 'Range à 15 BB contre une ouverture tardive : 12 à 21 % des mains, par exemple 44+, A9s+, KTs+, QJs, ATo+, KQo. Contre une ouverture d’UTG : 3 à 4 % seulement (99+, AQs+, AKo).', 'Avec 40 BB et plus, le resteal est un 3-bet normal, souvent un 3-bet light (chapitre 39) : 3 fois l’ouverture en position, 4 fois depuis les blindes.', 'Au club : vise les joueurs qui ouvrent beaucoup au bouton et se couchent face à une relance. Contre celui qui paie tout, ne resteal qu’avec de la valeur.'] },
+      { ask: 'C’est quoi un open shove ?', h: 'L’open shove : ouvrir directement à tapis', p: ['Tout le monde s’est couché avant toi, et au lieu d’ouvrir à 2 BB, tu fais tapis. C’est le coup normal sous 12 à 15 BB, surtout du cut-off, du bouton et de la petite blinde.', 'Pourquoi pas une ouverture à 2 BB ? Avec 10 BB, 2 BB font 20 % de ton tapis. Si on te relance à tapis, tu es obligé de payer avec presque tout : tu as perdu ta fold equity. En faisant tapis toi-même, c’est l’adversaire qui doit décider, et il se couche le plus souvent.', 'Le calcul : avec l’ante de grosse blinde, il y a 2,5 BB au milieu (0,5 + 1 + 1 d’ante). Tu risques 10 BB pour les gagner. Même si tu perdais toujours quand on paie, il suffirait que tout le monde se couche 80 % du temps. Avec ton équité quand on paie (souvent 30 à 50 %), il en faut bien moins.', 'Les ranges sont dans les tables du chapitre 37 : à 15 BB, UTG pousse 9 % des mains, le bouton 38 %, la petite blinde 65 %. À 8 BB : UTG 19 %, cut-off 36 %, bouton 48 %, petite blinde 78 %.'] },
+      { ask: 'Et le resteal ?', h: 'Le resteal : reprendre le vol', p: ['Un joueur ouvre au cut-off ou au bouton pour voler les blindes. Tu es derrière lui, souvent en petite ou grosse blinde, et tu relances : tu lui « re-voles » le pot.', 'Avec 15 à 25 BB, le resteal se fait à tapis (re-shove, chapitre 36). Exemple : le bouton ouvre à 2 BB, tu as 15 BB en grosse blinde. Il y a 4,5 BB au milieu (son ouverture, les blindes, l’ante). Tu risques 14 BB pour les prendre : sans compter ton équité, il faudrait qu’il se couche 76 % du temps. Avec ton équité quand il paie, beaucoup moins.', 'Range à 15 BB contre une ouverture tardive : 12 à 21 % des mains, par exemple 44+, A9s+, KTs+, QJs, ATo+, KQo. Contre une ouverture d’UTG : 3 à 4 % seulement (99+, AQs+, AKo).', 'Avec 40 BB et plus, le resteal est un 3-bet normal, souvent un 3-bet light (chapitre 11) : 3 fois l’ouverture en position, 4 fois depuis les blindes.', 'Au club : vise les joueurs qui ouvrent beaucoup au bouton et se couchent face à une relance. Contre celui qui paie tout, ne resteal qu’avec de la valeur.'] },
       { ask: 'Et le cold 4-bet ?', h: 'Le cold 4-bet', p: ['Un joueur ouvre, un autre fait un 3-bet, et toi, qui n’as encore rien mis, tu fais un 4-bet. « Cold », parce que tu entres dans le coup à froid. Exemple : le cut-off ouvre à 2 BB, le bouton relance à 6,5 BB, tu 4-bet en petite blinde.', 'Taille : environ 2,5 fois le 3-bet hors position, soit 16 BB dans l’exemple. En position, 2,2 fois.', 'Range : très serrée, QQ+ et AK. Deux joueurs ont déjà montré de la force, et l’ouvreur parle encore après toi. Le bluff (A5s, qui bloque les as) seulement contre un joueur qui 3-bet très souvent au bouton.', 'À 40 BB et moins, le cold 4-bet est un tapis.', 'Au club, c’est rare : quand un joueur prudent fait un cold 4-bet, c’est presque toujours AA ou KK.'] },
-      { ask: 'Compléter en petite blinde, ça se fait ?', h: 'Compléter en petite blinde', p: ['Tout le monde s’est couché jusqu’à toi en petite blinde. Tu mets juste 0,5 BB de plus pour égaliser la grosse blinde, sans relancer : tu complètes.', 'Le prix est très bon : 0,5 BB pour un pot de 3 BB (avec l’ante), soit environ 17 % d’équité. Mais la grosse blinde peut relancer, et tu joueras tout le coup hors position.', 'Quand compléter : contre une grosse blinde passive, qui relance rarement les limps, avec des mains trop faibles pour relancer mais jouables : petites assorties (J5s, T6s, 85s), petites paires, connecteurs.', 'Contre une grosse blinde agressive, relance à 3 BB ou couche. Et si tu complètes souvent, glisse quelques grosses mains dans tes limps (chapitre 34) : la grosse blinde ne pourra plus te relancer sans risque.'] },
-      { ask: 'Et l’over-limp ?', h: 'L’over-limp : limper derrière un limper', p: ['Un joueur a limpé, et tu paies simplement 1 BB à ton tour au lieu de l’isoler. Tu entres dans un pot à plusieurs, pas cher. Au club, le limp est interdit sauf en tête-à-tête : ce coup sert en ligne et dans d’autres clubs.', 'Avec quelles mains : celles qui gagnent gros quand elles touchent, et ne perdent pas grand-chose sinon. Petites paires (22 à 66) pour le brelan, connecteurs assortis (76s, 65s), As assortis faibles au bouton.', 'Les mains fortes s’isolent (chapitre 7) : 3 BB plus 1 BB par limper en position, 4 BB plus 1 depuis les blindes. Les mains dépareillées moyennes (K8o, Q9o) se couchent : à plusieurs, elles font des paires dominées.', 'L’over-limp est meilleur au bouton et au cut-off, où tu joueras en position. En début de table, préfère isoler ou coucher : trop de joueurs parlent encore derrière toi.'] },
-      { ask: 'Le min-raise, c’est notre ouverture du club ?', h: 'Le min-raise', p: ['Relancer du minimum : 2 BB quand la grosse blinde vaut 1 BB. C’est exactement l’ouverture du club.', 'Ça marche parce que le vol est bon marché : à 2 BB, il suffit que tout le monde se couche 44 % du temps pour qu’il soit rentable (avec l’ante de grosse blinde). En échange, la grosse blinde reçoit une belle cote : 18 % d’équité lui suffisent pour payer, elle défend donc large.', 'Contre une grosse blinde qui défend tout, ouvre un peu plus gros (2,5 BB) avec tes mains fortes, et un peu moins large avec tes mains faibles.', 'Le min-raise en retour (face à une mise ou une relance) s’appelle le click back : voir le chapitre 9.'] },
-      { ask: 'Et payer un 3-bet au lieu de 4-bet ?', h: 'Le flat call d’un 3-bet', p: ['Tu as ouvert, on te 3-bet, et tu paies simplement : c’est un flat call (payer « à plat », sans relancer).', 'Il marche en position, avec des mains qui jouent bien après le flop. Au bouton face aux blindes, le profil TAG paie JJ à 55, ATs à AQs, KJs, KQs, QJs, JTs, T9s, 98s, 87s et AQo, et réserve le 4-bet à QQ+, AK et A5s-A4s.', 'Hors position, paie moins : au cut-off face au bouton, JJ à 77, ATs à AQs, KJs, KQs, QJs, JTs, AQo.', 'À éviter : payer avec des mains dominées (AJo, KQo contre un 3-bet serré d’UTG), et payer souvent quand il te reste moins de 40 BB. Le 4-bet serait déjà un tapis, et payer te laisse un pot énorme hors position.', 'Après le flat call, le SPR tourne autour de 5 (chapitre 17) : une top paire forte ou une overpaire s’engage, une paire moyenne contrôle le pot.'] }
+      { ask: 'Compléter en petite blinde, ça se fait ?', h: 'Compléter en petite blinde', p: ['Tout le monde s’est couché jusqu’à toi en petite blinde. Tu mets juste 0,5 BB de plus pour égaliser la grosse blinde, sans relancer : tu complètes.', 'Le prix est très bon : 0,5 BB pour un pot de 3 BB (avec l’ante), soit environ 17 % d’équité. Mais la grosse blinde peut relancer, et tu joueras tout le coup hors position.', 'Quand compléter : contre une grosse blinde passive, qui relance rarement les limps, avec des mains trop faibles pour relancer mais jouables : petites assorties (J5s, T6s, 85s), petites paires, connecteurs.', 'Contre une grosse blinde agressive, relance à 3 BB ou couche. Et si tu complètes souvent, glisse quelques grosses mains dans tes limps (chapitre 9) : la grosse blinde ne pourra plus te relancer sans risque.'] },
+      { ask: 'Et l’over-limp ?', h: 'L’over-limp : limper derrière un limper', p: ['Un joueur a limpé, et tu paies simplement 1 BB à ton tour au lieu de l’isoler. Tu entres dans un pot à plusieurs, pas cher. Au club, le limp est interdit sauf en tête-à-tête : ce coup sert en ligne et dans d’autres clubs.', 'Avec quelles mains : celles qui gagnent gros quand elles touchent, et ne perdent pas grand-chose sinon. Petites paires (22 à 66) pour le brelan, connecteurs assortis (76s, 65s), As assortis faibles au bouton.', 'Les mains fortes s’isolent (chapitre 8) : 3 BB plus 1 BB par limper en position, 4 BB plus 1 depuis les blindes. Les mains dépareillées moyennes (K8o, Q9o) se couchent : à plusieurs, elles font des paires dominées.', 'L’over-limp est meilleur au bouton et au cut-off, où tu joueras en position. En début de table, préfère isoler ou coucher : trop de joueurs parlent encore derrière toi.'] },
+      { ask: 'Le min-raise, c’est notre ouverture du club ?', h: 'Le min-raise', p: ['Relancer du minimum : 2 BB quand la grosse blinde vaut 1 BB. C’est exactement l’ouverture du club.', 'Ça marche parce que le vol est bon marché : à 2 BB, il suffit que tout le monde se couche 44 % du temps pour qu’il soit rentable (avec l’ante de grosse blinde). En échange, la grosse blinde reçoit une belle cote : 18 % d’équité lui suffisent pour payer, elle défend donc large.', 'Contre une grosse blinde qui défend tout, ouvre un peu plus gros (2,5 BB) avec tes mains fortes, et un peu moins large avec tes mains faibles.', 'Le min-raise en retour (face à une mise ou une relance) s’appelle le click back : voir le chapitre 13.'] },
+      { ask: 'Et payer un 3-bet au lieu de 4-bet ?', h: 'Le flat call d’un 3-bet', p: ['Tu as ouvert, on te 3-bet, et tu paies simplement : c’est un flat call (payer « à plat », sans relancer).', 'Il marche en position, avec des mains qui jouent bien après le flop. Au bouton face aux blindes, le profil TAG paie JJ à 55, ATs à AQs, KJs, KQs, QJs, JTs, T9s, 98s, 87s et AQo, et réserve le 4-bet à QQ+, AK et A5s-A4s.', 'Hors position, paie moins : au cut-off face au bouton, JJ à 77, ATs à AQs, KJs, KQs, QJs, JTs, AQo.', 'À éviter : payer avec des mains dominées (AJo, KQo contre un 3-bet serré d’UTG), et payer souvent quand il te reste moins de 40 BB. Le 4-bet serait déjà un tapis, et payer te laisse un pot énorme hors position.', 'Après le flat call, le SPR tourne autour de 5 (chapitre 31) : une top paire forte ou une overpaire s’engage, une paire moyenne contrôle le pot.'] }
     ],
     mistake: 'Ouvrir à 2 BB avec 9 BB au bouton : si on te relance à tapis, tu dois payer presque tout. Sous 12 à 15 BB, l’ouverture à tapis garde la fold equity de ton côté.',
-    retain: ['Open shove sous 12 à 15 BB : tables du chapitre 22 (à 8 BB, bouton 48 %, petite blinde 78 %).', 'Resteal : tapis à 15-25 BB contre les voleurs tardifs (44+, A9s+, ATo+, KQo…), 3-bet light au-delà.', 'Cold 4-bet : QQ+ et AK, environ 2,5 fois le 3-bet hors position ; au club, c’est AA ou KK.', 'Compléter en petite blinde contre une grosse blinde passive, avec des mains jouables trop faibles pour relancer.', 'Over-limp en position avec les petites paires et les connecteurs assortis ; isoler les mains fortes.', 'Flat call d’un 3-bet en position avec des mains jouables ; pas sous 40 BB.'],
+    retain: ['Open shove sous 12 à 15 BB : tables du chapitre 37 (à 8 BB, bouton 48 %, petite blinde 78 %).', 'Resteal : tapis à 15-25 BB contre les voleurs tardifs (44+, A9s+, ATo+, KQo…), 3-bet light au-delà.', 'Cold 4-bet : QQ+ et AK, environ 2,5 fois le 3-bet hors position ; au club, c’est AA ou KK.', 'Compléter en petite blinde contre une grosse blinde passive, avec des mains jouables trop faibles pour relancer.', 'Over-limp en position avec les petites paires et les connecteurs assortis ; isoler les mains fortes.', 'Flat call d’un 3-bet en position avec des mains jouables ; pas sous 40 BB.'],
     quiz: [
       { q: 'Tu as 9 BB au bouton, tout le monde s’est couché, tu as K9o. Que fais-tu ?', o: ['Ouvrir à 2 BB', 'Tapis', 'Limper', 'Se coucher'], a: 1, why: 'À 8-9 BB, le bouton pousse près de la moitié des mains : K9o en fait partie. Ouvrir à 2 BB engagerait plus d’un cinquième de ton tapis.' },
       { q: 'Le resteal, c’est…', o: ['ouvrir à tapis en début de table', 'relancer pour reprendre le pot d’un voleur', 'payer une ouverture', 'limper en petite blinde'], a: 1, why: 'Le voleur ouvre large au cut-off ou au bouton : tu lui reprends le pot, à tapis avec 15 à 25 BB.' },
@@ -8570,15 +8570,15 @@
     ]
   };
 
-  L[46] = {
+  L[27] = {
     minutes: 15,
     links: [{ href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'Kd8s3c', path: 'x' })), label: 'Le solveur : checker derrière sur K♦8♠3♣' }, { href: '#solveur?d=' + encodeURIComponent(JSON.stringify({ spot: 'btn-bb', flop: 'As7d2c', path: 'x' })), label: 'Le solveur : presque un range bet sur A♠7♦2♣' }, { href: '#cas', label: 'S’entraîner : cas concrets' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['Au flop, l’ouvreur choisit entre miser toute sa range petit (range bet), miser une partie, ou checker derrière. En face, on paie, on se couche, ou on relance le c-bet pour la valeur et en semi-bluff.', 'À la turn et à la river, on enchaîne les mises (barrels) avec les mains qui en valent trois, on garde le pot petit avec les mains moyennes (contrôle du pot), et on mise pour protéger quand l’adversaire a beaucoup d’outs.'],
     sections: [
-      { ask: 'Checker derrière, c’est faible ?', h: 'Checker derrière (check back)', p: ['Tu es le dernier à parler, l’adversaire a checké, et tu checkes aussi : la carte suivante arrive gratuitement. Ce n’est pas un aveu de faiblesse, c’est un choix.', 'Le solveur le fait beaucoup : bouton contre grosse blinde, sur K♦8♠3♣, le bouton checke 40 % du temps. Avec seulement la hauteur as, il checke 64 % : la main gagne souvent au check, et une mise ne ferait coucher que des mains plus faibles. Sur 8♥7♥4♦, il checke 49 %.', 'Trois raisons de checker derrière : ta main gagne souvent à l’abattage mais ne se fait pas payer par pire (contrôle du pot) ; tu veux garder des mains fortes dans tes checks, pour ne pas être lisible ; tu as une main sans équité sur un flop qui aide l’adversaire.', 'Après ton check, la turn devient le moment de miser si l’adversaire checke encore : c’est le c-bet retardé (chapitre 43).'] },
-      { ask: 'Et le range bet ?', h: 'Le range bet : miser toute sa range', p: ['Miser avec toutes tes mains, petit, sans réfléchir main par main. Ça marche quand tu as un gros avantage de range (chapitre 42) : l’adversaire a peu de mains qui supportent la mise, et aucune qui peut relancer souvent.', 'Exemple du solveur : la grosse blinde a fait un 3-bet, le bouton a payé. Sur A♠7♦2♣, elle mise 99 % du temps, presque toujours un tiers du pot. C’est un range bet.', 'En pot simple, bouton contre grosse blinde sur A♠7♦2♣ : le bouton mise 77 %, presque toujours petit. On s’en approche, sans y être.', 'Jamais sur un flop bas et connecté : sur 8♥7♥4♦, le bouton checke environ la moitié de ses mains.', 'Face à un range bet, défends large : la mise est petite (75 % de ta range à garder face à un tiers du pot), et l’adversaire a beaucoup de mains faibles dans sa mise.'] },
-      { ask: 'Je peux relancer un c-bet en position ?', h: 'Relancer le c-bet', p: ['Hors position, c’est le check-raise (chapitre 44). En position, au bouton ou au cut-off, tu peux aussi relancer le c-bet : le hijack ouvre, tu paies au bouton, il mise, tu relances.', 'Exemple du solveur : le hijack ouvre, le bouton paie, flop K♦8♠3♣, le hijack mise un tiers du pot. Le bouton se couche 20 %, paie 61 %, relance 19 %.', 'Avec quoi : la valeur (doubles paires, brelans, top paire forte sur tableau humide) et les semi-bluffs (tirage couleur, tirage quinte par les deux bouts, ventrale avec overcards). Les mains moyennes paient : relancer les ferait coucher par pire et payer par mieux.', 'Taille : environ 3 fois sa mise, un peu plus sur un tableau humide.', 'Au club : un c-bet qui se fait relancer est souvent abandonné par les récréatifs. Mais face à la relance d’un joueur passif, couche tes paires moyennes : c’est presque toujours deux paires ou mieux.'] },
-      { ask: 'Double barrel, triple barrel ?', h: 'Double et triple barrel', p: ['Double barrel : miser au flop, puis encore à la turn. Triple barrel : flop, turn et river. Chaque barrel doit avoir une raison : la valeur, ou un bluff qui a encore de l’équité ou une bonne carte à représenter.', 'Bonnes turns pour continuer : une carte haute sur un tableau bas, qui aide ta range d’ouvreur ; une carte qui donne de l’équité à ton tirage. Mauvaises : une carte qui complète les tirages adverses quand tu n’en as pas, ou une petite carte qui donne des doubles paires à la grosse blinde (chapitre 15).', 'Sur K♦8♠3♣, turn 2♦, après un tiers du pot payé : le bouton mise 40 % du temps. Sa top paire mise toujours, la taille du pot ou tapis 88 % ; sa paire moyenne checke 84 %.', 'Le triple barrel est polarisé : grosses mains et bluffs. Sur A♠7♦2♣, turn K♥, river 3♦, après deux mises payées (un tiers du pot au flop, deux tiers à la turn), le bouton fait tapis 40 % : doubles paires 100 %, brelans 42 %, et 42 % de ses mains sans rien. Sa top paire checke 77 %.', 'Contre une calling station, oublie le triple barrel en bluff : elle paie. Garde tes trois mises pour la valeur.'] },
+      { ask: 'Checker derrière, c’est faible ?', h: 'Checker derrière (check back)', p: ['Tu es le dernier à parler, l’adversaire a checké, et tu checkes aussi : la carte suivante arrive gratuitement. Ce n’est pas un aveu de faiblesse, c’est un choix.', 'Le solveur le fait beaucoup : bouton contre grosse blinde, sur K♦8♠3♣, le bouton checke 40 % du temps. Avec seulement la hauteur as, il checke 64 % : la main gagne souvent au check, et une mise ne ferait coucher que des mains plus faibles. Sur 8♥7♥4♦, il checke 49 %.', 'Trois raisons de checker derrière : ta main gagne souvent à l’abattage mais ne se fait pas payer par pire (contrôle du pot) ; tu veux garder des mains fortes dans tes checks, pour ne pas être lisible ; tu as une main sans équité sur un flop qui aide l’adversaire.', 'Après ton check, la turn devient le moment de miser si l’adversaire checke encore : c’est le c-bet retardé (chapitre 26).'] },
+      { ask: 'Et le range bet ?', h: 'Le range bet : miser toute sa range', p: ['Miser avec toutes tes mains, petit, sans réfléchir main par main. Ça marche quand tu as un gros avantage de range (chapitre 18) : l’adversaire a peu de mains qui supportent la mise, et aucune qui peut relancer souvent.', 'Exemple du solveur : la grosse blinde a fait un 3-bet, le bouton a payé. Sur A♠7♦2♣, elle mise 99 % du temps, presque toujours un tiers du pot. C’est un range bet.', 'En pot simple, bouton contre grosse blinde sur A♠7♦2♣ : le bouton mise 77 %, presque toujours petit. On s’en approche, sans y être.', 'Jamais sur un flop bas et connecté : sur 8♥7♥4♦, le bouton checke environ la moitié de ses mains.', 'Face à un range bet, défends large : la mise est petite (75 % de ta range à garder face à un tiers du pot), et l’adversaire a beaucoup de mains faibles dans sa mise.'] },
+      { ask: 'Je peux relancer un c-bet en position ?', h: 'Relancer le c-bet', p: ['Hors position, c’est le check-raise (chapitre 22). En position, au bouton ou au cut-off, tu peux aussi relancer le c-bet : le hijack ouvre, tu paies au bouton, il mise, tu relances.', 'Exemple du solveur : le hijack ouvre, le bouton paie, flop K♦8♠3♣, le hijack mise un tiers du pot. Le bouton se couche 20 %, paie 61 %, relance 19 %.', 'Avec quoi : la valeur (doubles paires, brelans, top paire forte sur tableau humide) et les semi-bluffs (tirage couleur, tirage quinte par les deux bouts, ventrale avec overcards). Les mains moyennes paient : relancer les ferait coucher par pire et payer par mieux.', 'Taille : environ 3 fois sa mise, un peu plus sur un tableau humide.', 'Au club : un c-bet qui se fait relancer est souvent abandonné par les récréatifs. Mais face à la relance d’un joueur passif, couche tes paires moyennes : c’est presque toujours deux paires ou mieux.'] },
+      { ask: 'Double barrel, triple barrel ?', h: 'Double et triple barrel', p: ['Double barrel : miser au flop, puis encore à la turn. Triple barrel : flop, turn et river. Chaque barrel doit avoir une raison : la valeur, ou un bluff qui a encore de l’équité ou une bonne carte à représenter.', 'Bonnes turns pour continuer : une carte haute sur un tableau bas, qui aide ta range d’ouvreur ; une carte qui donne de l’équité à ton tirage. Mauvaises : une carte qui complète les tirages adverses quand tu n’en as pas, ou une petite carte qui donne des doubles paires à la grosse blinde (chapitre 25).', 'Sur K♦8♠3♣, turn 2♦, après un tiers du pot payé : le bouton mise 40 % du temps. Sa top paire mise toujours, la taille du pot ou tapis 88 % ; sa paire moyenne checke 84 %.', 'Le triple barrel est polarisé : grosses mains et bluffs. Sur A♠7♦2♣, turn K♥, river 3♦, après deux mises payées (un tiers du pot au flop, deux tiers à la turn), le bouton fait tapis 40 % : doubles paires 100 %, brelans 42 %, et 42 % de ses mains sans rien. Sa top paire checke 77 %.', 'Contre une calling station, oublie le triple barrel en bluff : elle paie. Garde tes trois mises pour la valeur.'] },
       { ask: 'Comment choisir la taille pour arriver à tapis ?', h: 'Le sizing géométrique', p: ['Avec une très grosse main, tu veux mettre tout ton tapis en trois mises, sans en faire une énorme à la fin. La solution : miser la même fraction du pot à chaque rue. C’est le sizing géométrique.', 'Exemple : pot de 5,5 BB au flop, il te reste 38 BB (bouton contre grosse blinde à 40 BB). Trois mises d’environ 73 % du pot font tapis à la river. En deux mises seulement (flop checké), il faudrait 142 % du pot à chaque fois : d’où les surmises.', 'En pot 3-bet à 100 BB (pot de 17,5 BB, 92 BB derrière) : trois mises d’environ deux tiers du pot, ou deux mises de 120 % du pot.', 'La règle simple : plus le SPR est bas, plus tes mises sont petites pour arriver au tapis. Si tu as checké une rue, il faut miser plus gros ensuite.'] },
       { ask: 'Et le contrôle du pot ?', h: 'Le contrôle du pot', p: ['Avec une main moyenne (paire moyenne, top paire petit kicker), tu ne veux pas jouer un gros pot : contre les mises fortes, tu es souvent battu, et les mains plus faibles ne paient pas trois rues.', 'Alors tu checkes une rue, souvent la turn, pour garder le pot petit et arriver à la river à bon prix. Le solveur le fait : paire moyenne à la turn sur K♦8♠3♣ 2♦, check 84 %.', 'Le contrôle du pot se joue mieux en position : tu choisis quand checker. Hors position, check-call est souvent le contrôle le plus simple.', 'Attention à l’excès : contrôler le pot avec une main forte, c’est laisser filer de la valeur. Le contrôle est pour les mains moyennes, pas pour les top paires bon kicker en pot simple.'] },
       { ask: 'Miser pour protéger ma main, ça existe ?', h: 'La protection', p: ['Miser pour faire coucher les mains qui ont des outs contre toi. Exemple : tu as 9♠9♦ sur 8♥7♥4♦. Une main comme A♣K♣ a 6 outs (trois as, trois rois) : environ 24 % jusqu’à la river, 12 % sur la turn seule. Une mise la fait payer ou coucher, un check lui donne une carte gratuite.', 'Sur ces flops dangereux, le solveur mise gros avec les overpaires : surmise 64 % du temps sur 8♥7♥4♦. Il fait payer les tirages pendant qu’ils sont derrière.', 'La protection compte surtout sur les tableaux humides et à plusieurs joueurs. Sur un tableau sec comme K♦8♠3♣, l’adversaire a peu d’outs : rien à protéger, tu peux checker.', 'Protéger n’est pas une raison de miser une main qui ne se fait payer que par mieux : si tous les payeurs te battent, checke.'] }
@@ -8597,7 +8597,7 @@
     ]
   };
 
-  L[47] = {
+  L[30] = {
     minutes: 15,
     links: [{ href: '#cas', label: 'S’entraîner : cas concrets à la river' }, { href: '#apf', label: 'Après le flop : que faire ?' }],
     key: ['À la river, la valeur fine fait payer des mains plus faibles avec une main moyenne ; la block bet fixe le prix hors position ; la mise puis couche te fait payer, mais pas trop.', 'Hero call et hero fold : on sort de la règle de défense quand on a une vraie lecture. Et au club, savoir lire un snap call, accepter un cooler et ne pas confondre bad beat et erreur.'],
@@ -8606,10 +8606,10 @@
       { ask: 'Une range fusionnée, c’est quoi ?', h: 'La range fusionnée (merge)', p: ['Une range de mise qui mélange les mains fortes et les mains moyennes, sans vrais bluffs. Elle s’oppose à la range polarisée (très fortes et bluffs) et ressemble à la linéaire.', 'Quand : contre un joueur qui paie trop. Il ne se couche pas, donc tes bluffs perdent ; mais il paie avec pire, donc tes mains moyennes gagnent à miser.', 'Exemple : contre une calling station à la river, mise petite avec top paire, paire moyenne correcte et mieux ; checke tes mains sans valeur au lieu de bluffer.', 'Contre un joueur qui se couche beaucoup, c’est l’inverse : polarise.'] },
       { ask: 'Et la block bet ?', h: 'La block bet (mise bloquante)', p: ['Tu es hors position à la river avec une main moyenne. Si tu checkes, l’adversaire peut miser gros et te mettre dans une décision difficile. Alors tu mises petit, 20 à 30 % du pot : tu fixes le prix.', 'Beaucoup de joueurs du club paient ta petite mise avec pire, et relancent rarement en bluff. Tu gagnes un peu de valeur et tu évites la grosse mise.', 'Le risque : un joueur agressif qui la lit comme faible et relance. Contre lui, préfère le check-call.', 'Garde-la pour les mains moyennes. Avec une très grosse main, mise plus gros ; avec rien, checke ou bluffe vraiment.'] },
       { ask: 'Miser puis se coucher, c’est pas contradictoire ?', h: 'Mise puis couche (bet-fold)', p: ['Tu mises pour la valeur, et tu prévois de te coucher si l’adversaire relance. Pas de contradiction : tu bats les mains qui paient, mais pas celles qui relancent.', 'Exemple : top paire, kicker moyen, à la river. Un récréatif paie avec ses paires plus faibles. S’il relance, c’est presque toujours deux paires ou mieux : couche-toi sans regret.', 'C’est le complément naturel de la valeur fine : petite mise, et couche face à une relance d’un joueur passif.', 'Contre un joueur très agressif qui relance en bluff, ton plan change : mise et paie, ou checke et paie.'] },
-      { ask: 'Et check-call, check-fold ?', h: 'Check-call et check-fold', p: ['Check-call : tu checkes, et tu paies sa mise. Avec un attrape-bluffs (bluff catcher) : une main qui bat ses bluffs, mais pas sa valeur.', 'Check-fold : tu checkes, et tu te couches s’il mise. Avec une main qui ne bat aucune de ses mises, ou contre un joueur qui ne bluffe jamais.', 'Pour choisir, compare l’équité requise (33 % face à une mise du pot) à la part de bluffs dans sa ligne (chapitre 16). Contre un récréatif passif qui mise gros à la river : check-fold. Contre un agressif : check-call plus large.'] },
-      { ask: 'Hero call, hero fold ?', h: 'Hero call et hero fold', p: ['Hero call : payer avec une main faible parce que tu lis un bluff. Exemple : pot de 12 BB, il fait tapis pour 12 BB. Il te faut 33 % d’équité : si tu penses qu’il bluffe plus d’une fois sur trois, paie, même avec une paire faible.', 'Il faut une vraie raison : une ligne qui n’a pas de sens pour la valeur, un tirage manqué évident, un joueur qui bluffe trop.', 'Hero fold : te coucher avec une main forte parce que tu lis la valeur. Exemple : un nit qui n’a jamais relancé de la soirée te relance la river : ta top paire, même avec un bon kicker, se couche.', 'Attention : la plupart des « hero » coûtent cher. Contre un joueur inconnu, reviens à la défense minimale (chapitre 42).'] },
+      { ask: 'Et check-call, check-fold ?', h: 'Check-call et check-fold', p: ['Check-call : tu checkes, et tu paies sa mise. Avec un attrape-bluffs (bluff catcher) : une main qui bat ses bluffs, mais pas sa valeur.', 'Check-fold : tu checkes, et tu te couches s’il mise. Avec une main qui ne bat aucune de ses mises, ou contre un joueur qui ne bluffe jamais.', 'Pour choisir, compare l’équité requise (33 % face à une mise du pot) à la part de bluffs dans sa ligne (chapitre 28). Contre un récréatif passif qui mise gros à la river : check-fold. Contre un agressif : check-call plus large.'] },
+      { ask: 'Hero call, hero fold ?', h: 'Hero call et hero fold', p: ['Hero call : payer avec une main faible parce que tu lis un bluff. Exemple : pot de 12 BB, il fait tapis pour 12 BB. Il te faut 33 % d’équité : si tu penses qu’il bluffe plus d’une fois sur trois, paie, même avec une paire faible.', 'Il faut une vraie raison : une ligne qui n’a pas de sens pour la valeur, un tirage manqué évident, un joueur qui bluffe trop.', 'Hero fold : te coucher avec une main forte parce que tu lis la valeur. Exemple : un nit qui n’a jamais relancé de la soirée te relance la river : ta top paire, même avec un bon kicker, se couche.', 'Attention : la plupart des « hero » coûtent cher. Contre un joueur inconnu, reviens à la défense minimale (chapitre 18).'] },
       { ask: 'Induire un bluff, comment ?', h: 'Induire', p: ['Faire jouer l’adversaire à ta place : tu checkes une main forte pour qu’il bluffe, ou tu mises petit pour qu’il relance.', 'Contre un joueur agressif qui mise dès qu’on checke : checke ta main forte à la river, puis paie ou relance. Il bluffera avec des mains qui n’auraient jamais payé ta mise.', 'Contre un passif, n’essaie pas : il checkera derrière, et tu auras perdu ta valeur. Mise toi-même.'] },
-      { ask: 'Et le snap call, le cooler ?', h: 'Snap call, cooler et bad beat', p: ['Snap call : payer instantanément. Au club, c’est souvent une main moyenne déjà décidée à payer : avec une très grosse main, la plupart des joueurs prennent le temps de réfléchir à la relance. Un snap call au flop ou à la turn montre souvent un tirage ou une paire moyenne.', 'Cooler : deux très grosses mains l’une contre l’autre, où la perte est inévitable. KK contre AA avant le flop, brelan contre brelan supérieur. Tu as bien joué, tu as perdu : ce n’est pas une erreur.', 'Bad beat : tu étais largement devant quand l’argent est entré, et l’adversaire touche. AA contre KK à tapis avant le flop : les rois gagnent environ 18 % du temps. Ça arrivera.', 'Pour ton mental (chapitre 29) : un cooler ou un bad beat ne se corrige pas. Ne change pas ton jeu après eux. Seules tes erreurs se travaillent.'] }
+      { ask: 'Et le snap call, le cooler ?', h: 'Snap call, cooler et bad beat', p: ['Snap call : payer instantanément. Au club, c’est souvent une main moyenne déjà décidée à payer : avec une très grosse main, la plupart des joueurs prennent le temps de réfléchir à la relance. Un snap call au flop ou à la turn montre souvent un tirage ou une paire moyenne.', 'Cooler : deux très grosses mains l’une contre l’autre, où la perte est inévitable. KK contre AA avant le flop, brelan contre brelan supérieur. Tu as bien joué, tu as perdu : ce n’est pas une erreur.', 'Bad beat : tu étais largement devant quand l’argent est entré, et l’adversaire touche. AA contre KK à tapis avant le flop : les rois gagnent environ 18 % du temps. Ça arrivera.', 'Pour ton mental (chapitre 47) : un cooler ou un bad beat ne se corrige pas. Ne change pas ton jeu après eux. Seules tes erreurs se travaillent.'] }
     ],
     mistake: 'Faire un hero call contre un joueur passif qui mise gros à la river : il bluffe très peu. Le « héros » finit souvent par payer la valeur.',
     retain: ['Valeur fine : mise petit (25 à 40 %) si tu bats plus de la moitié des mains qui paient.', 'Range fusionnée contre les stations, polarisée contre ceux qui se couchent.', 'Block bet : 20 à 30 % hors position avec une main moyenne, pour fixer le prix.', 'Mise puis couche face à la relance d’un joueur passif.', 'Hero call seulement avec une vraie lecture ; hero fold face au nit qui relance la river.', 'Induire contre les agressifs ; cooler et bad beat ne sont pas des erreurs.'],
@@ -8625,7 +8625,7 @@
     ]
   };
 
-  L[45].podcast = [
+  L[12].podcast = [
    [
     "J",
     "Salut Yo ! On m’a parlé d’open shove, de resteal, de cold quatre-bet… Encore des coups qu’on n’a pas vus ?"
@@ -8648,7 +8648,7 @@
    ],
    [
     "Y",
-    "Les tables du chapitre vingt-deux. À huit blindes, le bouton pousse presque la moitié des mains, la petite blinde plus des trois quarts."
+    "Les tables du chapitre trente-sept. À huit blindes, le bouton pousse presque la moitié des mains, la petite blinde plus des trois quarts."
    ],
    [
     "J",
@@ -8780,7 +8780,7 @@
    ]
   ];
 
-  L[46].podcast = [
+  L[27].podcast = [
    [
     "J",
     "Salut Yo ! Checker derrière, range bet, triple barrel… On parle du flop et de la turn aujourd’hui ?"
@@ -8935,7 +8935,7 @@
    ]
   ];
 
-  L[47].podcast = [
+  L[30].podcast = [
    [
     "J",
     "Salut Yo ! Valeur fine, block bet, hero call… Aujourd’hui, c’est la river ?"
@@ -9098,20 +9098,20 @@
    ]
   ];
 
-  L[48] = {
+  L[39] = {
     minutes: 16, sit: 'bulle', range: { type: 'callshove', pos: 'BB', opener: 'SB', bb: 10, bubble: 'moyen' },
-    links: [{ href: '#ranges', label: 'Ma range › 🫧 Bulle (tapis moyen, gros ou petit)' }, { href: '#situations', label: 'Exercices : Jouer la bulle' }, { href: '#lecon-23', label: 'Chapitre 23 : L’ICM complet' }],
+    links: [{ href: '#ranges', label: 'Ma range › 🫧 Bulle (tapis moyen, gros ou petit)' }, { href: '#situations', label: 'Exercices : Jouer la bulle' }, { href: '#lecon-38', label: 'Chapitre 38 : L’ICM complet' }],
     key: ['À la bulle, les jetons ne valent plus des euros : perdre ton tapis te coûte bien plus que doubler ne te rapporte. C’est ce qui oblige à resserrer.', 'Tout dépend de ton tapis : le tapis moyen resserre fort, le gros tapis attaque, le petit tapis joue tapis ou fold.', 'On resserre surtout ce qui fait risquer son tapis : payer un tapis, défendre, répondre à un 3-bet. On resserre peu ses ouvertures en fin de table.', 'Les premières mains jetées : petites paires, as faibles, assorties moyennes, dépareillées « jolies » (KJ, QJ, AT) ; et plus aucun 3-bet de bluff.'],
     sections: [
-      { ask: 'Pourquoi la bulle change tout ?', h: 'Les jetons ne valent plus des euros', p: ['Tant que personne n’est payé, sortir te coûte tout ton prix possible, alors que doubler ne double pas ce que tu vas toucher. C’est l’ICM du chapitre 23 : un jeton perdu vaut plus qu’un jeton gagné.', 'On le mesure avec le « bubble factor » : il te faut 1,5 à 2 fois plus d’avantage qu’en temps normal pour risquer ton tapis quand tu es dans la moyenne. Une paye qui demandait 40 % d’équité en jetons en demande alors 50 à 55 %.', 'La bulle commence un peu avant le dernier joueur à sortir : dès qu’il ne reste que quelques éliminations avant les places payées, et à chaque palier important (table finale, gros saut de prix).'] },
-      { ask: 'Quel est mon rôle selon mon tapis ?', h: 'Gros, moyen ou petit tapis', p: ['Gros tapis (nettement au-dessus de la moyenne) : tu peux perdre un coup sans danger, les autres non. Tu ouvres et sur-relances plus large en fin de table, surtout contre les tapis moyens qui ne peuvent pas te payer.', 'Tapis moyen : c’est toi qui as le plus à perdre. Tu ne peux pas te permettre de sauter avant les petits tapis. C’est toi qui resserres le plus, surtout tes payes.', 'Petit tapis (moins de 15 BB) : tu joues tapis ou fold avec les tables du chapitre 22. Tu continues de pousser — les autres se couchent davantage — et tu paies un peu moins large.'] },
+      { ask: 'Pourquoi la bulle change tout ?', h: 'Les jetons ne valent plus des euros', p: ['Tant que personne n’est payé, sortir te coûte tout ton prix possible, alors que doubler ne double pas ce que tu vas toucher. C’est l’ICM du chapitre 38 : un jeton perdu vaut plus qu’un jeton gagné.', 'On le mesure avec le « bubble factor » : il te faut 1,5 à 2 fois plus d’avantage qu’en temps normal pour risquer ton tapis quand tu es dans la moyenne. Une paye qui demandait 40 % d’équité en jetons en demande alors 50 à 55 %.', 'La bulle commence un peu avant le dernier joueur à sortir : dès qu’il ne reste que quelques éliminations avant les places payées, et à chaque palier important (table finale, gros saut de prix).'] },
+      { ask: 'Quel est mon rôle selon mon tapis ?', h: 'Gros, moyen ou petit tapis', p: ['Gros tapis (nettement au-dessus de la moyenne) : tu peux perdre un coup sans danger, les autres non. Tu ouvres et sur-relances plus large en fin de table, surtout contre les tapis moyens qui ne peuvent pas te payer.', 'Tapis moyen : c’est toi qui as le plus à perdre. Tu ne peux pas te permettre de sauter avant les petits tapis. C’est toi qui resserres le plus, surtout tes payes.', 'Petit tapis (moins de 15 BB) : tu joues tapis ou fold avec les tables du chapitre 37. Tu continues de pousser — les autres se couchent davantage — et tu paies un peu moins large.'] },
       { ask: 'Concrètement, quelles mains je jette en tapis moyen ?', h: 'Tes ouvertures : début de table resserré, fin de table presque inchangée', p: ['Exemple en TAG avec 30 BB. UTG : tu passes de 14 % à 9 % des mains ; tu jettes 77, 66, A9s, KJs, QJs, AJo, KJo et ATo.', 'Hijack : de 21 % à 14 % ; tu jettes 55, 44, A8s, A7s, K9s, QTs, Q9s, JTs, J9s, T9s, KTo et A9o.', 'Cut-off : de 31 % à 23 % ; tu jettes 22, A4s, A3s, K8s, K7s, Q8s, J8s, T8s, 98s, QJo, QTo, K9o et A8o.', 'Bouton et petite blinde : presque rien ne change. Les blindes aussi ont peur de sauter : le vol reste rentable.', 'La logique : on garde les mains qui gagnent souvent un gros pot et on jette celles qui gagnent de petits pots ou se font dominer — petites paires (qui ratent le brelan 88 % du temps), as faibles, assorties moyennes, dépareillées « jolies » comme KJ ou QJ.'] },
       { ask: 'Et face à une relance ?', h: 'Défendre à la bulle : la plus grosse coupe', p: ['Fini les 3-bets de bluff : tu ne sur-relances plus qu’avec 99 et plus, AK, AQ, AJs et KQs.', 'Fini les payes « pour voir » : les petites paires, les as faibles assortis, les assorties moyennes et les dépareillées faibles partent à la poubelle.', 'Exemple TAG à 30 BB, grosse blinde face au bouton (au club, rappel : sous 40 BB on ne paie plus depuis les blindes) : tu défendais 50 % des mains, tu n’en défends plus que 26 %. Tu jettes notamment ATs à A2s, 88, 77, K4s, Q6s, J6s, T6s, 87s, 76s, 65s, JTo, Q9o, A6o à A2o.', 'Au bouton face au cut-off : de 21 % à 9 %. Tu jettes ATs à A2s, KJs, QJs, QTs, J9s, AJo, 88, 77, 66, 44 et 33.'] },
       { ask: 'Et payer un tapis ?', h: 'Payer un tapis : là où l’ICM frappe le plus', p: ['C’est la décision la plus touchée, parce que tu risques tout pour un gain limité. En tapis moyen, tu ne gardes qu’environ la moitié de tes payes habituelles, les plus fortes.', 'Exemple : 10 BB, la petite blinde pousse, tu es en grosse blinde. Hors bulle, tu paies 59 % des mains ; à la bulle, 33 %. Tu jettes les rois et dames faibles (K4s, Q7s, K8o, Q9o…), les as faibles dépareillés (A5o à A2o), les connecteurs (87s, T9o, JTo).', 'Face au tapis du bouton à 15 BB : de 28 % à 15 %. Tu jettes A7s à A2s, A9o à A4o, K9s, K8s, KTo, QJo, JTs et les petites paires 44 à 22.', 'Exception : en gros tapis face à un petit tapis, tu peux presque payer comme d’habitude (85 % de tes payes) : le perdre ne te met pas en danger.'] },
       { ask: 'Et si on me 3-bet ?', h: 'Face au 3-bet', p: ['En tapis moyen à la bulle, tu 4-bets seulement QQ, KK, AA et AK. Plus de 4-bet bluff avec A5s.', 'Tu paies JJ, TT, AQs, et c’est presque tout. Exemple au bouton face au 3-bet des blindes : de 15 % à 7 % des mains ; tu jettes ATs, A5s, A4s, KJs, QJs, JTs, T9s, 98s, 87s, 88, 77, 66 et 55.'] },
       { ask: 'Et quand je suis gros tapis ?', h: 'Le gros tapis met la pression', p: ['Tu ouvres plus large en fin de table, avec 60 BB : au bouton de 56 % à 63 % (Q3s, J5s, K6o, Q7o…), au cut-off de 37 % à 43 % (K4s, Q6s, K8o, A5o…).', 'Tes cibles : les tapis moyens, qui doivent se coucher. Évite au contraire les autres gros tapis : un coup contre eux peut te faire redescendre.', 'Tu paies à peine moins, mais tu évites les payes dépareillées faibles en fin de table.'] },
       { ask: 'Et en petit tapis ?', h: 'Le petit tapis', p: ['Sous 15 BB, tu joues tapis ou fold. Pousse comme d’habitude, voire un peu plus large : à la bulle, on te paie moins.', 'Paie un peu moins large qu’en temps normal (environ les trois quarts de tes payes) : d’autres petits tapis risquent de sauter avant toi.', 'Ne te laisse pas « mourir » aux blindes : pousser à 8 BB vaut mieux que d’attendre d’en avoir 3.'] },
-      { ask: 'Et une fois dans l’argent ?', h: 'Après la bulle', p: ['Dès que la bulle éclate, la pression retombe : les petits tapis poussent, les tapis moyens rouvrent leurs ranges. Reprends ta range normale, puis resserre de nouveau à l’approche de chaque gros palier, surtout à la table finale (chapitre 24).', 'Au club, beaucoup de joueurs se crispent à l’approche des places payées sans savoir pourquoi : vole leurs blindes. À l’inverse, ceux qui paient tout restent des cibles pour la valeur, pas pour le bluff.'] }
+      { ask: 'Et une fois dans l’argent ?', h: 'Après la bulle', p: ['Dès que la bulle éclate, la pression retombe : les petits tapis poussent, les tapis moyens rouvrent leurs ranges. Reprends ta range normale, puis resserre de nouveau à l’approche de chaque gros palier, surtout à la table finale (chapitre 41).', 'Au club, beaucoup de joueurs se crispent à l’approche des places payées sans savoir pourquoi : vole leurs blindes. À l’inverse, ceux qui paient tout restent des cibles pour la valeur, pas pour le bluff.'] }
     ],
     mistake: 'Payer un tapis à la bulle, en tapis moyen, avec une main qui serait un « call » en temps normal (A5o, K9s, 44) : tu risques ta place payée pour quelques jetons.',
     retain: ['Tapis moyen : il te faut 1,5 à 2 fois plus d’avantage pour risquer ton tapis.', 'On resserre d’abord les payes de tapis, les défenses et les réponses au 3-bet ; peu les ouvertures en fin de table.', 'Mains jetées en premier : petites paires, as faibles, assorties moyennes, dépareillées comme KJ, QJ, AT ; plus de 3-bet de bluff.', 'Gros tapis : ouvre plus large en fin de table contre les tapis moyens. Petit tapis : continue de pousser, paie un peu moins.', 'Dans Ma range, le bouton « 🫧 Bulle » montre la range resserrée et les mains qui changent.'],
@@ -9127,12 +9127,12 @@
     ]
   };
 
-  L[48].podcast = [
+  L[39].podcast = [
     ['J', 'Salut Yo ! Ce soir, je veux parler de la bulle. Au club comme en ligne, quand on approche des places payées, je ne sais jamais quoi jeter. Je joue soit trop serré, soit comme d’habitude.'],
     ['Y', 'Salut ! Bonne question, parce que c’est là que beaucoup de joueurs perdent leur tournoi. On va voir pourquoi la bulle change tout, puis ce que tu fais selon ton tapis, et surtout quelles mains tu jettes.'],
     ['J', 'Alors, pourquoi ça change tout ?'],
     ['Y', 'Parce qu’à la bulle, tes jetons ne valent plus des euros. Si tu sautes juste avant les places payées, tu perds tout ce que tu pouvais toucher. Si tu doubles, tu ne doubles pas ce que tu vas gagner. Un jeton perdu vaut plus qu’un jeton gagné.'],
-    ['J', 'C’est l’ICM du chapitre vingt-trois ?'],
+    ['J', 'C’est l’ICM du chapitre trente-huit ?'],
     ['Y', 'Exactement. Et on le résume avec un chiffre : le bubble factor. Pour un tapis moyen, il est de un et demi à deux. Ça veut dire qu’il te faut une fois et demie à deux fois plus d’avantage qu’en temps normal pour risquer ton tapis.'],
     ['J', 'Concrètement ?'],
     ['Y', 'Une paye qui demandait quarante pour cent de chances de gagner en temps normal en demande cinquante, voire cinquante-cinq, à la bulle. Beaucoup de payes deviennent des folds.'],
@@ -9173,7 +9173,7 @@
     ['J', 'Et les autres gros tapis ?'],
     ['Y', 'Évite-les. Un gros coup contre eux peut te faire redescendre au rang de tapis moyen. Et tu continues d’éviter les payes dépareillées faibles en fin de table.'],
     ['J', 'Et le petit tapis ?'],
-    ['Y', 'Sous quinze blindes, c’est tapis ou fold avec les tables du chapitre vingt-deux. Tu continues de pousser, même un peu plus large : à la bulle, on te paie moins. Mais tu paies un peu moins large, environ les trois quarts de tes payes : d’autres petits tapis peuvent sauter avant toi.'],
+    ['Y', 'Sous quinze blindes, c’est tapis ou fold avec les tables du chapitre trente-sept. Tu continues de pousser, même un peu plus large : à la bulle, on te paie moins. Mais tu paies un peu moins large, environ les trois quarts de tes payes : d’autres petits tapis peuvent sauter avant toi.'],
     ['J', 'Je peux attendre que les autres sautent ?'],
     ['Y', 'Un peu, mais ne te laisse pas mourir aux blindes. Pousser à huit blindes vaut bien mieux qu’attendre d’en avoir trois : plus personne ne se couchera.'],
     ['J', 'Et une fois qu’on est dans l’argent ?'],
@@ -9193,7 +9193,7 @@
     ['Y', 'Exactement. On résume. Le tapis moyen serre le plus. On resserre d’abord les payes de tapis, les défenses et les réponses au trois-bet. On jette les petites paires, les as faibles, les assorties moyennes et les dépareillées jolies. Le gros tapis attaque, le petit tapis pousse. Et dans Ma range, le bouton Bulle te montre exactement les mains qui changent. À bientôt !']
   ];
 
-  L[49] = {
+  L[40] = {
     minutes: 12,
     links: [{ href: '#classement', label: 'Club › Championnat' }, { href: '#tournoi', label: 'Club › Tournoi du club (tête mise à prix)' }, { href: '#mainsclub', label: 'Club › Mains du club' }, { href: '#lecon-3', label: 'Chapitre 3 : Le club' }],
     key: ['Deux tournois comptent pour le championnat : le mercredi, chaque semaine, et le deep du vendredi, une fois par mois, avec des points multipliés par 1,5.', 'Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Qui sort la tête mise à prix gagne 2 points de plus.', 'Les règles du club changent ta façon de jouer : pas de limp sauf en tête-à-tête, pas de défense de blinde sous 40 BB, et la range d’ouverture du club.'],
@@ -9202,7 +9202,7 @@
       { ask: 'Comment se comptent les points ?', h: 'Le barème du championnat', p: ['Le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins, et ainsi de suite jusqu’au dernier, qui marque 1 point. Exemple à 14 joueurs : le 1er marque 14 points, le 3e 12, le 14e 1.', 'Au deep, on multiplie par 1,5 : à 14 joueurs, le 1er marque 21 points, le 3e 18.', 'Chaque place gagnée ne vaut qu’un point (1,5 au deep). Gagner rapporte beaucoup plus que grappiller des places : à 16 joueurs, le vainqueur marque 16 points, le 8e seulement 9. Joue pour gagner, pas pour survivre.', 'Les 3 premiers du classement de l’année sont récompensés. Si la saison a commencé avant l’appli, le classement se reprend à la main (Club › Championnat).'] },
       { ask: 'Et la tête mise à prix ?', h: 'La tête mise à prix', p: ['Celui qui élimine la tête mise à prix gagne 2 points de plus. La tête mise à prix, c’est le vainqueur du tournoi précédent du même type : celui du dernier mercredi pour le mercredi, celui du dernier deep pour le deep.', 'S’il est absent, c’est le 2e de ce tournoi, puis le 3e, et ainsi de suite. L’appli la choisit toute seule d’après les inscrits et l’affiche en haut du tournoi.', 'Quand la tête mise à prix fait tapis sur toi, les 2 points valent deux places (un peu plus d’une au deep) : tu peux payer d’un cran plus large qu’en temps normal, pas davantage. Une main qui se couche largement reste un fold.', 'Si c’est toi la tête mise à prix, attends-toi à être payé plus large : pousse un peu plus serré, et mise plus gros pour la valeur.'] },
       { ask: 'Quelles règles du club changent mon jeu ?', h: 'Les règles du club', p: ['Pas de limp, sauf en tête-à-tête ; la petite blinde peut compléter. On ouvre en relançant, ou on se couche.', 'Pas de défense de blinde sous 40 BB : sous 40 BB, en grosse blinde, tu fais tapis avec tes grosses mains ou tu te couches ; payer le tapis d’un adversaire reste possible.', 'L’ouverture suit la range du club (une range de table à 6) : la 1re place à parler joue la range de la photo, puis un cran plus large à chaque place jusqu’au bouton ; la petite blinde ouvre comme le bouton. Entre 20 et 40 BB, un cran plus serré.'] },
-      { ask: 'Comment progresser entre deux tournois ?', h: 'Les mains du club et les adversaires', p: ['Après un tournoi, note un coup intéressant dans Club › Mains du club, avec la question à te poser. Lionel y ajoute son commentaire : la main sert ensuite d’exercice à tout le monde.', 'Note aussi trois choses sur les habitués dans le carnet des adversaires : s’ils jouent beaucoup de mains, s’ils sont agressifs, et une habitude marquante (chapitre 28).'] }
+      { ask: 'Comment progresser entre deux tournois ?', h: 'Les mains du club et les adversaires', p: ['Après un tournoi, note un coup intéressant dans Club › Mains du club, avec la question à te poser. Lionel y ajoute son commentaire : la main sert ensuite d’exercice à tout le monde.', 'Note aussi trois choses sur les habitués dans le carnet des adversaires : s’ils jouent beaucoup de mains, s’ils sont agressifs, et une habitude marquante (chapitre 46).'] }
     ],
     mistake: 'Jouer pour « finir dans les points » : chaque place ne vaut qu’un point, alors que la victoire en vaut beaucoup plus. Survivre sans jetons ne rapporte presque rien.',
     retain: ['Points : 1er = nombre de joueurs, puis un de moins par place ; deep ×1,5.', 'Tête mise à prix : +2 points ; c’est le vainqueur du tournoi précédent du même type, sinon le 2e, le 3e…', 'Contre la tête mise à prix, paie un tapis d’un cran plus large, pas plus.', 'Pas de limp (sauf tête-à-tête), pas de défense de blinde sous 40 BB, range d’ouverture du club.'],
@@ -9219,7 +9219,7 @@
     ]
   };
 
-  L[49].podcast = [
+  L[40].podcast = [
     ['J', 'Salut Yo ! Aujourd’hui, je veux parler de nos tournois à nous. Le mercredi, le deep du vendredi, les points, la tête mise à prix. Je ne suis pas sûr de tout bien compter.'],
     ['Y', 'Salut ! On va faire simple. D’abord les deux tournois, puis le barème, puis la tête mise à prix, et enfin les règles du club qui changent ta façon de jouer.'],
     ['J', 'Alors, les deux tournois ?'],
@@ -9258,7 +9258,7 @@
   ];
 
 
-  L[50] = {
+  L[34] = {
     "minutes": 14,
     "key": [
       "Une re-entry est un nouveau tournoi qui commence avec un tapis de départ : on la décide à l’avance, avec un budget, jamais pour « se refaire ».",
@@ -9281,7 +9281,7 @@
         "p": [
           "Une re-entry n’est pas une deuxième chance de récupérer ton argent : c’est un nouveau tournoi, avec le même prix et les mêmes chances. La seule question est : « est-ce que je paierais ce prix pour m’inscrire maintenant ? ».",
           "Regarde ton tapis de départ en grosses blindes à ce niveau. Au premier niveau, avec 20 000 jetons à 50/100, tu repars avec 200 BB : une excellente affaire, autant que l’inscription initiale. Deux niveaux avant la fin des re-entry, à 200/400 par exemple, tu repars avec 50 BB : encore correct. Au dernier niveau, si les blindes sont à 400/800, 25 BB : tu entres déjà en tapis court, la valeur de l’entrée a baissé.",
-          "Ta règle se fixe avant le tournoi, à froid : par exemple « une re-entry au maximum, seulement si je repars avec 40 BB ou plus ». Jamais de re-entry décidée dans la colère d’un bad beat (chapitre 29) : c’est exactement le tilt de perte.",
+          "Ta règle se fixe avant le tournoi, à froid : par exemple « une re-entry au maximum, seulement si je repars avec 40 BB ou plus ». Jamais de re-entry décidée dans la colère d’un bad beat (chapitre 47) : c’est exactement le tilt de perte.",
           "Et le budget (chapitre 4) : trois entrées, c’est trois buy-ins. Si ta bankroll du mois ne le permet pas, pas de re-entry, même à 200 BB."
         ]
       },
@@ -9411,7 +9411,7 @@
       }
     ]
   };
-  L[50].podcast = [
+  L[34].podcast = [
    [
     "J",
     "Salut Yo ! Aujourd’hui, une question qui me travaille : la re-entry. Quand je saute tôt, je me réinscris presque toujours."
@@ -9482,7 +9482,7 @@
    ],
    [
     "Y",
-    "C’est le pire moment pour décider. C’est exactement le tilt de perte du chapitre vingt-neuf. Ta règle, écrite à froid, décide pour toi."
+    "C’est le pire moment pour décider. C’est exactement le tilt de perte du chapitre quarante-sept. Ta règle, écrite à froid, décide pour toi."
    ],
    [
     "J",
