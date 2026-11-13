@@ -17,9 +17,9 @@
   function localData() {
     var d = league().load(), st = timer() && timer().getStruct ? timer().getStruct() : null;
     return { app: 'Poker Academy Club', v: 1, at: Date.now(), by: app() + ' · ' + device(),
-      league: { list: d.list || [], deleted: d.deleted || [], roster: d.roster || null, rosterAt: d.rosterAt || 0, closed: d.closed || {}, carry: d.carry || {}, hands: d.hands || [], handsDel: d.handsDel || [] }, struct: st };
+      league: { list: d.list || [], deleted: d.deleted || [], roster: d.roster || null, rosterAt: d.rosterAt || 0, closed: d.closed || {}, carry: d.carry || {}, hands: d.hands || [], handsDel: d.handsDel || [] }, struct: st, structs: timer() && timer().getStructs ? timer().getStructs() : null };
   }
-  function sig(x) { try { return JSON.stringify([x.league.list.map(function (t) { return t.id + ':' + (t.editAt || 0); }).sort(), x.league.deleted.slice().sort(), x.league.rosterAt, x.league.roster, x.league.closed, x.league.carry || {}, x.struct && x.struct.at, (x.league.hands || []).map(function (h) { return h.id + ':' + (h.editAt || 0); }).sort(), (x.league.handsDel || []).slice().sort()]); } catch (e) { return ''; } }
+  function sig(x) { try { return JSON.stringify([x.league.list.map(function (t) { return t.id + ':' + (t.editAt || 0); }).sort(), x.league.deleted.slice().sort(), x.league.rosterAt, x.league.roster, x.league.closed, x.league.carry || {}, x.struct && x.struct.at, x.structs ? x.structs.list.map(function (t) { return t.name + ':' + t.at; }).sort().concat(Object.keys(x.structs.del || {}).sort()) : null, (x.league.hands || []).map(function (h) { return h.id + ':' + (h.editAt || 0); }).sort(), (x.league.handsDel || []).slice().sort()]); } catch (e) { return ''; } }
   function merge(a, b) {
     if (!b || !b.league) return a;
     var del = {}; (a.league.deleted || []).concat(b.league.deleted || []).forEach(function (id) { del[id] = 1; });
@@ -34,7 +34,14 @@
     var hdel = {}; (a.league.handsDel || []).concat(b.league.handsDel || []).forEach(function (id) { hdel[id] = 1; });
     var hm = {}; (a.league.hands || []).concat(b.league.hands || []).forEach(function (h) { if (!h || !h.id || hdel[h.id]) return; var o = hm[h.id]; if (!o || (h.editAt || 0) > (o.editAt || 0)) hm[h.id] = h; });
     var hands = Object.keys(hm).map(function (k) { return hm[k]; }).sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
-    return { app: a.app, v: 1, at: Date.now(), by: a.by, league: { list: list, deleted: Object.keys(del), roster: rb > ra ? b.league.roster : a.league.roster, rosterAt: Math.max(ra, rb), closed: closed, carry: carry, hands: hands, handsDel: Object.keys(hdel) }, struct: struct };
+    return { app: a.app, v: 1, at: Date.now(), by: a.by, league: { list: list, deleted: Object.keys(del), roster: rb > ra ? b.league.roster : a.league.roster, rosterAt: Math.max(ra, rb), closed: closed, carry: carry, hands: hands, handsDel: Object.keys(hdel) }, struct: struct, structs: mergeStructs(a.structs, b.structs) };
+  }
+  // Mes structures : par nom, la plus récente gagne ; une structure supprimée ne revient pas (sauf si elle est réenregistrée après)
+  function mergeStructs(a, b) {
+    if (!a) return b || null; if (!b) return a;
+    var del = {}; [a.del || {}, b.del || {}].forEach(function (o) { Object.keys(o).forEach(function (k) { del[k] = Math.max(del[k] || 0, o[k]); }); });
+    var m = {}; (a.list || []).concat(b.list || []).forEach(function (t) { if (!t || !t.name) return; var k = t.name.toLowerCase(); if ((del[k] || 0) >= (t.at || 0)) return; if (!m[k] || (t.at || 0) > (m[k].at || 0)) m[k] = t; });
+    return { list: Object.keys(m).map(function (k) { return m[k]; }).sort(function (x, y) { return (y.at || 0) - (x.at || 0); }), del: del };
   }
   function applyLocal(x) {
     var d = league().load();
@@ -42,6 +49,7 @@
     if (x.league.roster) { d.roster = x.league.roster; d.rosterAt = x.league.rosterAt; }
     league().saveRaw(d);
     if (x.struct && timer() && timer().setStruct) timer().setStruct(x.struct);
+    if (x.structs && timer() && timer().setStructs) timer().setStructs(x.structs);
   }
   function rRead(cb) {
     if (IS_PC) { fetch('/api/clubsync', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.path) CS.path = j.path; cb(j && !j.none ? j : null, !j); }).catch(function () { cb(null, true); }); return; }

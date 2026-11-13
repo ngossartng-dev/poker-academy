@@ -850,6 +850,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 .lv-tbl .lv-pause td{color:var(--gold);font-weight:700}
 .lv-ctl{white-space:nowrap}
 .lv-ctl button{min-width:30px;width:30px;height:34px;padding:0;margin-left:2px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;cursor:pointer}
+.lv-mv{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}.lv-mv button{min-width:36px;height:34px;padding:0;border-radius:8px;border:1px solid var(--gold);background:var(--panel2);color:var(--gold);font:inherit;cursor:pointer}.lv-mv button:disabled{opacity:.3;cursor:default}
 
 .brush{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .brush button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}

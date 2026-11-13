@@ -67,6 +67,21 @@
     if (a.length) out += '<div class="stack" style="gap:6px">' + a.map(function (b, i) { var Lb = levels()[b.lvl]; return '<div class="row" style="justify-content:space-between;gap:8px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1;min-width:0">' + hhmm(b.at) + ' · ' + b.left + ' / ' + b.entrants + ' en jeu' + (Lb ? ' · ' + (Lb.pause ? 'pause' : 'niv. ' + Lb.n) : '') + '</span><button class="btn" data-tmact="bakRestore" data-v="' + i + '" style="min-height:36px;padding:4px 12px;flex:none">Reprendre</button></div>'; }).join('') + '</div>';
     return out + '</div></details>';
   }
+  var SKEY = 'pa2structs', STMSG = null;
+  function myStructs() { try { var a = JSON.parse(localStorage.getItem(SKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function setMyStructs(a) { try { localStorage.setItem(SKEY, JSON.stringify(a)); } catch (e) {} if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); }
+  function structsDel() { try { var o = JSON.parse(localStorage.getItem(SKEY + 'Del') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+  function delStruct(name) { var o = structsDel(); o[name.toLowerCase()] = Date.now(); try { localStorage.setItem(SKEY + 'Del', JSON.stringify(o)); } catch (e) {} }
+  // pour la synchro entre appareils : la liste et les suppressions
+  function getStructs() { return { list: myStructs(), del: structsDel() }; }
+  function setStructs(x) { if (!x) return; try { localStorage.setItem(SKEY, JSON.stringify(x.list || [])); localStorage.setItem(SKEY + 'Del', JSON.stringify(x.del || {})); } catch (e) {} }
+  function structsHtml(IN) {
+    var a = myStructs(), nm = function (st) { var L = st.text.split(/\n/).filter(function (x) { return x.trim(); }), np = L.filter(function (x) { return /^\s*pause/i.test(x); }).length; return (L.length - np) + ' niveaux' + (np ? ', ' + np + ' pause' + (np > 1 ? 's' : '') : ''); };
+    var out = '<div class="card stack"><b>5. Mes structures</b><div class="small muted">Enregistre la structure ci-dessus (même faite à la main) pour la reprendre un autre soir. « Charger » la remet dans le tableau.</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="tmStName" type="text" maxlength="40" placeholder="Nom : Deep du vendredi" style="flex:1;min-width:180px;' + IN + '"><button class="btn gold" data-tmact="stSave">💾 Enregistrer cette structure</button></div>' + (STMSG ? '<div class="small" style="color:var(--gold)">' + U().esc(STMSG) + '</div>' : '') +
+      (a.length ? a.map(function (st, i) { return '<div class="row" style="justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1;min-width:0"><b>' + U().esc(st.name) + '</b><br><span class="small muted">' + nm(st) + ' · ' + new Date(st.at).toLocaleDateString('fr-FR') + '</span></span><button class="btn" data-tmact="stLoad" data-v="' + i + '">Charger</button><button class="btn" data-tmact="stDel" data-v="' + i + '" title="Supprimer">✕</button></div>'; }).join('') : '<div class="small muted">Aucune structure enregistrée pour l’instant.</div>') + '</div>';
+    STMSG = null; return out;
+  }
   function levels() {
     var out = [], n = 0;
     ST.text.split(/\n/).forEach(function (l) {
@@ -526,7 +541,7 @@
     if (!L.length) return '<div class="small muted">Aucun niveau : touche « Créer la structure » ou « + Un niveau à la fin ».</div>';
     return '<div style="overflow-x:auto"><table class="tbl lv-tbl"><tr><th>N°</th><th>Petite</th><th>Grosse</th><th>Ante</th><th>Min</th><th></th></tr>' + L.map(function (l, i) {
       var bad = badAmounts(l), ctl = '<td class="lv-ctl"><button data-tmact="lvAdd" data-v="' + i + '" title="Ajouter un niveau dessous">+</button><button data-tmact="lvPause" data-v="' + i + '" title="Ajouter une pause dessous">☕</button><button data-tmact="lvDel" data-v="' + i + '" title="Supprimer">✕</button></td>';
-      if (l.pause) return '<tr class="lv-pause"><td>☕</td><td colspan="3">Pause</td><td>' + inp(i, 'min', l.min, 42) + '</td>' + ctl + '</tr>';
+      if (l.pause) return '<tr class="lv-pause"><td>☕</td><td colspan="3">Pause <span class="lv-mv"><button data-tmact="lvUp" data-v="' + i + '" title="Monter la pause d’un niveau"' + (i ? '' : ' disabled') + '>▲</button><button data-tmact="lvDown" data-v="' + i + '" title="Descendre la pause d’un niveau"' + (i < L.length - 1 ? '' : ' disabled') + '>▼</button></span></td><td>' + inp(i, 'min', l.min, 42) + '</td>' + ctl + '</tr>';
       return '<tr><td><b>' + l.n + '</b></td><td>' + inp(i, 'sb', l.sb, 56, bad.indexOf('sb') >= 0) + '</td><td>' + inp(i, 'bb', l.bb, 60, bad.indexOf('bb') >= 0) + '</td><td><select class="lv-in" data-i="' + i + '" data-f="kind" style="' + IN2 + ';width:60px"><option value="none"' + (!l.ante ? ' selected' : '') + '>Non</option><option value="bb"' + (l.ante && l.bbAnte ? ' selected' : '') + '>GB</option><option value="classic"' + (l.ante && !l.bbAnte ? ' selected' : '') + '>Joueur</option></select>' + (l.ante && !l.bbAnte ? inp(i, 'ante', l.ante, 60, bad.indexOf('ante') >= 0) : '') + '</td><td>' + inp(i, 'min', l.min, 42) + '</td>' + ctl + '</tr>';
     }).join('') + '</table></div>' + (L.some(function (l) { return badAmounts(l).length; }) ? '<div class="small" style="color:#ff8a8a">Les cases en rouge ne tombent pas juste avec les jetons en jeu (plus petit jeton : ' + chipSet()[0] + ', puis selon les retraits).</div>' : '');
   }
@@ -562,10 +577,10 @@
         row('Retrait des petits jetons', '<input id="tmColorUp" type="text" value="' + ui.esc(c.colorUp || '') + '" placeholder="25 au niveau 8" style="width:210px;' + IN + '">') +
         '<div class="small muted">Les blindes et les antes créées sont toujours des multiples du plus petit jeton en jeu (pas de jeton de 50 : 75/150 se paie avec des 25 ; après le retrait des 25, tout passe en centaines).</div>' +
         '<button class="btn gold block" data-tmact="gen">Créer la structure</button></div>' +
-        '<div class="card stack"><b>4. Les niveaux, un par un</b><div class="small muted">Change n’importe quelle case : petite blinde, grosse blinde, ante (Non, GB = ante de grosse blinde, Joueur = ante par joueur), durée en minutes. « + » ajoute un niveau juste en dessous, « ☕ » une pause, « ✕ » supprime la ligne. Une case en rouge ne peut pas se payer avec les jetons en jeu à ce niveau.</div>' +
+        '<div class="card stack"><b>4. Les niveaux, un par un</b><div class="small muted">Change n’importe quelle case : petite blinde, grosse blinde, ante (Non, GB = ante de grosse blinde, Joueur = ante par joueur), durée en minutes. « + » ajoute un niveau juste en dessous, « ☕ » une pause, « ✕ » supprime la ligne, « ▲ ▼ » déplacent une pause d’un niveau. Une case en rouge ne peut pas se payer avec les jetons en jeu à ce niveau.</div>' +
         lvEditor(L0) +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="lvAdd" data-v="' + (L0.length - 1) + '">+ Un niveau à la fin</button><button class="btn" data-tmact="lvPause" data-v="' + (L0.length - 1) + '">+ Une pause à la fin</button></div>' +
-        '<button class="btn gold block" data-tmact="savestruct">Enregistrer et revenir au minuteur</button>' + prev +
+        '<button class="btn gold block" data-tmact="savestruct">Enregistrer et revenir au minuteur</button></div>' + structsHtml(IN) + '<div class="card stack">' + prev +
         '<details><summary class="small muted">Saisir ou coller la structure en texte</summary><div class="small muted">Un niveau par ligne : « 100/200 », « 100/200 bbante 200 » ou « 100/200 ante 25 ». « pause 10 » ajoute une pause. Une durée différente : « 600/1200 bbante 1200 30 min ».</div><textarea id="tmText" rows="10" style="width:100%;' + IN + ';padding:8px">' + ui.esc(ST.text) + '</textarea><button class="btn" data-tmact="txtApply">Remplacer les niveaux par ce texte</button></details></div></div>');
     }
     var l = s.L[s.idx], run = !!ST.since;
@@ -698,6 +713,29 @@
     else if (a === 'ecranOut') { location.hash = T().players.length ? '#tournoi' : '#minuteur'; return; }
     else if (a === 'done') EDIT = false;
     else if (a === 'txtApply') { var tx = document.getElementById('tmText'); if (tx) { ST.text = tx.value; ST.structAt = Date.now(); } }
+    else if (a === 'lvUp' || a === 'lvDown') {
+      var LM = levels(), im = +t.getAttribute('data-v'), jm = im + (a === 'lvUp' ? -1 : 1);
+      if (LM[im] && LM[jm]) { var tmp = LM[im]; LM[im] = LM[jm]; LM[jm] = tmp; ST.text = toText(LM); ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); }
+    }
+    else if (a === 'stSave') {
+      var nmE = document.getElementById('tmStName'), nm = (nmE && nmE.value || '').trim();
+      if (!nm) { STMSG = 'Donne un nom à ta structure (par exemple « Deep du vendredi »).'; }
+      else if (!levels().length) { STMSG = 'La structure est vide : rien à enregistrer.'; }
+      else {
+        var lst = myStructs(), ex = lst.filter(function (x) { return x.name.toLowerCase() === nm.toLowerCase(); })[0];
+        if (ex && typeof confirm === 'function' && !confirm('Remplacer la structure « ' + ex.name + ' » ?')) return;
+        lst = lst.filter(function (x) { return x !== ex; }); lst.unshift({ name: nm, text: ST.text, cfg: JSON.parse(JSON.stringify(cfg())), mins: ST.mins, at: Date.now() });
+        setMyStructs(lst); STMSG = 'Structure « ' + nm + ' » enregistrée dans Mes structures.';
+      }
+    }
+    else if (a === 'stLoad') {
+      var sl = myStructs()[+t.getAttribute('data-v')];
+      if (sl) { ST.text = sl.text; if (sl.cfg) ST.cfg = JSON.parse(JSON.stringify(sl.cfg)); if (sl.mins) ST.mins = sl.mins; ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); STMSG = 'Structure « ' + sl.name + ' » chargée : vérifie-la, puis « Enregistrer et revenir au minuteur ».'; }
+    }
+    else if (a === 'stDel') {
+      var lsd = myStructs(), kd = +t.getAttribute('data-v'), sd = lsd[kd];
+      if (sd && (typeof confirm !== 'function' || confirm('Supprimer la structure « ' + sd.name + ' » ?'))) { lsd.splice(kd, 1); delStruct(sd.name); setMyStructs(lsd); STMSG = 'Structure « ' + sd.name + ' » supprimée.'; }
+    }
     else if (a === 'lvDel' || a === 'lvAdd' || a === 'lvPause') {
       var LL = levels(), i0 = +t.getAttribute('data-v');
       if (a === 'lvDel') LL.splice(i0, 1);
@@ -880,5 +918,5 @@
     if (!running) { var L0 = levels(); ST.idx = 0; ST.rem = L0.length ? L0[0].min * 60 : 0; }
     save(); return true;
   }
-  window.PA_TIMER = { tab: function (v) { TAB = v; }, getStruct: getStruct, setStruct: setStruct, view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
+  window.PA_TIMER = { tab: function (v) { TAB = v; }, getStruct: getStruct, setStruct: setStruct, getStructs: getStructs, setStructs: setStructs, view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
 })();
