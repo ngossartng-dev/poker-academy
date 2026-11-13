@@ -11,13 +11,13 @@
   function setRoster(list) { var d = load(), seen = {}; d.roster = list.map(function (x) { return String(x || '').trim().slice(0, 30); }).filter(function (x) { var k = x.toLowerCase(); if (!x || seen[k]) return false; seen[k] = 1; return true; }); d.rosterAt = Date.now(); save(d); return d.roster; }
   // les points se recalculent à chaque lecture avec le barème en vigueur (deep passé de ×1,4 à ×1,5)
   function load() {
-    try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 10) / 10; }); }); return d; } } catch (e) {}
+    try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 100) / 100; }); }); return d; } } catch (e) {}
     return { list: [] };
   }
   function saveRaw(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
   function save(d) { saveRaw(d); if (window.PA_CLUBSYNC) window.PA_CLUBSYNC.dirty(); }
   function key(n) { return String(n || '').trim().toLowerCase(); }
-  function f1(x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); }
+  function f1(x) { return (Math.round(x * 100) / 100).toString().replace('.', ','); }
   function dfr(iso) { var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   // semaine ISO : « 2026-S45 »
@@ -56,14 +56,14 @@
   function hands() { return (load().hands || []).slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }); }
   function saveHand(h) { var d = load(); d.hands = d.hands || []; h.editAt = Date.now(); if (!h.id) { h.id = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); h.at = Date.now(); d.hands.push(h); } else { d.hands = d.hands.map(function (x) { return x.id === h.id ? h : x; }); } save(d); return h; }
   function delHand(id) { var d = load(); d.hands = (d.hands || []).filter(function (x) { return x.id !== id; }); d.handsDel = (d.handsDel || []).concat([id]); save(d); }
-  function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 10) / 10; }
+  function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 100) / 100; }
   // enregistre un tournoi terminé (état du tournoi du minuteur)
   function record(t) {
     var type = t.type || 'mercredi', date = t.date || today(), n = t.players.length, d = load();
     var winner = t.players.filter(function (x) { return !x.out; })[0];
     var rows = t.players.map(function (x) {
       var place = x.out ? x.place : 1, pts = placePts(n, place, type), bonus = x.bonus || 0;
-      return { name: x.name, place: place, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 10) / 10, prize: ((t.payout || [])[place - 1] || {}).amt || null, entries: x.entries || 1, koBy: x.koBy || null, koAt: x.koAt || null, koLevel: x.koLevel || null, bountyFrom: x.bountyFrom || null };
+      return { name: x.name, place: place, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 100) / 100, prize: ((t.payout || [])[place - 1] || {}).amt || null, entries: x.entries || 1, koBy: x.koBy || null, koAt: x.koAt || null, koLevel: x.koLevel || null, bountyFrom: x.bountyFrom || null };
     }).sort(function (a, b) { return a.place - b.place; });
     var rec = { prize: +t.prize || 0, id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: date, type: type, n: n, re: t.re || 0, add: t.add || 0, winner: winner ? winner.name : null, holder: t.holder || null, rows: rows };
     d.list.push(rec); d.list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); save(d);
@@ -76,7 +76,7 @@
   // enregistre à la main un tournoi déjà joué : la liste des joueurs du 1er au dernier
   function recordManual(o) {
     var type = TYPES[o.type] ? o.type : 'mercredi', n = o.names.length, d = load(), bk = key(o.bonusTo);
-    var rows = o.names.map(function (nm, i) { var pts = placePts(n, i + 1, type), bonus = bk && type !== 'libre' && key(nm) === bk ? BONUS : 0; return { name: nm, place: i + 1, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 10) / 10, prize: null, entries: 1, koBy: null, koAt: null, koLevel: null, bountyFrom: null }; });
+    var rows = o.names.map(function (nm, i) { var pts = placePts(n, i + 1, type), bonus = bk && type !== 'libre' && key(nm) === bk ? BONUS : 0; return { name: nm, place: i + 1, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 100) / 100, prize: null, entries: 1, koBy: null, koAt: null, koLevel: null, bountyFrom: null }; });
     var rec = { prize: 0, id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: o.date, type: type, n: n, re: 0, add: 0, winner: o.names[0], holder: null, rows: rows, manual: true };
     d.list.push(rec); d.list.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); save(d);
     return rec;
@@ -91,7 +91,7 @@
       var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
       o.total += r.pts; o.pts += r.pts; o.carry = r.pts; if (r.n) { o.n += r.n; o.carryN = r.n; }
     });
-    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 10) / 10; o.mer = Math.round(o.mer * 10) / 10; o.deep = Math.round(o.deep * 10) / 10; o.bonus = Math.round(o.bonus * 10) / 10; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 10) / 10 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
+    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 100) / 100; o.mer = Math.round(o.mer * 100) / 100; o.deep = Math.round(o.deep * 100) / 100; o.bonus = Math.round(o.bonus * 100) / 100; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 100) / 100 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
   }
 
   /* ---------- Trophées de la saison ---------- */
@@ -312,7 +312,7 @@
       var seenC = {}, rowsC = [], badC = [];
       V.crows.forEach(function (r) {
         var nm = cleanName(r.name).toUpperCase(), ps = String(r.pts || '').replace(/\s/g, '').replace(',', '.'); if (!nm || ps === '') return;
-        var pts = Math.round(parseFloat(ps) * 10) / 10; if (isNaN(pts)) { badC.push(nm + ' (points illisibles)'); return; }
+        var pts = Math.round(parseFloat(ps) * 100) / 100; if (isNaN(pts)) { badC.push(nm + ' (points illisibles)'); return; }
         if (seenC[key(nm)]) { badC.push(nm + ' (en double)'); return; } seenC[key(nm)] = 1;
         var rw = { name: nm, pts: pts }, nn = parseInt(r.n, 10); if (nn > 0) rw.n = nn; rowsC.push(rw);
       });

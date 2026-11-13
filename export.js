@@ -2,12 +2,12 @@
 (function () {
   'use strict';
   function L() { return window.PA_LEAGUE; }
-  function f1(x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); }
+  function f1(x) { return (Math.round(x * 100) / 100).toString().replace('.', ','); }
   function dfr(iso) { var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
   function dm(iso) { var p = iso.split('-'); return p[2] + '/' + p[1]; }
   function hm(t) { return t ? new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''; }
   function utf8(s) { return new TextEncoder().encode(s); }
-  function r1(x) { return Math.round(x * 10) / 10; }
+  function r1(x) { return Math.round(x * 100) / 100; }
 
   /* ---------- Les données, une fois pour les deux formats ---------- */
   function yearData(year) {
@@ -67,7 +67,7 @@
   // 10 moyenne 0,0 · 11 étiquette de chiffre clé · 12 chiffre clé · 13 podium moyenne 0,0 · 14 total en gras · 15 prime en rouge
   function xf(a) { return '<xf xfId="0" numFmtId="' + (a.n || 0) + '" fontId="' + (a.f || 0) + '" fillId="' + (a.l || 0) + '" borderId="' + (a.b || 0) + '"' + (a.n ? ' applyNumberFormat="1"' : '') + (a.f ? ' applyFont="1"' : '') + (a.l ? ' applyFill="1"' : '') + (a.b ? ' applyBorder="1"' : '') + (a.al ? ' applyAlignment="1"><alignment horizontal="' + a.al + '" vertical="center"' + (a.w ? ' wrapText="1"' : '') + '/></xf>' : '/>'); }
   var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-    '<numFmts count="1"><numFmt numFmtId="164" formatCode="0.0"/></numFmts>' +
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="General"/></numFmts>' +
     '<fonts count="7"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF8A6A12"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFE3C26A"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF666666"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FF8A6A12"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFC0262D"/><name val="Calibri"/></font></fonts>' +
     '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF141414"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF7ECC9"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEDEDED"/></patternFill></fill></fills>' +
     '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFD0D0D0"/></bottom><diagonal/></border></borders>' +
