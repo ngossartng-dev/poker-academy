@@ -108,17 +108,18 @@
   var PACE = { normal: 12, semi: 8, turbo: 5 };
   var PACE_MIN = { normal: 5, semi: 3, turbo: 2 }; // les blindes montent avec le temps de jeu, comme en vrai
   function lvlMs() { return (PACE_MIN[G.opts.pace] || 3) * 60000; }
-  var PAYOUT = { 9: [0.5, 0.3, 0.2], 6: [0.65, 0.35], 2: [1] };
+  var PAYOUT = { 10: [0.5, 0.3, 0.2], 9: [0.5, 0.3, 0.2], 8: [0.5, 0.3, 0.2], 6: [0.65, 0.35], 2: [1] };
 
   /* ---------- État de partie ---------- */
   var G = null; // partie en cours
-  var SETUP = { format: 'sng9', chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique', huChips: 8000, sizing: 'club' };
+  var SETUP = { format: 'sng', seats: 9, chips: 20000, pace: 'semi', coach: true, table: 'club', bounty: 'classique', huChips: 8000, sizing: 'club' };
   var MTT_FIELD = 100, MTT_PAID = 15;
   var MTT_PAY = [25, 16, 11.5, 8.5, 6.5, 5, 4, 3.2, 2.6, 2.95, 2.95, 2.95, 2.95, 2.95, 2.95];
   var BUYIN = 10;
 
   function newGame(opts) {
-    opts.seats = opts.format === 'hu' ? 2 : (opts.format === 'sng6' ? 6 : 9);
+    if (opts.format === 'sng9' || opts.format === 'sng6') { opts.seats = opts.format === 'sng6' ? 6 : 9; opts.format = 'sng'; }
+    opts.seats = opts.format === 'hu' ? 2 : ([6, 8, 9, 10].indexOf(+opts.seats) >= 0 ? +opts.seats : 9);
     if (opts.format === 'hu') opts.chips = opts.huChips || 8000;
     opts.mtt = opts.format === 'mtt' || opts.format === 'moments';
     if (opts.mtt) opts.chips = 20000;
@@ -177,7 +178,7 @@
   function phaseName() {
     var rem = remaining(), paid = paidPlaces(), me = G.players[0], L = levelInfo(), bbs = me.stack / L.bb;
     if (alive().length === 2 && rem === 2) return 'Heads-up';
-    if (G.opts.mtt && rem <= 9) return 'Table finale';
+    if (G.opts.mtt && rem <= G.opts.seats) return 'Table finale';
     if (rem > paid && rem <= paid + (G.opts.mtt ? 3 : 1)) return 'Bulle';
     if (bbs <= 12) return 'Tapis court';
     if (rem <= paid) return 'Places payées';
@@ -187,9 +188,10 @@
   // champ virtuel : les autres tables du tournoi
   function simField() {
     if (!G.opts.mtt) return;
-    if (remaining() <= 9) return;
+    var TS = G.opts.seats || 9;
+    if (remaining() <= TS) return;
     var L = levelInfo(), live = G.field.filter(function (f) { return f.stack > 0; });
-    var tables = Math.ceil(live.length / 9);
+    var tables = Math.ceil(live.length / TS);
     for (var t = 0; t < tables; t++) {
       var a = live[Math.floor(Math.random() * live.length)], b = live[Math.floor(Math.random() * live.length)];
       if (!a || !b || a === b || a.stack <= 0 || b.stack <= 0) continue;
@@ -197,11 +199,11 @@
       var pBig = 0.025 + Math.min(0.25, 0.6 * L.bb / avg) + (Math.min(a.stack, b.stack) < 12 * L.bb ? 0.15 : 0);
       var amt = Math.random() < pBig ? Math.min(a.stack, b.stack) : Math.round(Math.min(a.stack, b.stack, L.bb * (2 + Math.random() * 6)));
       var w = Math.random() < 0.5 ? a : b, l = w === a ? b : a;
-      if (amt >= l.stack && remaining() <= 9) continue;
+      if (amt >= l.stack && remaining() <= TS) continue;
       w.stack += amt; l.stack -= amt;
       if (l.stack <= 0) { l.stack = 0; w.bounty += l.bounty / 2; }
     }
-    live.forEach(function (f) { if (f.stack > 0 && f.stack < L.bb && remaining() > 9) { var others = live.filter(function (o) { return o !== f && o.stack > 0; }); if (others.length) { others[Math.floor(Math.random() * others.length)].stack += f.stack; f.stack = 0; } } });
+    live.forEach(function (f) { if (f.stack > 0 && f.stack < L.bb && remaining() > TS) { var others = live.filter(function (o) { return o !== f && o.stack > 0; }); if (others.length) { others[Math.floor(Math.random() * others.length)].stack += f.stack; f.stack = 0; } } });
   }
   function refillSeats() {
     if (!G.opts.mtt) return;
@@ -211,7 +213,7 @@
       if (!src.length) return;
       var f = src[Math.floor(Math.random() * src.length)];
       p.stack = f.stack; p.bounty = f.bounty; f.stack = 0; p.prof = G.mix[Math.floor(Math.random() * G.mix.length)];
-      p.name = freshName();
+      p.name = freshName(); p.hs = null;
       p.fresh = G.handNo + 1; (G.arrivals = G.arrivals || []).push(p.name + ' (' + PA.fmt(p.stack) + ')');
     });
   }
@@ -224,6 +226,7 @@
     // à table incomplète, chaque place prend le nom de sa place à 9 joueurs comptée depuis le bouton
     // (à 6 joueurs : LJ, HJ, CO, BTN, SB, BB), pour coller aux ranges de « Ma range »
     var n = order.length, labels = {}, BACK = ['CO', 'HJ', 'LJ', 'MP', 'UTG+1', 'UTG'];
+    if (n === 10) BACK = ['CO', 'HJ', 'LJ', 'MP', 'UTG+2', 'UTG+1', 'UTG']; // à 10 : une place de plus en début de table, jouée comme UTG+1
     order.forEach(function (s, i) { labels[s] = n === 2 ? ['BTN', 'BB'][i] : (i < 3 ? ['BTN', 'SB', 'BB'][i] : BACK[n - 1 - i]); }); return labels;
   }
 
@@ -260,9 +263,15 @@
     H.cur = L.bb;
     H.toAct = heads ? sbSeat : nextIn(bbSeat);
     G.stats.hands++;
+    H.vp = {}; H.pr = {}; order.forEach(function (i) { hsOf(G.players[i]).n++; });
     H.heroIn = !!H.inHand[0];
     G.coachMsg = null; H.auto = auto; H.phase = phaseName();
   }
+  // stats sous chaque joueur (comme un HUD) : mains distribuées, VPIP (a mis de l'argent de lui-même avant le flop), relances avant le flop
+  function hsOf(p) { if (!p.hs) p.hs = { n: 0, v: 0, r: 0 }; return p.hs; }
+  function hudPct(a, n) { return n ? Math.round(a / n * 100) : 0; }
+  function hudLine(p) { var h = p.hs; if (!h || !h.n) return '<span class="hd2">— mains</span>'; return '<span class="hd2" title="' + h.n + ' mains · VPIP ' + hudPct(h.v, h.n) + ' % (mains jouées) · ' + hudPct(h.v - h.r, h.n) + ' % payées sans relancer · ' + hudPct(h.r, h.n) + ' % relancées avant le flop"><b>' + h.n + '</b> · V<b>' + hudPct(h.v, h.n) + '</b> · P<b>' + hudPct(h.v - h.r, h.n) + '</b> · R<b>' + hudPct(h.r, h.n) + '</b></span>'; }
+  function hudFull(p) { var h = p.hs || { n: 0, v: 0, r: 0 }; return '<span class="small">' + h.n + ' main' + (h.n > 1 ? 's' : '') + ' · VPIP ' + hudPct(h.v, h.n) + ' % · payées ' + hudPct(h.v - h.r, h.n) + ' % · relances ' + hudPct(h.r, h.n) + ' %</span>'; }
   function post(i, amt) { var H = G.hand, p = G.players[i], a = Math.min(amt, p.stack); p.stack -= a; H.bets[i] += a; H.total[i] += a; if (p.stack === 0) H.allin[i] = true; }
   function nextIn(i) { var H = G.hand, n = G.players.length; for (var k = 1; k <= n; k++) { var j = (i + k) % n; if (H.inHand[j] && !H.folded[j] && !H.allin[j]) return j; } return -1; }
   function activeCount() { var H = G.hand; return Object.keys(H.inHand).filter(function (i) { return !H.folded[i]; }).length; }
@@ -297,6 +306,7 @@
       if (H.street === 0) { H.preRaises++; H.pfa = i; if (!H.opener && H.opener !== 0) H.opener = i; } else H.sRaises = (H.sRaises || 0) + 1;
       H.lastAggressor = i;
     }
+    if (H.street === 0 && H.vp && (type === 'raise' || (type === 'call' && rec.amount > 0))) { var hs = hsOf(p); if (!H.vp[i]) { H.vp[i] = 1; hs.v++; } if (type === 'raise' && !H.pr[i]) { H.pr[i] = 1; hs.r++; } }
     if (H.street === 0 && type === 'call' && H.preRaises === 0 && i !== H.bbSeat) H.limpers++;
     if (p.stack === 0 && type !== 'fold' && type !== 'check') rec.allin = true;
     H.acted[i] = true; H.actions.push(rec);
@@ -460,7 +470,7 @@
   function botDecide(i) {
     var H = G.hand, p = G.players[i], P = OPP[p.prof], L = H.L, tc = toCall(i), bbs = p.stack / L.bb, pot = potTotal();
     var code = handCode(H.hole[i][0], H.hole[i][1]), hp = PCT[code];
-    var pos = H.pos[i], hu = H.order.length === 2, late = hu ? (pos === 'BTN' ? 5 : 1) : ({ CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1, MP: 0.85, 'UTG+1': 0.75, UTG: 0.7, BB: 1 }[pos] || 1);
+    var pos = H.pos[i], hu = H.order.length === 2, late = hu ? (pos === 'BTN' ? 5 : 1) : ({ CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1, MP: 0.85, 'UTG+2': 0.78, 'UTG+1': 0.75, UTG: 0.7, BB: 1 }[pos] || 1);
     var eff = Math.min(p.stack + H.bets[i], Math.max.apply(null, Object.keys(H.inHand).filter(function (k) { return +k !== i && !H.folded[k]; }).map(function (k) { return G.players[k].stack + H.bets[k]; })));
     var effBB = eff / L.bb, wild = P.wild ? (Math.random() - 0.5) * 0.15 : 0;
     var rem = remaining(), bubble = rem > paidPlaces() && rem <= paidPlaces() + (G.opts.mtt ? 3 : 1);
@@ -611,7 +621,7 @@
     var H = G.hand, L = H.L, pos = H.pos[0], code = handCode(H.hole[0][0], H.hole[0][1]);
     var eff = (G.players[0].stack + H.bets[0]) / L.bb;
     if (H.street !== 0) return null;
-    var map9 = { UTG: 'UTG', 'UTG+1': 'UTG+1', MP: 'MP', LJ: 'LJ', HJ: 'HJ', CO: 'CO', BTN: 'BTN', SB: 'SB', BB: 'BB' };
+    var map9 = { UTG: 'UTG', 'UTG+1': 'UTG+1', 'UTG+2': 'UTG+1', MP: 'MP', LJ: 'LJ', HJ: 'HJ', CO: 'CO', BTN: 'BTN', SB: 'SB', BB: 'BB' };
     var p = map9[pos];
     // heads-up : le bouton est la petite blinde ; tables tapis ou fold exactes sous 15 BB, pas de range à 9 au-dessus
     if (H.order.length === 2) {
@@ -707,8 +717,8 @@
   /* ---------- Après le flop : comparaison avec le solveur (pots à deux joueurs, au flop) ----------
      La main est rapprochée d'une des situations calculées (ouverture + paye, pot 3-bet, blinde contre blinde, limp-isolement),
      le flop du flop calculé le plus ressemblant, ta mise de la taille calculée la plus proche (1/3, 1/2, 3/4 du pot, 1,25 pot, tapis). */
-  var PCLS = { UTG: 'utg', 'UTG+1': 'utg', MP: 'utg', LJ: 'hj', HJ: 'hj', CO: 'co', BTN: 'btn', SB: 'sb', BB: 'bb' };
-  var PFORDER = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN'];
+  var PCLS = { UTG: 'utg', 'UTG+1': 'utg', 'UTG+2': 'utg', MP: 'utg', LJ: 'hj', HJ: 'hj', CO: 'co', BTN: 'btn', SB: 'sb', BB: 'bb' };
+  var PFORDER = ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'LJ', 'HJ', 'CO', 'BTN'];
   function cStr(c) { return RCH[cRank(c)] + 'cdhs'[cSuit(c)]; }
   function solSpotFor(H) {
     var D = window.PA_SOLVER && window.PA_SOLVER.data(); if (!D) return null;
@@ -842,7 +852,7 @@
   /* ---------- Les parties comptent dans ta progression ----------
      Chaque main jouée part dans Analyser (marquée « appli ») ; chaque partie est gardée dans « Mes tournois d'entraînement ». */
   var HHBUF = [];
-  function fname0(o) { return ({ sng9: 'Sit & Go 9 joueurs', sng6: 'Sit & Go 6 joueurs', hu: 'Heads-up', mtt: 'Tournoi 100 joueurs', moments: 'Moments clés' }[o.format] || 'Partie') + (o.bounty && o.bounty !== 'classique' ? ' ' + (o.bounty === 'pko' ? 'PKO' : 'Space KO') : ''); }
+  function fname0(o) { return ({ sng: 'Sit & Go ' + o.seats + ' joueurs', sng9: 'Sit & Go 9 joueurs', sng6: 'Sit & Go 6 joueurs', hu: 'Heads-up', mtt: 'Tournoi 100 joueurs', moments: 'Moments clés' }[o.format] || 'Partie') + (o.bounty && o.bounty !== 'classique' ? ' ' + (o.bounty === 'pko' ? 'PKO' : 'Space KO') : ''); }
   function dstr(t) { var d = new Date(t), p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()); }
   function recordHH(H) {
     var nm = {}, used = {};
@@ -941,7 +951,7 @@
     G.prize = prizeFor(G.place);
     var pl = PA.player();
     var s = G.stats;
-    var fname = { sng9: 'Sit & Go 9 joueurs', sng6: 'Sit & Go 6 joueurs', hu: 'Heads-up', mtt: 'Tournoi 100 joueurs', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? ' ' + (G.opts.bounty === 'pko' ? 'PKO' : 'Space KO') : '');
+    var fname = fname0({ format: G.opts.format, seats: G.opts.seats }) + (G.opts.mtt ? ' (tables de ' + G.opts.seats + ')' : '') + (G.opts.bounty !== 'classique' ? ' ' + (G.opts.bounty === 'pko' ? 'PKO' : 'Space KO') : '');
     pl.sessions.unshift({ at: Date.now(), label: fname + ' (' + TABLES[G.opts.table].name + ') · ' + G.place + 'e', n: s.pre.n, ok: s.pre.ok, style: s.pre.style, err: s.pre.err, consult: s.consult });
     flushHH(); try { saveTourney(false); } catch (e) {}
     pl.last = null; PA.save();
@@ -955,10 +965,11 @@
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="entrainer">‹ S’entraîner</button><h1>Jouer une partie</h1>' +
       (G && !G.over ? '<button class="big-cta" data-act="nav" data-v="jeu"><div><div class="disp">Reprendre la partie</div><div style="font-weight:500">Main ' + G.handNo + ' · niveau ' + levelInfo().n + '</div></div></button>' : '') +
       '<a class="card row" href="#mestournois" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>📈 Mes tournois d’entraînement</b><span class="small muted"> · ' + ((p.tourneys || []).length ? (p.tourneys || []).length + ' joué' + ((p.tourneys || []).length > 1 ? 's' : '') + ', ta progression' : 'historique et progression') + '</span></span><span style="color:var(--gold)">›</span></a>' +
-      '<div class="card stack"><b>Format</b>' + seg('format', [['sng9', 'Sit & Go 9 joueurs'], ['sng6', 'Sit & Go 6 joueurs'], ['hu', 'Heads-up'], ['mtt', 'Tournoi 100 joueurs'], ['moments', 'Moments clés']]) +
+      '<div class="card stack"><b>Format</b>' + seg('format', [['sng', 'Sit & Go'], ['hu', 'Heads-up'], ['mtt', 'Tournoi 100 joueurs'], ['moments', 'Moments clés']]) +
+      (SETUP.format === 'hu' ? '' : '<b>Joueurs par table</b>' + seg('seats', [[6, '6 max'], [8, '8 joueurs'], [9, '9 joueurs'], [10, '10 joueurs']]) + '<div class="small muted">' + (SETUP.format === 'sng' ? (SETUP.seats === 6 ? '2 places payées.' : '3 places payées.') : 'Toutes les tables du tournoi ont ce nombre de places.') + ' À 6 max, les places sont LJ, HJ, CO, bouton et les blindes, comme dans ta range du club.</div>') +
       (SETUP.format === 'hu' ? '<b>Tapis de départ</b>' + seg('huChips', [[5000, '25 BB'], [8000, '40 BB'], [20000, '100 BB']]) + '<div class="small muted">Un contre un, blindes 100/200 au départ : le bouton est aussi la petite blinde. Le gagnant prend tout. Ton adversaire est tiré de la table choisie ci-dessous.</div>' : '') +
       (SETUP.format === 'moments' ? '<div class="small muted">Tournoi de 100 joueurs : les mains sans enjeu sont jouées automatiquement selon ta range, tu ne joues que la bulle, les tapis courts, la table finale et le heads-up.</div>' : '') +
-      (SETUP.format === 'hu' ? '' : SETUP.format === 'sng9' || SETUP.format === 'sng6' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
+      (SETUP.format === 'hu' ? '' : SETUP.format === 'sng' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
       (SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up, et la petite blinde qui complète quand tout le monde s’est couché) — on relance ou on se couche.</div>' : '') +
@@ -1127,7 +1138,7 @@
       h += '<button class="seat2' + (k === 0 ? ' hero' : '') + ((fold || out) ? ' out' : '') + (H.toAct === k && !H.done ? ' turn' : '') + '" data-gact="seat" data-v="' + k + '" style="left:' + x + '%;top:' + y + '%">';
       if (inH && !fold && k !== 0) h += '<span class="mc' + (dealing ? ' fx-dealo' : '') + '"' + (dealing ? ' style="--d1:' + (dealD(k, 0) || '-9s') + ';--d2:' + (dealD(k, 1) || '-9s') + '"' : '') + '>' + (showCards ? cardSmall(H.hole[k][0]) + cardSmall(H.hole[k][1]) : cardSmall(0, true) + cardSmall(0, true)) + '</span>';
       h += '<span class="av">' + ui.esc(nm.charAt(0).toUpperCase()) + '</span><span class="nm2">' + ui.esc(nm) + '</span><span class="ps' + (k === G.button ? ' btn-d' : '') + '">' + (H.pos[k] || '') + '</span>' +
-        '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>' + (p.fresh && p.fresh >= G.handNo && k !== 0 && !out ? '<span class="new2">nouveau</span>' : '');
+        '<span class="st2">' + (out ? 'Éliminé' : (H.allin[k] ? 'Tapis' : PA.fmt(p.stack))) + '</span>' + (out ? '' : hudLine(p)) + (p.fresh && p.fresh >= G.handNo && k !== 0 && !out ? '<span class="new2">nouveau</span>' : '');
       if (G.opts.bounty !== 'classique' && !out) h += '<span class="bty">' + (G.opts.bounty === 'space' && k !== 0 ? '?' : p.bounty.toFixed(0) + ' €') + '</span>';
       h += '</button>';
       if (H.bets[k]) { var bp = BETXY[n] && BETXY[n][k], bx = bp ? bp[0] : 50 + RX * 0.62 * Math.cos(a), by = bp ? bp[1] : 50 + RY * 0.6 * Math.sin(a); h += '<div class="bet2' + (FXV && fxDelay('c' + k, 0, 0.38) ? ' fx-chip' : '') + '" style="--cd:' + (fxDelay('c' + k, 0, 0.38) || '0s') + ';left:' + bx + '%;top:' + by + '%;--sx:' + x + '%;--sy:' + y + '%;--bx:' + bx + '%;--by:' + by + '%">' + chipPiles(H.bets[k], 5, 5) + PA.fmt(H.bets[k]) + '</div>'; }
@@ -1145,7 +1156,7 @@
     }
     if (G.pop !== undefined && G.pop !== null && G.players[G.pop]) {
       var q = G.players[G.pop];
-      h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' +
+      h += '<div class="pop2" data-gact="seat" data-v="-1"><b>' + ui.esc(G.pop === 0 ? 'Toi' : q.name) + '</b> · ' + (H.pos[G.pop] || '') + '<br>' + PA.fmt(q.stack) + ' (' + bbTxt(q.stack) + ' BB)' + '<br>' + hudFull(q) +
         (G.pop !== 0 && G.opts.coach ? '<br><span style="color:var(--gold)">' + OPP[q.prof].name + '</span><br><span class="small">Ses mises : ' + ST(OPP[q.prof]).txt + '.</span>' : '') +
         (G.pop !== 0 && q.note ? '<br><span class="small">Ta note : ' + ui.esc(q.note.slice(0, 120)) + '</span>' : '') +
         (G.opts.bounty !== 'classique' ? '<br>Prime : ' + (G.opts.bounty === 'space' && G.pop !== 0 ? 'mystère' : q.bounty.toFixed(2).replace('.', ',') + ' €') + (G.pop === 0 && G.stats.bountyCash ? ' · gagné ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' €' : '') : '') + '<br><span class="small muted">Toucher pour fermer</span></div>';
@@ -1154,8 +1165,9 @@
     var hasHud = G.opts.format !== 'hu';
     var info = '<div class="small muted" style="text-align:center">' + (hasHud ? 'Main ' + G.handNo : 'Niveau ' + L.n + ' · blindes ' + PA.fmt(L.sb) + ' / ' + PA.fmt(L.bb) + (L.ante ? ' · ante ' + PA.fmt(L.ante) + ' (BB ante)' : '') + ' · main ' + G.handNo + ' · ' + alive().length + ' joueurs') + (G.stats.autoHands ? ' · ' + G.stats.autoHands + ' mains jouées automatiquement' : '') + (G.opts.bounty !== 'classique' ? ' · <b style="color:#4fe08f">primes gagnées : ' + G.stats.bountyCash.toFixed(2).replace('.', ',') + ' € (' + G.stats.kos + ' élimination' + (G.stats.kos > 1 ? 's' : '') + ')</b>' : '') + '</div>' +
       (G.keyMsg ? U().yo(G.keyMsg) : '') + (!H.done && G.arrivals && G.arrivals.length ? '<div class="small" style="text-align:center;color:var(--gold)">🪑 Nouveau' + (G.arrivals.length > 1 ? 'x joueurs' : ' joueur') + ' à ta table, venu' + (G.arrivals.length > 1 ? 's' : '') + ' d’une autre table pour remplacer ' + (G.arrivals.length > 1 ? 'les éliminés' : 'l’éliminé') + ' : ' + G.arrivals.map(function (x) { return U().esc(x); }).join(', ') + '</div>' : '');
-    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + { sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go 6', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
+    var top = '<div class="drill-top"><button class="back" data-gact="quit">‹ Quitter</button><span class="muted small">' + ({ sng: 'Sit &amp; Go', sng9: 'Sit &amp; Go', sng6: 'Sit &amp; Go', hu: 'Heads-up', mtt: 'Tournoi', moments: 'Moments clés' }[G.opts.format] || '') + (G.opts.format === 'hu' ? '' : ' · ' + G.opts.seats + ' max') + (G.opts.bounty !== 'classique' ? (G.opts.bounty === 'pko' ? ' PKO' : ' Space KO') : '') + ' · ' + TABLES[G.opts.table].name + '</span><button class="rbtn" data-act="range" aria-label="Ouvrir ma range">Ma range</button></div>';
     var me = G.players[0];
+    var legend = '<div class="small muted hd-leg">Sous chaque joueur : <b>mains</b> · <b>V</b> = VPIP (% de mains jouées) · <b>P</b> = % payées sans relancer · <b>R</b> = % relancées avant le flop, depuis le début de la partie.</div>';
     var mine = H.inHand[0] ? '<div class="small" style="text-align:center">Ton tapis : <b>' + PA.fmt(me.stack) + '</b> (' + bbTxt(me.stack) + ' BB)' + (H.board.length && !H.folded[0] ? ' · ' + catName(evalHand(H.hole[0].concat(H.board))) : '') + '</div>' : '';
     var bottom = '';
     if (H.done) {
@@ -1202,7 +1214,7 @@
       bottom = (G.opts.coach && G.coachMsg ? ui.yo(G.coachMsg) : '') + '<div class="banner muted" style="text-align:center">' + (H.inHand[0] && !H.folded[0] ? 'Au tour de ' + ui.esc(G.players[H.toAct] ? G.players[H.toAct].name : '…') + '…' : 'Tu t’es couché. La main continue…') + '</div>' + (H.folded[0] || !H.inHand[0] ? '<button class="btn block" data-gact="skip">Passer à la main suivante</button>' : '');
     }
     if (window.requestAnimationFrame) requestAnimationFrame(fitTable);
-    return ui.shell('entrainer', '<div class="stack">' + top + (G.opts.format === 'hu' ? '' : hud()) + '<div class="gtab"><div class="gtab-l">' + info + h + mine + '</div><div class="gtab-r stack">' + bottom + '</div></div></div>', true);
+    return ui.shell('entrainer', '<div class="stack">' + top + (G.opts.format === 'hu' ? '' : hud()) + '<div class="gtab"><div class="gtab-l">' + info + h + mine + legend + '</div><div class="gtab-r stack">' + bottom + '</div></div></div>', true);
   }
   function noteOf(v, k) { var p2 = String(v).split(':'), i = parseInt(p2[1], 10); if (p2[0] === 'g') return G && G.stats[k][i]; var T = (PA.player().tourneys || []).filter(function (t) { return String(t.id) === p2[0]; })[0]; return T && T[k] && T[k][i]; }
   // le détail des écarts (avant et après le flop), pour le bilan de la partie et pour un tournoi de l'historique
@@ -1267,7 +1279,7 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-gact]'); if (!t) return;
     var a = t.getAttribute('data-gact'), v = t.getAttribute('data-v');
-    if (a === 'setup') { var k = t.getAttribute('data-k'); SETUP[k] = k === 'chips' || k === 'huChips' ? parseInt(v, 10) : (k === 'coach' ? v === 'true' : v); U().render(); }
+    if (a === 'setup') { var k = t.getAttribute('data-k'); SETUP[k] = k === 'chips' || k === 'huChips' || k === 'seats' ? parseInt(v, 10) : (k === 'coach' ? v === 'true' : v); U().render(); }
     else if (a === 'start') { newGame(Object.assign({}, SETUP)); location.hash = '#jeu'; U().render(); }
     else if (a === 'again') { newGame(Object.assign({}, G.opts)); U().render(); }
     else if (a === 'quit') { location.hash = '#partie'; }

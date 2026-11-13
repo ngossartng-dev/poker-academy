@@ -135,12 +135,13 @@ label{font-weight:600}
 .felt2::after{content:'POKER ACADEMY';position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;letter-spacing:.2em;font-size:clamp(11px,2.6vw,20px);color:rgba(255,255,255,.08);pointer-events:none}
 .felt2.t-noir{--felt1:#2c2c33;--felt2:#121216;--rail:#ffd23f}
 .felt2.t-sombre{--felt1:#1d2a44;--felt2:#0c1220;--rail:#e03131;--chip:#ff6b6b}
-.seat2{position:absolute;transform:translate(-50%,-50%);width:max-content;white-space:nowrap;display:grid;grid-template-columns:auto auto;grid-template-areas:"mc mc" "av nm" "av st" "bt bt";column-gap:5px;align-items:center;background:rgba(10,10,14,.82);border:1.5px solid rgba(255,255,255,.14);border-radius:12px;padding:3px 7px 3px 4px;color:#fff;font:inherit;min-width:0;cursor:pointer}
+.seat2{position:absolute;transform:translate(-50%,-50%);width:max-content;white-space:nowrap;display:grid;grid-template-columns:auto auto;grid-template-areas:"mc mc" "av nm" "av st" "hd hd" "bt bt";column-gap:5px;align-items:center;background:rgba(10,10,14,.82);border:1.5px solid rgba(255,255,255,.14);border-radius:12px;padding:3px 7px 3px 4px;color:#fff;font:inherit;min-width:0;cursor:pointer}
 .seat2 .mc{grid-area:mc;display:flex;gap:2px;justify-content:center;margin:-22px 0 2px}
 .seat2 .av{grid-area:av;width:26px;height:26px;border-radius:50%;background:#2e2e35;color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
 .seat2 .nm2{grid-area:nm;font-weight:700;font-size:12px;line-height:1.1;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 .seat2 .ps{position:absolute;top:-8px;right:-6px;background:#0b0b0d;color:#c9c9cf;border:1px solid #444;border-radius:6px;font-size:9px;font-weight:700;padding:0 4px;line-height:14px}
 .seat2 .st2{grid-area:st;font-size:11px;color:#c9c9cf;text-align:left;line-height:1.1}
+.seat2 .hd2{grid-area:hd;font-size:10px;line-height:1.2;color:#9fd3ff;text-align:center;font-variant-numeric:tabular-nums;margin-top:1px}.seat2 .hd2 b{color:#fff;font-weight:700}.seat2.hero .hd2{color:#ffd23f}.hd-leg{text-align:center;margin-top:2px}
 .seat2 .bty{grid-area:bt;font-size:10px;color:#7cc8ff;text-align:center}
 .seat2.hero{border-color:var(--gold);background:rgba(40,32,8,.9)}.seat2.hero .av{background:var(--gold);color:#1a1400}
 .seat2.turn{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,210,63,.45),0 0 14px rgba(255,210,63,.6)}
