@@ -87,6 +87,15 @@
     monclub: { name: 'Mes adversaires du club', mix: ['fan', 'fan', 'lp', 'lp', 'reg', 'fan', 'station', 'reg'] }
   };
   function p0() { return PA.player() || {}; }
+  var CLUBMIX = {
+    2: ['fan', 'lp', 'reg'],
+    6: ['fan', 'lp', 'reg', 'fan', 'station'],
+    8: ['fan', 'fan', 'lp', 'lp', 'reg', 'fan', 'station'],
+    9: ['fan', 'fan', 'lp', 'lp', 'reg', 'fan', 'station', 'reg'],
+    10: ['fan', 'fan', 'lp', 'lp', 'reg', 'fan', 'station', 'reg', 'lp']
+  };
+  // appli Club : toujours la table du club (avec tes fiches d'adversaires s'il y en a)
+  function clubTable(p) { return ((p || p0()).opps || []).some(function (o) { return o.name && OPP[o.prof]; }) ? 'monclub' : 'club'; }
   var NAMES = ['Ludo', 'Sabrina', 'Marco', 'Gégé', 'Nadia', 'Bruno', 'Coralie', 'Didier', 'Fanfan', 'Jojo', 'Karine', 'Momo',
     'Alain', 'Amandine', 'Antoine', 'Audrey', 'Aurélien', 'Bastien', 'Béa', 'Benoît', 'Cédric', 'Céline', 'Chantal', 'Christophe', 'Claire', 'Damien', 'Delphine', 'Denis', 'Dom', 'Elodie', 'Emma', 'Eric', 'Fabien', 'Fanny', 'Flo', 'Franck', 'Gaby', 'Gilles', 'Greg', 'Hélène', 'Hugo', 'Isa', 'Jacky', 'Jeannot', 'Jérôme', 'Julie', 'Kevin', 'Laure', 'Léa', 'Lionel', 'Lolo', 'Lucie', 'Manu', 'Marie', 'Martine', 'Mathieu', 'Max', 'Mélanie', 'Michel', 'Mimi', 'Nath', 'Nico', 'Noémie', 'Olivier', 'Pascal', 'Patou', 'Paulo', 'Pierrot', 'Rachid', 'Régis', 'Rémi', 'Rico', 'Romain', 'Sandrine', 'Seb', 'Serge', 'Simon', 'Sophie', 'Steph', 'Sylvie', 'Thierry', 'Thomas', 'Titi', 'Valérie', 'Véro', 'Vincent', 'Xavier', 'Yann', 'Yves', 'Zoé'];
   // un prénom jamais vu dans cette partie : un joueur éliminé ne « revient » pas sous un nom voisin
@@ -124,7 +133,10 @@
     opts.mtt = opts.format === 'mtt' || opts.format === 'moments';
     if (opts.mtt) opts.chips = 20000;
     var p = PA.player(), n = opts.seats, players = [], names = NAMES.slice().sort(function () { return Math.random() - 0.5; });
+    if (window.PA_CLUB) opts.table = clubTable(p);
     var mix = TABLES[opts.table].mix;
+    // table du club : le même esprit (fantasques, larges-passifs, quelques réguliers, une station) quel que soit le nombre de places
+    if (opts.table === 'club' || opts.table === 'monclub') mix = CLUBMIX[n] || mix;
     if (!mix) { var mp = { nit: 'nit', tag: 'reg', equilibre: 'reg', lag: 'lag', perso: 'reg' }[p.profile || 'perso']; mix = [mp, mp, mp, mp, mp, mp, mp, mp]; }
     mix = mix.slice().sort(function () { return Math.random() - 0.5; });
     // « Mes adversaires du club » : les fiches du carnet (Analyser › Adversaires) prennent place à la table, avec leur profil
@@ -1121,17 +1133,18 @@
       (G && !G.over ? '<button class="big-cta" data-act="nav" data-v="jeu"><div><div class="disp">Reprendre la partie</div><div style="font-weight:500">Main ' + G.handNo + ' · niveau ' + levelInfo().n + '</div></div></button>' : '') +
       '<a class="card row" href="#mestournois" style="text-decoration:none;color:inherit;justify-content:space-between"><span><b>📈 Mes tournois d’entraînement</b><span class="small muted"> · ' + ((p.tourneys || []).length ? (p.tourneys || []).length + ' joué' + ((p.tourneys || []).length > 1 ? 's' : '') + ', ta progression' : 'historique et progression') + '</span></span><span style="color:var(--gold)">›</span></a>' +
       '<div class="card stack"><b>Format</b>' + seg('format', [['sng', 'Sit & Go'], ['hu', 'Heads-up'], ['mtt', 'Tournoi 100 joueurs'], ['moments', 'Moments clés']]) +
-      (SETUP.format === 'hu' ? '' : '<b>Joueurs par table</b>' + seg('seats', [[6, '6 max'], [8, '8 joueurs'], [9, '9 joueurs'], [10, '10 joueurs']]) + '<div class="small muted">' + (SETUP.format === 'sng' ? (SETUP.seats === 6 ? '2 places payées.' : '3 places payées.') : 'Toutes les tables du tournoi ont ce nombre de places.') + ' À 6 max, les places sont LJ, HJ, CO, bouton et les blindes, comme dans ta range du club.</div>') +
       (SETUP.format === 'hu' ? '<b>Tapis de départ</b>' + seg('huChips', [[5000, '25 BB'], [8000, '40 BB'], [20000, '100 BB']]) + '<div class="small muted">Un contre un, blindes 100/200 au départ : le bouton est aussi la petite blinde. Le gagnant prend tout. Ton adversaire est tiré de la table choisie ci-dessous.</div>' : '') +
       (SETUP.format === 'moments' ? '<div class="small muted">Tournoi de 100 joueurs : les mains sans enjeu sont jouées automatiquement selon ta range, tu ne joues que la bulle, les tapis courts, la table finale et le heads-up.</div>' : '') +
       (SETUP.format === 'hu' ? '' : SETUP.format === 'sng' ? '<b>Jetons de départ</b>' + seg('chips', [[20000, '20 000'], [3000, '3 000']]) : '<div class="small muted">Tournoi : 20 000 jetons de départ, 15 places payées.</div>') +
       '<b>Primes</b>' + seg('bounty', [['classique', 'Classique'], ['pko', 'PKO'], ['space', 'Space KO']]) +
       '<b>Rythme des blindes</b>' + seg('pace', [['normal', 'Normal (5 min)'], ['semi', 'Semi-turbo (3 min)'], ['turbo', 'Turbo (2 min)']]) + '<div class="small muted">Les blindes montent avec le temps passé à la table : toutes les 5, 3 ou 2 minutes. Le chrono s’arrête quand tu quittes la table.</div>' +
-      (SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up, et la petite blinde qui complète quand tout le monde s’est couché) — on relance ou on se couche.</div>' : '') +
+      (window.PA_CLUB || SETUP.table === 'club' || SETUP.table === 'monclub' ? '<div class="small muted">Table Club : pas de limp, comme au club (sauf en heads-up, et la petite blinde qui complète quand tout le monde s’est couché) — on relance ou on se couche.</div>' : '') +
       '<div class="small muted">Chaque adversaire mise à sa façon, selon son profil (le nit petit et honnête, le maniac énorme, le fantasque au hasard…) : touche un joueur à la table pour voir son style.</div>' +
-      '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; })) +
+      (window.PA_CLUB ? '<div class="small muted">Adversaires : les joueurs du club (fantasques, larges-passifs, réguliers, une station)' + (clubTable(p) === 'monclub' ? ', avec tes fiches d’adversaires' : '') + ', répartis selon le nombre de places.</div>' : '<b>Adversaires</b>' + seg('table', Object.keys(TABLES).map(function (k) { return [k, TABLES[k].name]; }))) +
       (SETUP.table === 'monclub' ? '<div class="small muted">' + ((p0().opps || []).length ? 'Tes ' + (p0().opps || []).length + ' fiches d’adversaires du club prennent place à la table, avec leur profil (les places restantes : joueurs de club habituels).' : 'Tu n’as pas encore de fiche d’adversaire : ajoute les joueurs du club dans Analyser › Adversaires, avec leur profil. En attendant, la table est celle du club.') + '</div>' : '') +
       '<b>Coach</b>' + seg('coach', [[true, 'Avec Yo'], [false, 'Sans coach (bilan à la fin)']]) +
+      (SETUP.format === 'hu' ? '' : '<b>Tu préfères jouer à combien ?</b>' + seg('seats', [[6, '6 max'], [8, '8 max'], [9, '9 max'], [10, '10 max']]) + '<div class="small muted">' + (SETUP.format === 'sng' ? (SETUP.seats === 6 ? '2 places payées.' : '3 places payées.') : 'Toutes les tables du tournoi ont ce nombre de places.') + ' À 6 max, les places sont LJ, HJ, CO, bouton et les blindes, comme dans ta range du club.</div>') +
+
       '<button class="btn gold block" data-gact="start">Lancer la partie</button></div>' +
       '</div>';
     return ui.shell('entrainer', body);

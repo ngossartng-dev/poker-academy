@@ -5,7 +5,7 @@
   // club: true = guide présent aussi dans l'appli Club
   var G = [
     { id: 'soiree', club: true, t: 'Une soirée tournoi de A à Z', i: 'De l’arrivée des joueurs au classement : tout se passe dans Club › Tournoi du club (onglet Tournoi dans l’appli Club). Sous le chrono, les 4 étapes de la soirée (Inscriptions › Tirage › Jeu › Fin) montrent où tu en es et ce qu’il reste à faire.',
-      s: ['Onglet Réglages : choisis le type (Mercredi, Deep ×1,5 ou Hors championnat), la date et le format des tables (6-max, 9-max ou 10 joueurs).',
+      s: ['Onglet Réglages : choisis le type (Mercredi, Deep ×1,5 ou Hors championnat) et la date. Le nombre de joueurs par table se choisit au tirage : « Tirer les tables » montre, pour tes inscrits, la répartition en 6, 8, 9 ou 10 max (nombre de tables et joueurs par table), avec le format conseillé en doré ; touche celui que tu préfères.',
         'Onglet Joueurs : touche le nom de chaque présent dans « Les habitués », ou « Tout le club présent » puis retouche les absents. Un nouveau venu : « Ajouter au club ».',
         'Touche « Tirer les tables et les sièges ». Le plan s’affiche dans l’onglet Tables, avec le numéro de siège à côté de chaque pseudo (S1, S2…).',
         'Pas d’imprimante ? Onglet Tables › « 📋 Liste des places » : tous les joueurs par ordre alphabétique avec leur table et leur siège. « 📤 Envoyer la liste » la partage sur WhatsApp ; « 📺 Afficher sur l’écran télé » la montre en grand sur la télé (touche-le à nouveau pour la retirer).',

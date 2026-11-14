@@ -205,6 +205,17 @@
     return '🃏 Placement' + (t.date ? ' du ' + t.date.split('-').reverse().join('/') : '') + '\n' + L.map(function (x) { return x.name + ' : table ' + x.table + ', siège ' + x.seat; }).join('\n');
   }
   function tablesOf() { var o = {}; alivePl().forEach(function (x) { if (x.table) (o[x.table] = o[x.table] || []).push(x); }); return o; }
+  // combien de tables et de joueurs par table pour un format donné
+  var SIZES = [6, 8, 9, 10], DRAWASK = false;
+  function split(n, size) { var nt = Math.max(1, Math.ceil(n / size)), base = Math.floor(n / nt), extra = n % nt, out = []; for (var i = 0; i < nt; i++) out.push(base + (i < extra ? 1 : 0)); return out; }
+  // le format conseillé : le moins de tables possible, puis les tables les plus petites (plus de place autour de chacune)
+  function bestSize(n) { var b = 9, bt = 99; SIZES.forEach(function (z) { var nt = split(n, z).length; if (nt < bt) { bt = nt; b = z; } }); return b; }
+  function askHtml() {
+    var n = alivePl().length, best = bestSize(n);
+    return '<div class="card stack tn-ask"><b style="font-size:1.15em">Tu préfères jouer à combien par table ?</b><div class="small muted">' + n + ' joueurs inscrits. Voici la répartition pour chaque format ; le conseil est en doré.</div>' +
+      SIZES.map(function (z) { var sp = split(n, z); return '<button class="btn block' + (z === best ? ' gold' : '') + '" data-tmact="drawSize" data-v="' + z + '" style="justify-content:space-between;align-items:center;display:flex;gap:10px;text-align:left"><b style="white-space:nowrap">' + z + ' max</b><span style="text-align:right">' + sp.length + ' table' + (sp.length > 1 ? 's' : '') + ' · ' + sp.join(', ') + ' joueurs' + (z === best ? ' · conseillé' : '') + '</span></button>'; }).join('') +
+      '<button class="btn block" data-tmact="drawCancel">Annuler</button></div>';
+  }
   function draw() {
     var t = T(), live = shuffle(alivePl().slice()), n = live.length; if (!n) return;
     var nt = Math.ceil(n / t.size), base = Math.floor(n / nt), extra = n % nt, k = 0;
@@ -363,6 +374,7 @@
       var hIn = t.players.some(function (x) { return x.name.toLowerCase() === t.holder.toLowerCase() && !x.out; });
       out += '<div class="tn-wanted"><div class="tn-wanted-t">Tête mise à prix</div><div class="tn-wanted-n">' + esc(t.holder) + '</div><div class="tn-wanted-s">' + (hIn ? '+' + LG.BONUS + ' points pour qui l’élimine' : 'pas en jeu ce soir') + (t.holderFor ? '<br>à la place de ' + esc(t.holderFor) + ', absent ce soir' : '') + '</div></div>';
     }
+    if (DRAWASK && alivePl().length) out += askHtml();
     if (t.msg) out += '<div class="tn-msg">' + t.msg + '</div>';
     out += movesHtml(false);
     // ---- onglets ----
@@ -409,8 +421,7 @@
     } else {
       var cin = function (id, v, lab) { return '<div class="tn-set"><span>' + lab + '</span><input id="' + id + '" type="number" inputmode="numeric" min="0" value="' + v + '" class="tn-in" style="width:130px"></div>'; };
       out += '<div class="card stack"><b>Le tournoi</b>' + (LG ? '<div class="seg">' + Object.keys(LG.TYPES).map(function (k) { return '<button class="' + (t.type === k ? 'on' : '') + '" data-tmact="ttype" data-v="' + k + '">' + LG.TYPES[k].short + (k === 'deep' ? ' ×1,5' : '') + '</button>'; }).join('') + '</div><div class="tn-set"><span>Date</span><input id="tnDate" type="date" value="' + t.date + '" class="tn-in"></div>' : '') +
-        '<div class="small muted">Format des tables</div><div class="seg">' + [[6, '6-max'], [9, '9-max'], [10, '10 joueurs']].map(function (o) { return '<button class="' + (t.size === o[0] ? 'on' : '') + '" data-tmact="size" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
-        (t.drawn ? '<button class="btn block" data-tmact="draw">Refaire le tirage des tables</button>' : '') + '</div>' +
+        (t.drawn ? '<div class="small muted">Tables de ' + t.size + ' places maximum.</div><button class="btn block" data-tmact="draw">Refaire le tirage des tables</button>' : '<div class="small muted">Le nombre de joueurs par table (6, 8, 9 ou 10 max) se choisit au moment du tirage.</div>') + '</div>' +
         '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>La dotation</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('lots') : '') + '</div><div class="small muted">Valeur totale des lots (bons, lots…). Laisse 0 s’il n’y en a pas.</div>' + cin('tnPrize', t.prize || 0, 'Dotation (€)') + cin('tnPaid', t.paid || 0, 'Places récompensées (0 = auto : ' + paidAuto(t.players.length || t.entrants || 0) + ')') + (payout(t).length ? '<div class="tn-pay">' + payout(t).map(function (p) { return '<span><b>' + p.place + (p.place === 1 ? 'er' : 'e') + '</b>' + eur(p.amt) + '</span>'; }).join('') + '</div>' : '') + '</div>' +
         '<div class="card stack"><b>Re-entry, add-on, jetons</b><div class="small muted">Annoncés à la voix et affichés sur l’écran télé. 0 = pas de règle.</div>' + cin('tnReEnd', c.reEnd || 0, 'Re-entry jusqu’à la fin du niveau') + cin('tnAddP', c.addPause || 0, 'Add-on à la pause n°') +
         '<div class="tn-set"><span>Retrait des petits jetons</span><input id="tnColor" type="text" value="' + esc(c.colorUp || '') + '" placeholder="25 au niveau 8, 100 au niveau 14" class="tn-in" style="width:230px"></div></div>' +
@@ -670,7 +681,9 @@
       if (rg) { if (inT(rg.name)) { var ix = -1; tr.players.forEach(function (x, j) { if (x.name.toLowerCase() === rg.name.toLowerCase()) ix = j; }); var px = tr.players[ix]; if (!tr.drawn) { tr.players.splice(ix, 1); tr.msg = null; } else tr.msg = px.out ? px.name + ' est déjà sorti.' : px.name + ' est en jeu (table ' + px.table + ') : pour le retirer, touche « Sorti ».'; } else { addOne(rg.name); tr.msg = tr.drawn ? rg.name + ' inscrit : table ' + tr.players[tr.players.length - 1].table + ', siège ' + tr.players[tr.players.length - 1].seat + '.' : null; } }
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
-    else if (a === 'draw') { draw(); TAB = 'tables'; }
+    else if (a === 'draw') { if (!alivePl().length) return; DRAWASK = true; try { window.scrollTo(0, 0); } catch (e6) {} }
+    else if (a === 'drawSize') { T().size = +t.getAttribute('data-v'); DRAWASK = false; draw(); TAB = 'tables'; }
+    else if (a === 'drawCancel') { DRAWASK = false; }
     else if (a === 'tab') { TAB = t.getAttribute('data-v'); }
     else if (a === 'movesDone') { T().pending = []; T().closed = []; MSHEET = false; }
     else if (a === 'movesLater') { MSHEET = false; }
