@@ -263,7 +263,7 @@
     H.cur = L.bb;
     H.toAct = heads ? sbSeat : nextIn(bbSeat);
     G.stats.hands++;
-    H.vp = {}; H.pr = {}; order.forEach(function (i) { hsOf(G.players[i]).n++; });
+    H.vp = {}; H.pr = {}; H.rng = {}; H.fanBase = {}; order.forEach(function (i) { hsOf(G.players[i]).n++; });
     H.heroIn = !!H.inHand[0];
     G.coachMsg = null; H.auto = auto; H.phase = phaseName();
   }
@@ -307,6 +307,7 @@
       H.lastAggressor = i;
     }
     if (H.street === 0 && H.vp && (type === 'raise' || (type === 'call' && rec.amount > 0))) { var hs = hsOf(p); if (!H.vp[i]) { H.vp[i] = 1; hs.v++; } if (type === 'raise' && !H.pr[i]) { H.pr[i] = 1; hs.r++; } }
+    if (H.street === 0 && H.rng && type !== 'check') noteRange(i, type, rec.amount);
     if (H.street === 0 && type === 'call' && H.preRaises === 0 && i !== H.bbSeat) H.limpers++;
     if (p.stack === 0 && type !== 'fold' && type !== 'check') rec.allin = true;
     H.acted[i] = true; H.actions.push(rec);
@@ -467,6 +468,155 @@
     return f;
   }
   function raiseMult(P) { var S = ST(P); if (S.wild) return [2, 2.5, 3, 4][Math.floor(Math.random() * 4)]; if (P.key === 'maniac' && Math.random() < 0.3) return 2; return S.raise; }
+
+  /* ---------- Adversaires plus réalistes ----------
+     Avant le flop, chaque profil suit une vraie grille par place (jamais la range du club, réservée au joueur) :
+     Nit et Survivant → grille « Nit », Régulier → « TAG », Large-agressif et Maniac → « Large », Large-passif, Station et Fantasque → « Équilibré »,
+     puis son caractère la déforme (le passif paie au lieu de relancer, la station paie trop, le maniac relance plus, le fantasque change de grille à chaque main).
+     Les profils qui réfléchissent s'adaptent à tes stats (VPIP et relances sous ton nom). Après le flop, ils calculent leurs chances contre la range que tu as montrée. */
+  var BASE = { nit: 'nit', surv: 'nit', reg: 'tag', lag: 'lag', maniac: 'lag', lp: 'equilibre', station: 'equilibre', fan: 'equilibre' };
+  var ADAPT = { reg: 1, lag: 1, maniac: 0.6, nit: 0.3, surv: 0.3, lp: 0.2, station: 0, fan: 0.2 };
+  // classement des mains corrigé pour les adversaires : AKo et AQo remontent près du haut
+  var BOTORDER = (function () { var o = PA.D.order.filter(function (h) { return h !== 'AKo' && h !== 'AQo'; }); o.splice(o.indexOf('AKs') + 1, 0, 'AKo'); o.splice(o.indexOf('AJs') + 1, 0, 'AQo'); return o; })();
+  var PCTB = {}, CUMB = []; (function () { var acc = 0; BOTORDER.forEach(function (h) { acc += PA.combos(h); PCTB[h] = acc / 1326; CUMB.push(acc / 1326); }); })();
+  var CHC = {};
+  function bchart(base, s) { var k = base + '|' + JSON.stringify(s); if (!CHC[k]) { try { CHC[k] = PA.chart(base, s) || {}; } catch (e) { CHC[k] = {}; } } return CHC[k]; }
+  function cpos(p) { return p === 'UTG+2' ? 'UTG+1' : p; }
+  function baseOf(i, P) {
+    var H = G.hand;
+    if (P.wild) { if (!H.fanBase[i]) H.fanBase[i] = ['nit', 'tag', 'equilibre', 'lag', 'lag'][Math.floor(Math.random() * 5)]; return H.fanBase[i]; }
+    var k = 'tag'; Object.keys(OPP).forEach(function (x) { if (OPP[x] === P) k = BASE[x] || 'tag'; }); return k;
+  }
+  function keyOf(P) { var k = 'reg'; Object.keys(OPP).forEach(function (x) { if (OPP[x] === P) k = x; }); return k; }
+  // ce que les adversaires savent de toi : tes stats de la partie (au moins 15 mains)
+  function heroRead() { var h = G.players[0] && G.players[0].hs; if (!h || h.n < 15) return null; return { v: h.v / h.n, r: h.r / h.n }; }
+  function sizeTo(i, P, mult3, callers) {
+    var H = G.hand, p = G.players[i], pos = H.pos[i], L = H.L, S = ST(P);
+    var to = H.preRaises >= 2 ? H.cur * S.four : (H.cur * (mult3 || (pos === 'BTN' || pos === 'CO' ? S.three[0] : S.three[1])) + (callers || 0) * H.cur + (i === H.bbSeat || pos === 'SB' ? L.bb : 0));
+    var effBB = (p.stack + H.bets[i]) / L.bb;
+    if (effBB <= 30 && H.preRaises === 1) to = p.stack + H.bets[i];
+    if (to > (p.stack + H.bets[i]) * 0.4) to = p.stack + H.bets[i];
+    return ['raise', Math.round(to)];
+  }
+  function chartDecide(i, P, code, effBB) {
+    var H = G.hand, p = G.players[i], L = H.L, pos = H.pos[i], tc = toCall(i), k = keyOf(P), base = baseOf(i, P), hp = PCTB[code];
+    var bbK = effBB < 40 ? 30 : 100, rd = heroRead(), ad = ADAPT[k] || 0, r = Math.random();
+    // 1. personne n'a relancé : ouvrir, limper ou se couper
+    if (H.preRaises === 0) {
+      if (i === H.bbSeat) return null;
+      var a = bchart(base, { type: 'open', pos: cpos(pos), bb: bbK })[code];
+      var open = a === 'raise' || a === 'allin';
+      // vol contre des blindes trop serrées (toi en blinde, peu de mains jouées)
+      if (!open && rd && ad >= 0.6 && rd.v < 0.16 && (pos === 'CO' || pos === 'BTN' || pos === 'SB') && (G.hand.bbSeat === 0 || G.hand.sb === 0)) open = hp < (pos === 'CO' ? 0.3 : 0.45) * ad;
+      var lt = { CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1 }[pos] || 0.85;
+      if (!open && k === 'maniac') open = hp < Math.min(0.7, P.pfr * lt * 1.35);
+      if (!open && k === 'lag') open = hp < Math.min(0.5, P.pfr * lt * 1.25);
+      if (open && (k === 'lp' || k === 'station') && hp > 0.04 && !noLimp() && r > P.pfr / P.vpip) return tc === 0 ? ['check'] : ['call']; // le passif limpe ses mains moyennes
+      if (open) { var sz = L.bb * openSize(P, L, pos) + H.limpers * L.bb; if (sz > (p.stack + H.bets[i]) * 0.45) sz = p.stack + H.bets[i]; return ['raise', Math.round(sz)]; }
+      return null; // limps des profils larges : logique habituelle
+    }
+    var opener = H.opener, opPos = opener !== null && opener !== undefined ? H.pos[opener] : null;
+    if (!opPos || tc >= p.stack * 0.5) return null; // tapis : logique dédiée
+    var callers = 0; Object.keys(H.inHand).forEach(function (q) { q = +q; if (q !== i && q !== opener && !H.folded[q] && H.bets[q] === H.cur && H.preRaises === 1) callers++; });
+    // 2. face à une ouverture
+    if (H.preRaises === 1) {
+      var d = bchart(base, { type: 'def', pos: pos === 'BB' ? 'BB' : cpos(pos), opener: cpos(opPos), bb: bbK })[code] || 'fold';
+      if (d === 'allin') d = 'raise';
+      if (callers > 0 && d === 'call' && hp > 0.12 && r < 0.5) d = 'fold';              // plusieurs joueurs déjà dedans : on resserre les calls
+      if (callers > 0 && d === 'fold' && P.light && LIGHT[code] && r < P.light * 0.5) d = 'raise'; // squeeze léger
+      if (k === 'station') { if (d === 'raise' && hp > 0.03) d = 'call'; if (d === 'fold' && hp < P.vpip * 0.8) d = 'call'; }
+      else if (k === 'lp') { if (d === 'raise' && hp > 0.05) d = 'call'; if (d === 'fold' && hp < P.vpip * 0.55) d = 'call'; }
+      else if (k === 'maniac') { if (d === 'call' && r < 0.5) d = 'raise'; else if (d === 'fold' && (LIGHT[code] || hp < 0.3) && r < 0.35) d = 'raise'; else if (d === 'fold' && hp < 0.4 && r < 0.75) d = 'call'; }
+      else if (k === 'lag') { if (d === 'fold' && hp < 0.22 && (pos === 'BTN' || pos === 'CO' || pos === 'BB') && r < 0.6) d = 'call'; }
+      else if (k === 'fan') { if (r < 0.12) d = d === 'fold' && hp < 0.5 ? 'call' : d === 'call' ? 'raise' : d; }
+      // adaptation à tes ouvertures
+      if (opener === 0 && rd && ad > 0) {
+        if (rd.r >= 0.25) { if (d === 'fold' && hp < 0.22 * ad && (pos === 'BTN' || pos === 'CO' || pos === 'BB')) d = 'call'; if (d === 'fold' && LIGHT[code] && r < 0.45 * ad) d = 'raise'; if (d === 'call' && hp < 0.06 && r < 0.6 * ad) d = 'raise'; }
+        else if (rd.r <= 0.1) { if (d === 'call' && hp > 0.07 && !(pos === 'BB' && hp < 0.3) && r < ad) d = 'fold'; if (d === 'raise' && hp > 0.03 && !LIGHT[code] && r < ad) d = 'call'; }
+      }
+      if (bubbleNow() && P.surv) { if (d === 'call' && hp > 0.05) d = 'fold'; if (d === 'raise' && hp > 0.025) d = 'fold'; }
+      if (d === 'raise') return sizeTo(i, P, null, callers);
+      if (d === 'call') return ['call'];
+      return tc === 0 ? ['check'] : ['fold'];
+    }
+    // 3. j'avais ouvert et on me sur-relance
+    if (H.preRaises === 2 && i === opener) {
+      var tb = H.pfa, tbPos = H.pos[tb], scen;
+      if (pos === 'SB' && tb === H.bbSeat) return null; // blinde contre blinde : logique dédiée plus bas
+      if ((tbPos === 'SB' || tbPos === 'BB') && pos !== 'SB') scen = 'ip';
+      else if (['UTG', 'UTG+1', 'UTG+2', 'MP', 'LJ'].indexOf(pos) >= 0) scen = 'early';
+      else scen = 'oop';
+      var v = bchart(base, { type: 'vs3bet', scen: scen, bb: bbK })[code] || 'fold';
+      if (k === 'station' && v === 'fold' && hp < 0.2) v = 'call';
+      if (k === 'maniac' && v === 'call' && r < 0.4) v = 'fourbet';
+      if (k === 'lp' && v === 'fourbet' && hp > 0.03) v = 'call';
+      if (tb === 0 && rd && ad > 0 && rd.r >= 0.3 && v === 'fold' && hp < 0.12 * ad) v = 'call'; // tu relances beaucoup : il défend plus
+      if (v === 'fourbet' || v === 'allin') return sizeTo(i, P);
+      if (v === 'call') return ['call'];
+      return tc === 0 ? ['check'] : ['fold'];
+    }
+    return null;
+  }
+  function bubbleNow() { var rem = remaining(); return rem > paidPlaces() && rem <= paidPlaces() + (G.opts.mtt ? 3 : 1); }
+  // ce que chaque joueur a montré avant le flop : une tranche du classement [lo, hi]
+  function statsOf(i) {
+    if (i === 0) { var rd = heroRead(); return rd ? { vpip: Math.max(0.08, rd.v), pfr: Math.max(0.05, rd.r) } : { vpip: 0.24, pfr: 0.18 }; }
+    var P = OPP[G.players[i].prof] || OPP.reg; return { vpip: P.vpip, pfr: P.pfr };
+  }
+  function noteRange(i, type, amount) {
+    var H = G.hand, st = statsOf(i), pos = H.pos[i], late = { CO: 1.5, BTN: 1.9, SB: 1.4, HJ: 1.15, LJ: 1, MP: 0.85, 'UTG+2': 0.78, 'UTG+1': 0.75, UTG: 0.7, BB: 1 }[pos] || 1;
+    if (H.order.length === 2) late = 2.2;
+    var cap = function (x) { return Math.max(0.02, Math.min(0.9, x)); };
+    if (type === 'raise') {
+      if (H.allin[i] && G.players[i].stack === 0 && (H.bets[i] / H.L.bb) <= 15) H.rng[i] = { lo: 0, hi: cap(st.vpip * late * 0.9) };
+      else if (H.preRaises === 1) H.rng[i] = { lo: 0, hi: cap(st.pfr * late) };
+      else if (H.preRaises === 2) H.rng[i] = { lo: 0, hi: cap(st.pfr * 0.3) };
+      else H.rng[i] = { lo: 0, hi: 0.03 };
+    } else if (type === 'call' && amount > 0) {
+      if (H.preRaises === 0) H.rng[i] = { lo: cap(st.pfr * late * 0.5), hi: cap(st.vpip * late) };
+      else if (H.preRaises === 1) H.rng[i] = { lo: i === H.bbSeat ? 0.02 : 0.025, hi: cap(st.vpip * (i === H.bbSeat ? 1.6 : 0.9)) };
+      else H.rng[i] = { lo: 0.01, hi: cap(st.vpip * 0.4) };
+    }
+  }
+  // tirer une main au hasard dans une tranche du classement, sans cartes déjà vues
+  function combosOf(code) {
+    var a = RCH.indexOf(code[0]), b = RCH.indexOf(code[1]), out = [], s1, s2;
+    if (a === b) { for (s1 = 0; s1 < 4; s1++) for (s2 = s1 + 1; s2 < 4; s2++) out.push([a * 4 + s1, a * 4 + s2]); }
+    else if (code[2] === 's') { for (s1 = 0; s1 < 4; s1++) out.push([a * 4 + s1, b * 4 + s1]); }
+    else { for (s1 = 0; s1 < 4; s1++) for (s2 = 0; s2 < 4; s2++) if (s1 !== s2) out.push([a * 4 + s1, b * 4 + s2]); }
+    return out;
+  }
+  var COMBOS = {}; BOTORDER.forEach(function (h) { COMBOS[h] = combosOf(h); });
+  function drawFrom(rg, used) {
+    for (var t = 0; t < 12; t++) {
+      var u = rg.lo + Math.random() * (rg.hi - rg.lo), lo = 0, hi = CUMB.length - 1;
+      while (lo < hi) { var m = (lo + hi) >> 1; if (CUMB[m] < u) lo = m + 1; else hi = m; }
+      var cs = COMBOS[BOTORDER[lo]].filter(function (c) { return !used[c[0]] && !used[c[1]]; });
+      if (cs.length) return cs[Math.floor(Math.random() * cs.length)];
+    }
+    return null;
+  }
+  function equityVs(hole, board, ranges, iters) {
+    var win = 0, base = {}; hole.concat(board).forEach(function (c) { base[c] = 1; });
+    for (var it = 0; it < iters; it++) {
+      var used = {}, k; for (k in base) used[k] = 1;
+      var opp = [], ok = true;
+      for (var o = 0; o < ranges.length; o++) { var h = drawFrom(ranges[o], used); if (!h) { ok = false; break; } used[h[0]] = used[h[1]] = 1; opp.push(h); }
+      if (!ok) { it--; iters--; if (iters <= 0) break; continue; }
+      var pool = []; for (var c = 0; c < 52; c++) if (!used[c]) pool.push(c);
+      var b = board.slice(), n = pool.length; while (b.length < 5) { var x = Math.floor(Math.random() * n); b.push(pool[x]); pool[x] = pool[n - 1]; n--; }
+      var me = evalHand(hole.concat(b)), lose = false, ties = 0;
+      for (o = 0; o < opp.length; o++) { var sc = evalHand(opp[o].concat(b)); if (sc > me) { lose = true; break; } if (sc === me) ties++; }
+      if (!lose) win += 1 / (ties + 1);
+    }
+    return iters > 0 ? win / iters : 0.5;
+  }
+  function botEquity(i) {
+    var H = G.hand, rs = [];
+    Object.keys(H.inHand).forEach(function (k) { k = +k; if (k !== i && !H.folded[k]) rs.push(H.rng[k] || { lo: 0, hi: 1 }); });
+    if (!rs.length) return 1;
+    return equityVs(H.hole[i], H.board, rs, 200);
+  }
   function botDecide(i) {
     var H = G.hand, p = G.players[i], P = OPP[p.prof], L = H.L, tc = toCall(i), bbs = p.stack / L.bb, pot = potTotal();
     var code = handCode(H.hole[i][0], H.hole[i][1]), hp = PCT[code];
@@ -483,6 +633,8 @@
         if (push) return ['raise', p.stack + H.bets[i]];
         return tc === 0 ? ['check'] : ['fold'];
       }
+      if (!hu && effBB > 15) { var cd = chartDecide(i, P, code, effBB); if (cd) return cd; }
+      hp = PCTB[code];
       if (H.preRaises === 0) {
         var openP = Math.min(hu ? 0.85 : 0.6, P.pfr * late + wild);
         if (hp < openP) { var sz = L.bb * openSize(P, L, pos) + H.limpers * L.bb; if (sz > (p.stack + H.bets[i]) * 0.45) sz = p.stack + H.bets[i]; return ['raise', Math.round(sz)]; }
@@ -538,11 +690,14 @@
       return tc === 0 ? ['check'] : ['fold'];
     }
     // après le flop
-    var opp = activeCount() - 1, eq = equity(H.hole[i], H.board, Math.max(1, opp), 180);
+    var opp = activeCount() - 1, eq = botEquity(i);
     var spr = p.stack / Math.max(1, pot);
     if (tc > 0) {
       var po = tc / (pot + tc), sr = H.sRaises || 0, big = tc > (pot - tc) * 0.8, multi = opp >= 2;
-      var betR = Math.min(1.5, tc / Math.max(1, pot - tc)); eq = eq - 0.1 - 0.12 * betR - (sr ? 0.08 : 0) + P.sticky * 0.06; // range de mise adverse plus forte qu'une main au hasard
+      var betR = Math.min(1.5, tc / Math.max(1, pot - tc)), bettor = H.lastAggressor, bP = bettor > 0 ? OPP[G.players[bettor].prof] : null;
+      eq = eq - 0.04 - 0.08 * betR - (sr ? 0.07 : 0) + P.sticky * 0.06; // on mise avec le haut de sa range : elle est plus forte que celle d'avant le flop
+      if (bP) eq += (bP.bluff - 0.1) * 0.3; // un nit qui mise, c'est du solide ; un maniac, beaucoup moins
+      if (bettor === 0) { var rdh = heroRead(); if (rdh && (ADAPT[keyOf(P)] || 0) > 0) eq += (rdh.r - 0.18) * 0.15 * ADAPT[keyOf(P)]; } // tu relances beaucoup : ils te paient plus léger
       // une relance au plus par tour, une sur-relance seulement avec une main énorme
       if (sr <= 1 && eq > (sr ? 0.8 : 0.68) && Math.random() < P.agg * (sr ? 0.5 : 1)) return ['raise', Math.min(p.stack + H.bets[i], Math.round(H.cur * raiseMult(P)))];
       if (spr < 0.6 && eq > 0.3) return ['call'];
@@ -553,7 +708,7 @@
     }
     var Z = { bet: [ST(P).dry || 0.33, ST(P).wet || 0.66] }, betFrac = postSize(P, eq, pot, eq > 0.75);
     var size = Math.max(L.bb, Math.round(pot * betFrac));
-    if (eq > 0.62 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack + H.bets[i]] : ['raise', size];
+    if (eq > 0.6 && Math.random() < 0.35 + P.agg * 0.6) return size >= p.stack * 0.8 ? ['raise', p.stack + H.bets[i]] : ['raise', size];
     var isAggressor = H.lastAggressor === i;
     // chapitre 26 : après un tour checké, le relanceur fait son c-bet retardé, l’autre sonde
     if (opp === 1 && H.street >= 2 && H.prevChecked) {
@@ -1322,6 +1477,6 @@
   window.PA_GAME = { dealSound: function (a, b) { dealSound(a, b); },
     views: { partie: setupView, jeu: tableView, mestournois: tourneysView },
     heroRangeCtx: function () { if (!G || !G.hand) return null; var hs = heroSit(); if (G.stats) G.stats.consult++; return hs; },
-    _test: { showdown: function () { showdown(); }, solSpot: function () { var M = solSpotFor(G.hand); return M ? { id: M.id, side: M.side } : null; }, canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand }
+    _test: { showdown: function () { showdown(); }, solSpot: function () { var M = solSpotFor(G.hand); return M ? { id: M.id, side: M.side } : null; }, canRaise: function (i) { return canRaise(i); }, heroSit: function () { return heroSit(); }, view: function () { return tableView(); }, evalHand: evalHand, equity: equity, handCode: handCode, newGame: function (o) { newGame(o); return G; }, get: function () { return G; }, heroAct: heroAct, fastForward: fastForward, startHand: startHand, dealHand: dealHand, autoPlay: autoPlay, botDecide: botDecide, OPP: OPP, PCTB: PCTB, equityVs: equityVs }
   };
 })();
