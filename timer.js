@@ -72,6 +72,12 @@
   }
   var SKEY = 'pa2structs', STMSG = null;
   function myStructs() { try { var a = JSON.parse(localStorage.getItem(SKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  // structure du club (export du logiciel Blinds, 15/11/2026) : ajoutée une fois dans « Mes structures » sur chaque appareil
+  var CLUB_STRUCT = { name: 'Structure du club (Blinds)', text: "100/200 20 min\n100/300 20 min\n200/400 20 min\n200/500 20 min\n300/600 20 min\n400/800 20 min\n500/1000 20 min\npause 45\n600/1200 20 min\n800/1600 20 min\n1000/2000 20 min\n1000/2500 20 min\n1500/3000 20 min\npause 10\n2000/4000 20 min\n3000/6000 20 min\n4000/8000 20 min\n5000/10000 20 min\n6000/12000 20 min\n8000/16000 20 min\npause 10\n10000/20000 20 min\n15000/30000 20 min\n20000/40000 20 min\n25000/50000 20 min\n30000/60000 20 min\n35000/70000 20 min\npause 10\n40000/80000 20 min\n50000/100000 20 min\n60000/120000 20 min\n70000/140000 20 min\n80000/160000 20 min\n100000/200000 20 min\npause 10\n100000/250000 20 min\n150000/300000 20 min\n200000/400000 20 min\n250000/500000 20 min\n300000/600000 20 min", mins: 20, at: 1794758400000 };
+  (function seedStruct() {
+    try { if (localStorage.getItem(SKEY + 'Seed1')) return; localStorage.setItem(SKEY + 'Seed1', '1');
+      var lst = myStructs(); if (!lst.some(function (x) { return x.name.toLowerCase() === CLUB_STRUCT.name.toLowerCase(); }) && !structsDel()[CLUB_STRUCT.name.toLowerCase()]) { lst.push(JSON.parse(JSON.stringify(CLUB_STRUCT))); localStorage.setItem(SKEY, JSON.stringify(lst)); } } catch (e) {}
+  })();
   function setMyStructs(a) { try { localStorage.setItem(SKEY, JSON.stringify(a)); } catch (e) {} if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); }
   function structsDel() { try { var o = JSON.parse(localStorage.getItem(SKEY + 'Del') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
   function delStruct(name) { var o = structsDel(); o[name.toLowerCase()] = Date.now(); try { localStorage.setItem(SKEY + 'Del', JSON.stringify(o)); } catch (e) {} }
