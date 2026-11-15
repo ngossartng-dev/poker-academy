@@ -86,9 +86,9 @@
   function setStructs(x) { if (!x) return; try { localStorage.setItem(SKEY, JSON.stringify(x.list || [])); localStorage.setItem(SKEY + 'Del', JSON.stringify(x.del || {})); } catch (e) {} }
   function structsHtml(IN) {
     var a = myStructs(), nm = function (st) { var L = st.text.split(/\n/).filter(function (x) { return x.trim(); }), np = L.filter(function (x) { return /^\s*pause/i.test(x); }).length; return (L.length - np) + ' niveaux' + (np ? ', ' + np + ' pause' + (np > 1 ? 's' : '') : ''); };
-    var out = '<div class="card stack"><b>5. Mes structures</b><div class="small muted">Enregistre la structure ci-dessus (même faite à la main) pour la reprendre un autre soir. « Charger » la remet dans le tableau.</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="tmStName" type="text" maxlength="40" placeholder="Nom : Deep du vendredi" style="flex:1;min-width:180px;' + IN + '"><button class="btn gold" data-tmact="stSave">💾 Enregistrer cette structure</button></div>' + (STMSG ? '<div class="small" style="color:var(--gold)">' + U().esc(STMSG) + '</div>' : '') +
-      (a.length ? a.map(function (st, i) { return '<div class="row" style="justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1;min-width:0"><b>' + U().esc(st.name) + '</b><br><span class="small muted">' + nm(st) + ' · ' + new Date(st.at).toLocaleDateString('fr-FR') + '</span></span><button class="btn" data-tmact="stLoad" data-v="' + i + '">Charger</button><button class="btn" data-tmact="stDel" data-v="' + i + '" title="Supprimer">✕</button></div>'; }).join('') : '<div class="small muted">Aucune structure enregistrée pour l’instant.</div>') + '</div>';
+    var out = '<div class="card stack"><b style="font-size:1.15em">📂 Mes structures</b><div class="small muted">« Charger » met la structure dans le tableau ci-dessous : ajuste les durées et les antes, puis « Enregistrer et revenir au minuteur » tout en bas. Pour garder ta version, donne-lui un nom et enregistre-la ici.</div>' +
+      (a.length ? a.map(function (st, i) { return '<div class="row" style="justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:6px"><span style="flex:1;min-width:0"><b>' + U().esc(st.name) + '</b><br><span class="small muted">' + nm(st) + ' · ' + new Date(st.at).toLocaleDateString('fr-FR') + '</span></span><button class="btn gold" data-tmact="stLoad" data-v="' + i + '" style="font-weight:700">Charger</button><button class="btn" data-tmact="stDel" data-v="' + i + '" title="Supprimer">✕</button></div>'; }).join('') : '<div class="small muted">Aucune structure enregistrée pour l’instant.</div>') +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="tmStName" type="text" maxlength="40" placeholder="Nom : Deep du vendredi" style="flex:1;min-width:180px;' + IN + '"><button class="btn" data-tmact="stSave">💾 Enregistrer cette structure</button></div>' + (STMSG ? '<div class="small" style="color:var(--gold)">' + U().esc(STMSG) + '</div>' : '') + '</div>';
     STMSG = null; return out;
   }
   function levels() {
@@ -467,7 +467,7 @@
         '<div class="tn-set"><span>Retrait des petits jetons</span><input id="tnColor" type="text" value="' + esc(c.colorUp || '') + '" placeholder="25 au niveau 8, 100 au niveau 14" class="tn-in" style="width:230px"></div></div>' +
         '<div class="card stack"><b>Les jetons</b>' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Re-entry (0 = départ)') + cin('tnAdd', c.addStack, 'Add-on (0 = départ)') + '</div>' +
         rmCard() + '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
-        '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">Structure : blindes, ante, durée, pauses</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
+        '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">⚙️ Structure · 📂 Mes structures (charger, modifier)</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
         (t.drawn && alivePl().length > 1 ? stopCard(t) : '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>');
     }
     out += bakCard();
@@ -610,6 +610,7 @@
         '<div class="small muted">Durée totale : ' + hm(sch.length ? sch[sch.length - 1] + L0[L0.length - 1].min : 0) + (c.chips && first ? ' · tapis de départ ' + fmt(c.chips) + ' = ' + Math.round(c.chips / first.bb) + ' grosses blindes au niveau 1' : '') + '</div>' : '';
       return ui.shell('apprendre', '<div class="stack"><button class="back" data-tmact="done">‹ Minuteur</button><h1>Structure du tournoi</h1>' +
         ui.yo('Choisis tes réglages et touche « Créer la structure ». La liste des niveaux se remplit : tu peux encore la corriger à la main avant d’enregistrer. Ante de grosse blinde : la grosse blinde paie une ante égale à sa blinde pour toute la table. Ante classique : chaque joueur paie environ un huitième de la grosse blinde.') +
+        structsHtml(IN) +
         '<div class="card stack"><b>1. Les blindes</b>' +
         row('Blindes de départ', num('tmSb', c.sb, 100, 1, 1000000) + ' / ' + num('tmBb', c.bb, 100, 1, 1000000)) +
         row('Progression', sel('tmSpeed', c.speed, Object.keys(SPEED).map(function (k) { return [k, SPEED[k][1]]; }))) +
@@ -633,7 +634,7 @@
         '<div class="card stack"><b>4. Les niveaux, un par un</b><div class="small muted">Change n’importe quelle case : petite blinde, grosse blinde, ante (Non, GB = ante de grosse blinde, Joueur = ante par joueur), durée en minutes. « + » ajoute un niveau juste en dessous, « ☕ » une pause, « ✕ » supprime la ligne, « ▲ ▼ » déplacent une pause d’un niveau. Une case en rouge ne peut pas se payer avec les jetons en jeu à ce niveau.</div>' +
         lvEditor(L0) +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="lvAdd" data-v="' + (L0.length - 1) + '">+ Un niveau à la fin</button><button class="btn" data-tmact="lvPause" data-v="' + (L0.length - 1) + '">+ Une pause à la fin</button></div>' +
-        '<button class="btn gold block" data-tmact="savestruct">Enregistrer et revenir au minuteur</button></div>' + structsHtml(IN) + '<div class="card stack">' + prev +
+        '<button class="btn gold block" data-tmact="savestruct">Enregistrer et revenir au minuteur</button></div>' + '<div class="card stack">' + prev +
         '<details><summary class="small muted">Saisir ou coller la structure en texte</summary><div class="small muted">Un niveau par ligne : « 100/200 », « 100/200 bbante 200 » ou « 100/200 ante 25 ». « pause 10 » ajoute une pause. Une durée différente : « 600/1200 bbante 1200 30 min ».</div><textarea id="tmText" rows="10" style="width:100%;' + IN + ';padding:8px">' + ui.esc(ST.text) + '</textarea><button class="btn" data-tmact="txtApply">Remplacer les niveaux par ce texte</button></details></div></div>');
     }
     var l = s.L[s.idx], run = !!ST.since;
@@ -645,7 +646,7 @@
       '<div class="disp" id="tmClock" style="font-size:clamp(70px,24vw,260px);line-height:1;margin-top:8px">' + mmss(s.rem) + '</div>' +
       '<div class="muted" id="tmNext" style="font-size:clamp(15px,3vw,26px)">' + nextInfo(s) + '</div></div>' +
       '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="prev">‹ Niveau</button><button class="btn gold" data-tmact="toggle" style="min-width:160px;font-size:1.2em">' + (run ? 'Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? 'Reprendre' : 'Démarrer')) + '</button><button class="btn" data-tmact="next">Niveau ›</button></div>' +
-      '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="minus">− 1 min</button><button class="btn" data-tmact="plus">+ 1 min</button><a class="btn" href="#ecran">📺 Écran télé</a>' + voiceBtn() + '<button class="btn" data-tmact="full">Plein écran</button><button class="btn" data-tmact="edit">Structure</button><button class="btn" data-tmact="reset">Remettre à zéro</button></div>' +
+      '<div class="row" style="justify-content:center;flex-wrap:wrap;gap:8px"><button class="btn" data-tmact="minus">− 1 min</button><button class="btn" data-tmact="plus">+ 1 min</button><a class="btn" href="#ecran">📺 Écran télé</a>' + voiceBtn() + '<button class="btn" data-tmact="full">Plein écran</button><button class="btn gold" data-tmact="edit">⚙️ Structure · 📂 Mes structures</button><button class="btn" data-tmact="reset">Remettre à zéro</button></div>' +
       statsHtml(s) + '<a class="btn block" href="#tournoi">Le tournoi : joueurs, tables, éliminations ›</a>' +
       (window.PA_GUIDE ? window.PA_GUIDE.link('chrono') : '') + '<p class="small muted">Un signal sonore et une voix annoncent la dernière minute et chaque nouveau niveau (les blindes et l’ante), la pause et la reprise. L’écran reste allumé pendant que le minuteur tourne.</p></div>';
     return ui.shell('apprendre', body, true);
@@ -798,7 +799,7 @@
       if (inProg && typeof confirm === 'function' && !confirm('Un tournoi est en cours. Remettre seulement le chrono au niveau 1 ? Les joueurs et les tables ne bougent pas (pour arrêter le tournoi : page Tournoi › Réglages › Arrêter le tournoi).')) return;
       if (!inProg && typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.brk = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
     else if (a === 'full') { if (window.PAAndroid && window.PAAndroid.fullscreen) { FULL = !FULL; window.PAAndroid.fullscreen(FULL); return; } try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
-    else if (a === 'edit') EDIT = true;
+    else if (a === 'edit') { EDIT = true; setTimeout(function () { try { window.scrollTo(0, 0); } catch (e7) {} }, 0); }
     else if (a === 'voice') { ST.voice = !vOn(); if (ST.voice) say('Annonces vocales activées. ' + (L[s.idx] ? lvlSay(L[s.idx]) : ''), true); else { try { if (window.speechSynthesis) speechSynthesis.cancel(); if (window.PAAndroid && window.PAAndroid.stop) window.PAAndroid.stop(); } catch (e4) {} } }
     else if (a === 'rmOn') { rmStart(true); return; }
     else if (a === 'rmOff') { rmStart(false); return; }
