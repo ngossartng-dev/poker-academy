@@ -50,16 +50,19 @@
   }
   function ago(ms) { var m = Math.round((Date.now() - ms) / 60000); return m < 1 ? 'à l’instant' : m < 60 ? 'il y a ' + m + ' min' : 'il y a ' + Math.floor(m / 60) + ' h ' + (m % 60 < 10 ? '0' : '') + (m % 60); }
   function hhmm(ms) { var d = new Date(ms); return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  // « Non, nouveau tournoi » : on ne propose plus de reprendre les copies déjà faites (elles restent dans la liste)
+  function bakSkip() { try { localStorage.setItem(BKEY + 'skip', String(Date.now())); } catch (e) {} }
   function bakCard() {
     var a = baks(), t = T(), esc = U().esc, out = '';
     var chk = 0; try { chk = +localStorage.getItem(BKEY + 'chk') || 0; } catch (e) {}
     // tournoi vide alors qu'une copie récente existe : on propose de le reprendre
-    if (!hasT(ST) && a.length && Date.now() - a[0].at < 24 * 3600e3) {
+    var skip = 0; try { skip = +localStorage.getItem(BKEY + 'skip') || 0; } catch (e) {}
+    if (!hasT(ST) && a.length && Date.now() - a[0].at < 24 * 3600e3 && a[0].at > skip && a[0].left > 1) {
       var b0 = a[0], L0 = levels()[b0.lvl];
-      out += '<div class="card stack tn-bak tn-bak-alert"><b>💾 Un tournoi interrompu a été sauvegardé</b><div>' + hhmm(b0.at) + ' (' + ago(b0.at) + ') · ' + b0.left + ' joueur' + (b0.left > 1 ? 's' : '') + ' en jeu sur ' + b0.entrants + (L0 ? ' · ' + (L0.pause ? 'pause' : 'niveau ' + L0.n) : '') + '</div><button class="btn gold" data-tmact="bakRestore" data-v="0">Reprendre ce tournoi</button><div class="small muted">Le chrono repart en pause, au temps qu’il restait au moment de la copie.</div></div>';
+      out += '<div class="card stack tn-bak tn-bak-alert"><b>💾 Un tournoi interrompu a été sauvegardé</b><div>' + hhmm(b0.at) + ' (' + ago(b0.at) + ') · ' + b0.left + ' joueur' + (b0.left > 1 ? 's' : '') + ' en jeu sur ' + b0.entrants + (L0 ? ' · ' + (L0.pause ? 'pause' : 'niveau ' + L0.n) : '') + '</div><button class="btn" data-tmact="bakSkip">Non, nouveau tournoi</button><button class="btn gold" data-tmact="bakRestore" data-v="0">Reprendre ce tournoi</button><div class="small muted">Le chrono repart en pause, au temps qu’il restait au moment de la copie.</div></div>';
       return out;
     }
-    if (!hasT(ST)) return '';
+    if (!hasT(ST) && !a.length) return '';
     var last = a.length ? Math.max(a[0].at, chk) : 0;
     out += '<details class="card tn-bak"><summary style="cursor:pointer"><b>💾 Sauvegarde automatique</b> <span class="small muted">· ' + (last ? ago(last) : 'bientôt') + ' · toutes les 3 min</span></summary><div class="stack" style="gap:8px;margin-top:8px">' +
       '<div class="small muted">Joueurs en jeu et éliminés, places, tables, re-entries, add-ons, jetons en jeu, niveau et temps restant : tout est copié toutes les 3 minutes' + (IS_PC_APP() ? ', et la dernière copie est aussi écrite dans ton Drive (Poker Academy › Sauvegardes › tournoi-en-cours.json)' : '') + '. Si l’appli plante, rouvre-la : le tournoi est là. En cas de fausse manœuvre, reprends une copie ci-dessous.</div>' +
@@ -687,6 +690,7 @@
     if (a === 'seatsToggle') { SEATS = !SEATS; return; }
     if (a === 'seatsShare') { var txt = seatText(), dn = function (m) { T().msg = m; save(); U().render(); }; if (window.PA_LEAGUE && window.PA_LEAGUE.shareText) window.PA_LEAGUE.shareText(txt, dn); else { try { navigator.clipboard.writeText(txt).then(function () { dn('Liste copiée : colle-la dans WhatsApp.'); }); } catch (e) {} } return; }
     if (a === 'seatsTv') { T().seatsTv = !T().seatsTv; T().msg = T().seatsTv ? 'La liste des places s’affiche en grand sur l’écran télé.' : null; save(); keepScroll(function () { U().render(); }); return; }
+    if (a === 'bakSkip') { bakSkip(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakNow') { bakNow(true); T().msg = 'Tournoi sauvegardé.'; save(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakRestore') { var bi = +t.getAttribute('data-v'), bb0 = baks()[bi]; if (bb0 && (typeof confirm !== 'function' || !hasT(ST) || confirm('Reprendre la copie de ' + hhmm(bb0.at) + ' ? L’état actuel est gardé dans les copies.'))) { restoreBak(bi); T().msg = 'Tournoi repris tel qu’il était le ' + hhmm(bb0.at) + '. Le chrono est en pause : relance-le.'; save(); } U().render(); return; }
     if (a === 'toggle') { if (ST.brk) { endBreak(); } else if (ST.since) { freeze(); ST.since = null; awake(false); } else { if (ST.t) ST.t.suspAt = null; ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
@@ -710,7 +714,7 @@
     else if (a === 'stopCancel') { STOP = null; }
     else if (a === 'stopStacks') { STOP = 'stacks'; }
     else if (a === 'stopAnnul') {
-      if (typeof confirm !== 'function' || confirm('Annuler ce tournoi ? Rien ne va au classement. Une copie de secours est gardée.')) { bakNow(true); ST.t = null; ST.since = null; ST.brk = null; awake(false); STOP = null; TAB = null; T().msg = 'Tournoi annulé. Rien n’est allé au classement ; une copie est gardée dans « Copies de secours ».'; }
+      if (typeof confirm !== 'function' || confirm('Annuler ce tournoi ? Rien ne va au classement. Une copie de secours est gardée.')) { bakNow(true); ST.t = null; bakSkip(); ST.since = null; ST.brk = null; awake(false); STOP = null; TAB = null; T().msg = 'Tournoi annulé. Rien n’est allé au classement ; une copie est gardée dans « Copies de secours ».'; }
     }
     else if (a === 'stopRank') {
       var ts0 = T(), alv = alivePl(), stk = alv.map(function (q) { var el = document.getElementById('stk' + ts0.players.indexOf(q)); var v = el ? parseInt(String(el.value).replace(/\s/g, ''), 10) : NaN; return { q: q, v: isNaN(v) ? -1 : v }; });
@@ -774,7 +778,7 @@
         // les joueurs sortis après lui remontent d'une place, et les lots suivent
         tu.players.forEach(function (q) { if (q.out && q !== pu && oldPl && q.place < oldPl) q.place++; });
         var pay2 = payout(tu); tu.players.forEach(function (q) { q.prize = q.out && pay2[q.place - 1] ? pay2[q.place - 1].amt : null; }); pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } var sn1 = snap(); delete sn1[pu.name]; seatSomewhere(pu); noteMoves(sn1, 'retour en jeu'); tu.msg = (a === 'reentry' && !reOpen(live()) ? '⚠️ Les re-entry sont fermées (fin du niveau ' + cfg().reEnd + '), enregistrée quand même. ' : '') + pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
-    else if (a === 'newT') { bakNow(true); if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
+    else if (a === 'newT') { bakNow(true); if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) { ST.t = null; bakSkip(); TAB = null; } }
     else if (a === 'print') { try { if (window.PAAndroid && window.PAAndroid.print) window.PAAndroid.print(); else window.print(); } catch (e3) {} return; }
     else if (a === 'entPlus') { T().entrants++; T().left++; }
     else if (a === 'entMinus') { if (T().entrants > 0) { T().entrants--; T().left = Math.max(0, T().left - 1); } }

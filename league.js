@@ -15,6 +15,18 @@
     return { list: [] };
   }
   function saveRaw(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  // reprise du championnat 2026 du club (classement au 15/11/2026, têtes mises à prix) : posée une seule fois sur chaque appareil,
+  // sauf si une reprise plus récente existe déjà ; la synchro garde ensuite la plus récente
+  var SEED2026 = {"at": 1794757123000, "date": "2026-11-15", "rows": [{"name": "MONPIERROT", "pts": 112}, {"name": "YO", "pts": 109.5}, {"name": "VILVOORD", "pts": 104}, {"name": "JR", "pts": 89.5}, {"name": "BASTOSS", "pts": 81}, {"name": "ENFANT2COEUR", "pts": 81}, {"name": "NARUTI", "pts": 79}, {"name": "ENFANT2GUETTO", "pts": 76}, {"name": "ENFANT2FISH", "pts": 75}, {"name": "TA_1_PB", "pts": 61}, {"name": "KAKTUSSE", "pts": 55}, {"name": "BANEEST", "pts": 53}, {"name": "VINCENT", "pts": 52.5}, {"name": "POOLSHARKS", "pts": 51.5}, {"name": "SIM", "pts": 48.5}, {"name": "PALLIX", "pts": 39}, {"name": "GREG", "pts": 38}, {"name": "UNDERTAKER", "pts": 36.5}, {"name": "JOHNY", "pts": 35}, {"name": "AIGLEFOUR", "pts": 25}, {"name": "JUJU", "pts": 10.5}, {"name": "NARDOS", "pts": 3}, {"name": "ROBIN", "pts": 3}, {"name": "MACHINEGUN", "pts": 2}, {"name": "ANNAELLE", "pts": 1}], "holders": {"mercredi": "YO", "deep": ["NARUTI", "VILVOORD"]}};
+  function seedClub() {
+    try {
+      var d = load(); if (d.seed2026) return;
+      d.seed2026 = true; d.carry = d.carry || {};
+      var cur = d.carry['2026']; if (!cur || !cur.rows || !cur.rows.length || (cur.at || 0) < SEED2026.at) d.carry['2026'] = JSON.parse(JSON.stringify(SEED2026));
+      var ros = (d.roster || CLUB).slice(), ks = ros.map(key); SEED2026.rows.forEach(function (r) { if (ks.indexOf(key(r.name)) < 0) { ros.push(r.name); ks.push(key(r.name)); } });
+      d.roster = ros; d.rosterAt = Math.max(d.rosterAt || 0, SEED2026.at); saveRaw(d);
+    } catch (e) {}
+  }
   function save(d) { saveRaw(d); if (window.PA_CLUBSYNC) window.PA_CLUBSYNC.dirty(); }
   function key(n) { return String(n || '').trim().toLowerCase(); }
   function f1(x) { return (Math.round(x * 100) / 100).toString().replace('.', ','); }
@@ -349,5 +361,6 @@
   });
   // retirer un tournoi du classement (il sera réenregistré corrigé)
   function removeRec(id) { var d = load(); d.list = d.list.filter(function (x) { return x.id !== id; }); d.deleted = (d.deleted || []).concat([id]); save(d); }
+  seedClub();
   window.PA_LEAGUE = { remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
