@@ -289,5 +289,5 @@
     links: '<a class="btn block" href="#lecon-25">Relire le chapitre 25</a><a class="btn block" href="#lecon-28">Relire le chapitre 28</a>' };
 
   window.PA_TAILLE = { view: function () { return exView('taille'); }, faceView: function () { return exView('facemise'); }, trView: function () { return exView('turnriver'); },
-    decide: decide, makeQ: makeQ, faceMake: faceMake, trMake: trMake, BOARDS: BOARDS, TURNS: TURNS, RIVERS: RIVERS, EX: EX, reset: function () { Object.keys(EX).forEach(function (k) { EX[k].Q = null; }); } };
+    decide: decide, _face: faceDecide, _tr: trDecide, makeQ: makeQ, faceMake: faceMake, trMake: trMake, BOARDS: BOARDS, TURNS: TURNS, RIVERS: RIVERS, EX: EX, reset: function () { Object.keys(EX).forEach(function (k) { EX[k].Q = null; }); } };
 })();

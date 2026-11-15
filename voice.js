@@ -38,7 +38,7 @@
     ['solveur', 'Le solveur', 'solveur gto flop turn river'], ['apf', 'Après le flop : que faire ?', 'apres le flop postflop c-bet'],
     ['partie', 'Jouer une partie', 'partie sit go tournoi heads-up jeu table'], ['testmenu', 'Test de profil', 'test profil'],
     ['analyser', 'Analyser mes mains', 'analyser historique winamax mains import fuites'], ['bankroll', 'Bankroll', 'bankroll argent gains buy-in'],
-    ['coach', 'Mode coach', 'coach quiz club lien lionel yo'], ['sauvegarde', 'Sauvegarde', 'sauvegarde drive synchronisation'],
+    ['yo', 'Pose ta question à Yo', 'question demander yo coup conseil taille mise check flop'], ['coach', 'Mode coach', 'coach quiz club lien lionel yo'], ['sauvegarde', 'Sauvegarde', 'sauvegarde drive synchronisation'],
     ['reglages', 'Réglages', 'reglages parametres theme taille texte'], ['outils', 'Outils', 'outils']
   ];
   var Q = { q: '', listening: false, msg: '' };
@@ -61,8 +61,9 @@
   function resHtml() {
     var ui = U(), r = results(Q.q);
     if (norm(Q.q).length < 2) return '<div class="small muted">Tape au moins deux lettres, ou touche le micro et dis par exemple « squeeze », « tapis moyen » ou « mise sonde ».</div>';
-    if (!r.length) return '<div class="small muted">Rien trouvé pour « ' + ui.esc(Q.q) + ' ».</div>';
-    return r.map(function (x) { return '<a class="card" href="' + x.href + '" style="display:block;text-decoration:none;color:var(--ink)"><b>' + ui.esc(x.t) + '</b><div class="small muted">' + ui.esc(x.d) + '</div></a>'; }).join('');
+    var yoL = window.PA_YO && norm(Q.q).split(' ').length >= 4 ? '<a class="btn block gold" href="#yo" data-vact="toyo" style="white-space:normal">💬 Poser cette question à Yo</a>' : '';
+    if (!r.length) return yoL + '<div class="small muted">Rien trouvé pour « ' + ui.esc(Q.q) + ' ».' + (yoL ? '' : ' Pour une question sur un coup, utilise « Pose ta question à Yo ».') + '</div>';
+    return yoL + r.map(function (x) { return '<a class="card" href="' + x.href + '" style="display:block;text-decoration:none;color:var(--ink)"><b>' + ui.esc(x.t) + '</b><div class="small muted">' + ui.esc(x.d) + '</div></a>'; }).join('');
   }
   function view() {
     var ui = U();
@@ -77,6 +78,7 @@
   });
   document.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('[data-vact]') : null; if (!t) return;
+    if (t.getAttribute('data-vact') === 'toyo') { if (window.PA_YO) window.PA_YO.ask(Q.q); return; }
     if (t.getAttribute('data-vact') === 'gs') {
       Q.listening = true; Q.msg = ''; U().render();
       listen('Que cherches-tu ?', function (txt, err) { Q.listening = false; if (txt === null) Q.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) Q.msg = 'Je n’ai rien entendu.'; else Q.q = txt; U().render(); });
