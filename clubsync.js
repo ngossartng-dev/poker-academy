@@ -124,7 +124,7 @@
     var rd = new FileReader(); rd.onload = function () { importText(String(rd.result || '')); }; rd.readAsText(e.target.files[0]);
   });
   window.__paClubPicked = function (name) { if (name) { CS.msg = 'Fichier choisi : ' + name + '.'; sync(true); } else U() && U().render(); };
-  if (IS_PC || IS_ANDROID) {
+  if ((IS_PC || IS_ANDROID) && !window.PA_RANGEWIN) {
     setTimeout(function () { sync(false); }, 2500);
     setInterval(function () { if (!document.hidden) sync(false); }, 60000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) sync(false); });

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PA = window.PA, $ = function (s, r) { return (r || document).querySelector(s); };
-  var VERSION = '2.58.0';
+  var VERSION = '2.58.1';
   var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -182,7 +182,7 @@
   try { if (localStorage.getItem('pa2pips') === '0') RS.pips = false; } catch (e) {}
   function openRange(ctx) {
     // appli PC : Ma range s'ouvre toujours dans sa propre fenêtre (avec la situation en cours)
-    if (PC_FULL && (location.hash || '').indexOf('#rangewin') !== 0 && !ui.rwFail) {
+    if (PC_FULL && !window.PA_RANGEWIN && !ui.rwFail) {
       try { localStorage.setItem('pa2rwctx', JSON.stringify({ sit: ctx && ctx.sit || null, hand: ctx && ctx.hand || null, at: Date.now() })); } catch (e) {}
       var pr = pcRange('open');
       if (pr && pr.then) { pr.then(function (r) { if (!r.ok) throw 0; }).catch(function () { ui.rwFail = true; openRange(ctx); }); return; }
@@ -380,7 +380,7 @@
     if (prof === 'perso' && plr && plr.testDone) ed += '<div class="row"><button class="btn" data-act="toggleEdit">' + (RS.edit ? 'Terminer la modification' : 'Modifier cette range') + '</button>' + (RS.edit && plan3 ? '<div class="brush">' + [['gris', 'Gris', CSSVAR['a-fold']], ['rose', 'Rose', '#f59aa2'], ['vert', 'Vert', '#63e083'], ['orange', 'Orange', '#f4a15d']].map(function (b) { return '<button class="' + (RS.brush === b[0] ? 'on' : '') + '" data-act="rsBrush" data-v="' + b[0] + '"><i style="background:' + b[2] + '"></i>' + b[1] + '</button>'; }).join('') + '</div>' : '') + (RS.edit ? '<span class="muted small">' + (plan3 ? (RS.brush ? 'Pinceau ' + RS.brush + ' : touche les cases à mettre en ' + RS.brush + '. Touche à nouveau la couleur pour revenir au mode « chaque toucher change la couleur ».' : 'Choisis une couleur puis touche les cases, ou touche une case pour faire tourner sa couleur : gris, rose, vert, orange.') + ' Tu peux ainsi élargir ta range au cas par cas. La suite face à une relance vaut pour tout le groupe de places (UTG à MP ; LJ à CO ; bouton ; petite blinde).' : 'Touchez une case pour changer son action.') + '</span>' : '') + '</div>';
     if (plr && RS.profile === 'perso' && plr.persoProp && propCount(plr)) ed = '<div class="prop-bar"><div><b>Le test de profil te propose ' + propCount(plr) + ' changement' + (propCount(plr) > 1 ? 's' : '') + '</b>' + (pmap ? ' (' + Object.keys(pmap).length + ' sur cette grille, entouré' + (Object.keys(pmap).length > 1 ? 's' : '') + ' de pointillés bleus)' : ' (aucun sur cette grille)') + '. Ta range ne change que si tu acceptes : touche une case entourée pour accepter son changement.</div><div class="row"><button class="btn" data-act="propAll">Tout accepter</button><button class="btn" data-act="propNone">Tout refuser</button></div></div>' + ed;
     out = out.replace('@@EDIT@@', ed);
-    if (PC_FULL && (location.hash || '').indexOf('#rangewin') !== 0) out += '<button class="btn block" data-act="rwOpen">🪟 Ouvrir Ma range dans une fenêtre à part</button>';
+    if (PC_FULL && !window.PA_RANGEWIN) out += '<button class="btn block" data-act="rwOpen">🪟 Ouvrir Ma range dans une fenêtre à part</button>';
     // rappel discret : les tailles du club après le flop (repliable)
     if (window.PA_MEMO && window.PA_MEMO.clubSizes) {
       var CZ = window.PA_MEMO.clubSizes(), szLine = function (r) { return '<div class="szm-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; };
@@ -993,7 +993,7 @@
     return '<div class="rangewin"><div class="row rw-bar"><button class="btn' + (ui.rwTop ? ' gold' : '') + '" data-act="rwTop">' + (ui.rwTop ? '📌 Toujours devant : oui' : '📌 Garder devant les autres fenêtres') + '</button></div><div class="stack" id="rangeFull">' + rangeBody(true) + '</div></div>';
   }
   if (window.addEventListener) window.addEventListener('storage', function (e) {
-    if (e.key !== 'pa2rwctx' || !e.newValue || (location.hash || '').indexOf('#rangewin') !== 0) return;
+    if (e.key !== 'pa2rwctx' || !e.newValue || !window.PA_RANGEWIN) return;
     try { applyCtx(JSON.parse(e.newValue)); } catch (x) {} render(); window.scrollTo(0, 0);
   });
   function pcRange(act, on) { try { return fetch('/api/rangewin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ act: act, on: !!on }) }); } catch (e) { return null; } }
@@ -1002,6 +1002,7 @@
     var app = $('#root');
     var s = PA.load(), p = PA.player();
     var r = (location.hash || '#home').slice(1).split('?')[0];
+    if (window.PA_RANGEWIN) { if (r !== 'rangewin') { try { history.replaceState(null, '', '#rangewin'); } catch (e) {} } r = 'rangewin'; }
     // on ne remonte en haut que si l’on change de page : un rafraîchissement en arrière-plan (mise à jour, synchronisation, téléchargement) garde la position
     var hk = location.hash || '#home', keepY = hk === ui.lastHash ? (window.scrollY || 0) : 0; ui.lastHash = hk;
     function top() { window.scrollTo(0, keepY); }
@@ -1196,6 +1197,6 @@
     document.addEventListener('scroll', hide, true);
   })();
   window.PA_UI_openRange = function (ctx) { openRange(ctx); };
-  window.PA_UI = { onStorage: function () { if ((location.hash || '').indexOf('#rangewin') === 0) render(); else rerenderRange(); }, version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, handText: handText, IC: IC };
+  window.PA_UI = { onStorage: function () { if (window.PA_RANGEWIN) render(); else rerenderRange(); }, version: VERSION, render: render, shell: shell, yo: yo, esc: esc, actName: actName, describeSit: describeSit, handText: handText, IC: IC };
   render();
 })();

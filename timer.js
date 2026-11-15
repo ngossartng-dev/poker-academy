@@ -40,9 +40,9 @@
       if (U() && /^#tournoi/.test(location.hash)) U().render();
     }).catch(function () {});
   }, 2000);
-  setInterval(function () { var a = baks(); if (!a.length || Date.now() - a[0].at >= BEVERY) bakNow(false); }, 30000);
+  if (!window.PA_RANGEWIN) setInterval(function () { var a = baks(); if (!a.length || Date.now() - a[0].at >= BEVERY) bakNow(false); }, 30000);
   // copie aussi quand l'appli passe en arrière-plan (écran éteint, autre appli ouverte) : c'est souvent là qu'Android ferme une appli
-  document.addEventListener('visibilitychange', function () { if (document.hidden) bakNow(false); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && !window.PA_RANGEWIN) bakNow(false); });
   function restoreBak(i) {
     var b = baks()[i]; if (!b) return false;
     bakNow(true); // l'état actuel est gardé avant d'être remplacé

@@ -1,6 +1,8 @@
 /* Poker Academy v2.0 — cœur : données, ranges, stockage, moteur de questions */
 (function () {
   'use strict';
+  // appli PC : la fenêtre « Ma range » à part ne fait que la range (pas de synchronisation, pas de bandeaux, pas de navigation)
+  try { window.PA_RANGEWIN = (location.hash || '').indexOf('#rangewin') === 0; } catch (e) { window.PA_RANGEWIN = false; }
   var D = window.PA_DATA;
   var RANKS = 'AKQJT98765432';
   var POS = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
@@ -44,7 +46,7 @@
   // La fenêtre Ma range relit tout ; la fenêtre principale ne reprend que la range (Perso, profil), pour ne rien perdre en cours de route.
   if (window.addEventListener) window.addEventListener('storage', function (e) {
     if (e.key !== KEY || !e.newValue) return;
-    if ((location.hash || '').indexOf('#rangewin') === 0) mem = null;
+    if (window.PA_RANGEWIN) mem = null;
     else {
       try {
         var n = JSON.parse(e.newValue), m = load();

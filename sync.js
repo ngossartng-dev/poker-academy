@@ -25,6 +25,7 @@
 
   /* ---------- Bandeau ---------- */
   function banner(text, btn, href) {
+    if (window.PA_RANGEWIN) return;
     var b = document.getElementById('paBanner');
     if (!b) { b = document.createElement('div'); b.id = 'paBanner'; b.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#1b1b20;border:2px solid var(--gold,#ffd23f);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 6px 24px #000a;font-size:.95em'; document.body.appendChild(b); }
     b.innerHTML = '<span style="flex:1;min-width:180px">' + text + '</span>' + (btn ? '<a class="btn gold" href="' + href + '" data-syact="close" style="min-height:40px">' + btn + '</a>' : '') + '<button class="btn" data-syact="close" style="min-height:40px">Fermer</button>';
@@ -47,7 +48,7 @@
     var hh = Object.keys(snap.data).filter(function (k) { return /^pa2hh_/.test(k); });
     Object.keys(snap.data).forEach(function (k) { if (/^pa2/.test(k) && !/^pa2hh_/.test(k)) localStorage.setItem(k, snap.data[k]); });
     setMeta({ changedAt: snap.savedAt, restoredAt: Date.now(), savedAt: snap.savedAt, syncedAt: snap.savedAt });
-    function fin() { location.hash = '#home'; location.reload(); }
+    function fin() { location.hash = window.PA_RANGEWIN ? '#rangewin' : '#home'; location.reload(); }
     var S = window.PA_STORE;
     if (!S) { hh.forEach(function (k) { try { localStorage.setItem(k, snap.data[k]); } catch (e) {} }); fin(); return; }
     S.clearNow(function () {
@@ -81,7 +82,7 @@
       .catch(function () { cb && cb(false); });
   }
   function pcLoad(name, cb) { fetch('/api/backup?name=' + encodeURIComponent(name), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(cb).catch(function () { cb(null); }); }
-  if (IS_PC) {
+  if (IS_PC && !window.PA_RANGEWIN) {
     setInterval(function () { pcSave(false); }, 5 * 60 * 1000);
     document.addEventListener('visibilitychange', function () { if (document.hidden) pcSave(false); });
     window.addEventListener('beforeunload', function () { pcSave(false); });
@@ -132,7 +133,7 @@
       done();
     });
   }
-  if (!CLUB && (IS_PC || hasAndroidSync())) {
+  if (!CLUB && !window.PA_RANGEWIN && (IS_PC || hasAndroidSync())) {
     setTimeout(function () {
       try { var msg = sessionStorage.getItem('pa2syncMsg'); if (msg) { sessionStorage.removeItem('pa2syncMsg'); var p = msg.split('|'); banner('Progression reprise depuis ' + (p[0] === 'PC' ? 'le PC' : 'le téléphone') + ' (' + dt(+p[1]) + ').'); } } catch (e) {}
       syncNow(true);
