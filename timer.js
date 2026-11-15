@@ -151,7 +151,7 @@
     return '<div class="card stack" style="text-align:left"><b>' + (named ? 'Re-entries et add-ons' : 'Les compteurs (sans pseudos)') + '</b>' +
       (named ? '' : line('Joueurs inscrits', 'entMinus', t.entrants, 'entPlus') +
       '<div class="row" style="gap:8px"><button class="btn gold" data-tmact="out" style="flex:1;font-size:1.15em"' + (t.left > 0 ? '' : ' disabled') + '>Joueur éliminé</button><button class="btn" data-tmact="undoOut">Annuler</button></div>') +
-      line('Re-entries', 'reMinus', t.re, 'rePlus') +
+      (named ? '<div class="small muted">Re-entries : ' + t.re + ' (comptées avec le bouton « Re-entry » de chaque joueur).</div>' : line('Re-entries', 'reMinus', t.re, 'rePlus')) +
       line('Add-ons', 'addMinus', t.add, 'addPlus') +
       '<div class="small muted">Un éliminé ne retire aucun jeton : ses jetons sont passés à un autre joueur. Une re-entry remet un joueur en jeu et ajoute un tapis. Le tapis moyen = jetons en jeu ÷ joueurs restants.</div></div>';
   }
@@ -166,7 +166,21 @@
     return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.n - a.n || (a.last === b.last ? 0 : a.last < b.last ? 1 : -1) || a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }); });
   }
   function inT(nm) { return T().players.some(function (x) { return x.name.toLowerCase() === String(nm).toLowerCase(); }); }
-  function addOne(nm) { var tt = T(); nm = String(nm || '').trim(); if (!nm || inT(nm)) return false; var pl = { name: nm.slice(0, 30), out: false, entries: 1 }; var sn2 = tt.drawn ? snap() : null; tt.players.push(pl); if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); } return true; }
+  function addOne(nm) {
+    var tt = T(); nm = String(nm || '').trim(); if (!nm || inT(nm)) return false;
+    var pl = { name: nm.slice(0, 30), out: false, entries: 1 }, sn2 = tt.drawn ? snap() : null;
+    if (tt.drawn) { pl.late = Date.now(); tt.players.forEach(function (q) { if (q.out && q.place) q.place++; }); } // un joueur de plus : les sortis reculent d'une place
+    tt.players.push(pl);
+    if (tt.drawn) { seatSomewhere(pl); noteMoves(sn2, 'inscription tardive'); var sn3 = snap(); rebalance(); noteMoves(sn3); fixPrizes(tt); markDirty(tt); }
+    return true;
+  }
+  function fixPrizes(t) { var pay = payout(t); t.players.forEach(function (q) { q.prize = q.out && pay[q.place - 1] ? pay[q.place - 1].amt : null; }); }
+  // le tournoi a changé après l'enregistrement au classement
+  function markDirty(t) { if (t.saved) t.dirty = true; }
+  // arrivées tardives : jusqu'à la fin de la 1re pause (réglable), une fois les tables tirées
+  function firstPause(L) { for (var i = 0; i < L.length; i++) if (L[i].pause) return i; return -1; }
+  function lateOpen(s) { var c = cfg(), t = T(); if (!t.drawn || c.lateEnd === 'none' || t.lateForce) return true; s = s || live(); var fp = firstPause(s.L); return fp < 0 || s.idx <= fp; }
+  function lateMsg() { return 'Les arrivées tardives sont fermées depuis la fin de la 1re pause. <button class="btn" data-tmact="lateForce">Inscrire quand même</button>'; }
   function alivePl() { return T().players.filter(function (x) { return !x.out; }); }
   /* ---------- Modifier les blindes du niveau en cours (toucher les blindes sur la page du tournoi) ---------- */
   var BLED = false, BL_KIND = null;
@@ -257,7 +271,8 @@
     if (left > 1 && left <= t.size && Object.keys(tablesOf()).length === 1 && !t.finalSaid) { t.finalSaid = true; moves.push('Table finale !'); }
     return moves;
   }
-  var FIND = { q: '', listening: false, msg: '' }, KO = null, MSHEET = false;
+  var FIND = { q: '', listening: false, msg: '' }, KO = null, MSHEET = false, STOP = null, STOPMSG = '', FULL = false;
+  function endBreak() { if (!ST.brk) return; ST.brk = null; ST.since = Date.now(); awake(true); beep(3); say('Fin de la pause, retour aux tables.'); }
   // changements de place : on compare les places avant et après, pour lister clairement qui doit bouger
   function snap() { var o = {}; alivePl().forEach(function (x) { o[x.name] = [x.table, x.seat]; }); return o; }
   function noteMoves(before, why) {
@@ -304,6 +319,18 @@
       return '<div class="tn-pick-h">Table ' + id + '</div><div class="tn-pick">' + tb[id].slice().sort(function (a, b) { return a.seat - b.seat; }).map(function (q) { return '<button class="tn-kb" data-tmact="ko" data-v="' + t.players.indexOf(q) + '"><small>' + q.seat + '</small> ' + ui.esc(q.name) + '</button>'; }).join('') + '</div>';
     }).join('') + '<button class="btn" data-tmact="koCancel">Annuler</button></div>';
   }
+  // arrêter un tournoi en cours : annuler, ou classer les joueurs restants selon leur tapis
+  function stopCard(t) {
+    var ui = U(), c = cfg(), al = alivePl().slice().sort(function (a, b) { return (a.table || 0) - (b.table || 0) || (a.seat || 0) - (b.seat || 0); });
+    var h = '<div class="card stack" style="border-color:#e0464c"><b>Pause, suspension, arrêt</b>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="brk" data-v="10">☕ Pause imprévue 10 min</button><button class="btn" data-tmact="susp">⏸ Suspendre la soirée</button></div>' +
+      '<div class="small muted">Suspendre : tout est gardé, tu reprends quand tu veux, même un autre jour. Arrivées tardives : ' + (c.lateEnd === 'none' ? 'sans limite' : 'jusqu’à la fin de la 1re pause') + ' <button class="btn" data-tmact="lateMode">' + (c.lateEnd === 'none' ? 'Limiter à la 1re pause' : 'Sans limite') + '</button></div>' +
+      '<button class="btn block" data-tmact="stopT" style="border-color:#e0464c">' + (STOP ? 'Fermer' : '⏹ Arrêter le tournoi…') + '</button>';
+    if (STOP === 'menu') h += '<button class="btn block" data-tmact="stopStacks">Arrêter maintenant et classer les joueurs restants selon leur tapis</button><button class="btn block" data-tmact="stopAnnul">Annuler le tournoi (rien au classement)</button><div class="small muted">Pour revenir à un moment précis de la soirée : « Copies de secours » plus bas.</div>';
+    if (STOP === 'stacks') h += '<div class="small muted">Compte les jetons de chaque joueur encore en jeu. Le plus gros tapis termine 1er, le plus petit ' + al.length + 'e.</div>' + al.map(function (q) { var i = t.players.indexOf(q); return '<div class="tn-set"><span>' + ui.esc(q.name) + ' <small class="muted">T' + q.table + ' · S' + q.seat + '</small></span><input id="stk' + i + '" type="number" inputmode="numeric" min="0" class="tn-in" style="width:140px" placeholder="jetons"></div>'; }).join('') +
+      (STOPMSG ? '<div class="small" style="color:#e0464c">' + STOPMSG + '</div>' : '') + '<div class="row" style="gap:8px"><button class="btn gold" data-tmact="stopRank" style="flex:1">Classer et terminer</button><button class="btn" data-tmact="stopCancel">Annuler</button></div>';
+    return h + '</div>';
+  }
   function lastOuts(n) { return T().players.filter(function (x) { return x.out; }).sort(function (a, b) { return (b.koAt || 0) - (a.koAt || 0) || a.place - b.place; }).slice(0, n); }
   function lastOutsHtml() {
     var ui = U(), t = T(), L = lastOuts(3); if (!L.length) return '';
@@ -320,6 +347,7 @@
   function finHtml(t) {
     var ui = U(), LG = window.PA_LEAGUE, pay = payout(t), pod = [alivePl()[0]].concat(t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; }).slice(0, 2));
     var h = '<div class="card stack tn-fin"><div class="tn-fin-t">🏆 Fin du tournoi</div><div class="tn-pod">' + pod.map(function (x, i) { return '<div class="tp' + (i + 1) + '"><i>' + ['🥇', '🥈', '🥉'][i] + '</i><b>' + ui.esc(x.name) + '</b><span>' + (i + 1) + (i ? 'e' : 'er') + (pay[i] ? ' · ' + eur(pay[i].amt) : '') + '</span></div>'; }).join('') + '</div>';
+    if (LG && t.saved && t.dirty) h += '<div class="tn-msg">Le tournoi a été corrigé depuis l’enregistrement.</div><button class="btn gold block" data-tmact="saveLeague">Mettre à jour le classement</button>';
     if (LG) h += t.saved ? '<div class="tn-done">✓ Tournoi enregistré au classement</div><button class="btn gold block" data-tmact="shareSum">📤 Envoyer le résultat au groupe (WhatsApp…)</button>' + (window.PA_EXPORT ? '<button class="btn block" data-tmact="shareImg">🖼️ Image du classement</button>' : '')
       : '<button class="btn gold block" data-tmact="saveLeague">1. Enregistrer au classement</button><div class="small muted" style="text-align:center">Ensuite : 2. envoyer le résultat au groupe.</div>';
     return h + '<button class="btn block" data-tmact="newT">Nouveau tournoi</button></div>';
@@ -347,7 +375,7 @@
   }
   function tournoiView() {
     var ui = U(), t = T(), s = live(), c = cfg(), LG = window.PA_LEAGUE, esc = ui.esc;
-    if (LG) { t.type = t.type || 'mercredi'; t.date = t.date || LG.today(); } syncHolder(t);
+    if (LG) { t.date = t.date || LG.today(); t.type = t.type || ({ 3: 'mercredi', 5: 'deep' }[new Date(t.date + 'T12:00:00').getDay()] || 'libre'); } syncHolder(t);
     var tab = TAB || (t.drawn ? 'tables' : 'joueurs');
     var typeName = LG ? { mercredi: 'Tournoi du mercredi', deep: 'Deep du vendredi', libre: 'Hors championnat' }[t.type] : 'Tournoi';
     var dateTxt = t.date ? t.date.split('-').reverse().join('/') : '';
@@ -359,10 +387,13 @@
     if (lv) {
       out += '<div class="tn-lvl">' + (lv.pause ? 'Pause' : 'Niveau ' + lv.n) + '</div>' + (BLED && !lv.pause ? blEditor(s) : (lv.pause ? '<div class="tn-blinds">Pause</div>' : '<button class="tn-blinds tn-bl-btn" data-tmact="blEdit" title="Toucher pour modifier les blindes">' + fmt(lv.sb) + ' / ' + fmt(lv.bb) + '<span class="tn-bl-pen">✏️</span></button>') + (lv.ante ? '<div class="tn-ante">' + anteTxt(lv) + '</div>' : '')) +
         '<div class="tn-clock" id="tmClock2">' + mmss(s.rem) + '</div><div class="tn-next">' + nextInfo(s) + '</div>' +
-        '<div class="tn-ctrl"><button data-tmact="prev" aria-label="Niveau précédent">⏮</button><button data-tmact="minus">−1</button><button class="tn-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : (ST.idx || ST.rem !== s.L[0].min * 60 ? '▶ Reprendre' : '▶ Lancer')) + '</button><button data-tmact="plus">+1</button><button data-tmact="next" aria-label="Niveau suivant">⏭</button></div>' +
+        '<div class="tn-ctrl"><button data-tmact="prev" aria-label="Niveau précédent">⏮</button><button data-tmact="minus">−1</button><button class="tn-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : (ST.brk || ST.idx || ST.rem !== s.L[0].min * 60 ? '▶ Reprendre' : '▶ Lancer')) + '</button><button data-tmact="plus">+1</button><button data-tmact="next" aria-label="Niveau suivant">⏭</button></div>' +
         '<div class="tn-links"><a class="tn-big" href="#ecran">📺 Écran télé ›</a>' + (canCast() ? '<button class="tn-big tn-vb" data-tmact="cast">📡 Diffuser sur la télé</button>' : '') + '<a class="tn-big" href="#minuteur">Minuteur ›</a><a class="tn-big" href="#guide?g=soiree">❓ Aide</a><button class="tn-big tn-vb" data-tmact="voice">' + (vOn() ? '🔊 Voix' : '🔇 Voix') + '</button>' + (RM.on ? '<button class="tn-big tn-vb" data-tmact="tab" data-v="reglages">📱 Télécommande ' + RM.code + '</button>' : '') + '</div>';
     }
     out += '</div>';
+    if (ST.brk) out += '<div class="card stack tn-brk"><b style="font-size:1.3em">☕ Pause · reprise dans <span id="tnBrk">' + mmss(Math.max(0, (ST.brk.until - Date.now()) / 1000)) + '</span></b><div class="small muted">Le niveau en cours est arrêté et reprendra où il en était. La structure ne change pas.</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-tmact="brk" data-v="5">+5 min</button><button class="btn gold" data-tmact="brkEnd">▶ Reprendre maintenant</button></div></div>';
+    else if (t.suspAt && !ST.since) out += '<div class="card stack tn-brk"><b>⏸ Tournoi suspendu le ' + new Date(t.suspAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' à ' + new Date(t.suspAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</b><div class="small muted">Tables, sorties et chrono sont gardés tels quels.</div><button class="btn gold block" data-tmact="toggle">▶ Reprendre le tournoi</button></div>';
+    else if (t.drawn && alivePl().length > 1 && run) out += '<div class="row tn-pz" style="gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn" data-tmact="brk" data-v="10">☕ Pause imprévue 10 min</button><button class="btn" data-tmact="brk" data-v="5">☕ 5 min</button></div>';
     var ended = stepOf(t) === 3;
     out += stepsHtml(t);
     if (ended) out += finHtml(t);
@@ -413,7 +444,7 @@
         '<div class="small muted">Le chiffre = tournois joués au championnat. ' + (t.drawn ? 'Tables tirées : un nouveau présent est placé à la table la moins remplie.' : 'Retouche un nom pour le retirer.') + '</div></div>';
       var inG = t.players.filter(function (x) { return !x.out; }).sort(function (a, b) { return (a.table || 99) - (b.table || 99) || (a.seat || 0) - (b.seat || 0); });
       var outL = t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; });
-      if (inG.length) out += '<div class="card stack"><b>En jeu · ' + inG.length + '</b>' + inG.map(function (x) { var i = t.players.indexOf(x); return '<div class="tn-row"><i>' + esc(x.name.charAt(0).toUpperCase()) + '</i><span><b>' + esc(x.name) + '</b><small>' + (x.table ? 'Table ' + x.table + ' · siège ' + x.seat : 'pas encore placé') + (x.entries > 1 ? ' · ' + x.entries + ' entrées' : '') + (x.bonus ? ' · prime +' + x.bonus : '') + '</small></span>' + (t.drawn ? '<button class="btn" data-tmact="ko" data-v="' + i + '">Sorti</button>' : '<button class="btn" data-tmact="delP" data-v="' + i + '" aria-label="Retirer">✕</button>') + '</div>'; }).join('') + '</div>';
+      if (inG.length) out += '<div class="card stack"><b>En jeu · ' + inG.length + '</b>' + inG.map(function (x) { var i = t.players.indexOf(x); return '<div class="tn-row"><i>' + esc(x.name.charAt(0).toUpperCase()) + '</i><span><b>' + esc(x.name) + '</b><small>' + (x.table ? 'Table ' + x.table + ' · siège ' + x.seat : 'pas encore placé') + (x.entries > 1 ? ' · ' + x.entries + ' entrées' : '') + (x.bonus ? ' · prime +' + x.bonus : '') + '</small></span>' + (t.drawn ? '<button class="btn" data-tmact="rmP" data-v="' + i + '" title="Inscrit par erreur : retirer sans place ni points" aria-label="Retirer">✕</button><button class="btn" data-tmact="ko" data-v="' + i + '">Sorti</button>' : '<button class="btn" data-tmact="delP" data-v="' + i + '" aria-label="Retirer">✕</button>') + '</div>'; }).join('') + '</div>';
       if (outL.length) out += '<div class="card stack"><b>Éliminés · ' + outL.length + '</b>' + outL.map(function (x) { var i = t.players.indexOf(x); return '<div class="tn-row tn-out"><i>' + x.place + '</i><span><b>' + esc(x.name) + '</b><small>' + (x.koBy ? 'par ' + esc(x.koBy) : '') + (x.koAt ? ' · ' + new Date(x.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '') + (x.koLevel ? ' · ' + x.koLevel : '') + '</small></span><button class="btn" data-tmact="reentry" data-v="' + i + '">Re-entry</button><button class="btn" data-tmact="unko" data-v="' + i + '" aria-label="Annuler">↺</button></div>'; }).join('') + '</div>';
       var ML = t.moveLog || [];
       if (ML.length) out += '<details class="card"><summary style="cursor:pointer"><b>Historique des déplacements · ' + ML.length + '</b></summary><div class="stack" style="gap:6px;margin-top:8px">' + ML.slice().reverse().map(function (m) { return '<div class="small">' + new Date(m.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · <b>' + esc(m.name) + '</b> : ' + (m.ft ? 'table ' + m.ft + ' siège ' + m.fs : 'nouveau') + ' → table ' + m.tt + ' siège ' + m.ts + ' <span class="muted">(' + m.why + ')</span></div>'; }).join('') + '</div></details>';
@@ -428,7 +459,7 @@
         '<div class="card stack"><b>Les jetons</b>' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Re-entry (0 = départ)') + cin('tnAdd', c.addStack, 'Add-on (0 = départ)') + '</div>' +
         rmCard() + '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
         '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">Structure : blindes, ante, durée, pauses</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
-        '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>';
+        (t.drawn && alivePl().length > 1 ? stopCard(t) : '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>');
     }
     out += bakCard();
     out += '</div>';
@@ -489,6 +520,7 @@
   function rulesSay(L, prev, idx) {
     var c = cfg(), l = L[idx], pl = L[prev], out = [];
     if (c.reEnd && pl && !pl.pause && pl.n === c.reEnd) out.push('Fin des re-entry.');
+    var tl = ST.t; if (tl && tl.drawn && c.lateEnd !== 'none' && !tl.lateForce && prev === firstPause(L) && idx > prev) out.push('Fin des arrivées tardives.');
     if (c.reEnd && pl && pl.pause && l && !l.pause && l.n === c.reEnd + 1 && !(L[prev - 1] && !L[prev - 1].pause && L[prev - 1].n === c.reEnd)) out.push('Fin des re-entry.');
     if (l && l.pause && c.addPause && pauseNo(L, idx) === c.addPause) out.push('C’est le moment de l’add-on : prenez-le maintenant.');
     var np = l && l.pause ? nextPlay(L, idx + 1) : l;
@@ -499,7 +531,8 @@
   function secsTo(s, ok) { var secs = s.rem; if (ok(s.L[s.idx], s.idx)) return secs; for (var k = s.idx + 1; k < s.L.length; k++) { secs += s.L[k].min * 60; if (ok(s.L[k], k)) return secs; } return -1; }
   function dur(secs) { var m = Math.max(1, Math.ceil(secs / 60)); return m >= 60 ? hm(m) : m + ' min'; }
   function rulesBadges(s) {
-    var c = cfg(), l = s.L[s.idx], b = [];
+    var c = cfg(), l = s.L[s.idx], b = [], tl = ST.t, fp = firstPause(s.L);
+    if (tl && tl.drawn && c.lateEnd !== 'none' && !tl.lateForce && fp >= 0) { if (s.idx <= fp) { var sl = secsTo(s, function (x, k) { return k === fp; }); b.push(s.idx === fp ? 'Arrivées tardives jusqu’à la fin de la pause' : 'Arrivées tardives jusqu’à la fin de la 1re pause' + (sl > 0 ? ' : encore ' + dur(sl) : '')); } else b.push('Arrivées tardives fermées'); }
     if (c.reEnd) {
       var se = secsTo(s, function (x) { return !x.pause && x.n === c.reEnd; });
       if (!reOpen(s)) b.push('Re-entry fermées');
@@ -615,6 +648,7 @@
     // règles avec le temps restant, panneaux tournants de l'écran télé
     ['tnRules', 'ecRules'].forEach(function (id) { var el = document.getElementById(id); if (!el) return; var h = id === 'tnRules' ? rulesInner(s, T()) : rulesBadges(s).map(badgeHtml).join(''); if (RULES_H[id] !== h) { RULES_H[id] = h; el.innerHTML = h; } });
     rotTick();
+    if (ST.brk) { var br = Math.max(0, (ST.brk.until - Date.now()) / 1000); ['tnBrk', 'ecBrk'].forEach(function (id) { var el = document.getElementById(id); if (el) el.textContent = mmss(br); }); if (br <= 0) { endBreak(); save(); U().render(); return; } if (Math.ceil(br) === 60 && lastBrk !== Math.floor(ST.brk.until / 1000)) { lastBrk = Math.floor(ST.brk.until / 1000); beep(1); say('Fin de la pause dans une minute. Retour aux tables.'); } }
     var stk = document.getElementById('tnStick'), hero = document.querySelector('.tn-hero'); if (stk && hero) stk.classList.toggle('stuck', hero.getBoundingClientRect().bottom < 0);
     if (ST.since) {
       if (s.idx !== ST.shown) {
@@ -627,7 +661,7 @@
     var hot = !!ST.since && s.rem <= 60, warm = !!ST.since && !hot && s.rem <= 120;
     cs.forEach(function (c) { c.textContent = mmss(s.rem); c.classList.toggle('ck-hot', hot); c.classList.toggle('ck-warm', warm); });
   }, 500);
-  var RULES_H = {}, warnBeep = -1;
+  var RULES_H = {}, warnBeep = -1, lastBrk = -1;
   function rotK(n) { return Math.floor(Date.now() / 15000) % n; }
   function rotTick() { var R = document.querySelectorAll('.ec-rot > div'); if (!R.length) return; var k = rotK(R.length); R.forEach(function (d, i) { d.classList.toggle('on', i === k); }); }
   window.addEventListener('scroll', function () { var stk = document.getElementById('tnStick'), hero = document.querySelector('.tn-hero'); if (stk && hero) stk.classList.toggle('stuck', hero.getBoundingClientRect().bottom < 0); }, { passive: true });
@@ -655,10 +689,42 @@
     if (a === 'seatsTv') { T().seatsTv = !T().seatsTv; T().msg = T().seatsTv ? 'La liste des places s’affiche en grand sur l’écran télé.' : null; save(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakNow') { bakNow(true); T().msg = 'Tournoi sauvegardé.'; save(); keepScroll(function () { U().render(); }); return; }
     if (a === 'bakRestore') { var bi = +t.getAttribute('data-v'), bb0 = baks()[bi]; if (bb0 && (typeof confirm !== 'function' || !hasT(ST) || confirm('Reprendre la copie de ' + hhmm(bb0.at) + ' ? L’état actuel est gardé dans les copies.'))) { restoreBak(bi); T().msg = 'Tournoi repris tel qu’il était le ' + hhmm(bb0.at) + '. Le chrono est en pause : relance-le.'; save(); } U().render(); return; }
-    if (a === 'toggle') { if (ST.since) { freeze(); ST.since = null; awake(false); } else { ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
+    if (a === 'toggle') { if (ST.brk) { endBreak(); } else if (ST.since) { freeze(); ST.since = null; awake(false); } else { if (ST.t) ST.t.suspAt = null; ST.idx = s.idx; ST.rem = s.rem; ST.since = Date.now(); ST.shown = s.idx; awake(true); beep(1); } }
     else if (a === 'next' || a === 'prev') { var k = Math.max(0, Math.min(L.length - 1, s.idx + (a === 'next' ? 1 : -1))); ST.idx = k; ST.rem = L[k].min * 60; ST.shown = k; if (ST.since) ST.since = Date.now(); if (k !== s.idx) { var ex = rulesSay(L, s.idx, k); say(lvlSay(L[k]) + (ex ? ' ' + ex : '')); } }
     else if (a === 'plus' || a === 'minus') { freeze(); ST.rem = Math.max(1, ST.rem + (a === 'plus' ? 60 : -60)); }
     else if (a === 'size') { T().size = +t.getAttribute('data-v'); T().msg = T().drawn ? 'Format changé : refais le tirage des tables.' : null; }
+    else if ((a === 'addNames' || a === 'addOpps' || a === 'addMember' || a === 'regAll') && !lateOpen(s)) { T().msg = lateMsg(); }
+    else if (a === 'lateMode') { ST.cfg = cfg(); ST.cfg.lateEnd = ST.cfg.lateEnd === 'none' ? 'pause' : 'none'; ST.structAt = Date.now(); if (window.PA_CLUBSYNC) setTimeout(window.PA_CLUBSYNC.dirty, 0); }
+    else if (a === 'lateForce') { T().lateForce = true; T().msg = 'Arrivées tardives rouvertes pour ce tournoi : inscris le joueur.'; }
+    else if (a === 'rmP') {
+      var tr0 = T(), ir = +t.getAttribute('data-v'), pr0 = tr0.players[ir];
+      if (pr0 && !pr0.out && (typeof confirm !== 'function' || confirm('Retirer ' + pr0.name + ' du tournoi (inscrit par erreur) ? Il n’aura ni place ni points.'))) {
+        var snr = snap(); tr0.players.splice(ir, 1); tr0.players.forEach(function (q) { if (q.out && q.place > 1) q.place--; });
+        rebalance(); noteMoves(snr); fixPrizes(tr0); markDirty(tr0); tr0.msg = pr0.name + ' est retiré du tournoi.';
+      }
+    }
+    else if (a === 'brk') { var mn = +t.getAttribute('data-v') || 10; if (ST.brk) ST.brk.until += mn * 60000; else { freeze(); ST.since = null; ST.brk = { until: Date.now() + mn * 60000 }; awake(true); say('Pause de ' + mn + ' minutes.'); } T().msg = null; }
+    else if (a === 'brkEnd') { endBreak(); }
+    else if (a === 'susp') { freeze(); ST.since = null; ST.brk = null; awake(false); T().suspAt = Date.now(); T().msg = 'Tournoi suspendu : tables, sorties et chrono sont gardés. Tu pourras reprendre à tout moment, même un autre jour.'; }
+    else if (a === 'stopT') { STOP = STOP ? null : 'menu'; }
+    else if (a === 'stopCancel') { STOP = null; }
+    else if (a === 'stopStacks') { STOP = 'stacks'; }
+    else if (a === 'stopAnnul') {
+      if (typeof confirm !== 'function' || confirm('Annuler ce tournoi ? Rien ne va au classement. Une copie de secours est gardée.')) { bakNow(true); ST.t = null; ST.since = null; ST.brk = null; awake(false); STOP = null; TAB = null; T().msg = 'Tournoi annulé. Rien n’est allé au classement ; une copie est gardée dans « Copies de secours ».'; }
+    }
+    else if (a === 'stopRank') {
+      var ts0 = T(), alv = alivePl(), stk = alv.map(function (q) { var el = document.getElementById('stk' + ts0.players.indexOf(q)); var v = el ? parseInt(String(el.value).replace(/\s/g, ''), 10) : NaN; return { q: q, v: isNaN(v) ? -1 : v }; });
+      if (stk.some(function (x) { return x.v < 0; })) { STOPMSG = 'Indique le tapis de chaque joueur encore en jeu.'; }
+      else {
+        stk.sort(function (x, y) { return x.v - y.v; }); // du plus petit tapis au plus gros
+        var now0 = Date.now(), lvn = lvlNow();
+        stk.slice(0, -1).forEach(function (x, k) { var q = x.q; q.out = true; q.place = alv.length - k; q.from = 'table ' + q.table + ' siège ' + q.seat; q.table = null; q.koAt = now0; q.koLevel = lvn; q.koBy = null; q.stack = x.v; q.stopped = true; });
+        stk[stk.length - 1].q.stack = stk[stk.length - 1].v;
+        fixPrizes(ts0); var pz0 = payout(ts0); if (pz0[0]) stk[stk.length - 1].q.prize = pz0[0].amt;
+        ts0.stoppedAt = now0; markDirty(ts0); freeze(); ST.since = null; ST.brk = null; awake(false); STOP = null; STOPMSG = ''; TAB = 'tables';
+        ts0.msg = 'Tournoi arrêté : les joueurs encore en jeu sont classés selon leur tapis. ' + stk[stk.length - 1].q.name + ' termine 1er.';
+      }
+    }
     else if (a === 'addNames' || a === 'addOpps') {
       var tt = T(), names = a === 'addOpps' ? (window.PA.player().opps || []).map(function (o) { return o.name; }) : (document.getElementById('tnNames').value || '').split(/[\n,;]+/);
       var added = 0; names.forEach(function (nm) { if (addOne(nm)) added++; });
@@ -678,7 +744,7 @@
     else if (a === 'regAll') { var ra = regulars().filter(function (r) { return r.club; }), nA = 0; ra.forEach(function (r) { if (addOne(r.name)) nA++; }); T().msg = nA + ' joueur' + (nA > 1 ? 's' : '') + ' du club inscrit' + (nA > 1 ? 's' : '') + '. Retouche les absents pour les retirer.'; }
     else if (a === 'reg') {
       var rg = regulars()[+t.getAttribute('data-v')], tr = T();
-      if (rg) { if (inT(rg.name)) { var ix = -1; tr.players.forEach(function (x, j) { if (x.name.toLowerCase() === rg.name.toLowerCase()) ix = j; }); var px = tr.players[ix]; if (!tr.drawn) { tr.players.splice(ix, 1); tr.msg = null; } else tr.msg = px.out ? px.name + ' est déjà sorti.' : px.name + ' est en jeu (table ' + px.table + ') : pour le retirer, touche « Sorti ».'; } else { addOne(rg.name); tr.msg = tr.drawn ? rg.name + ' inscrit : table ' + tr.players[tr.players.length - 1].table + ', siège ' + tr.players[tr.players.length - 1].seat + '.' : null; } }
+      if (rg) { if (inT(rg.name)) { var ix = -1; tr.players.forEach(function (x, j) { if (x.name.toLowerCase() === rg.name.toLowerCase()) ix = j; }); var px = tr.players[ix]; if (!tr.drawn) { tr.players.splice(ix, 1); tr.msg = null; } else tr.msg = px.out ? px.name + ' est déjà sorti.' : px.name + ' est en jeu (table ' + px.table + ') : s’il est inscrit par erreur, retire-le avec ✕ dans la liste « En jeu ».'; } else if (!lateOpen(s)) { tr.msg = lateMsg(); } else { addOne(rg.name); tr.msg = tr.drawn ? rg.name + ' inscrit : table ' + tr.players[tr.players.length - 1].table + ', siège ' + tr.players[tr.players.length - 1].seat + '.' : null; } }
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { if (!alivePl().length) return; DRAWASK = true; try { window.scrollTo(0, 0); } catch (e6) {} }
@@ -688,7 +754,7 @@
     else if (a === 'movesDone') { T().pending = []; T().closed = []; MSHEET = false; }
     else if (a === 'movesLater') { MSHEET = false; }
     else if (a === 'ttype') { T().type = t.getAttribute('data-v'); }
-    else if (a === 'saveLeague') { var ts = T(); if (!ts.saved && window.PA_LEAGUE) { ts.payout = payout(ts); var rec = window.PA_LEAGUE.record(ts); ts.recId = rec.id; ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
+    else if (a === 'saveLeague') { var ts = T(); if (ts.saved && ts.dirty && window.PA_LEAGUE && ts.recId) { window.PA_LEAGUE.remove(ts.recId); ts.saved = false; ts.dirty = false; } if (!ts.saved && window.PA_LEAGUE) { ts.payout = payout(ts); var rec = window.PA_LEAGUE.record(ts); ts.recId = rec.id; ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
     else if (a === 'shareSum') { var tz = T(); if (tz.recId && window.PA_LEAGUE) window.PA_LEAGUE.shareText(window.PA_LEAGUE.summary(tz.recId), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'shareImg') { window.PA_EXPORT.image((T().date || '').slice(0, 4) || String(new Date().getFullYear()), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }
@@ -702,12 +768,14 @@
       if (typeof KO === 'number') doKO(KO, byv); KO = null;
       if (T().drawn && alivePl().length === 1) { TAB = 'tables'; save(); U().render(); try { window.scrollTo(0, 0); } catch (e5) {} return; }
     }
-    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } var oldPl = pu.place; pu.out = false; pu.place = null; pu.prize = null;
+    else if (a === 'reentry' && !reOpen(s) && !T().reForce) { T().msg = 'Les re-entry sont fermées (fin du niveau ' + cfg().reEnd + '). <button class="btn" data-tmact="reForce">Autoriser quand même</button>'; }
+    else if (a === 'reForce') { T().reForce = true; T().msg = 'Re-entry rouvertes pour ce tournoi : touche à nouveau « Re-entry ».'; }
+    else if (a === 'unko' || a === 'reentry') { var tu = T(), pu = tu.players[+t.getAttribute('data-v')]; if (pu && pu.out) { markDirty(tu); if (pu.stopped) { tu.stoppedAt = null; }  if (pu.bountyTakenBy) { tu.players.forEach(function (q) { if (q.name === pu.bountyTakenBy && q.bountyFrom === pu.name) { q.bonus = Math.max(0, (q.bonus || 0) - (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2)); q.bountyFrom = null; } }); pu.bountyTakenBy = null; } var oldPl = pu.place; pu.out = false; pu.place = null; pu.prize = null;
         // les joueurs sortis après lui remontent d'une place, et les lots suivent
         tu.players.forEach(function (q) { if (q.out && q !== pu && oldPl && q.place < oldPl) q.place++; });
         var pay2 = payout(tu); tu.players.forEach(function (q) { q.prize = q.out && pay2[q.place - 1] ? pay2[q.place - 1].amt : null; }); pu.koBy = null; pu.koAt = null; pu.koLevel = null; if (a === 'reentry') { tu.re++; pu.entries = (pu.entries || 1) + 1; } var sn1 = snap(); delete sn1[pu.name]; seatSomewhere(pu); noteMoves(sn1, 'retour en jeu'); tu.msg = (a === 'reentry' && !reOpen(live()) ? '⚠️ Les re-entry sont fermées (fin du niveau ' + cfg().reEnd + '), enregistrée quand même. ' : '') + pu.name + (a === 'reentry' ? ' fait une re-entry' : ' revient (élimination annulée)') + ' : table ' + pu.table + ', siège ' + pu.seat + '.'; } }
     else if (a === 'newT') { bakNow(true); if (typeof confirm !== 'function' || confirm('Effacer les inscrits, les tables et les compteurs ?')) ST.t = null; }
-    else if (a === 'print') { try { window.print(); } catch (e3) {} return; }
+    else if (a === 'print') { try { if (window.PAAndroid && window.PAAndroid.print) window.PAAndroid.print(); else window.print(); } catch (e3) {} return; }
     else if (a === 'entPlus') { T().entrants++; T().left++; }
     else if (a === 'entMinus') { if (T().entrants > 0) { T().entrants--; T().left = Math.max(0, T().left - 1); } }
     else if (a === 'out') { if (T().left > 0) T().left--; }
@@ -716,8 +784,10 @@
     else if (a === 'reMinus') { if (T().re > 0) { T().re--; if (!T().players.length) T().left = Math.max(0, T().left - 1); } }
     else if (a === 'addPlus') T().add++;
     else if (a === 'addMinus') { if (T().add > 0) T().add--; }
-    else if (a === 'reset') { bakNow(true); if (typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
-    else if (a === 'full') { try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
+    else if (a === 'reset') { bakNow(true); var inProg = T().drawn && alivePl().length > 1;
+      if (inProg && typeof confirm === 'function' && !confirm('Un tournoi est en cours. Remettre seulement le chrono au niveau 1 ? Les joueurs et les tables ne bougent pas (pour arrêter le tournoi : page Tournoi › Réglages › Arrêter le tournoi).')) return;
+      if (!inProg && typeof confirm === 'function' && (T().entrants || T().re || T().add) && confirm('Remettre aussi à zéro les joueurs, re-entries et add-ons ?')) ST.t = null; ST.brk = null; ST.idx = 0; ST.rem = L.length ? L[0].min * 60 : 0; ST.since = null; ST.shown = 0; awake(false); }
+    else if (a === 'full') { if (window.PAAndroid && window.PAAndroid.fullscreen) { FULL = !FULL; window.PAAndroid.fullscreen(FULL); return; } try { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen(); } catch (e2) {} return; }
     else if (a === 'edit') EDIT = true;
     else if (a === 'voice') { ST.voice = !vOn(); if (ST.voice) say('Annonces vocales activées. ' + (L[s.idx] ? lvlSay(L[s.idx]) : ''), true); else { try { if (window.speechSynthesis) speechSynthesis.cancel(); if (window.PAAndroid && window.PAAndroid.stop) window.PAAndroid.stop(); } catch (e4) {} } }
     else if (a === 'rmOn') { rmStart(true); return; }
@@ -873,7 +943,13 @@
       '<div class="ec-top"><span class="ec-brand">POKER ACADEMY</span><span class="ec-title">' + esc(typeName) + (t.date ? ' · ' + t.date.split('-').reverse().slice(0, 2).join('/') : '') + '</span><span id="ecNow">' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</span></div>';
     var bdg = ended ? '' : '<div class="ec-rules" id="ecRules">' + rulesBadges(s).map(badgeHtml).join('') + '</div>';
     var bar = '<div class="ec-bar"><i id="ecBar" style="width:' + Math.max(0, 100 - s.rem / (l.min * 60) * 100).toFixed(1) + '%"></i></div>';
-    if (l.pause) {
+    if (ST.brk) {
+      var bk = Math.max(0, (ST.brk.until - Date.now()) / 1000);
+      h = h.replace('<div class="ec' + (seatMode ? ' ec-seatmode' : ''), '<div class="ec ec-pause' + (seatMode ? ' ec-seatmode' : ''));
+      h += '<div class="ec-main"><div class="ec-clockbox"><div class="ec-lvl">☕ Pause</div><div class="ec-clock ec-pclock" id="ecBrk">' + mmss(bk) + '</div>' +
+        '<div class="ec-ante">Retour aux tables à <b>' + new Date(ST.brk.until).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</b></div>' +
+        '<div class="ec-next">Reprise : ' + (l.pause ? 'pause' : 'niveau ' + l.n + ' · ' + fmt(l.sb) + ' / ' + fmt(l.bb) + ' · encore ' + mmss(s.rem)) + '</div></div><div class="ec-side">' + wanted + top5 + (!wanted && !top5 ? (t.entrants || t.players.length ? stat('Joueurs', t.left + '<small> / ' + (t.entrants + t.re) + '</small>', '') : '') + (avg ? stat('Tapis moyen', fmt(Math.round(avg)), bb ? Math.round(avg / bb) + ' grosses blindes' : '') : '') : '') + '</div></div>';
+    } else if (l.pause) {
       // ---- écran de pause : grand compte à rebours, reprise, retrait des jetons, prime, championnat ----
       var np = nextPlay(s.L, s.idx + 1), cu = colorUps().filter(function (x) { return np && x.lvl === np.n; }), addOn = c.addPause && pauseNo(s.L, s.idx) === c.addPause;
       var back = run ? new Date(Date.now() + s.rem * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
@@ -913,7 +989,7 @@
     }
     if (ended) { var pod = [al[0]].concat(t.players.filter(function (x) { return x.out; }).sort(function (a, b) { return a.place - b.place; }).slice(0, 2)), pay = payout(t);
       h += '<div class="ec-win">🏆 ' + esc(al[0].name) + ' remporte le tournoi !</div><div class="ec-pod">' + pod.map(function (x, i) { return '<span>' + ['🥇', '🥈', '🥉'][i] + ' <em>' + esc(x.name) + '</em>' + (pay[i] ? ' · ' + eur(pay[i].amt) : '') + '</span>'; }).join('') + '</div>'; }
-    h += '<div class="ec-ctrl"><button data-tmact="ecranOut" aria-label="Quitter">‹ Quitter</button><button data-tmact="prev">⏮</button><button class="ec-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : '▶ Lancer') + '</button><button data-tmact="next">⏭</button><button data-tmact="voice">' + (vOn() ? '🔊' : '🔇') + '</button><button data-tmact="full">⛶ Plein écran</button>' + (canCast() ? '<button data-tmact="cast">📡 Diffuser</button>' : '') + '</div></div>';
+    h += '<div class="ec-ctrl"><button data-tmact="ecranOut" aria-label="Quitter">‹ Quitter</button><button data-tmact="prev">⏮</button><button class="ec-play" data-tmact="toggle">' + (run ? '❚❚ Pause' : ST.brk ? '▶ Reprendre' : '▶ Lancer') + '</button><button data-tmact="next">⏭</button><button data-tmact="voice">' + (vOn() ? '🔊' : '🔇') + '</button><button data-tmact="full">⛶ Plein écran</button>' + (canCast() ? '<button data-tmact="cast">📡 Diffuser</button>' : '') + '</div></div>';
     return h;
   }
   // clavier sur l’écran télé et le minuteur : espace = lancer / pause, flèches = niveau
