@@ -39,8 +39,9 @@
     var dt = date || today(), prev = load().list.filter(function (x) { return x.type === type && x.date < dt; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
     // reprise du classement : la tête mise à prix indiquée à la main (une pour le mercredi, une pour le vendredi), tant qu'aucun tournoi de ce type n'a été joué depuis ;
     // ses remplaçants sont alors pris dans l'ordre du classement de la saison
-    var cy = carryOf(dt.slice(0, 4)), ch = cy && cy.holders && cy.holders[type];
-    if (ch && cy.date <= dt && (!prev || prev.date < cy.date)) return [ch].concat(standings(load().list.filter(function (x) { return x.date.slice(0, 4) === dt.slice(0, 4) && x.date < dt; }), dt.slice(0, 4)).map(function (r) { return r.name; }).filter(function (n) { return key(n) !== key(ch); }));
+    // la tête mise à prix peut avoir des remplaçants désignés (liste) : on les prend dans l'ordre avant le reste du classement
+    var cy = carryOf(dt.slice(0, 4)), ch = cy && cy.holders && cy.holders[type], chs = holdArr(ch);
+    if (chs.length && cy.date <= dt && (!prev || prev.date < cy.date)) { var ks = chs.map(key); return chs.concat(standings(load().list.filter(function (x) { return x.date.slice(0, 4) === dt.slice(0, 4) && x.date < dt; }), dt.slice(0, 4)).map(function (r) { return r.name; }).filter(function (n) { return ks.indexOf(key(n)) < 0; })); }
     return prev ? prev.rows.slice().sort(function (a, b) { return a.place - b.place; }).map(function (r) { return r.name; }) : [];
   }
   function holderInfo(type, date, present) {
@@ -72,6 +73,7 @@
   function years() { var y = {}, dd = load(); dd.list.forEach(function (x) { y[x.date.slice(0, 4)] = 1; }); Object.keys(dd.carry || {}).forEach(function (k) { if (dd.carry[k] && dd.carry[k].rows && dd.carry[k].rows.length) y[k] = 1; }); var a = Object.keys(y).sort().reverse(); return a.length ? a : [String(new Date().getFullYear())]; }
   // reprise du classement : les points déjà acquis avant de commencer à utiliser l'appli, par saison
   function carryOf(year) { var c = (load().carry || {})[year]; return c && c.rows && c.rows.length ? c : null; }
+  function holdArr(h) { return (Array.isArray(h) ? h : String(h || '').split(/\s*(?:,|;|\bpuis\b)\s*/i)).map(function (x) { return String(x || '').trim().toUpperCase(); }).filter(Boolean); }
   function setCarry(year, date, rows, holders) { var d = load(); d.carry = d.carry || {}; d.carry[year] = { at: Date.now(), date: date, rows: rows, holders: holders || {} }; save(d); }
   // enregistre à la main un tournoi déjà joué : la liste des joueurs du 1er au dernier
   function recordManual(o) {
@@ -234,8 +236,8 @@
         }).join('') + '</div>' +
         '<button class="btn" data-lgact="crAdd">+ Ajouter un joueur</button>' +
         '<b>Les têtes mises à prix (+' + BONUS + ' points pour qui les élimine)</b><div class="small muted">Chaque type de tournoi a la sienne : le vainqueur du dernier mercredi pour le mercredi, le vainqueur du dernier deep pour le vendredi. Indique-les pour le prochain tournoi ; ensuite l’appli les suit toute seule.</div>' +
-        '<label class="small muted" for="lgHoldM">Tête mise à prix du mercredi :</label><input id="lgHoldM" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldM != null ? V.choldM : (hd.mercredi || '')) + '" placeholder="Pseudo, ou vide" style="' + INP + '">' +
-        '<label class="small muted" for="lgHoldD">Tête mise à prix du vendredi (deep) :</label><input id="lgHoldD" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldD != null ? V.choldD : (hd.deep || '')) + '" placeholder="Pseudo, ou vide" style="' + INP + '">' +
+        '<label class="small muted" for="lgHoldM">Tête mise à prix du mercredi :</label><input id="lgHoldM" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldM != null ? V.choldM : holdArr(hd.mercredi).join(', ')) + '" placeholder="Pseudo, puis ses remplaçants s’il est absent (virgules)" style="' + INP + '">' +
+        '<label class="small muted" for="lgHoldD">Tête mise à prix du vendredi (deep) :</label><input id="lgHoldD" list="lgNames" autocapitalize="characters" value="' + ui.esc(V.choldD != null ? V.choldD : holdArr(hd.deep).join(', ')) + '" placeholder="Pseudo, puis ses remplaçants s’il est absent (virgules)" style="' + INP + '">' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="saveCarry" style="flex:1">Enregistrer la reprise ' + V.year + '</button><button class="btn" data-lgact="formCancel">Annuler</button></div>' +
         (cy ? '<button class="btn" data-lgact="delCarry">Supprimer la reprise ' + V.year + '</button>' : '');
     } else if (V.form === 'past') {
@@ -318,8 +320,8 @@
       });
       if (badC.length) { V.fmsg = 'À corriger : ' + badC.join(', ') + '.'; U().render(); return; }
       if (!rowsC.length) { V.fmsg = 'Aucun joueur avec des points : remplis au moins une ligne.'; U().render(); return; }
-      var hm2 = cleanName(V.choldM).toUpperCase(), hdp = cleanName(V.choldD).toUpperCase(), hol = {}; if (hm2) hol.mercredi = hm2; if (hdp) hol.deep = hdp;
-      setCarry(V.year, V.cdate || today(), rowsC, hol); addToRoster(rowsC.map(function (r) { return r.name; }).concat(hm2 ? [hm2] : [], hdp ? [hdp] : []));
+      var hmA = holdArr(V.choldM).map(cleanName), hdA = holdArr(V.choldD).map(cleanName), hm2 = hmA.join(' puis '), hdp = hdA.join(' puis '), hol = {}; if (hmA.length) hol.mercredi = hmA.length > 1 ? hmA : hmA[0]; if (hdA.length) hol.deep = hdA.length > 1 ? hdA : hdA[0];
+      setCarry(V.year, V.cdate || today(), rowsC, hol); addToRoster(rowsC.map(function (r) { return r.name; }).concat(hmA, hdA));
       V.form = null; V.crows = null; V.cdate = null; V.choldM = V.choldD = null; V.fmsg = 'Reprise enregistrée : ' + rowsC.length + ' joueurs' + (hm2 || hdp ? ' ; têtes mises à prix : ' + [hm2 ? hm2 + ' (mercredi)' : '', hdp ? hdp + ' (vendredi)' : ''].filter(Boolean).join(', ') : '') + '.'; U().render(); return;
     }
     if (a === 'delCarry') { if (typeof confirm === 'function' && !confirm('Supprimer la reprise du classement ' + V.year + ' ?')) return; setCarry(V.year, today(), []); V.form = null; V.fmsg = 'Reprise supprimée.'; U().render(); return; }
