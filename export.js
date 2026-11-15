@@ -124,18 +124,18 @@
   function yearXlsx(year) {
     var D = yearData(year), now = new Date().toLocaleDateString('fr-FR'); prio = 0;
     // 1. classement : chiffres clés, puis le tableau avec barres
-    var head = H(['Rang', 'Joueur', 'Total', 'Mercredi', 'Deep ×1,5', 'Primes', 'Tournois', 'Moyenne / tournoi', 'Victoires', 'Meilleure place', 'Éliminations']); head.h = 32;
+    var head = H(['Rang', 'Joueur', 'Total', 'Classement (sans primes)', 'Reprise', 'Mercredi', 'Deep ×1,5', 'Primes gagnées', 'Points de prime', 'Tournois', 'Moyenne / tournoi', 'Victoires', 'Meilleure place', 'Éliminations']); head.h = 32;
     var r1s = [[{ v: 'Championnat du club · ' + year, s: 2 }], [{ v: 'Édité le ' + now + ' · Poker Academy · le deep rapporte ×1,5 et compte dans le même classement que les mercredis' + carryNote(year), s: 3 }], []]
-      .concat(kpiRows([['Tournois', D.nT], ['Mercredis', D.nMer], ['Deeps (×1,5)', D.nDeep], ['Joueurs classés', D.nPlayers], ['Moyenne de joueurs par tournoi', D.avgPlayers], ['Points de prime', D.primes]]), [[], head]);
+      .concat(kpiRows([['Tournois', D.nT], ['Mercredis', D.nMer], ['Deeps (×1,5)', D.nDeep], ['Joueurs classés', D.st.length], ['Moyenne de joueurs par tournoi', D.nT ? D.avgPlayers : ''], ['Points de prime', D.primes]]), [[], head]);
     var top = r1s.length;
     D.st.forEach(function (o, i) {
-      var p = i < 3, s = p ? 4 : 8, sc = p ? 5 : 6;
-      r1s.push([{ v: p ? ['1er', '2e', '3e'][i] : i + 1, s: sc }, { v: o.name, s: s }, { v: o.total, s: p ? 5 : 14 }, { v: o.mer || '', s: sc }, { v: o.deep || '', s: sc }, { v: o.bonus || '', s: o.bonus ? 15 : sc }, { v: o.n, s: sc }, { v: o.moy, s: p ? 13 : 10 }, { v: o.wins || '', s: sc }, { v: o.best < 99 ? o.best : '', s: sc }, { v: o.kos || '', s: sc }]);
+      var rk = o.rank || i + 1, p = rk <= 3, s = p ? 4 : 8, sc = p ? 5 : 6;
+      r1s.push([{ v: p ? ['1er', '2e', '3e'][rk - 1] : rk, s: sc }, { v: o.name, s: s }, { v: o.total, s: p ? 5 : 14 }, { v: o.cls, s: sc }, { v: o.carry || '', s: sc }, { v: o.mer || '', s: sc }, { v: o.deep || '', s: sc }, { v: o.bty || '', s: o.bty ? 15 : sc }, { v: o.bonus || '', s: o.bonus ? 15 : sc }, { v: o.n || '', s: sc }, { v: o.nT ? o.moy : '', s: p ? 13 : 10 }, { v: o.wins || '', s: sc }, { v: o.best < 99 ? o.best : '', s: sc }, { v: o.kos || '', s: sc }]);
     });
     var last = r1s.length;
-    r1s.push([], [{ v: 'Barème : le 1er marque autant de points qu’il y a de joueurs, le dernier 1 point. Deep du vendredi ×1,5. Prime de ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués. Les 3 premiers sont récompensés.', s: 16 }]);
-    var s1 = { name: 'Classement ' + year, widths: [8, 22, 11, 11, 11, 9, 10, 12, 10, 11, 12], freeze: top, rows: r1s, merge: ['A' + (last + 2) + ':K' + (last + 2)],
-      cf: D.st.length ? [bar('C' + (top + 1) + ':C' + last, 'FFD4A72C'), heat('H' + (top + 1) + ':H' + last)] : [] };
+    r1s.push([], [{ v: 'Barème : le 1er marque autant de points qu’il y a de joueurs, le dernier 1 point. Deep du vendredi ×1,5. Prime de ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués. Classement = points sans les primes. Reprise = points repris d’un classement déjà en cours. Les 3 premiers sont récompensés.', s: 16 }]);
+    var s1 = { name: 'Classement ' + year, widths: [8, 22, 11, 13, 10, 11, 11, 10, 10, 10, 12, 10, 11, 12], freeze: top, rows: r1s, merge: ['A' + (last + 2) + ':N' + (last + 2)],
+      cf: D.st.length ? [bar('C' + (top + 1) + ':C' + last, 'FFD4A72C'), heat('K' + (top + 1) + ':K' + last)] : [] };
     r1s[last + 1].h = 32;
     // 2. semaine par semaine : une colonne par semaine, couleur selon les points
     var W = D.weeks, h2 = H(['Rang', 'Joueur'].concat(W.map(function (w) { return w.short + '\n' + dm(w.from) + (w.deep ? ' · deep' : ''); }), ['Total'])); h2.h = 34;
@@ -187,7 +187,7 @@
   /* ---------- PDF illustré (A4, polices Helvetica intégrées aux lecteurs) ---------- */
   var PW = 595.28, PH = 841.89, M = 36, CW = PW - 2 * M;
   var GOLD = '0.80 0.63 0.20', DEEPC = '0.36 0.25 0.07', RED = '0.76 0.15 0.17', INK = '0.10 0.10 0.10', GREY = '0.45 0.45 0.45', DARK = '0.07 0.07 0.07',
-    PALE = '0.98 0.95 0.84', ZEB = '0.965 0.965 0.965', TRACK = '0.93 0.93 0.93', WHITE = '1 1 1', SILVER = '0.66 0.67 0.70', BRONZE = '0.70 0.44 0.20';
+    PALE = '0.98 0.95 0.84', ZEB = '0.965 0.965 0.965', TRACK = '0.93 0.93 0.93', WHITE = '1 1 1', SILVER = '0.66 0.67 0.70', BRONZE = '0.70 0.44 0.20', CARRYC = '0.55 0.57 0.62';
   var MEDAL = [GOLD, SILVER, BRONZE], LINES = [GOLD, RED, DARK, '0.18 0.42 0.72', '0.20 0.56 0.32'];
   function mix(t) { // blanc → or selon t (0..1)
     var a = [1, 1, 1], b = [0.83, 0.63, 0.16]; return a.map(function (v, i) { return (v + (b[i] - v) * t).toFixed(3); }).join(' ');
@@ -242,21 +242,28 @@
     d.legend = function (items) { var x = M; d.need(16); items.forEach(function (it) { d.rect(x, d.y - 9, 9, 9, it[1]); d.text(x + 13, d.y - 8, it[0], 8, false, INK); x += 22 + tw(it[0], 8); }); d.y -= 18; };
     // classement en barres : mercredi (or), deep (bronze), primes (rouge)
     d.bars = function (st) {
-      var nameW = 128, bx = M + 26 + nameW, bw = CW - 26 - nameW - 92, max = Math.max.apply(null, st.map(function (o) { return o.total; }).concat([1]));
-      function head() { d.text(bx, d.y - 8, 'POINTS', 7, true, GREY); d.text(bx + bw + 4, d.y - 8, 'TOTAL', 7, true, GREY, 'r', 44); d.text(bx + bw + 50, d.y - 8, 'MOYENNE', 7, true, GREY, 'r', 42); d.y -= 14; }
+      // colonnes à droite : tournois joués, primes (nombre et points), points de classement, total
+      var nameW = 120, CO = [['TOURN.', 34], ['PRIMES', 52], ['CLASS.', 46], ['TOTAL', 48]], cwS = CO.reduce(function (a, c) { return a + c[1]; }, 0);
+      var bx = M + 26 + nameW, bw = CW - 26 - nameW - cwS - 8, max = Math.max.apply(null, st.map(function (o) { return o.total; }).concat([1]));
+      function colX(k) { var x = bx + bw + 8; for (var j = 0; j < k; j++) x += CO[j][1]; return x; }
+      function head() { d.text(bx, d.y - 8, 'POINTS', 7, true, GREY); CO.forEach(function (c, k) { d.text(colX(k), d.y - 8, c[0], 7, true, GREY, 'r', c[1] - 4); }); d.y -= 14; }
       d.need(60); head();
       st.forEach(function (o, i) {
         if (d.y - 23 < M + 22) { page(); head(); }
         var yc = d.y - 11.5, p = i < 3;
         if (p) d.rect(M, d.y - 23, CW, 23, PALE); else if (i % 2) d.rect(M, d.y - 23, CW, 23, ZEB);
-        d.circle(M + 11, yc, 9, p ? MEDAL[i] : '0.86 0.86 0.86'); d.text(M + 2, yc - 3.2, String(i + 1), 8.5, true, p && i !== 0 ? WHITE : INK, 'c', 18);
+        var rk = o.rank || i + 1, pm = rk <= 3; p = pm;
+        if (pm && !(i < 3)) d.rect(M, d.y - 23, CW, 23, PALE);
+        d.circle(M + 11, yc, 9, pm ? MEDAL[rk - 1] : '0.86 0.86 0.86'); d.text(M + 2, yc - 3.2, String(rk), 8.5, true, pm && rk !== 1 ? WHITE : INK, 'c', 18);
         d.text(M + 26, yc + 1, o.name, 10.5, true, INK, null, nameW - 4);
-        d.text(M + 26, yc - 9, o.n + ' tournoi' + (o.n > 1 ? 's' : '') + (o.wins ? ' · ' + o.wins + ' victoire' + (o.wins > 1 ? 's' : '') : '') + (o.kos ? ' · ' + o.kos + ' élim.' : ''), 7, false, GREY, null, nameW - 4);
+        d.text(M + 26, yc - 9, (o.nT ? (o.wins ? o.wins + ' victoire' + (o.wins > 1 ? 's' : '') : 'moy. ' + f1(o.moy)) : o.carry ? 'repris : ' + f1(o.carry) + ' pts' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : ''), 7, false, GREY, null, nameW - 4);
         d.rect(bx, yc - 5, bw, 10, TRACK);
         var x = bx, sc = bw / max;
-        [[o.mer, GOLD], [o.deep, DEEPC], [o.bonus, RED]].forEach(function (s) { if (s[0] > 0) { d.rect(x, yc - 5, s[0] * sc, 10, s[1]); x += s[0] * sc; } });
-        d.text(bx + bw + 4, yc - 4, f1(o.total), 11.5, true, INK, 'r', 44);
-        d.text(bx + bw + 50, yc - 3.5, f1(o.moy), 9.5, false, INK, 'r', 42);
+        [[o.carry || 0, CARRYC], [o.mer, GOLD], [o.deep, DEEPC], [o.bonus, RED]].forEach(function (s) { if (s[0] > 0) { d.rect(x, yc - 5, s[0] * sc, 10, s[1]); x += s[0] * sc; } });
+        d.text(colX(0), yc - 3.5, o.n ? String(o.n) : '—', 9.5, false, INK, 'r', CO[0][1] - 4);
+        d.text(colX(1), yc - 3.5, o.bty ? o.bty + ' · +' + f1(o.bonus) : '—', 9.5, !!o.bty, o.bty ? RED : INK, 'r', CO[1][1] - 4);
+        d.text(colX(2), yc - 3.5, f1(o.cls != null ? o.cls : o.total - o.bonus), 9.5, false, INK, 'r', CO[2][1] - 4);
+        d.text(colX(3), yc - 4, f1(o.total), 11.5, true, INK, 'r', CO[3][1] - 4);
         d.y -= 23;
       });
       d.y -= 8;
@@ -364,12 +371,13 @@
     var D = yearData(year), doc = Doc('Championnat du club ' + year);
     doc.newPage();
     doc.h1('Championnat du club', 'Classement général : mercredis et deeps comptent ensemble (le deep rapporte ×1,5) · les 3 premiers sont récompensés' + carryNote(year), year);
-    doc.kpis([['Tournois', D.nT, D.nMer + ' mercredi · ' + D.nDeep + ' deep' + (D.nLib ? ' · ' + D.nLib + ' hors champ.' : '')], ['Joueurs classés', D.nPlayers, 'au moins un tournoi'], ['Moyenne de joueurs', f1(D.avgPlayers), 'par tournoi'], ['Primes', '+' + f1(D.primes), 'points de prime', RED]]);
+    var cyK = L().carryOf ? L().carryOf(year) : null;
+    doc.kpis([['Tournois', D.nT, (cyK ? 'depuis la reprise du ' + dfr(cyK.date) + ' · ' : '') + D.nMer + ' mercredi · ' + D.nDeep + ' deep' + (D.nLib ? ' · ' + D.nLib + ' hors champ.' : '')], ['Joueurs classés', D.st.length, cyK ? 'reprise comprise' : 'au moins un tournoi'], ['Moyenne de joueurs', D.nT ? f1(D.avgPlayers) : '—', 'par tournoi'], ['Primes', '+' + f1(D.primes), 'points de prime', RED]]);
     doc.podium(D.st);
     doc.h2('Classement général');
-    doc.legend([['Mercredi', GOLD], ['Deep ×1,5', DEEPC], ['Primes', RED]]);
+    doc.legend([['Mercredi', GOLD], ['Deep ×1,5', DEEPC], ['Primes', RED]].concat(cyK ? [['Reprise au ' + dfr(cyK.date), CARRYC]] : []));
     doc.bars(D.st);
-    doc.note('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5, ajoutés au même total que les mercredis. Prime : ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués.');
+    doc.note('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5, ajoutés au même total que les mercredis. Colonnes : TOURN. = tournois joués, PRIMES = têtes mises à prix éliminées · points rapportés, CLASS. = points de classement sans les primes. Prime : ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués.');
     if (D.weeks.length) {
       doc.newPage(); doc.h1('La saison semaine après semaine', 'Course au titre (points cumulés des 5 premiers), puis les points marqués chaque semaine.');
       if (D.weeks.length > 1) { doc.h2('La course au titre'); doc.race(D); }
@@ -450,12 +458,12 @@
     // classement 4 à 12
     var rows = st.slice(3, 12), y = 792, rh = Math.min(56, (1255 - y) / Math.max(rows.length, 1)), max = st.length ? st[0].total : 1;
     rows.forEach(function (o, i) {
-      var r = i + 4, yy = y + i * rh, yc = yy + rh / 2;
+      var r = o.rank || i + 4, yy = y + i * rh, yc = yy + rh / 2;
       if (i % 2 === 0) rr(50, yy + 3, W - 100, rh - 6, 12, 'rgba(255,255,255,.04)');
       circ(92, yc, 22, '#26262c'); txt(String(r), 92, yc + 9, F(DISP, 28), '#ddd', 'center');
       txt(fitTxt(o.name, 230, F(TXT, 30, 700)), 130, yc + 10, F(TXT, 30, 700), '#fff');
       var bx = 380, bw = 420, sc = bw / max; rr(bx, yc - 9, bw, 18, 9, 'rgba(255,255,255,.08)');
-      var xx = bx; [[o.mer, G], [o.deep, BR], [o.bonus, RD]].forEach(function (sg) { if (sg[0] > 0) { c.fillStyle = sg[1]; c.fillRect(xx, yc - 9, sg[0] * sc, 18); xx += sg[0] * sc; } });
+      var xx = bx; [[o.carry || 0, '#6b7280'], [o.mer, G], [o.deep, BR], [o.bonus, RD]].forEach(function (sg) { if (sg[0] > 0) { c.fillStyle = sg[1]; c.fillRect(xx, yc - 9, sg[0] * sc, 18); xx += sg[0] * sc; } });
       txt(f1(o.total), 900, yc + 12, F(DISP, 40), G, 'right');
       var ev = pr[o.name.toLowerCase()], d = ev ? ev - r : null;
       txt(d === null ? 'nouveau' : d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + (-d) : '=', 1020, yc + 9, F(TXT, d === null ? 20 : 26, 700), d === null ? G : d > 0 ? '#3ddc84' : d < 0 ? RD : '#888', 'right');
@@ -463,7 +471,8 @@
     // pied
     c.fillStyle = '#2e2e35'; c.fillRect(60, 1268, W - 120, 2);
     var lx = 60; [['Mercredi', G], ['Deep ×1,5', BR], ['Prime', RD]].forEach(function (it) { c.fillStyle = it[1]; c.fillRect(lx, 1291, 22, 22); txt(it[0], lx + 32, 1310, F(TXT, 24, 400), '#bbb'); c.font = F(TXT, 24, 400); lx += 60 + c.measureText(it[0]).width; });
-    txt(list.length + ' tournois · moyenne ' + f1(D.avgPlayers) + ' joueurs', W - 60, 1310, F(TXT, 24, 400), '#bbb', 'right');
+    var cyI = L().carryOf ? L().carryOf(year) : null;
+    txt(list.length ? list.length + ' tournois · moyenne ' + f1(D.avgPlayers) + ' joueurs' + (cyI ? ' · reprise au ' + dfr(cyI.date) : '') : (cyI ? 'Classement repris au ' + dfr(cyI.date) : '0 tournoi'), W - 60, 1310, F(TXT, 24, 400), '#bbb', 'right');
     txt('Merci à Lionel et au club', W / 2 - 12, 1340, F(TXT, 20, 400), '#777', 'center'); c.font = F(TXT, 20, 400); txt('♥', W / 2 + c.measureText('Merci à Lionel et au club').width / 2 - 4, 1340, F(TXT, 20, 700), RD, 'left');
     return cv;
   }

@@ -98,14 +98,15 @@
   function standings(list, year) {
     var m = {}, cy = year ? carryOf(year) : null;
     list.forEach(function (tn) { if (tn.type === 'libre') return; tn.rows.forEach(function (r) {
-      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
-      o.total += r.total; o.pts += r.pts; if (tn.type === 'deep') o.deep += r.pts; else o.mer += r.pts; o.bonus += r.bonus; o.n++; if (r.place === 1) o.wins++; if (r.place <= 3) o.pod++; o.places += r.place / tn.n; o.best = Math.min(o.best, r.place);
+      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, nT: 0, bty: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
+      o.total += r.total; o.pts += r.pts; if (tn.type === 'deep') o.deep += r.pts; else o.mer += r.pts; o.bonus += r.bonus; if (r.bonus) o.bty += Math.max(1, Math.round(r.bonus / BONUS)); o.n++; o.nT++; if (r.place === 1) o.wins++; if (r.place <= 3) o.pod++; o.places += r.place / tn.n; o.best = Math.min(o.best, r.place);
     }); tn.rows.forEach(function (r) { if (r.koBy && m[key(r.koBy)]) m[key(r.koBy)].kos++; }); });
     if (cy) cy.rows.forEach(function (r) {
-      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
+      var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, nT: 0, bty: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
       o.total += r.pts; o.pts += r.pts; o.carry = r.pts; if (r.n) { o.n += r.n; o.carryN = r.n; }
     });
-    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 100) / 100; o.mer = Math.round(o.mer * 100) / 100; o.deep = Math.round(o.deep * 100) / 100; o.bonus = Math.round(o.bonus * 100) / 100; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 100) / 100 : 0; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; });
+    return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 100) / 100; o.mer = Math.round(o.mer * 100) / 100; o.deep = Math.round(o.deep * 100) / 100; o.bonus = Math.round(o.bonus * 100) / 100; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 100) / 100 : 0; o.cls = Math.round((o.total - o.bonus) * 100) / 100; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; })
+      .map(function (o, i, a) { o.rank = i && a[i - 1].total === o.total ? a[i - 1].rank : i + 1; return o; }); // même total = même rang (ex aequo)
   }
 
   /* ---------- Trophées de la saison ---------- */
@@ -144,7 +145,7 @@
   /* ---------- Fiche d'un joueur ---------- */
   function playerData(name, year) {
     var k = key(name), list = load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = standings(list, year), me = null, rank = 0;
-    st.forEach(function (o, i) { if (key(o.name) === k) { me = o; rank = i + 1; } });
+    st.forEach(function (o, i) { if (key(o.name) === k) { me = o; rank = o.rank || i + 1; } });
     var hist = [], by = {}, vic = {};
     list.forEach(function (tn) { tn.rows.forEach(function (r) {
       if (key(r.name) === k) { hist.push({ tn: tn, r: r }); if (r.koBy) by[r.koBy] = (by[r.koBy] || 0) + 1; }
@@ -170,7 +171,7 @@
     var ui = U(), D = playerData(name, V.year), o = D.me, esc = ui.esc;
     var out = '<div class="stack"><button class="back" data-lgact="pl" data-v="">‹ Championnat ' + V.year + '</button><h1>' + esc(name) + '</h1>';
     if (!o) return out + '<div class="card small muted">Aucun tournoi du championnat en ' + V.year + '.</div></div>';
-    out += '<div class="lg-kpis"><div><span>Classement</span><b>' + D.rank + (D.rank === 1 ? 'er' : 'e') + '</b><small>sur ' + D.of + '</small></div><div><span>Points</span><b>' + f1(o.total) + '</b><small>' + f1(o.mer) + ' mer. · ' + f1(o.deep) + ' deep' + (o.bonus ? ' · +' + f1(o.bonus) + ' prime' : '') + '</small></div><div><span>Moyenne</span><b>' + f1(o.moy) + '</b><small>points par tournoi</small></div><div><span>Tournois</span><b>' + o.n + '</b><small>' + o.wins + ' victoire' + (o.wins > 1 ? 's' : '') + ' · ' + o.pod + ' podium' + (o.pod > 1 ? 's' : '') + '</small></div></div>';
+    out += '<div class="lg-kpis"><div><span>Classement</span><b>' + D.rank + (D.rank === 1 ? 'er' : 'e') + '</b><small>sur ' + D.of + '</small></div><div><span>Points</span><b>' + f1(o.total) + '</b><small>' + (o.carry ? f1(o.carry) + ' repris · ' : '') + f1(o.mer) + ' mer. · ' + f1(o.deep) + ' deep</small></div><div><span>Primes</span><b>' + (o.bty || 0) + '</b><small>' + (o.bty ? 'tête' + (o.bty > 1 ? 's' : '') + ' mise' + (o.bty > 1 ? 's' : '') + ' à prix éliminée' + (o.bty > 1 ? 's' : '') + ' · +' + f1(o.bonus) + ' points · ' + f1(o.cls) + ' sans les primes' : 'aucune tête mise à prix éliminée') + '</small></div><div><span>Moyenne</span><b>' + (o.nT ? f1(o.moy) : '—') + '</b><small>points par tournoi</small></div><div><span>Tournois</span><b>' + o.n + '</b><small>' + o.wins + ' victoire' + (o.wins > 1 ? 's' : '') + ' · ' + o.pod + ' podium' + (o.pod > 1 ? 's' : '') + '</small></div></div>';
     if (D.troph.length) out += '<div class="lg-troph-me">' + D.troph.map(function (t) { return '<span>' + t.icon + ' ' + t.title + '</span>'; }).join('') + '</div>';
     if (D.curve.length > 1) out += '<div class="card stack"><b>Sa saison</b><div class="small muted">Points cumulés semaine après semaine, avec son rang.</div>' + curveSvg(D.curve) + '</div>';
     out += '<div class="lg-duo"><div class="card"><span class="small muted">Sa bête noire</span><b>' + (D.nemesis ? esc(D.nemesis.name) : '—') + '</b><small>' + (D.nemesis ? 'l’a sorti ' + D.nemesis.n + ' fois' : 'personne ne l’a sorti deux fois') + '</small></div><div class="card"><span class="small muted">Sa victime préférée</span><b>' + (D.victim ? esc(D.victim.name) : '—') + '</b><small>' + (D.victim ? 'sortie ' + D.victim.n + ' fois' : '') + '</small></div></div>';
@@ -220,7 +221,7 @@
     return '<div class="lg-leg"><span><i style="background:var(--gold)"></i>Mercredi</span><span><i style="background:#9a6a18"></i>Deep ×1,5</span><span><i style="background:#e0464c"></i>Primes</span>' + (st.some(function (o) { return o.carry; }) ? '<span><i style="background:#6b7280"></i>Reprise</span>' : '') + '<span class="lg-legr">Total · moyenne</span></div><div>' +
       st.map(function (o, i) {
         var seg = function (v, c) { return v > 0 ? '<i style="width:' + (v / max * 100).toFixed(1) + '%;background:' + c + '"></i>' : ''; };
-        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + o.n + ' t.' + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.carry || 0, '#6b7280') + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>moy. ' + f1(o.moy || 0) + '</small></div></div>';
+        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (o.rank || i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + (o.n ? o.n + ' t.' : 'reprise') + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.bty ? ' · 🎯 ' + o.bty + ' prime' + (o.bty > 1 ? 's' : '') + ' (+' + f1(o.bonus) + ')' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.carry || 0, '#6b7280') + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>' + (o.nT ? 'moy. ' + f1(o.moy || 0) : (o.carry ? 'repris' : '')) + '</small></div></div>';
       }).join('') + '</div>';
   }
   function tnCard(tn) {

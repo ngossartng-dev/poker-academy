@@ -79,6 +79,7 @@
       tips: ['Un tournoi « Hors championnat » est enregistré sans points.', 'Un tournoi enregistré par erreur : onglet Tournois, ouvre-le, « Supprimer ce tournoi du classement ».'] },
     { id: 'exports', club: true, t: 'Exports et partage', i: 'Le classement et les tournois se partagent en Excel, en PDF, en image ou en texte.',
       s: ['Club › Championnat, en bas : « 📊 Excel » ou « 📄 PDF » pour toute l’année (classement, semaines, tournois, trophées).',
+        'Pour chaque joueur : son rang (même total = même rang, ex aequo), le nombre de tournois joués, les primes gagnées (têtes mises à prix éliminées) et les points qu’elles rapportent, les points de classement sans les primes, et le total. Les points repris d’un classement déjà en cours apparaissent en gris dans les barres. Sa fiche (touche son nom) reprend ces chiffres.',
         '« 🖼️ Image du classement pour WhatsApp » : une image prête à envoyer au groupe, avec les places gagnées ou perdues.',
         'Onglet Tournois, ouvre un tournoi : « Excel de ce tournoi », « PDF de ce tournoi », « 📝 Résumé texte pour WhatsApp ».',
         'Onglet Trophées : « PDF de la remise des prix ».'],
