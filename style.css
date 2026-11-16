@@ -860,7 +860,7 @@ textarea.tn-in{width:100%;padding:8px 12px}
 
 /* reprise du classement, joueur par joueur */
 .lg-crows{display:flex;flex-direction:column;gap:6px}
-.lg-crow{display:grid;grid-template-columns:minmax(0,1fr) 66px 52px 40px;gap:5px;align-items:center}
+.lg-crow{display:grid;grid-template-columns:minmax(0,1fr) 58px 44px 44px 38px;gap:5px;align-items:center}
 .lg-crow input{width:100%;min-width:0;padding:6px 7px!important;font-size:1em!important}
 .lg-crow input[data-f="name"]{text-transform:uppercase}
 .lg-crow .btn{min-height:44px;padding:0}

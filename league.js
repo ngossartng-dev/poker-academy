@@ -103,7 +103,7 @@
     }); tn.rows.forEach(function (r) { if (r.koBy && m[key(r.koBy)]) m[key(r.koBy)].kos++; }); });
     if (cy) cy.rows.forEach(function (r) {
       var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, nT: 0, bty: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
-      o.total += r.pts; o.pts += r.pts; o.carry = r.pts; if (r.n) { o.n += r.n; o.carryN = r.n; }
+      o.total += r.pts; o.pts += r.pts; o.carry = r.pts; if (r.n) { o.n += r.n; o.carryN = r.n; } if (r.b) { o.bty += r.b; o.bonus += r.b * BONUS; o.carryB = r.b; }
     });
     return Object.keys(m).map(function (k) { var o = m[k]; o.total = Math.round(o.total * 100) / 100; o.mer = Math.round(o.mer * 100) / 100; o.deep = Math.round(o.deep * 100) / 100; o.bonus = Math.round(o.bonus * 100) / 100; o.moy = o.n ? Math.round((o.total - (o.carry && !o.carryN ? o.carry : 0)) / o.n * 100) / 100 : 0; o.cls = Math.round((o.total - o.bonus) * 100) / 100; return o; }).sort(function (a, b) { return b.total - a.total || b.wins - a.wins || a.best - b.best; })
       .map(function (o, i, a) { o.rank = i && a[i - 1].total === o.total ? a[i - 1].rank : i + 1; return o; }); // même total = même rang (ex aequo)
@@ -238,14 +238,14 @@
   function manualCard(cy) {
     var ui = U(), h = '<div class="card stack"><b>✍️ Saisie manuelle</b>';
     if (V.form === 'carry') {
-      if (!V.crows) V.crows = cy ? cy.rows.map(function (r) { return { name: r.name, pts: String(r.pts).replace('.', ','), n: r.n ? String(r.n) : '' }; }) : roster().map(function (nm) { return { name: nm, pts: '', n: '' }; });
-      if (!V.crows.length) V.crows.push({ name: '', pts: '', n: '' });
+      if (!V.crows) V.crows = cy ? cy.rows.map(function (r) { return { name: r.name, pts: String(r.pts).replace('.', ','), n: r.n ? String(r.n) : '', b: r.b ? String(r.b) : '' }; }) : roster().map(function (nm) { return { name: nm, pts: '', n: '', b: '' }; });
+      if (!V.crows.length) V.crows.push({ name: '', pts: '', n: '', b: '' });
       var hd = (cy && cy.holders) || {};
-      h += '<div class="small muted">La saison a déjà commencé : pour chaque joueur, son pseudo et ses points actuels. Le nombre de tournois joués est facultatif (il sert à garder une moyenne juste). Une ligne sans points est ignorée.</div>' +
+      h += '<div class="small muted">La saison a déjà commencé : pour chaque joueur, son pseudo et ses points actuels. Facultatifs : le nombre de tournois joués (pour une moyenne juste) et le nombre de primes gagnées (têtes mises à prix éliminées). Les points de ces primes (+' + BONUS + ' chacune) sont déjà dans ses points : l’appli les sépare seulement dans les colonnes Primes et Classement. Une ligne sans points est ignorée.</div>' +
         '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + (V.cdate || (cy ? cy.date : today())) + '" style="' + INP + '">' +
         '<datalist id="lgNames">' + roster().map(function (x) { return '<option value="' + ui.esc(x) + '">'; }).join('') + '</datalist>' +
-        '<div class="lg-crows"><div class="lg-crow lg-crh"><span>Pseudo</span><span>Points</span><span>Tournois</span><span></span></div>' + V.crows.map(function (r, i) {
-          return '<div class="lg-crow"><input class="lg-cr" data-i="' + i + '" data-f="name" list="lgNames" autocapitalize="characters" value="' + ui.esc(r.name) + '" placeholder="Pseudo" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="pts" inputmode="decimal" value="' + ui.esc(r.pts) + '" placeholder="0" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="n" inputmode="numeric" value="' + ui.esc(r.n) + '" placeholder="–" style="' + INP + '"><button class="btn" data-lgact="crDel" data-v="' + i + '" aria-label="Retirer">✕</button></div>';
+        '<div class="lg-crows"><div class="lg-crow lg-crh"><span>Pseudo</span><span>Points</span><span>Tourn.</span><span>Primes</span><span></span></div>' + V.crows.map(function (r, i) {
+          return '<div class="lg-crow"><input class="lg-cr" data-i="' + i + '" data-f="name" list="lgNames" autocapitalize="characters" value="' + ui.esc(r.name) + '" placeholder="Pseudo" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="pts" inputmode="decimal" value="' + ui.esc(r.pts) + '" placeholder="0" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="n" inputmode="numeric" value="' + ui.esc(r.n) + '" placeholder="–" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="b" inputmode="numeric" value="' + ui.esc(r.b || '') + '" placeholder="–" aria-label="Primes gagnées" style="' + INP + '"><button class="btn" data-lgact="crDel" data-v="' + i + '" aria-label="Retirer">✕</button></div>';
         }).join('') + '</div>' +
         '<button class="btn" data-lgact="crAdd">+ Ajouter un joueur</button>' +
         '<b>Les têtes mises à prix (+' + BONUS + ' points pour qui les élimine)</b><div class="small muted">Chaque type de tournoi a la sienne : le vainqueur du dernier mercredi pour le mercredi, le vainqueur du dernier deep pour le vendredi. Indique-les pour le prochain tournoi ; ensuite l’appli les suit toute seule.</div>' +
@@ -329,7 +329,7 @@
         var nm = cleanName(r.name).toUpperCase(), ps = String(r.pts || '').replace(/\s/g, '').replace(',', '.'); if (!nm || ps === '') return;
         var pts = Math.round(parseFloat(ps) * 100) / 100; if (isNaN(pts)) { badC.push(nm + ' (points illisibles)'); return; }
         if (seenC[key(nm)]) { badC.push(nm + ' (en double)'); return; } seenC[key(nm)] = 1;
-        var rw = { name: nm, pts: pts }, nn = parseInt(r.n, 10); if (nn > 0) rw.n = nn; rowsC.push(rw);
+        var rw = { name: nm, pts: pts }, nn = parseInt(r.n, 10), nb = parseInt(r.b, 10); if (nn > 0) rw.n = nn; if (nb > 0) rw.b = nb; rowsC.push(rw);
       });
       if (badC.length) { V.fmsg = 'À corriger : ' + badC.join(', ') + '.'; U().render(); return; }
       if (!rowsC.length) { V.fmsg = 'Aucun joueur avec des points : remplis au moins une ligne.'; U().render(); return; }
