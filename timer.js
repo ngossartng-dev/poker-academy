@@ -229,13 +229,15 @@
   }
   function tablesOf() { var o = {}; alivePl().forEach(function (x) { if (x.table) (o[x.table] = o[x.table] || []).push(x); }); return o; }
   // combien de tables et de joueurs par table pour un format donné
-  var SIZES = [6, 8, 9, 10], DRAWASK = false;
+  var SIZES = [6, 8, 9, 10], DRAWASK = false, DRAWMODE = 'auto', MAN = null;
   function split(n, size) { var nt = Math.max(1, Math.ceil(n / size)), base = Math.floor(n / nt), extra = n % nt, out = []; for (var i = 0; i < nt; i++) out.push(base + (i < extra ? 1 : 0)); return out; }
   // le format conseillé : le moins de tables possible, puis les tables les plus petites (plus de place autour de chacune)
   function bestSize(n) { var b = 9, bt = 99; SIZES.forEach(function (z) { var nt = split(n, z).length; if (nt < bt) { bt = nt; b = z; } }); return b; }
   function askHtml() {
     var n = alivePl().length, best = bestSize(n);
-    return '<div class="card stack tn-ask"><b style="font-size:1.15em">Tu préfères jouer à combien par table ?</b><div class="small muted">' + n + ' joueurs inscrits. Voici la répartition pour chaque format ; le conseil est en doré.</div>' +
+    return '<div class="card stack tn-ask"><b style="font-size:1.15em">Comment placer les joueurs ?</b><div class="seg">' + [['auto', '🎲 Tirage au sort'], ['manual', '✋ Je place moi-même']].map(function (m) { return '<button class="' + (DRAWMODE === m[0] ? 'on' : '') + '" data-tmact="drawMode" data-v="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
+      (DRAWMODE === 'manual' ? '<div class="small" style="color:var(--gold)">Tu choisis le format, puis tu touches chaque siège pour y asseoir un joueur (pour recopier le plan d’une autre appli, par exemple).</div>' : '') +
+      '<b style="font-size:1.15em">Tu préfères jouer à combien par table ?</b><div class="small muted">' + n + ' joueurs inscrits. Voici la répartition pour chaque format ; le conseil est en doré.</div>' +
       SIZES.map(function (z) { var sp = split(n, z); return '<button class="btn block' + (z === best ? ' gold' : '') + '" data-tmact="drawSize" data-v="' + z + '" style="justify-content:space-between;align-items:center;display:flex;gap:10px;text-align:left"><b style="white-space:nowrap">' + z + ' max</b><span style="text-align:right">' + sp.length + ' table' + (sp.length > 1 ? 's' : '') + ' · ' + sp.join(', ') + ' joueurs' + (z === best ? ' · conseillé' : '') + '</span></button>'; }).join('') +
       '<button class="btn block" data-tmact="drawCancel">Annuler</button></div>';
   }
@@ -249,6 +251,75 @@
       t.buttons[tb] = seats[Math.floor(Math.random() * seats.length)];
     }
     t.drawn = true; t.finalSaid = nt === 1; t.pending = []; t.closed = []; t.msg = 'Tirage fait : ' + n + ' joueurs sur ' + nt + ' table' + (nt > 1 ? 's' : '') + ' de ' + t.size + ' places maximum.';
+  }
+  /* plan de table à la main : tu touches un siège, puis le joueur qui s’y assoit */
+  function manStart(size, keep) {
+    var t = T(), L = alivePl(), n = L.length; t.size = size;
+    var bak = {}; t.players.forEach(function (x) { bak[x.name] = [x.table || null, x.seat || null]; });
+    MAN = { bak: bak, bakBtn: JSON.parse(JSON.stringify(t.buttons || {})), wasDrawn: !!t.drawn, sel: null, q: '' };
+    if (!keep) L.forEach(function (x) { x.table = null; x.seat = null; });
+    var used = L.filter(function (x) { return x.table; }).map(function (x) { return x.table; });
+    MAN.nt = Math.max(split(n, size).length, used.length ? Math.max.apply(null, used) : 0);
+    if (!keep) t.buttons = {};
+  }
+  function manUnplaced() { return alivePl().filter(function (x) { return !x.table; }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+  function manAt(tb, st) { return alivePl().filter(function (x) { return x.table === tb && x.seat === st; })[0]; }
+  function manFill() { // les non placés : au hasard, dans les tables les moins remplies
+    var t = T(), un = shuffle(manUnplaced());
+    un.forEach(function (pl) {
+      var best = null, bc = 99;
+      for (var tb = 1; tb <= MAN.nt; tb++) { var c = alivePl().filter(function (x) { return x.table === tb; }).length; if (c < t.size && c < bc) { bc = c; best = tb; } }
+      if (best == null) { MAN.nt++; best = MAN.nt; }
+      var fr = []; for (var st = 1; st <= t.size; st++) if (!manAt(best, st)) fr.push(st);
+      pl.table = best; pl.seat = fr[Math.floor(Math.random() * fr.length)];
+    });
+  }
+  function manDone() {
+    var t = T(), L = alivePl(), tb = tablesOf(), ids = Object.keys(tb).map(Number).sort(function (a, b) { return a - b; });
+    // tables renumérotées sans trou (1, 2, 3…)
+    var ren = {}; ids.forEach(function (id, i) { ren[id] = i + 1; });
+    var btn = {}; ids.forEach(function (id) { var b = t.buttons && t.buttons[id]; if (!b || !manAt(id, b)) { var ss = tb[id].map(function (x) { return x.seat; }); b = ss[Math.floor(Math.random() * ss.length)]; } btn[ren[id]] = b; });
+    L.forEach(function (x) { if (x.table) x.table = ren[x.table]; });
+    t.buttons = btn;
+    var nt = ids.length, was = MAN.wasDrawn; MAN = null;
+    if (!was) { t.drawn = true; t.finalSaid = nt === 1; t.pending = []; t.closed = []; }
+    t.manual = true;
+    t.msg = 'Plan de table manuel : ' + L.length + ' joueurs sur ' + nt + ' table' + (nt > 1 ? 's' : '') + ' de ' + t.size + ' places maximum.';
+  }
+  function manCancel() {
+    var t = T(); if (!MAN) return;
+    t.players.forEach(function (x) { var b = MAN.bak[x.name]; if (b) { x.table = b[0]; x.seat = b[1]; } });
+    t.buttons = MAN.bakBtn; MAN = null;
+  }
+  function manHtml() {
+    var esc = U().esc, t = T(), un = manUnplaced(), L = alivePl(), out = '';
+    out += '<div class="card stack" style="gap:8px;border-color:var(--gold)"><b style="font-size:1.15em">✋ Plan de table à la main · ' + t.size + ' max</b>' +
+      '<div class="small muted">Touche un siège, puis le joueur qui s’y assoit. Touche un siège occupé pour changer ou libérer. « D » = le bouton du donneur.</div>' +
+      '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span>Tables :</span><button class="btn" data-tmact="manNt" data-v="-1" aria-label="Une table de moins">−</button><b style="font-size:1.2em">' + MAN.nt + '</b><button class="btn" data-tmact="manNt" data-v="1" aria-label="Une table de plus">+</button>' +
+      '<span class="small" style="margin-left:auto;color:' + (un.length ? 'var(--gold)' : 'var(--muted)') + '">' + (un.length ? un.length + ' joueur' + (un.length > 1 ? 's' : '') + ' à placer' : 'Tout le monde est placé ✔') + '</span></div></div>';
+    if (MAN.sel) {
+      var cur = manAt(MAN.sel[0], MAN.sel[1]), q = (MAN.q || '').toLowerCase();
+      var cand = un.filter(function (x) { return !q || x.name.toLowerCase().indexOf(q) >= 0; });
+      out += '<div class="card stack tn-ask" id="manPick" style="gap:8px"><b style="font-size:1.15em">Table ' + MAN.sel[0] + ' · siège ' + MAN.sel[1] + (cur ? ' : ' + esc(cur.name) : '') + '</b>' +
+        (un.length > 8 ? '<input id="manQ" type="search" autocomplete="off" placeholder="Taper le début du pseudo…" value="' + esc(MAN.q || '') + '" class="tn-in">' : '') +
+        '<div class="man-pick">' + cand.map(function (x) { return '<button class="btn" data-tmact="manPut" data-v="' + t.players.indexOf(x) + '">' + esc(x.name) + '</button>'; }).join('') + (cand.length ? '' : '<span class="small muted">' + (un.length ? 'Aucun pseudo ne correspond.' : 'Tout le monde est déjà placé : libère un siège pour déplacer quelqu’un.') + '</span>') + '</div>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap">' + (cur ? '<button class="btn" data-tmact="manFree">Libérer ce siège</button><button class="btn" data-tmact="manDealer">Mettre le bouton (D) ici</button>' : '') + '<button class="btn" data-tmact="manSel" data-v="">Fermer</button></div></div>';
+    }
+    out += '<div class="tn-tables">';
+    for (var id = 1; id <= MAN.nt; id++) {
+      var cnt = L.filter(function (x) { return x.table === id; }).length;
+      var h = '<div class="tn-table"><div class="tn-felt"><b>Table ' + id + '</b><span>' + cnt + ' / ' + t.size + '</span></div>';
+      for (var st = 1; st <= t.size; st++) {
+        var ang = Math.PI / 2 + (st - 1) * 2 * Math.PI / t.size, x = 50 + 38 * Math.cos(ang), y = 50 + 44 * Math.sin(ang);
+        var pl = manAt(id, st), on = MAN.sel && MAN.sel[0] === id && MAN.sel[1] === st, dB = t.buttons && t.buttons[id] === st;
+        h += '<div class="tn-seat" style="left:' + x + '%;top:' + y + '%"><button class="tn-p' + (on ? ' tn-h' : '') + (pl ? '' : ' man-empty') + '" data-tmact="manSel" data-v="' + id + ':' + st + '"><span>' + (pl ? esc(pl.name) : '+ ' + st) + '</span></button>' + (pl ? '<em class="tn-sn">S' + st + '</em>' : '') + (dB && pl ? '<em class="tn-d">D</em>' : '') + '</div>';
+      }
+      out += h + '</div>';
+    }
+    out += '</div>';
+    out += '<div class="card stack" style="gap:8px">' + (un.length ? '<button class="btn block" data-tmact="manFill">🎲 Placer les ' + un.length + ' autres au hasard</button>' : '') +
+      '<button class="btn gold block" data-tmact="manOk">Valider le plan de table</button><button class="btn block" data-tmact="manCancel">Annuler</button></div>';
+    return out;
   }
   function freeSeat(tb) { var t = T(), used = {}; alivePl().forEach(function (x) { if (x.table === tb) used[x.seat] = 1; }); var fr = []; for (var i = 1; i <= t.size; i++) if (!used[i]) fr.push(i); return fr.length ? fr[Math.floor(Math.random() * fr.length)] : null; }
   function seatSomewhere(pl) { // la table la moins remplie
@@ -349,7 +420,7 @@
   function stepOf(t) { if (t.drawn && t.players.length > 1 && alivePl().length === 1) return 3; if (t.drawn) return 2; return t.players.length >= 2 ? 1 : 0; }
   function stepsHtml(t) {
     var k = stepOf(t), N = [['Inscriptions', 'joueurs'], ['Tirage', 'tables'], ['Jeu', 'tables'], ['Fin', 'tables']], nOut = t.players.filter(function (x) { return x.out; }).length;
-    var tip = ['Touche les présents dans « Les habitués » ou tape les pseudos.', t.players.length + ' inscrits. Quand tout le monde est là : <button class="btn gold tn-tipbtn" data-tmact="draw">Tirer les tables</button>', nOut ? '' : 'Lance le chrono. À chaque élimination : « ❌ Sortie », le joueur, puis qui l’a sorti.', ''][k];
+    var tip = ['Touche les présents dans « Les habitués » ou tape les pseudos.', (MAN ? 'Place chaque joueur sur le plan (onglet Tables), puis « Valider le plan de table ».' : t.players.length + ' inscrits. Quand tout le monde est là : <button class="btn gold tn-tipbtn" data-tmact="draw">Tirer les tables</button>'), nOut ? '' : 'Lance le chrono. À chaque élimination : « ❌ Sortie », le joueur, puis qui l’a sorti.', ''][k];
     return '<div class="tn-steps">' + N.map(function (n, i) { return '<button class="' + (i < k ? 'ok' : i === k ? 'on' : '') + '" data-tmact="tab" data-v="' + n[1] + '"><i>' + (i < k ? '✓' : i + 1) + '</i>' + n[0] + '</button>'; }).join('<em>›</em>') + '</div>' + (tip ? '<div class="tn-tip">' + tip + '</div>' : '');
   }
   // fin : podium, enregistrement, envoi
@@ -423,7 +494,8 @@
     if (tab === 'tables') {
       if (canKO) out += '<button class="btn block tn-ko-big" data-tmact="koPick">❌ Sortie d’un joueur</button>' + lastOutsHtml();
       if (t.players.length) out += '<div class="tn-search"><input id="tnFind" type="search" autocomplete="off" placeholder="Trouver un joueur…" value="' + esc(FIND.q) + '">' + (window.PA_VOICE ? window.PA_VOICE.mic('data-tmact="findMic"', FIND.listening) : '') + '</div>' + (FIND.msg ? '<div class="small" style="color:var(--gold)">' + esc(FIND.msg) + '</div>' : '') + '<div id="tnFound" class="stack" style="gap:8px">' + (FIND.q ? findHtml() : '') + '</div>';
-      if (!t.drawn) out += '<div class="tn-empty">' + (t.players.length ? '<b>' + t.players.length + ' inscrits</b><span>Les tables ne sont pas encore tirées.</span><button class="btn gold" data-tmact="draw">Tirer les tables et les sièges</button>' : '<b>Pas encore de joueurs</b><span>Inscris-les dans l’onglet Joueurs.</span><button class="btn gold" data-tmact="tab" data-v="joueurs">Inscrire les joueurs</button>') + '</div>';
+      if (MAN) out += manHtml();
+      else if (!t.drawn) out += '<div class="tn-empty">' + (t.players.length ? '<b>' + t.players.length + ' inscrits</b><span>Les tables ne sont pas encore tirées.</span><button class="btn gold" data-tmact="draw">Tirer les tables et les sièges</button>' : '<b>Pas encore de joueurs</b><span>Inscris-les dans l’onglet Joueurs.</span><button class="btn gold" data-tmact="tab" data-v="joueurs">Inscrire les joueurs</button>') + '</div>';
       else {
         var tb = tablesOf(), ids = Object.keys(tb).map(Number).sort(function (a, b) { return a - b; });
         out += '<div class="small muted" style="text-align:center">Touche le joueur qui sort. Les tables s’équilibrent et se ferment toutes seules.</div><div class="tn-tables">' + ids.map(function (id) {
@@ -440,7 +512,7 @@
         out += '<details class="card tn-seats"' + (SEATS ? ' open' : '') + '><summary data-tmact="seatsToggle" style="cursor:pointer"><b>📋 Liste des places</b> <span class="small muted">· ' + SL.length + ' joueurs, par ordre alphabétique</span></summary>' +
           '<div class="tn-seatlist">' + SL.map(function (x) { return '<div><span>' + esc(x.name) + '</span><b>Table ' + x.table + ' · siège ' + x.seat + '</b></div>'; }).join('') + '</div>' +
           '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn gold" data-tmact="seatsShare" style="flex:1">📤 Envoyer la liste (WhatsApp…)</button><button class="btn" data-tmact="seatsTv" style="flex:1">' + (t.seatsTv ? '📺 Retirer de l’écran télé' : '📺 Afficher sur l’écran télé') + '</button></div></details>' +
-          '<button class="btn block" data-tmact="print">Imprimer le plan des tables</button>';
+          '<button class="btn block" data-tmact="print">Imprimer le plan des tables</button><button class="btn block" data-tmact="manEdit">✋ Modifier le plan à la main</button>';
       }
     } else if (tab === 'joueurs') {
       out += '<div class="card stack"><b>Inscrire</b><textarea id="tnNames" rows="3" class="tn-in" placeholder="Un pseudo par ligne (ou séparés par des virgules)"></textarea><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-tmact="addNames" style="flex:1">Inscrire</button>' + ((window.PA.player() || {}).opps && window.PA.player().opps.length ? '<button class="btn" data-tmact="addOpps">Mes adversaires du club</button>' : '') + '</div>' +
@@ -780,7 +852,17 @@
     }
     else if (a === 'delP') { T().players.splice(+t.getAttribute('data-v'), 1); }
     else if (a === 'draw') { if (!alivePl().length) return; DRAWASK = true; try { window.scrollTo(0, 0); } catch (e6) {} }
-    else if (a === 'drawSize') { T().size = +t.getAttribute('data-v'); DRAWASK = false; draw(); TAB = 'tables'; }
+    else if (a === 'drawSize') { DRAWASK = false; if (DRAWMODE === 'manual') manStart(+t.getAttribute('data-v'), false); else { T().size = +t.getAttribute('data-v'); draw(); } TAB = 'tables'; }
+    else if (a === 'drawMode') { DRAWMODE = t.getAttribute('data-v'); }
+    else if (a === 'manEdit') { manStart(T().size, true); TAB = 'tables'; }
+    else if (a === 'manNt') { var dn = +t.getAttribute('data-v'), nn = MAN.nt + dn; if (nn >= 1 && nn <= alivePl().length) { if (dn < 0) alivePl().forEach(function (x) { if (x.table > nn) { x.table = null; x.seat = null; } }); MAN.nt = nn; MAN.sel = null; } }
+    else if (a === 'manSel') { var sv = t.getAttribute('data-v'); MAN.sel = sv ? sv.split(':').map(Number) : null; MAN.q = ''; if (MAN.sel) setTimeout(function () { var el = document.getElementById('manPick'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 30); }
+    else if (a === 'manPut') { var mp = T().players[+t.getAttribute('data-v')]; if (mp && MAN.sel) { var occ = manAt(MAN.sel[0], MAN.sel[1]); if (occ) { occ.table = null; occ.seat = null; } mp.table = MAN.sel[0]; mp.seat = MAN.sel[1]; MAN.sel = null; MAN.q = ''; } }
+    else if (a === 'manFree') { var fo = MAN.sel && manAt(MAN.sel[0], MAN.sel[1]); if (fo) { fo.table = null; fo.seat = null; } MAN.sel = null; }
+    else if (a === 'manDealer') { if (MAN.sel) { T().buttons = T().buttons || {}; T().buttons[MAN.sel[0]] = MAN.sel[1]; } MAN.sel = null; }
+    else if (a === 'manFill') { manFill(); MAN.sel = null; }
+    else if (a === 'manOk') { if (manUnplaced().length) { if (typeof confirm === 'function' && !confirm(manUnplaced().length + ' joueur(s) pas encore placé(s) : les placer au hasard ?')) return; manFill(); } if (!alivePl().some(function (x) { return x.table; })) return; manDone(); }
+    else if (a === 'manCancel') { manCancel(); }
     else if (a === 'drawCancel') { DRAWASK = false; }
     else if (a === 'tab') { TAB = t.getAttribute('data-v'); }
     else if (a === 'movesDone') { T().pending = []; T().closed = []; MSHEET = false; }
@@ -906,6 +988,11 @@
     var rd = new FileReader(); rd.onload = function () { var ta = document.getElementById('tnRoster'); if (ta) ta.value = String(rd.result || '').replace(/\r/g, '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean).join('\n'); }; rd.readAsText(e.target.files[0]);
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'tnNewM') { var bt = document.querySelector('[data-tmact="addMember"]'); if (bt) { e.preventDefault(); bt.click(); } } });
+  document.addEventListener('input', function (e) {
+    if (!e.target || e.target.id !== 'manQ' || !MAN) return;
+    MAN.q = e.target.value; var esc = U().esc, t = T(), q = MAN.q.toLowerCase(), un = manUnplaced(), cand = un.filter(function (x) { return !q || x.name.toLowerCase().indexOf(q) >= 0; }), box = document.querySelector('#manPick .man-pick');
+    if (box) box.innerHTML = cand.map(function (x) { return '<button class="btn" data-tmact="manPut" data-v="' + t.players.indexOf(x) + '">' + esc(x.name) + '</button>'; }).join('') || '<span class="small muted">Aucun pseudo ne correspond.</span>';
+  });
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'tnFind') { FIND.q = e.target.value; FIND.msg = ''; var r = document.getElementById('tnFound'); if (r) r.innerHTML = findHtml(); } });
   // élimination : idx = joueur qui sort, by = index de celui qui l'élimine ('' = inconnu)
   function doKO(idx, by) {
