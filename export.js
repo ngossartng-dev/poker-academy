@@ -320,7 +320,7 @@
       d.need(30 + 22 + 15 + 18 * Math.min(4, tn.rows.length));
       if (!bare) {
       d.rect(M, d.y - 30, CW, 30, bg); d.text(M + 10, d.y - 19.5, L().TYPES[tn.type].name + (dp ? '  ×1,5' : ''), 13, true, fg, null, CW - 150); d.text(M, d.y - 19.5, dfr(tn.date), 11, true, fg, 'r', CW - 10); d.y -= 30;
-      var chips = [tn.n + ' joueurs'].concat(tn.re ? [tn.re + ' re-entry'] : [], tn.add ? [tn.add + ' add-on'] : [], tnLength(tn) ? ['durée ' + tnLength(tn)] : [], ['vainqueur : ' + (tn.winner || '—')], tn.holder ? ['tête mise à prix : ' + tn.holder] : []);
+      var chips = [tn.n + ' joueurs'].concat(tn.manual ? ['saisi à la main'] : [], tn.re ? [tn.re + ' re-entry'] : [], tn.add ? [tn.add + ' add-on'] : [], tnLength(tn) ? ['durée ' + tnLength(tn)] : [], ['vainqueur : ' + (tn.winner || '—')], tn.holder ? ['tête mise à prix : ' + tn.holder] : []);
       d.rect(M, d.y - 22, CW, 22, PALE); var x = M + 8;
       chips.forEach(function (c, i) { var w = tw(c, 8, i === chips.length - 1 && tn.holder); if (x + w > M + CW - 6) return; d.text(x, d.y - 14.5, c, 8, /vainqueur/.test(c), /tête/.test(c) ? RED : INK); x += w + 16; });
       d.y -= 24; }
@@ -387,7 +387,20 @@
       var wl = D.weeks.slice().reverse(), half = Math.ceil(wl.length / 2), cw2 = CW / 2;
       for (var q = 0; q < half; q++) { doc.need(13); [wl[q], wl[q + half]].forEach(function (w, c) { if (!w) return; var x = M + c * cw2; doc.text(x, doc.y - 9, w.short, 8, true, '0.55 0.42 0.08'); doc.text(x + 28, doc.y - 9, w.games, 8, false, INK, null, cw2 - 34); }); doc.y -= 13; }
     }
-    if (D.list.length) { doc.newPage(); doc.h1('Les tournois', 'Qui a sorti qui, à quelle heure, à quel niveau · prime en rouge'); D.list.slice().reverse().forEach(function (tn) { doc.tourney(tn); }); }
+    if (D.list.length) { doc.newPage(); doc.h1('Les tournois', D.list.length + ' tournoi' + (D.list.length > 1 ? 's' : '') + ', du plus récent au plus ancien · qui a sorti qui, heure, niveau · prime en rouge'); D.list.slice().reverse().forEach(function (tn) { doc.tourney(tn); }); }
+    if (cyK && cyK.rows && cyK.rows.length) {
+      doc.newPage(); doc.h1('La reprise du classement', 'Les points de chaque joueur au ' + dfr(cyK.date) + ', avant le premier tournoi joué avec l’appli · ils comptent dans le total');
+      var rws = cyK.rows.slice().sort(function (a, b) { return b.pts - a.pts; }), cc = [[0, 40, 'c', 'Rang'], [40, 220, 'l', 'Joueur'], [260, 80, 'c', 'Points'], [340, 80, 'c', 'Tournois'], [420, CW - 420, 'c', 'Primes']];
+      doc.rect(M, doc.y - 15, CW, 15, '0.20 0.20 0.20'); cc.forEach(function (c) { doc.text(M + c[0] + 4, doc.y - 10.5, c[3].toUpperCase(), 6.8, true, '0.85 0.85 0.85', c[2], c[1] - 8); }); doc.y -= 15;
+      var rk = 0;
+      rws.forEach(function (r, i) {
+        doc.need(17); if (i === 0 || r.pts !== rws[i - 1].pts) rk = i + 1;
+        if (i % 2) doc.rect(M, doc.y - 17, CW, 17, PALE);
+        var v = [String(rk), r.name, f1(r.pts), r.n ? String(r.n) : '–', r.b ? String(r.b) : '–'];
+        cc.forEach(function (c, j) { doc.text(M + c[0] + 4, doc.y - 12, v[j], 9, j < 3, INK, c[2], c[1] - 8); });
+        doc.y -= 17;
+      });
+    }
     return doc.bytes();
   }
   function awardsPdf(year) {
@@ -509,5 +522,25 @@
     var tn = L().load().list.filter(function (x) { return x.id === id; })[0]; if (!tn) { done('Tournoi introuvable.'); return; }
     deliver(fmt === 'pdf' ? tnPdf(tn) : tnXlsx(tn), slug(L().TYPES[tn.type].short + '-' + tn.date) + '.' + fmt, done);
   }
-  window.PA_EXPORT = { awards: awards, _awardsPdf: awardsPdf, year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, image: rankImage, _canvas: rankCanvas, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
+  /* Sur le PC : le PDF du championnat se refait tout seul après chaque changement (tournoi enregistré, ajouté à la main,
+     corrigé, supprimé, reçu d’un téléphone par la synchro) dans Mon Drive › Poker Academy › Classement. */
+  var AUTO = { t: null, at: 0, path: '', err: '' };
+  try { AUTO.at = +localStorage.getItem('pa2autopdfAt') || 0; AUTO.path = localStorage.getItem('pa2autopdfPath') || ''; } catch (e) {}
+  function autoSig(y) { var d = L().load(), c = L().carryOf ? L().carryOf(y) : null; return JSON.stringify([d.list.filter(function (x) { return x.date.slice(0, 4) === y; }).map(function (x) { return x.id + ':' + (x.editAt || 0) + ':' + x.rows.length; }), c ? c.at || c.date : 0, (d.closed || {})[y] || 0]); }
+  function autoRun() {
+    AUTO.t = null;
+    if (!(window.PA_SYNC && window.PA_SYNC.isPC) || window.PA_RANGEWIN || !L()) return;
+    var ys = L().years ? L().years() : [String(new Date().getFullYear())], jobs = [];
+    ys.forEach(function (y) { var sg = autoSig(y), old = ''; try { old = localStorage.getItem('pa2autopdf' + y) || ''; } catch (e) {} if (sg !== old) jobs.push([y, sg]); });
+    jobs.forEach(function (j) {
+      var bytes; try { bytes = yearPdf(j[0]); } catch (e) { AUTO.err = 'PDF impossible : ' + e.message; return; }
+      fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Championnat-club-' + j[0] + '.pdf', b64: b64(bytes), open: false, dir: 'Classement' }) })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (res) { AUTO.at = Date.now(); AUTO.path = res.path || ''; AUTO.err = ''; try { localStorage.setItem('pa2autopdf' + j[0], j[1]); localStorage.setItem('pa2autopdfAt', String(AUTO.at)); localStorage.setItem('pa2autopdfPath', AUTO.path); } catch (e) {} })
+        .catch(function () { AUTO.err = 'Le PDF automatique n’a pas pu être enregistré dans le Drive.'; });
+    });
+  }
+  function autoSoon() { if (!(window.PA_SYNC && window.PA_SYNC.isPC) || window.PA_RANGEWIN) return; if (AUTO.t) clearTimeout(AUTO.t); AUTO.t = setTimeout(autoRun, 4000); }
+  setTimeout(autoSoon, 6000);
+  window.PA_EXPORT = { autoSoon: autoSoon, autoInfo: function () { return AUTO; }, awards: awards, _awardsPdf: awardsPdf, year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, image: rankImage, _canvas: rankCanvas, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
 })();

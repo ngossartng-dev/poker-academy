@@ -14,7 +14,7 @@
     try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 100) / 100; }); }); return d; } } catch (e) {}
     return { list: [] };
   }
-  function saveRaw(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  function saveRaw(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} if (window.PA_EXPORT && window.PA_EXPORT.autoSoon) window.PA_EXPORT.autoSoon(); }
   // reprise du championnat 2026 du club (classement au 15/11/2026, têtes mises à prix) : posée une seule fois sur chaque appareil,
   // sauf si une reprise plus récente existe déjà ; la synchro garde ensuite la plus récente
   var SEED2026 = {"at": 1794757123000, "date": "2026-11-15", "rows": [{"name": "MONPIERROT", "pts": 112}, {"name": "YO", "pts": 109.5}, {"name": "VILVOORD", "pts": 104}, {"name": "JR", "pts": 89.5}, {"name": "BASTOSS", "pts": 81}, {"name": "ENFANT2COEUR", "pts": 81}, {"name": "NARUTI", "pts": 79}, {"name": "ENFANT2GUETTO", "pts": 76}, {"name": "ENFANT2FISH", "pts": 75}, {"name": "TA_1_PB", "pts": 61}, {"name": "KAKTUSSE", "pts": 55}, {"name": "BANEEST", "pts": 53}, {"name": "VINCENT", "pts": 52.5}, {"name": "POOLSHARKS", "pts": 51.5}, {"name": "SIM", "pts": 48.5}, {"name": "PALLIX", "pts": 39}, {"name": "GREG", "pts": 38}, {"name": "UNDERTAKER", "pts": 36.5}, {"name": "JOHNY", "pts": 35}, {"name": "AIGLEFOUR", "pts": 25}, {"name": "JUJU", "pts": 10.5}, {"name": "NARDOS", "pts": 3}, {"name": "ROBIN", "pts": 3}, {"name": "MACHINEGUN", "pts": 2}, {"name": "ANNAELLE", "pts": 1}], "holders": {"mercredi": "YO", "deep": ["NARUTI", "VILVOORD"]}};
@@ -274,6 +274,11 @@
       (V.renMsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.renMsg) + '</div>' : '') +
       '<div class="row" style="gap:8px"><button class="btn gold" style="flex:1" data-lgact="renDo" data-v="' + tn.id + '">Remplacer</button><button class="btn" data-lgact="renOpen" data-v="">Fermer</button></div></div>';
   }
+  function autoLine() {
+    var ui = U(), E = window.PA_EXPORT, pc = window.PA_SYNC && window.PA_SYNC.isPC;
+    if (pc && E && E.autoInfo) { var A = E.autoInfo(); return '<div class="small" style="color:var(--gold)">📁 Sur ce PC, le PDF du classement se met à jour tout seul après chaque tournoi : Mon Drive › Poker Academy › Classement' + (A.at ? ' (dernière mise à jour : ' + new Date(A.at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ')' : '') + '.</div>' + (A.err ? '<div class="small" style="color:#ff8a8f">' + ui.esc(A.err) + '</div>' : ''); }
+    return '<div class="small">📁 Pour le ranger dans ton Drive : touche « 📄 PDF », puis « Enregistrer dans Drive ». Sur le PC, il se met à jour tout seul après chaque synchro.</div>';
+  }
   // saisie manuelle : reprendre un classement en cours, ou ajouter un tournoi déjà joué
   var INP = 'min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:1.05em';
   function manualCard(cy) {
@@ -352,7 +357,7 @@
     } else {
       out += inY.length ? inY.slice().reverse().map(tnCard).join('') : '<div class="card small muted">Aucun tournoi enregistré en ' + V.year + '.</div>';
     }
-    if (window.PA_EXPORT && (d.list.length || carryOf(V.year))) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>Exporter ' + V.year + '</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('exports') : '') + '</div><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine et tous les tournois (qui a sorti qui, heure, niveau).</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
+    if (window.PA_EXPORT && (d.list.length || carryOf(V.year))) out += '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>Exporter ' + V.year + '</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('exports') : '') + '</div><div class="small muted">Un seul fichier avec le classement annuel, le détail semaine par semaine, tous les tournois (joués avec le chrono ou saisis à la main : qui a sorti qui, heure, niveau) et la reprise du classement.</div>' + autoLine() + '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="xy" data-f="xlsx" style="flex:1">📊 Excel (.xlsx)</button><button class="btn gold" data-lgact="xy" data-f="pdf" style="flex:1">📄 PDF</button></div><button class="btn block" data-lgact="img">🖼️ Image du classement pour WhatsApp</button>' + (V.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.msg) + '</div>' : '') + '</div>';
     if (window.PA_CLUBSYNC) out += window.PA_CLUBSYNC.card();
     out += '<div class="small muted">Les tournois s’enregistrent depuis la page Tournoi du club, quand il ne reste qu’un joueur. Le championnat est inclus dans la sauvegarde Drive.</div></div>';
     return ui.shell('club', out);
