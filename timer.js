@@ -387,7 +387,7 @@
     return '<div class="card stack" style="border-color:var(--gold)"><b style="font-size:1.2em">❌ ' + ui.esc(pk.name) + ' sort</b>' +
       (t.holder && pk.name.toLowerCase() === t.holder.toLowerCase() ? '<div style="color:var(--gold)">C’est la tête mise à prix : son éliminateur gagne ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points.</div>' : '') +
       '<div class="small muted">Table ' + pk.table + ', siège ' + pk.seat + ' · ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · ' + lvlNow() + '</div>' +
-      '<b>Éliminé par :</b><div class="tn-pick">' + same.map(function (x) { return '<button class="tn-kb" data-tmact="koBy" data-v="' + t.players.indexOf(x) + '">' + ui.esc(x.name) + '</button>'; }).join('') + '<button class="tn-kb tn-kb-q" data-tmact="koBy" data-v="">Je ne sais pas</button></div>' +
+      fxRow() + '<b>Éliminé par :</b><div class="tn-pick">' + same.map(function (x) { return '<button class="tn-kb" data-tmact="koBy" data-v="' + t.players.indexOf(x) + '">' + ui.esc(x.name) + '</button>'; }).join('') + '<button class="tn-kb tn-kb-q" data-tmact="koBy" data-v="">Je ne sais pas</button></div>' +
       (rest.length ? '<div class="row" style="gap:8px;flex-wrap:nowrap"><select id="koBy" style="flex:1;min-width:0;min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit;font-size:1em"><option value="-">Un joueur d’une autre table…</option>' +
         rest.map(function (x) { return '<option value="' + t.players.indexOf(x) + '">' + ui.esc(x.name) + ' (table ' + x.table + ')</option>'; }).join('') + '</select><button class="btn gold" data-tmact="koOk">Valider</button></div>' : '') +
       '<button class="btn" data-tmact="koCancel">Annuler</button></div>';
@@ -538,7 +538,7 @@
         '<div class="card stack"><b>Re-entry, add-on, jetons</b><div class="small muted">Annoncés à la voix et affichés sur l’écran télé. 0 = pas de règle.</div>' + cin('tnReEnd', c.reEnd || 0, 'Re-entry jusqu’à la fin du niveau') + cin('tnAddP', c.addPause || 0, 'Add-on à la pause n°') +
         '<div class="tn-set"><span>Retrait des petits jetons</span><input id="tnColor" type="text" value="' + esc(c.colorUp || '') + '" placeholder="25 au niveau 8, 100 au niveau 14" class="tn-in" style="width:230px"></div></div>' +
         '<div class="card stack"><b>Les jetons</b>' + cin('tnChips', c.chips, 'Tapis de départ') + cin('tnRe', c.reStack, 'Re-entry (0 = départ)') + cin('tnAdd', c.addStack, 'Add-on (0 = départ)') + '</div>' +
-        rmCard() + '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' +
+        rmCard() + '<div class="card stack"><b>Les annonces</b><div class="small muted">La voix annonce chaque niveau, la dernière minute, les pauses, les éliminations, la prime et les changements de place.</div>' + voiceBtn() + '</div>' + fxCard() +
         '<div class="card stack"><b>Les niveaux</b><button class="btn block" data-tmact="editFromT">⚙️ Structure · 📂 Mes structures (charger, modifier)</button><a class="btn block" href="#minuteur">Minuteur en grand écran</a></div>' +
         (t.drawn && alivePl().length > 1 ? stopCard(t) : '<button class="btn block" data-tmact="newT">Nouveau tournoi (tout effacer)</button>');
     }
@@ -637,6 +637,21 @@
   // annonces vocales : voix du téléphone (Android) ou du navigateur / PC
   var sayN = 0;
   function vOn() { return ST.voice !== false; }
+  function sayLater(d, txt) { if (d > 0) setTimeout(function () { say(txt); }, d * 1000); else say(txt); }
+  var KOFX = null;
+  function fxRow() {
+    var F = window.PA_FX; if (!F || !F.cfg().on) return '';
+    var cur = KOFX || F.cfg().def;
+    return '<b>Animation :</b><div class="tn-pick fx-pick">' + F.LIST.concat([{ id: 'hasard', e: '🎲', name: 'Au hasard' }, { id: 'aucune', e: '🔇', name: 'Aucune' }]).map(function (x) { return '<button class="tn-kb' + (cur === x.id ? ' fx-on' : '') + '" data-tmact="koFx" data-v="' + x.id + '" title="' + x.name + '" aria-label="' + x.name + '" style="font-size:1.6em;min-width:56px">' + x.e + '</button>'; }).join('') + '</div>';
+  }
+  function fxCard() {
+    var F = window.PA_FX; if (!F) return '';
+    var c = F.cfg();
+    return '<div class="card stack"><b>🎉 Animations sonores et visuelles</b><div class="small muted">À chaque élimination : une animation en grand et son bruitage (aussi sur l’écran télé). La tête mise à prix et le vainqueur ont la leur. Au moment de la sortie, tu peux en choisir une autre.</div>' +
+      '<label class="row" style="gap:10px;align-items:center;font-size:1.1em;cursor:pointer"><input type="checkbox" data-tmact="fxOn"' + (c.on ? ' checked' : '') + ' style="width:26px;height:26px"> Animations activées</label>' +
+      (c.on ? '<div class="small">Animation par défaut :</div><div class="tn-pick fx-pick">' + F.LIST.concat([{ id: 'hasard', e: '🎲', name: 'Au hasard' }]).map(function (x) { return '<button class="tn-kb' + (c.def === x.id ? ' fx-on' : '') + '" data-tmact="fxDef" data-v="' + x.id + '">' + x.e + ' ' + x.name + '</button>'; }).join('') + '</div>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><span class="small">Volume :</span>' + [[0.35, 'Doux'], [0.7, 'Moyen'], [1, 'Fort']].map(function (v) { return '<button class="btn' + (Math.abs(c.vol - v[0]) < 0.05 ? ' gold' : '') + '" data-tmact="fxVol" data-v="' + v[0] + '">' + v[1] + '</button>'; }).join('') + '<button class="btn" data-tmact="fxTest" style="margin-left:auto">▶️ Tester</button></div>' : '') + '</div>';
+  }
   function say(txt, force) {
     if (!vOn() && !force) return;
     try {
@@ -875,7 +890,12 @@
     else if (a === 'findMic') { FIND.listening = true; FIND.msg = ''; U().render(); window.PA_VOICE.listen('Quel joueur ?', function (txt, err) { FIND.listening = false; if (txt === null) FIND.msg = err || 'La dictée n’est pas disponible sur cet appareil.'; else if (!txt) FIND.msg = 'Je n’ai rien entendu.'; else FIND.q = txt.replace(/^(élimine|elimine|éliminer|sortir|sort)\s+/i, '').trim(); U().render(); }); return; }
     else if (a === 'ko') { var pk0 = T().players[+t.getAttribute('data-v')]; if (pk0 && !pk0.out) { KO = +t.getAttribute('data-v'); FIND.q = ''; } }
     else if (a === 'koCancel') { KO = null; }
-    else if (a === 'koPick') { KO = 'pick'; FIND.q = ''; }
+    else if (a === 'koPick') { KO = 'pick'; FIND.q = ''; KOFX = null; }
+    else if (a === 'koFx') { KOFX = t.getAttribute('data-v'); }
+    else if (a === 'fxOn') { if (window.PA_FX) window.PA_FX.set('on', !window.PA_FX.cfg().on); }
+    else if (a === 'fxDef') { if (window.PA_FX) { window.PA_FX.set('def', t.getAttribute('data-v')); window.PA_FX.test(t.getAttribute('data-v')); } }
+    else if (a === 'fxVol') { if (window.PA_FX) { window.PA_FX.set('vol', +t.getAttribute('data-v')); window.PA_FX.test(); } }
+    else if (a === 'fxTest') { if (window.PA_FX) window.PA_FX.test(); return; }
     else if (a === 'koOk' || a === 'koBy') {
       var sel = document.getElementById('koBy'), byv = a === 'koBy' ? t.getAttribute('data-v') : (sel ? sel.value : '');
       if (byv === '-') return;
@@ -1010,7 +1030,8 @@
         if (lot) pk.prize = lot.amt;
         var win1 = alivePl().length === 1 ? alivePl()[0] : null; if (win1 && wlot) win1.prize = wlot.amt;
         if (win1) { freeze(); ST.since = null; awake(false); } // fin du tournoi : le chrono s'arrête
-        say(pk.name + ' sort à la ' + ordSay(lft) + ' place' + (killer ? ', éliminé par ' + killer.name : '') + (lot ? ', et remporte ' + lot.amt + ' euros' : '') + '.' + (bmsg ? ' Prime de ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points pour ' + killer.name + ' !' : '') +
+        var fxd = 0; try { if (window.PA_FX) fxd = window.PA_FX.ko({ kind: KOFX, name: pk.name, place: lft, by: killer ? killer.name : '', bounty: !!bmsg, bonus: window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2, winner: win1 ? win1.name : null }); } catch (eFx) {} KOFX = null;
+        sayLater(fxd, pk.name + ' sort à la ' + ordSay(lft) + ' place' + (killer ? ', éliminé par ' + killer.name : '') + (lot ? ', et remporte ' + lot.amt + ' euros' : '') + '.' + (bmsg ? ' Prime de ' + (window.PA_LEAGUE ? window.PA_LEAGUE.BONUS : 2) + ' points pour ' + killer.name + ' !' : '') +
           (alivePl().length === 1 ? ' ' + alivePl()[0].name + ' remporte le tournoi' + (wlot ? ' et ' + wlot.amt + ' euros' : '') + ' ! Bravo !' : (mv.length ? ' Table finale !' : '') + (newMv.length ? (newMv.length <= 4 ? ' Changement de place : ' + newMv.map(function (m) { return m.name + ', table ' + m.tt + ', siège ' + m.ts; }).join(' ; ') + '.' : ' ' + newMv.length + ' joueurs changent de place, regardez l’écran.') : '')));
         tk.msg = pk.name + ' sort à la ' + lft + 'e place' + (killer ? ', éliminé par ' + killer.name : '') + (lot ? ' — lot : ' + eur(lot.amt) : '') + ' (' + new Date(pk.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ', ' + pk.koLevel + ').' + bmsg + (nmv ? '<br>' + nmv + ' joueur' + (nmv > 1 ? 's changent' : ' change') + ' de place : voir la liste.' : '') + (mv.length ? '<br><b>Table finale !</b>' : '') + (alivePl().length === 1 ? '<br><b>' + alivePl()[0].name + ' gagne le tournoi !</b>' : '');
       }
