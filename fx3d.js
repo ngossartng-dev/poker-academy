@@ -40,7 +40,7 @@
     var tex = clayTex(T);
     function M(c, r, noBump) { return new T.MeshStandardMaterial({ color: c, roughness: r == null ? 0.82 : r, metalness: 0, bumpMap: noBump ? null : tex, bumpScale: noBump ? 0 : 0.6 }); }
     var mWhite = M(0xf4ede0), mRed = M(0xd8232c, 0.6), mOrange = M(0xf09a1c, 0.6), mBeak = M(0xf6b51e, 0.5), mPink = M(0xff9aa6, 0.9),
-      mEye = M(0xffffff, 0.25, true), mPup = M(0x111111, 0.2, true), mStalk = M(0xd24d4d, 0.5), mCar = M(0xf06c0a, 0.55), mLeaf = M(0x3aa52f, 0.7), mStar = new T.MeshStandardMaterial({ color: 0xffd23a, emissive: 0x8a6400, roughness: 0.4 });
+      mEye = M(0xffffff, 0.25, true), mPup = M(0x111111, 0.2, true), mStalk = M(0xd24d4d, 0.5), mCar = M(0xf06c0a, 0.55), mLeaf = M(0x3aa52f, 0.7), mStar = new T.MeshStandardMaterial({ color: 0xffd84a, emissive: 0xb08000, emissiveIntensity: 0.8, roughness: 0.35 });
     function ball(r, m, sx, sy, sz, x, y, z) { var o = new T.Mesh(new T.SphereGeometry(r, 48, 32), m); o.scale.set(sx || 1, sy || 1, sz || 1); o.position.set(x || 0, y || 0, z || 0); o.castShadow = true; o.receiveShadow = true; return o; }
 
     // ---- la poule ----
@@ -98,7 +98,9 @@
       for (var k = 0; k < 3; k++) { var lf = ball(0.08, mLeaf, 0.6, 1.4, 0.3, (k % 2 ? 0.07 : -0.07), 0.35 + k * 0.15, 0); lf.rotation.z = k % 2 ? -0.6 : 0.6; g.add(lf); }
     });
     // étoiles de la PLS
-    var stars = []; for (var k = 0; k < 3; k++) { var st2 = new T.Mesh(new T.OctahedronGeometry(0.13), mStar); st2.visible = false; S.add(st2); stars.push(st2); }
+    var shp = new T.Shape(); for (var k = 0; k < 10; k++) { var ra = k % 2 ? 0.07 : 0.17, an = PI / 2 + k * PI / 5; if (k) shp.lineTo(Math.cos(an) * ra, Math.sin(an) * ra); else shp.moveTo(Math.cos(an) * ra, Math.sin(an) * ra); }
+    var starG = new T.ExtrudeGeometry(shp, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.015, bevelSegments: 2 }); starG.center();
+    var stars = []; for (var k = 0; k < 5; k++) { var st2 = new T.Mesh(starG, mStar); st2.visible = false; S.add(st2); stars.push(st2); }
 
     var BUTT = new T.Vector3(-1.52, 1.3, 0), DIR = new T.Vector3(1, -0.12, 0).normalize();
     var P0 = new T.Vector3(-2.6, 7.6, 1.0), P1 = new T.Vector3(-3.3, 2.0, 0.8), END = BUTT.clone().addScaledVector(DIR, -1.05), IN = BUTT.clone().addScaledVector(DIR, -0.12);
@@ -153,7 +155,9 @@
       fall.rotation.x = PI / 2 * f; fall.position.set(-0.35 * f, 0, 0.95 - 1.5 * f);
       legs.forEach(function (L, k) { L.rotation.z = t > 4.1 ? Math.sin(t * 22 + k * 2) * 0.25 * (1 - seg(t, 5.2, 6.5)) : 0; });
       // étoiles qui tournent autour de la tête
-      if (t > 4.0) { head.getWorldPosition(hw); stars.forEach(function (s, k) { s.visible = true; var a = t * 3 + k * 2.09; s.position.set(hw.x + Math.cos(a) * 0.85, hw.y + 0.75 + Math.sin(a * 2) * 0.08, hw.z + Math.sin(a) * 0.85); s.rotation.y = t * 4; }); }
+      if (t > 4.0) { head.getWorldPosition(hw); var gs = easeOut(seg(t, 4.0, 4.3)); stars.forEach(function (s, k) { // couronne d’étoiles qui tourne au-dessus de la tête
+        s.visible = true; var a = t * 3.2 + k * 2 * PI / 5; s.position.set(hw.x + 0.25 + Math.cos(a) * 0.62, hw.y + 1.0 + Math.sin(a * 3) * 0.05, hw.z + Math.sin(a) * 0.62);
+        s.rotation.set(0, -a, Math.sin(t * 6 + k) * 0.3); s.scale.setScalar(gs * (1 + Math.sin(t * 9 + k * 1.7) * 0.18)); }); }
       R.render(S, cam);
     }
     var started = false, raf = 0;
