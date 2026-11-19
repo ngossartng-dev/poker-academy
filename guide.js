@@ -82,7 +82,7 @@
       s: ['Club › Championnat, en bas : « 📊 Excel » ou « 📄 PDF » pour toute l’année (classement, semaines, tournois, trophées).',
         'Pour chaque joueur : son rang (même total = même rang, ex aequo), le nombre de tournois joués, les primes gagnées (têtes mises à prix éliminées) et les points qu’elles rapportent, les points de classement sans les primes, et le total. Les points repris d’un classement déjà en cours apparaissent en gris dans les barres. Sa fiche (touche son nom) reprend ces chiffres.',
         '« 🖼️ Image du classement pour WhatsApp » : une image prête à envoyer au groupe, avec les places gagnées ou perdues.',
-        'Onglet Tournois, ouvre un tournoi : « Excel de ce tournoi », « PDF de ce tournoi », « 📝 Résumé texte pour WhatsApp ».',
+        'Onglet Tournois, ouvre un tournoi : « Excel de ce tournoi », « PDF de ce tournoi », « 📝 Résumé texte pour WhatsApp ». Le résumé (le même que « Envoyer le résultat au groupe ») finit par le classement de l’année après ce tournoi, avec pour chaque joueur les places gagnées (⬆️ +2) ou perdues (🔻 −1), ＝ s’il n’a pas bougé, 🆕 s’il entre au classement.',
         'Onglet Trophées : « PDF de la remise des prix ».'],
       tips: ['Sur Android, le menu de partage s’ouvre (WhatsApp, mail, Drive). Sur PC, le fichier est rangé dans Mon Drive › Poker Academy › Partage et s’ouvre tout seul.'] },
     { id: 'synchro', club: true, t: 'Synchroniser l’appli complète et l’appli Club', i: 'Le championnat, la liste du club et la structure sont partagés par un fichier de ton Google Drive : Mon Drive › Poker Academy › Club › championnat-club.json.',

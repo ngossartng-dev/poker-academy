@@ -214,7 +214,19 @@
     else if (hd) L.push('🛡️ ' + hd.name + ', tête mise à prix, n’a pas été chassé' + (hd.place === 1 ? ' : il gagne encore !' : (hd.koBy ? '' : '')));
     if (kk && ko[kk] > 1) L.push('🔪 Le plus de sorties : ' + kk + ' (' + ko[kk] + ')');
     if (last && last.koAt) L.push('🏁 Dernière main à ' + hmf(last.koAt) + (last.koLevel ? ' (' + last.koLevel + ')' : ''));
-    if (tn.type !== 'libre') { var st = standings(d.list.filter(function (x) { return x.date.slice(0, 4) === tn.date.slice(0, 4) && x.date <= tn.date; }), tn.date.slice(0, 4)); L.push('📊 Classement ' + tn.date.slice(0, 4) + ' : ' + st.slice(0, 5).map(function (o, i) { return (i + 1) + '. ' + o.name + ' ' + f1(o.total); }).join(' · ')); }
+    if (tn.type !== 'libre') {
+      // classement après ce tournoi, avec les places gagnées ou perdues depuis le précédent
+      var yr = tn.date.slice(0, 4), idx = d.list.indexOf(tn);
+      var upto = d.list.filter(function (x, i) { return x.date.slice(0, 4) === yr && (x.date < tn.date || (x.date === tn.date && i <= idx)); });
+      var st = standings(upto, yr), prev = standings(upto.filter(function (x) { return x !== tn; }), yr), pr = {};
+      prev.forEach(function (o) { if (o.total > 0) pr[key(o.name)] = o.rank; });
+      L.push('', '📊 Classement ' + yr + ' après ce tournoi :');
+      st.filter(function (o) { return o.total > 0; }).forEach(function (o) {
+        var b = pr[key(o.name)], mv = b == null ? '🆕' : b > o.rank ? '⬆️ +' + (b - o.rank) : b < o.rank ? '🔻 −' + (o.rank - b) : '＝';
+        L.push(o.rank + '. ' + o.name + ' — ' + f1(o.total) + ' pts  ' + mv);
+      });
+      L.push('(⬆️ places gagnées · 🔻 places perdues · ＝ même place · 🆕 entre au classement)');
+    }
     L.push('', 'Merci à tous, et merci à Lionel ! ♠️♥️♦️♣️');
     return L.join('\n');
   }
