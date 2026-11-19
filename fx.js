@@ -57,8 +57,9 @@
       return 2.2;
     },
     poulet: function (a, t) { // missile-carotte, « plop », CRI du poulet, boïng des yeux, puis BOUM
-      noise(a, t, 0.75, { ft: 'bandpass', f0: 500, f1: 4000, q: 2, peak: 0.3, att: 0.5, rel: 0.05 }); // le missile arrive
-      tone(a, t, 0.75, 300, { f1: 1400, type: 'sawtooth', peak: 0.08, lp: 3000, att: 0.4 });
+      noise(a, t, 1.6, { ft: 'bandpass', f0: 400, f1: 4000, q: 2, peak: 0.3, att: 1.2, rel: 0.05 }); // le missile arrive (lentement)
+      tone(a, t, 1.6, 220, { f1: 1400, type: 'sawtooth', peak: 0.08, lp: 3000, att: 1.0 });
+      t += 0.85;
       tone(a, t + 0.75, 0.12, 520, { f1: 90, type: 'sine', peak: 0.8, rel: 0.1 }); noise(a, t + 0.75, 0.07, { f0: 1800, peak: 0.45 }); // plop : la carotte rentre
       // le cri : deux couches dentelées avec un vibrato très rapide, plus un souffle rauque
       [[0, 900, 1650, 1.0], [0.012, 905, 1680, 0.7]].forEach(function (L) {
@@ -70,7 +71,7 @@
       tone(a, t + 1.35, 0.4, 350, { f1: 1400, type: 'sine', vib: 25, vibDepth: 45, peak: 0.35 });
       noise(a, t + 2.15, 1.6, { ft: 'lowpass', f0: 2000, f1: 80, peak: 1, att: 0.005, rel: 1.5 }); tone(a, t + 2.15, 1.1, 100, { f1: 30, peak: 0.9, rel: 1 }); // BOUM
       noise(a, t + 2.35, 1.2, { ft: 'bandpass', f0: 1500, f1: 600, q: 1.5, peak: 0.12, att: 0.1 }); // plumes
-      return 3.7;
+      return 4.55;
     },
     trombone: function (a, t) { // « wouah-wouah-wouah-wouaaah »
       var n = [233.1, 220, 207.7, 196], d = [0.45, 0.45, 0.45, 1.4];
@@ -132,18 +133,23 @@
     '@keyframes fxFly{0%{left:40%;top:45%;transform:scale(1)}30%{left:42%;top:42%}100%{left:115%;top:-20%;transform:scale(.6) rotate(-20deg)}}' +
     '.pk-wrap{position:absolute;left:50%;top:44%;width:min(94vw,760px);transform:translate(-50%,-50%)}.pk{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 12px 22px rgba(0,0,0,.55))}' +
     '.pk-chick{transform-box:view-box;transform-origin:228px 312px;animation:pkIdle .5s ease-in-out infinite alternate}@keyframes pkIdle{from{transform:scale(1,1)}to{transform:scale(1.02,.985)}}' +
-    '.pk-missile{transform:translate(-260px,214px);animation:pkFly .75s cubic-bezier(.5,0,1,.6) forwards}.pk-fire{animation:pkFlick .07s infinite alternate}' +
-    '@keyframes pkFly{to{transform:translate(70px,206px) rotate(4deg)}}@keyframes pkFlick{from{opacity:.65;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1.25)}}' +
-    '.pk-in .pk-missile{animation:pkIn .14s ease-in forwards}@keyframes pkIn{from{transform:translate(70px,206px) rotate(4deg);opacity:1}to{transform:translate(128px,208px) rotate(4deg) scale(.15,.4);opacity:0}}' +
+    '.pk-missile{transform:translate(-260px,214px);animation:pkFly 1.6s linear forwards}.pk-fire{animation:pkFlick .07s infinite alternate}' +
+    '@keyframes pkFly{0%{transform:translate(-330px,190px) rotate(-6deg) scale(1.5)}35%{transform:translate(-210px,176px) rotate(-4deg) scale(1.5)}65%{transform:translate(-90px,200px) rotate(5deg) scale(1.5)}88%{transform:translate(-5px,210px) rotate(4deg) scale(1.5)}100%{transform:translate(45px,206px) rotate(4deg) scale(1.5)}}' +
+    '.pk-pup{transition:transform .3s}.pk-look .pk-pup{transform:translate(-12px,2px)}@keyframes pkFlick{from{opacity:.65;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1.25)}}' +
+    '.pk-in .pk-missile{animation:pkIn .14s ease-in forwards}@keyframes pkIn{from{transform:translate(45px,206px) rotate(4deg) scale(1.5);opacity:1}to{transform:translate(128px,208px) rotate(4deg) scale(.15,.4);opacity:0}}' +
     '.pk-in .pk-puff{animation:pkPuff .7s ease-out forwards}@keyframes pkPuff{0%{opacity:.95;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(-40px,-30px) scale(1.6)}}' +
     '.pk-wing{transform-box:view-box;transform-origin:256px 182px}.pk-wing2{transform-box:view-box;transform-origin:248px 150px;opacity:0}' +
     '.pk-in .pk-wing{animation:pkFlap .11s 13 alternate ease-in-out}.pk-in .pk-wing2{opacity:1;animation:pkFlap2 .11s 13 alternate ease-in-out}' +
     '@keyframes pkFlap{from{transform:rotate(-8deg)}to{transform:rotate(58deg) scale(1.1,1.15)}}@keyframes pkFlap2{from{transform:rotate(-15deg)}to{transform:rotate(48deg) scale(1.15)}}' +
-    '.cv-goat{transform-box:view-box;transform-origin:200px 310px;animation:pkIdle .6s ease-in-out infinite alternate}' +
-    '.cv-head{transform-box:view-box;transform-origin:290px 170px;transition:transform .15s}.cv-jaw{transform-box:view-box;transform-origin:338px 146px;transition:transform .12s}' +
-    '.cv-bl .cv-head{transform:rotate(-12deg)}.cv-bl .cv-jaw{animation:cvJaw .1s infinite alternate}@keyframes cvJaw{from{transform:rotate(24deg)}to{transform:rotate(34deg)}}' +
-    '.cv-bl .cv-goat{animation:cvShake .1s infinite alternate}@keyframes cvShake{from{transform:translateX(-2px) scale(1,1)}to{transform:translateX(2px) scale(1.01,.99)}}' +
-    '.cv-bl .cv-brow{transform:translateY(-5px)}.cv-brow{transform-box:view-box;transition:transform .1s}' +
+    '.cv-wrap{top:46%;width:min(80vw,560px)}.cv-goat{transform-box:view-box;transform-origin:210px 380px;animation:pkIdle .6s ease-in-out infinite alternate}' +
+    '.cv-head,.cv-mouth,.cv-chin,.cv-earL,.cv-earR,.cv-lid,.cv-brow,.cv-lip{transform-box:view-box}' +
+    '.cv-head{transform-origin:210px 300px;transition:transform .15s}.cv-mouth{transform-origin:210px 214px;transform:scaleY(.05);transition:transform .12s}.cv-chin{transition:transform .12s}' +
+    '.cv-earL{transform-origin:150px 118px;transition:transform .15s}.cv-earR{transform-origin:270px 118px;transition:transform .15s}.cv-lid{opacity:0;transition:opacity .1s}.cv-brow{transition:transform .1s}.cv-lip{transition:opacity .1s}' +
+    '.cv-bl .cv-head{transform:translateY(-10px) scale(1.04)}.cv-bl .cv-mouth{transform:scale(1.15,1.7);animation:cvMouth .1s infinite alternate}.cv-bl .cv-chin{transform:translateY(44px);animation:cvChin .1s infinite alternate}.cv-bl .cv-lip{opacity:0}' +
+    '@keyframes cvMouth{from{transform:scale(1.12,1.55)}to{transform:scale(1.18,1.85)}}@keyframes cvChin{from{transform:translateY(38px)}to{transform:translateY(50px)}}' +
+    '.cv-teeth{fill:#fffdf3;stroke:#bdb4a0;stroke-width:1.5;opacity:0;transition:opacity .08s}.cv-bl .cv-teeth{opacity:1}' +
+    '.cv-bl .cv-earL{transform:rotate(-22deg)}.cv-bl .cv-earR{transform:rotate(22deg)}.cv-bl .cv-lid{opacity:1}.cv-bl .cv-brow{transform:translateY(-8px)}' +
+    '.cv-bl .cv-goat{animation:cvShake .1s infinite alternate}@keyframes cvShake{from{transform:translateX(-3px)}to{transform:translateX(3px)}}' +
     '.pk-jaw{transform-box:view-box;transform-origin:340px 134px}.pk-hit .pk-jaw{animation:pkJaw .09s 10 alternate}@keyframes pkJaw{from{transform:rotate(8deg)}to{transform:rotate(28deg)}}' +
     '.pk-hit .pk-chick{animation:pkJolt .55s ease-out}' +
     '@keyframes pkJolt{0%{transform:scale(1,1)}18%{transform:scale(1.2,.76)}45%{transform:scale(.84,1.24) translateY(-40px)}72%{transform:scale(1.06,.95)}100%{transform:scale(1,1)}}' +
@@ -154,55 +160,62 @@
   function css() { if (document.getElementById('fxCss')) return; var st = document.createElement('style'); st.id = 'fxCss'; st.textContent = CSS; document.head.appendChild(st); }
   function el(cls, txt, style) { var d = document.createElement('div'); d.className = cls; d.textContent = txt; if (style) d.setAttribute('style', style); return d; }
   var SCENE = {
-    chevre: function (ov) { // chèvre en pâte à modeler : reste au centre, la gueule s'ouvre à chaque bêlement
-      var W = document.createElement('div'); W.className = 'pk-wrap';
-      W.innerHTML = '<svg class="pk" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg"><defs>' +
+    chevre: function (ov) { // chèvre de face, en volume façon pâte à modeler : la gueule s'ouvre à chaque bêlement
+      var W = document.createElement('div'); W.className = 'pk-wrap cv-wrap';
+      W.innerHTML = '<svg class="pk" viewBox="0 0 420 400" xmlns="http://www.w3.org/2000/svg"><defs>' +
         '<filter id="cvClay" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="4" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
           '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.62" result="g"/><feComposite in="g" in2="d" operator="in" result="tex"/>' +
           '<feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge></filter>' +
-        '<radialGradient id="cvFur" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fbf6ee"/><stop offset=".55" stop-color="#e9dfcf"/><stop offset="1" stop-color="#b9a98f"/></radialGradient>' +
-        '<radialGradient id="cvDark" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#8a6a4c"/><stop offset="1" stop-color="#4b3420"/></radialGradient>' +
-        '<linearGradient id="cvHorn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9cdb4"/><stop offset="1" stop-color="#8d7d63"/></linearGradient>' +
-        '<radialGradient id="cvMouth" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#7a1020"/><stop offset="1" stop-color="#2a0308"/></radialGradient>' +
-        '<radialGradient id="cvShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
-        '<ellipse cx="200" cy="318" rx="140" ry="14" fill="url(#cvShadow)"/>' +
-        '<g class="cv-goat"><g filter="url(#cvClay)">' +
-          // pattes et sabots
-          '<g fill="url(#cvFur)" stroke="#a08d70" stroke-width="2"><rect x="112" y="226" width="20" height="78" rx="10"/><rect x="146" y="232" width="20" height="74" rx="10"/><rect x="226" y="232" width="20" height="74" rx="10"/><rect x="256" y="226" width="20" height="78" rx="10"/></g>' +
-          '<g fill="url(#cvDark)"><ellipse cx="122" cy="306" rx="15" ry="8"/><ellipse cx="156" cy="308" rx="15" ry="8"/><ellipse cx="236" cy="308" rx="15" ry="8"/><ellipse cx="266" cy="306" rx="15" ry="8"/></g>' +
-          // petite queue relevée
-          '<ellipse cx="76" cy="160" rx="10" ry="22" transform="rotate(-35 76 160)" fill="url(#cvDark)" stroke="#3a2614" stroke-width="2"/>' +
-          // corps dodu + tache
-          '<ellipse cx="190" cy="196" rx="118" ry="62" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
-          '<ellipse cx="160" cy="180" rx="34" ry="22" fill="#c9a97f" opacity=".55"/>' +
-          '<path d="M120 214 q30 20 70 18 M210 230 q30 4 56 -10" stroke="#cbbca2" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>' +
-          // cou
-          '<path d="M250 170 C262 140 280 126 300 124 L318 160 C300 172 286 196 270 214 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+        '<radialGradient id="cvFur" cx="42%" cy="30%" r="75%"><stop offset="0" stop-color="#fffaf2"/><stop offset=".45" stop-color="#ece2d2"/><stop offset=".8" stop-color="#c9b89c"/><stop offset="1" stop-color="#9e8c70"/></radialGradient>' +
+        '<radialGradient id="cvBody" cx="50%" cy="20%" r="80%"><stop offset="0" stop-color="#f3eadc"/><stop offset=".6" stop-color="#d4c4aa"/><stop offset="1" stop-color="#8f7e64"/></radialGradient>' +
+        '<radialGradient id="cvMuz" cx="45%" cy="30%" r="75%"><stop offset="0" stop-color="#fbe3d6"/><stop offset=".7" stop-color="#e7bfae"/><stop offset="1" stop-color="#b98f7d"/></radialGradient>' +
+        '<radialGradient id="cvDark" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#8a6a4c"/><stop offset="1" stop-color="#3f2a18"/></radialGradient>' +
+        '<linearGradient id="cvHorn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8d7d63"/><stop offset=".5" stop-color="#d9cdb4"/><stop offset="1" stop-color="#a39478"/></linearGradient>' +
+        '<radialGradient id="cvMouth" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#8e1426"/><stop offset="1" stop-color="#2a0308"/></radialGradient>' +
+        '<radialGradient id="cvEye" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#ffe98a"/><stop offset=".8" stop-color="#e3b93a"/><stop offset="1" stop-color="#a87c10"/></radialGradient>' +
+        '<radialGradient id="cvShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+        '<ellipse cx="210" cy="384" rx="150" ry="14" fill="url(#cvShadow)"/>' +
+        '<g class="cv-goat">' +
+        '<g filter="url(#cvClay)">' +
+          // poitrail et pattes avant (vus de face)
+          '<g fill="url(#cvBody)" stroke="#8f7e64" stroke-width="2"><rect x="150" y="300" width="34" height="76" rx="16"/><rect x="236" y="300" width="34" height="76" rx="16"/></g>' +
+          '<g fill="url(#cvDark)"><ellipse cx="167" cy="376" rx="22" ry="9"/><ellipse cx="253" cy="376" rx="22" ry="9"/></g>' +
+          '<ellipse cx="210" cy="290" rx="128" ry="74" fill="url(#cvBody)" stroke="#8f7e64" stroke-width="2.5"/>' +
+          '<path d="M150 300 q60 30 120 0" stroke="#bfae92" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>' +
         '</g>' +
         '<g class="cv-head"><g filter="url(#cvClay)">' +
-          // cornes recourbées vers l'arrière
-          '<path d="M300 84 C292 46 258 34 238 52 C258 50 276 62 286 92 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
-          '<path d="M318 82 C318 44 292 26 270 38 C290 42 304 56 304 90 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
-          // intérieur de la gueule (caché bouche fermée)
-          '<path d="M334 142 Q362 136 392 142 Q384 168 340 162 z" fill="url(#cvMouth)"/><ellipse cx="362" cy="156" rx="16" ry="6" fill="#e2627a"/>' +
-          // tête + museau
-          '<ellipse cx="316" cy="112" rx="44" ry="36" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
-          '<path d="M326 96 C356 96 394 112 396 134 C396 146 380 146 338 144 C322 140 316 112 326 96 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
-          '<path d="M342 102 q22 4 40 20" stroke="#cbbca2" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-          '<ellipse cx="386" cy="126" rx="4" ry="2.6" fill="#4b3420"/>' +
-          '<path class="cv-teeth" d="M352 144 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6" fill="#fff" stroke="#ccc" stroke-width="1"/>' +
-          // oreille tombante
-          '<ellipse cx="278" cy="112" rx="28" ry="11" transform="rotate(28 278 112)" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/><ellipse cx="276" cy="113" rx="18" ry="5" transform="rotate(28 276 113)" fill="#e8a7a0"/>' +
+          // cornes qui montent et s’écartent
+          '<path d="M178 74 C170 40 150 18 122 12 C140 28 152 50 158 84 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
+          '<path d="M242 74 C250 40 270 18 298 12 C280 28 268 50 262 84 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
+          '<path d="M160 56 l10 -4 M156 42 l9 -5 M260 56 l-10 -4 M264 42 l-9 -5" stroke="#8d7d63" stroke-width="2.5" stroke-linecap="round"/>' +
+          // oreilles tombantes sur les côtés
+          '<g class="cv-earL"><ellipse cx="112" cy="128" rx="48" ry="17" transform="rotate(18 112 128)" fill="url(#cvFur)" stroke="#9e8c70" stroke-width="2.5"/><ellipse cx="108" cy="129" rx="32" ry="8" transform="rotate(18 108 129)" fill="#e8a7a0"/></g>' +
+          '<g class="cv-earR"><ellipse cx="308" cy="128" rx="48" ry="17" transform="rotate(-18 308 128)" fill="url(#cvFur)" stroke="#9e8c70" stroke-width="2.5"/><ellipse cx="312" cy="129" rx="32" ry="8" transform="rotate(-18 312 129)" fill="#e8a7a0"/></g>' +
+          // tête : large en haut, museau long qui vient vers nous
+          '<path d="M146 104 C142 50 278 50 274 104 C272 150 256 176 254 210 C252 250 168 250 166 210 C164 176 148 150 146 104 z" fill="url(#cvFur)" stroke="#9e8c70" stroke-width="2.5"/>' +
+          '<path d="M196 70 q14 -14 28 0 q-6 -4 -14 6 q-8 -10 -14 -6 z" fill="#d9ccb6"/>' +
+          '<path d="M170 150 q-6 30 6 54 M250 150 q6 30 -6 54" stroke="#cdbfa6" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>' +
+          // intérieur de la gueule (caché quand elle est fermée)
+          '<g class="cv-mouth"><ellipse cx="210" cy="232" rx="30" ry="22" fill="url(#cvMouth)"/><ellipse cx="210" cy="246" rx="18" ry="8" fill="#e2627a"/>' +'</g>' +
+          // museau rose
+          '<ellipse cx="210" cy="206" rx="46" ry="30" fill="url(#cvMuz)" stroke="#a87e6c" stroke-width="2"/>' +
+          '<path d="M192 196 q-6 6 -2 12 M228 196 q6 6 2 12" stroke="#5a2e22" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+          '<path class="cv-lip" d="M196 226 q14 8 28 0" stroke="#7a4a3a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+          '<ellipse cx="196" cy="190" rx="10" ry="5" fill="#fff" opacity=".35"/>' +
+          '<g class="cv-teeth"><rect x="186" y="230" width="11" height="13" rx="3"/><rect x="198" y="231" width="11" height="15" rx="3"/><rect x="210" y="231" width="11" height="15" rx="3"/><rect x="222" y="230" width="11" height="13" rx="3"/></g>' +
+          // menton + barbiche (descendent quand elle braie)
+          '<g class="cv-chin"><path d="M182 228 Q210 246 238 228 Q236 252 210 256 Q184 252 182 228 z" fill="url(#cvMuz)" stroke="#a87e6c" stroke-width="2"/>' +
+            '<g class="cv-teeth"><rect x="190" y="225" width="10" height="11" rx="3"/><rect x="201" y="227" width="9" height="11" rx="3"/><rect x="211" y="227" width="9" height="11" rx="3"/><rect x="221" y="225" width="10" height="11" rx="3"/></g>' +
+            '<path class="cv-beard" d="M194 248 C192 280 202 304 210 318 C218 304 228 280 226 248 z" fill="url(#cvDark)" stroke="#2e1d0f" stroke-width="2"/></g>' +
         '</g>' +
-          // œil de chèvre (pupille horizontale), net
-          '<g class="cv-eye"><ellipse cx="330" cy="98" rx="13" ry="12" fill="#f2d36b" stroke="#6b5a45" stroke-width="2"/><rect x="321" y="95" width="18" height="6" rx="3" fill="#141414"/><circle cx="334" cy="94" r="2.4" fill="#fff"/></g>' +
-          '<path class="cv-brow" d="M314 82 q16 -8 30 2" stroke="#6b5a45" stroke-width="4" stroke-linecap="round" fill="none"/>' +
-          // mâchoire du bas + barbiche (elle s'ouvre)
-          '<g class="cv-jaw" filter="url(#cvClay)"><path d="M336 142 Q366 146 390 142 Q384 166 344 162 Q334 156 336 142 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
-            '<path d="M346 158 C344 182 350 200 358 210 C362 196 366 180 366 162 z" fill="url(#cvDark)" stroke="#3a2614" stroke-width="2"/></g>' +
+          // yeux de chèvre (pupille horizontale), sur les côtés, nets
+          '<g class="cv-eye"><ellipse cx="172" cy="118" rx="17" ry="15" fill="url(#cvEye)" stroke="#5b4a35" stroke-width="2.5"/><rect x="160" y="114" width="24" height="7" rx="3.5" fill="#141414"/><circle cx="178" cy="112" r="3" fill="#fff"/>' +
+            '<ellipse cx="248" cy="118" rx="17" ry="15" fill="url(#cvEye)" stroke="#5b4a35" stroke-width="2.5"/><rect x="236" y="114" width="24" height="7" rx="3.5" fill="#141414"/><circle cx="254" cy="112" r="3" fill="#fff"/></g>' +
+          '<g class="cv-lid" fill="#e4d8c4" stroke="#5b4a35" stroke-width="2"><path d="M154 116 Q172 96 190 116 Q172 108 154 116 z"/><path d="M230 116 Q248 96 266 116 Q248 108 230 116 z"/></g>' +
+          '<path class="cv-brow" d="M152 96 q20 -12 40 0 M228 96 q20 -12 40 0" stroke="#6b5a45" stroke-width="5" stroke-linecap="round" fill="none"/>' +
         '</g></g></svg>';
       ov.appendChild(W);
-      var me = el('fx-s', 'MÊÊÊÊÊ !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(40px,10vw,130px);opacity:0'); ov.appendChild(me);
+      var me = el('fx-s', 'MÊÊÊÊÊ !', 'top:4%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(40px,10vw,130px);opacity:0'); ov.appendChild(me);
       function bl(on, txt) { W.classList.toggle('cv-bl', on); if (on) { me.textContent = txt; me.style.opacity = 1; me.style.animation = 'fxPulse .2s infinite'; } else { me.style.opacity = 0; me.style.animation = ''; } }
       setTimeout(function () { bl(true, 'MÊÊÊÊÊ !'); }, 80);
       setTimeout(function () { bl(false); }, 1200);
@@ -263,23 +276,24 @@
       ov.appendChild(W);
       var cod = null, eyes = W.querySelectorAll('.pk-eye');
       eyes[0].setAttribute('transform', 'translate(290 106)'); eyes[1].setAttribute('transform', 'translate(328 104)');
-      setTimeout(function () { W.classList.add('pk-in'); }, 750); // la carotte rentre et disparaît
+      setTimeout(function () { W.classList.add('pk-look'); }, 700); // il voit arriver la carotte
+      setTimeout(function () { W.classList.remove('pk-look'); W.classList.add('pk-in'); }, 1600); // la carotte rentre et disparaît
       setTimeout(function () { // le cri
         W.classList.add('pk-hit');
         cod = el('fx-s', 'CRÔÔÔÂÂÂÂK !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); ov.appendChild(cod);
-      }, 820);
+      }, 1670);
       setTimeout(function () { // les yeux sortent des orbites
         W.classList.add('pk-eyes');
         eyes[0].setAttribute('transform', 'translate(300 58) scale(2)'); eyes[1].setAttribute('transform', 'translate(352 50) scale(1.85)');
         W.querySelectorAll('.pk-stalk').forEach(function (l, k) { l.setAttribute('x2', k ? '-13' : '-6'); l.setAttribute('y2', k ? '26' : '25'); });
-      }, 1150);
+      }, 2000);
       setTimeout(function () { // BOUM
         if (cod && cod.parentNode) cod.parentNode.removeChild(cod); W.classList.add('pk-boom'); ov.style.animation = 'fxShake .12s 7'; ov.style.background = 'rgba(255,150,0,.6)'; setTimeout(function () { ov.style.background = 'rgba(0,0,0,.72)'; }, 260);
         ov.appendChild(el('fx-e', '💥', 'left:30%;top:20%;animation:fxBoom 1s ease-out forwards'));
         ov.appendChild(el('fx-s', 'BOUM !', 'top:6%;left:50%;transform:translateX(-50%);color:#ff5a3c;font-weight:900;font-size:clamp(50px,12vw,150px)'));
         var bits = ['🪶', '🪶', '🪶', '🪶', '🍗', '🪶', '🪶', '👀', '🪶'];
         for (var i = 0; i < 30; i++) { var g = Math.random() * Math.PI * 2, r = 30 + Math.random() * 40; ov.appendChild(el('fx-s', bits[i % bits.length], 'left:46%;top:44%;font-size:clamp(26px,6vw,74px);--dx:' + (Math.cos(g) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(g) * r).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.1 + Math.random()).toFixed(2) + 's ease-out forwards')); }
-      }, 2150);
+      }, 3000);
     },
     trombone: function (ov) { ov.appendChild(el('fx-e', '🎺', 'left:8%;top:22%;transform:rotate(-20deg)')); ov.appendChild(el('fx-e', '😢', 'right:10%;top:22%;animation:fxSink 3s ease-in forwards')); },
     bombe: function (ov) {
