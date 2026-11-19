@@ -1139,5 +1139,12 @@
     if (!running) { var L0 = levels(); ST.idx = 0; ST.rem = L0.length ? L0[0].min * 60 : 0; }
     save(); return true;
   }
-  window.PA_TIMER = { tab: function (v) { TAB = v; }, getStruct: getStruct, setStruct: setStruct, getStructs: getStructs, setStructs: setStructs, view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
+  function renameLive(recId, old, nu) { // un pseudo corrigé dans le classement : même correction dans le tournoi du chrono
+    var t = T(); if (!t || t.recId !== recId) return;
+    var k = old.toLowerCase();
+    t.players.forEach(function (x) { if (x.name.toLowerCase() === k) x.name = nu; if (x.koBy && x.koBy.toLowerCase() === k) x.koBy = nu; if (x.bountyFrom && String(x.bountyFrom).toLowerCase() === k) x.bountyFrom = nu; });
+    if (t.holder && t.holder.toLowerCase() === k) t.holder = nu;
+    save();
+  }
+  window.PA_TIMER = { renameLive: renameLive, tab: function (v) { TAB = v; }, getStruct: getStruct, setStruct: setStruct, getStructs: getStructs, setStructs: setStructs, view: view, tournoi: tournoiView, ecran: ecranView, payout: payout, _rulesSay: rulesSay, _reOpen: reOpen, _live: live, _levels: levels, _generate: generate };
 })();

@@ -69,6 +69,25 @@
   function hands() { return (load().hands || []).slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }); }
   function saveHand(h) { var d = load(); d.hands = d.hands || []; h.editAt = Date.now(); if (!h.id) { h.id = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); h.at = Date.now(); d.hands.push(h); } else { d.hands = d.hands.map(function (x) { return x.id === h.id ? h : x; }); } save(d); return h; }
   function delHand(id) { var d = load(); d.hands = (d.hands || []).filter(function (x) { return x.id !== id; }); d.handsDel = (d.handsDel || []).concat([id]); save(d); }
+  // corrige un pseudo dans un tournoi enregistré (place, « sorti par », vainqueur, tête mise à prix)
+  function renameInRec(id, old, nu) {
+    nu = String(nu || '').trim().slice(0, 30); if (!nu) return 'Écris le bon pseudo.';
+    var d = load(), tn = d.list.filter(function (x) { return x.id === id; })[0]; if (!tn) return 'Tournoi introuvable.';
+    var k = key(old);
+    if (key(nu) !== k && tn.rows.some(function (r) { return key(r.name) === key(nu); })) return nu + ' est déjà dans ce tournoi.';
+    tn.rows.forEach(function (r) { if (key(r.name) === k) r.name = nu; if (r.koBy && key(r.koBy) === k) r.koBy = nu; if (r.bountyFrom && key(String(r.bountyFrom)) === k) r.bountyFrom = nu; });
+    if (tn.winner && key(tn.winner) === k) tn.winner = nu;
+    if (tn.holder && key(tn.holder) === k) tn.holder = nu;
+    tn.editAt = Date.now();
+    var still = d.list.some(function (x) { return x.rows.some(function (r) { return key(r.name) === k; }); }) || Object.keys(d.carry || {}).some(function (y) { return ((d.carry[y] || {}).rows || []).some(function (r) { return key(r.name) === k; }); });
+    var r = (d.roster || CLUB).slice(), seen = {}; r.forEach(function (x) { seen[key(x)] = 1; });
+    if (!seen[key(nu)]) r.push(nu);
+    if (!still) r = r.filter(function (x) { return key(x) !== k; });
+    d.roster = r; d.rosterAt = Date.now();
+    save(d);
+    if (window.PA_TIMER && window.PA_TIMER.renameLive) window.PA_TIMER.renameLive(id, old, nu);
+    return '';
+  }
   function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 100) / 100; }
   // enregistre un tournoi terminé (état du tournoi du minuteur)
   function record(t) {
@@ -231,7 +250,17 @@
     return head + '<div class="card stack"><table class="tbl" style="font-size:.9em"><tr><th>Place</th><th>Joueur</th><th>Points</th><th>Sorti par</th><th>Heure · niveau</th></tr>' + tn.rows.map(function (r) {
       var h = r.koAt ? new Date(r.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
       return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus ? ' <span class="small muted">(' + f1(r.pts) + ' + ' + f1(r.bonus) + ' prime)</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
-    }).join('') + '</table>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
+    }).join('') + '</table>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
+  }
+  function renHtml(tn) {
+    var ui = U();
+    if (V.ren !== tn.id) return (V.renDone && V.renDone.id === tn.id ? '<div class="tn-done">' + ui.esc(V.renDone.txt) + '</div>' : '') + '<button class="btn block" data-lgact="renOpen" data-v="' + tn.id + '">✏️ Corriger un pseudo</button>';
+    var names = tn.rows.map(function (r) { return r.name; });
+    return '<div class="card stack" style="gap:8px;border-color:var(--gold)"><b>✏️ Corriger un pseudo dans ce tournoi</b><div class="small muted">Ses points, ses éliminations et la prime passent au bon nom. Le classement se recalcule tout seul.</div>' +
+      '<label class="small">Le pseudo à remplacer</label><select id="lgRenOld" class="tn-in" style="' + INP + '">' + names.map(function (n) { return '<option' + (n === V.renOld ? ' selected' : '') + '>' + ui.esc(n) + '</option>'; }).join('') + '</select>' +
+      '<label class="small">Le bon pseudo</label><input id="lgRenNew" list="lgRenList" autocomplete="off" placeholder="Ex. : ENFANTS 2FISH" style="' + INP + '"><datalist id="lgRenList">' + roster().map(function (n) { return '<option value="' + ui.esc(n) + '">'; }).join('') + '</datalist>' +
+      (V.renMsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.renMsg) + '</div>' : '') +
+      '<div class="row" style="gap:8px"><button class="btn gold" style="flex:1" data-lgact="renDo" data-v="' + tn.id + '">Remplacer</button><button class="btn" data-lgact="renOpen" data-v="">Fermer</button></div></div>';
   }
   // saisie manuelle : reprendre un classement en cours, ou ajouter un tournoi déjà joué
   var INP = 'min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:1.05em';
@@ -357,11 +386,13 @@
     if (a === 'xy') { V.msg = ''; window.PA_EXPORT.year(V.year, t.getAttribute('data-f'), done); return; }
     if (a === 'xt') { V.msg = ''; window.PA_EXPORT.tournament(v, t.getAttribute('data-f'), done); return; }
     V.msg = ''; if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;
+    else if (a === 'renOpen') { V.ren = v || null; V.renMsg = ''; V.renOld = ''; V.renDone = null; }
+    else if (a === 'renDo') { var o = document.getElementById('lgRenOld'), nn = document.getElementById('lgRenNew'), ov = o ? o.value : '', nv = nn ? nn.value : ''; var er = renameInRec(v, ov, nv); if (er) { V.renMsg = er; V.renOld = ov; } else { V.ren = null; V.renDone = { id: v, txt: '✓ « ' + ov + ' » est devenu « ' + nv.trim() + ' » dans ce tournoi. Le classement est à jour.' }; } }
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });
   // retirer un tournoi du classement (il sera réenregistré corrigé)
   function removeRec(id) { var d = load(); d.list = d.list.filter(function (x) { return x.id !== id; }); d.deleted = (d.deleted || []).concat([id]); save(d); }
   seedClub();
-  window.PA_LEAGUE = { remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
