@@ -162,7 +162,38 @@
     return tot;
   }
   window.addEventListener('storage', function (e) { if (e.key !== 'pa2fxev' || !e.newValue) return; try { var o = JSON.parse(e.newValue); if (Date.now() - o.at < 8000 && /#ecran/.test(location.hash)) ko(o, true); } catch (x) {} });
-  window.PA_FX = {
+  /* ---------- la page « 🎉 Animations pour rire » : jouer une animation quand on veut ---------- */
+  var FUN = { name: '', by: '' };
+  var EXTRA = [{ id: 'prime', e: '💰', name: 'La prime' }, { id: 'vainqueur', e: '🏆', name: 'Le vainqueur' }, { id: 'hasard', e: '🎲', name: 'Au hasard' }];
+  function fun(kind) {
+    var k = pick(kind), nm = (FUN.name || '').trim(), by = (FUN.by || '').trim();
+    var title = k === 'vainqueur' ? '🏆 ' + (nm || 'Champion') + ' !' : k === 'prime' ? '💰 Prime pour ' + (by || nm || 'toi') + ' !' : (nm ? nm + ' sort !' : 'Et un de moins !');
+    var sub = k === 'vainqueur' ? 'Bravo !' : k === 'prime' ? '+2 points' : (by ? 'éliminé par ' + by : '');
+    try { var a = ctx(); if (a && a.state === 'suspended') a.resume(); } catch (e) {}
+    enqueue(k, title, sub);
+    try { localStorage.setItem('pa2fxfun', JSON.stringify({ k: k, title: title, sub: sub, at: Date.now() })); } catch (e) {}
+  }
+  window.addEventListener('storage', function (e) { if (e.key !== 'pa2fxfun' || !e.newValue) return; try { var o = JSON.parse(e.newValue); if (Date.now() - o.at < 8000 && /#ecran/.test(location.hash)) enqueue(o.k, o.title, o.sub); } catch (x) {} });
+  function view() {
+    var U = window.PA_UI, esc = U.esc, ro = window.PA_LEAGUE ? window.PA_LEAGUE.roster().slice().sort(function (a, b) { return a.localeCompare(b, 'fr'); }) : [];
+    var big = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:118px;font-size:1.05em;font-weight:700;border-radius:16px';
+    var body = '<div class="stack"><a class="back" href="#' + (window.PA_CLUB ? 'home' : 'home') + '">‹ Accueil</a><h1>🎉 Animations pour rire</h1>' +
+      '<div class="small muted">Touche une animation : elle se joue tout de suite, en grand avec son bruitage (et sur l’écran télé s’il est ouvert dans une autre fenêtre). Le pseudo est facultatif.</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="fxName" list="fxNames" autocomplete="off" autocapitalize="characters" placeholder="Pseudo" value="' + esc(FUN.name) + '" class="tn-in" style="flex:1;min-width:140px;min-height:52px;font-size:1.1em">' +
+      '<input id="fxBy" list="fxNames" autocomplete="off" autocapitalize="characters" placeholder="Sorti par" value="' + esc(FUN.by) + '" class="tn-in" style="flex:1;min-width:140px;min-height:52px;font-size:1.1em"></div>' +
+      '<datalist id="fxNames">' + ro.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">' + LIST.concat(EXTRA).map(function (x) { return '<button class="btn" data-fx="' + x.id + '" style="' + big + '"><span style="font-size:3em;line-height:1">' + x.e + '</span>' + x.name + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><span class="small">Volume :</span>' + [[0.35, 'Doux'], [0.7, 'Moyen'], [1, 'Fort']].map(function (v) { return '<button class="btn' + (Math.abs(C.vol - v[0]) < 0.05 ? ' gold' : '') + '" data-fxvol="' + v[0] + '">' + v[1] + '</button>'; }).join('') + '</div>' +
+      (C.on ? '' : '<div class="small" style="color:var(--gold)">Les animations sont coupées pour les sorties du tournoi (Tournoi › Réglages), mais elles se jouent ici quand même.</div>') + '</div>';
+    return U.shell('home', body);
+  }
+  document.addEventListener('input', function (e) { if (!e.target) return; if (e.target.id === 'fxName') FUN.name = e.target.value; if (e.target.id === 'fxBy') FUN.by = e.target.value; });
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-fx],[data-fxvol]') : null; if (!t) return;
+    if (t.hasAttribute('data-fxvol')) { C.vol = +t.getAttribute('data-fxvol'); saveCfg(); window.PA_UI.render(); fun('canard'); return; }
+    fun(t.getAttribute('data-fx'));
+  });
+  window.PA_FX = { view: view, fun: fun,
     LIST: LIST, cfg: function () { return C; }, set: function (k, v) { C[k] = v; saveCfg(); },
     ko: ko, test: function (k) { if (!C.on) return; enqueue(pick(k || C.def), 'NARUTI sort · 12e', 'éliminé par YO'); },
     _sound: sound
