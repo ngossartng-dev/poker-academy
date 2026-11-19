@@ -557,7 +557,7 @@
      corrigé, supprimé, reçu d’un téléphone par la synchro) dans Mon Drive › Poker Academy › Classement. */
   var AUTO = { t: null, at: 0, path: '', err: '' };
   try { AUTO.at = +localStorage.getItem('pa2autopdfAt') || 0; AUTO.path = localStorage.getItem('pa2autopdfPath') || ''; } catch (e) {}
-  function autoSig(y) { var d = L().load(), c = L().carryOf ? L().carryOf(y) : null; return JSON.stringify([d.list.filter(function (x) { return x.date.slice(0, 4) === y; }).map(function (x) { return x.id + ':' + (x.editAt || 0) + ':' + x.rows.length; }), c ? c.at || c.date : 0, (d.closed || {})[y] || 0]); }
+  function autoSig(y) { var d = L().load(), c = L().carryOf ? L().carryOf(y) : null; return JSON.stringify([(window.PA_UI && window.PA_UI.version) || '', d.list.filter(function (x) { return x.date.slice(0, 4) === y; }).map(function (x) { return x.id + ':' + (x.editAt || 0) + ':' + x.rows.length; }), c ? c.at || c.date : 0, (d.closed || {})[y] || 0]); }
   function autoRun() {
     AUTO.t = null;
     if (!(window.PA_SYNC && window.PA_SYNC.isPC) || window.PA_RANGEWIN || !L()) return;
