@@ -4,7 +4,7 @@
   'use strict';
   var LIST = [
     { id: 'chevre', e: '🐐', name: 'La chèvre qui braille' },
-    { id: 'poulet', e: '🐔', name: 'Le poulet et la carotte-missile' },
+    { id: 'poulet', e: '🐔', name: 'Le poulet et la carotte' },
     { id: 'trombone', e: '🎺', name: 'Le trombone triste' },
     { id: 'bombe', e: '💣', name: 'La bombe' },
     { id: 'tombe', e: '🪦', name: 'La pierre tombale' },
@@ -50,28 +50,38 @@
     lp.type = 'lowpass'; lp.frequency.value = o.lp || 8000; os.connect(lp); lp.connect(g); g.connect(MASTER);
     env(g, t0, o.att || 0.01, o.peak || 0.4, o.rel || dur * 0.6, t0 + dur); os.start(t0); os.stop(t0 + dur + 0.05);
   }
+  // voix off (fichier mp3 intégré, joué dans le mixeur pour suivre le volume)
+  var VO = 'data:audio/mpeg;base64,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xIuARaQxeaSYZPChB6x0kwjq5LcsoPiX9QMtCmSSNxUPHlUj9Bl1Auz9wS+pbiBENUMmyV1NlEqqkmojYNCkRFjpw6URsPGCUKhkBCqTKhcz+PFEf/VVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVV//skxJIABVw9X6SYxMC7CGo0kySoVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//skxJaABXBJWaSIyHC0EmowxAi2VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//skxJuARXhPPSCZIcCZiOMAMCSIVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV', VOBUF = null;
+  function vo(a, when) {
+    function go(b) { var s = a.createBufferSource(), g = a.createGain(); s.buffer = b; g.gain.value = 1.3; s.connect(g); g.connect(MASTER); s.start(Math.max(when, a.currentTime)); }
+    if (VOBUF) return go(VOBUF);
+    try { var bin = atob(VO.split(',')[1]), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      a.decodeAudioData(u.buffer, function (b) { VOBUF = b; go(b); }, function () {}); } catch (e) {}
+  }
   var SND = {
     chevre: function (a, t) { // « MÊÊÊÊÊ » tremblé, deux fois
       voice(a, t, 1.15, { f0: 420, f1: 360, vib: 9, vibDepth: 38, formant: 1100, formant2: 2400, q: 3, peak: 0.7, att: 0.05, rel: 0.25 });
       voice(a, t + 1.25, 0.8, { f0: 470, f1: 330, vib: 10, vibDepth: 45, formant: 1000, formant2: 2600, q: 3, peak: 0.6, att: 0.04, rel: 0.3 });
       return 2.2;
     },
-    poulet: function (a, t) { // missile-carotte, « plop », CRI du poulet, boïng des yeux, puis BOUM
-      noise(a, t, 1.6, { ft: 'bandpass', f0: 400, f1: 4000, q: 2, peak: 0.3, att: 1.2, rel: 0.05 }); // le missile arrive (lentement)
-      tone(a, t, 1.6, 220, { f1: 1400, type: 'sawtooth', peak: 0.08, lp: 3000, att: 1.0 });
-      t += 0.85;
-      tone(a, t + 0.75, 0.12, 520, { f1: 90, type: 'sine', peak: 0.8, rel: 0.1 }); noise(a, t + 0.75, 0.07, { f0: 1800, peak: 0.45 }); // plop : la carotte rentre
-      // le cri : deux couches dentelées avec un vibrato très rapide, plus un souffle rauque
-      [[0, 900, 1650, 1.0], [0.012, 905, 1680, 0.7]].forEach(function (L) {
-        voice(a, t + 0.82 + L[0], 0.95, { f0: L[1], f1: L[2], type: 'sawtooth', vib: 31, vibDepth: 120, formant: 1800, formant2: 3200, q: 3, peak: 0.85 * L[3], att: 0.015, rel: 0.25 });
+    poulet: function (a, t) { // vraie carotte, TCHONK, cri, cot-cot, chute en PLS, voix off
+      tone(a, t, 1.35, 1900, { f1: 520, type: 'sine', peak: 0.22, att: 0.08, rel: 0.08 }); // sifflement de la carotte
+      noise(a, t, 1.35, { ft: 'bandpass', f0: 600, f1: 3000, q: 3, peak: 0.12, att: 1.0, rel: 0.05 });
+      tone(a, t + 1.4, 0.3, 190, { f1: 55, type: 'sine', peak: 0.95, att: 0.003, rel: 0.25 }); // TCHONK
+      noise(a, t + 1.4, 0.3, { ft: 'lowpass', f0: 1400, f1: 180, peak: 0.7, att: 0.003, rel: 0.25 });
+      tone(a, t + 1.43, 0.2, 800, { f1: 220, type: 'triangle', peak: 0.35, att: 0.003 }); // splotch
+      [[0, 950, 1750, 1.0], [0.012, 955, 1790, 0.7]].forEach(function (L) { // le cri
+        voice(a, t + 1.5 + L[0], 1.05, { f0: L[1], f1: L[2], type: 'sawtooth', vib: 31, vibDepth: 130, formant: 1800, formant2: 3200, q: 3, peak: 0.85 * L[3], att: 0.015, rel: 0.25 });
       });
-      noise(a, t + 0.82, 0.95, { ft: 'bandpass', f0: 2600, f1: 3600, q: 3, peak: 0.25, att: 0.02, rel: 0.3 });
-      voice(a, t + 1.85, 0.35, { f0: 1500, f1: 700, type: 'sawtooth', vib: 28, vibDepth: 90, formant: 1600, q: 3, peak: 0.6, att: 0.01, rel: 0.1 }); // dernier couac
-      tone(a, t + 1.15, 0.45, 300, { f1: 1200, type: 'sine', vib: 22, vibDepth: 40, peak: 0.4 }); // boïng des yeux
-      tone(a, t + 1.35, 0.4, 350, { f1: 1400, type: 'sine', vib: 25, vibDepth: 45, peak: 0.35 });
-      noise(a, t + 2.15, 1.6, { ft: 'lowpass', f0: 2000, f1: 80, peak: 1, att: 0.005, rel: 1.5 }); tone(a, t + 2.15, 1.1, 100, { f1: 30, peak: 0.9, rel: 1 }); // BOUM
-      noise(a, t + 2.35, 1.2, { ft: 'bandpass', f0: 1500, f1: 600, q: 1.5, peak: 0.12, att: 0.1 }); // plumes
-      return 4.55;
+      noise(a, t + 1.5, 1.0, { ft: 'bandpass', f0: 2600, f1: 3800, q: 3, peak: 0.22, att: 0.02, rel: 0.3 });
+      tone(a, t + 1.8, 0.45, 300, { f1: 1200, type: 'sine', vib: 22, vibDepth: 40, peak: 0.35 }); // boïng des yeux
+      noise(a, t + 1.6, 0.9, { ft: 'bandpass', f0: 1800, f1: 700, q: 1.5, peak: 0.15, att: 0.05 }); // plumes
+      [0, 0.16, 0.32, 0.48].forEach(function (d, i) { voice(a, t + 2.75 + d, 0.1, { f0: 620 + i * 25, f1: 520, type: 'sawtooth', formant: 1300, formant2: 2600, q: 3, peak: 0.5, att: 0.005, rel: 0.05 }); }); // cot cot cot cot
+      voice(a, t + 3.4, 0.55, { f0: 700, f1: 1150, type: 'sawtooth', vib: 12, vibDepth: 40, formant: 1500, formant2: 2900, q: 3, peak: 0.55, att: 0.02, rel: 0.2 }); // codêêêk
+      tone(a, t + 3.75, 0.35, 140, { f1: 50, type: 'sine', peak: 0.9, att: 0.004, rel: 0.3 }); noise(a, t + 3.75, 0.3, { ft: 'lowpass', f0: 900, f1: 120, peak: 0.6, att: 0.004 }); // flop, il tombe
+      voice(a, t + 3.95, 0.6, { f0: 520, f1: 300, type: 'sawtooth', vib: 7, vibDepth: 30, formant: 1200, formant2: 2400, q: 3, peak: 0.35, att: 0.05, rel: 0.3 }); // petit gémissement
+      vo(a, t + 4.15); // « C'est pas carré… mais tu t'es fait fourrer ! »
+      return 7.0;
     },
     trombone: function (a, t) { // « wouah-wouah-wouah-wouaaah »
       var n = [233.1, 220, 207.7, 196], d = [0.45, 0.45, 0.45, 1.4];
@@ -150,6 +160,15 @@
     '.cv-teeth{fill:#fffdf3;stroke:#bdb4a0;stroke-width:1.5;opacity:0;transition:opacity .08s}.cv-bl .cv-teeth{opacity:1}' +
     '.cv-bl .cv-earL{transform:rotate(-22deg)}.cv-bl .cv-earR{transform:rotate(22deg)}.cv-bl .cv-lid{opacity:1}.cv-bl .cv-brow{transform:translateY(-8px)}' +
     '.cv-bl .cv-goat{animation:cvShake .1s infinite alternate}@keyframes cvShake{from{transform:translateX(-3px)}to{transform:translateX(3px)}}' +
+    '.p2-car{transform:translate(-330px,60px) rotate(40deg) scale(1.4);animation:p2Fly 1.4s cubic-bezier(.35,.1,.7,.6) forwards}' +
+    '@keyframes p2Fly{0%{transform:translate(-330px,60px) rotate(40deg) scale(1.4)}40%{transform:translate(-190px,40px) rotate(14deg) scale(1.4)}75%{transform:translate(-40px,150px) rotate(10deg) scale(1.4)}100%{transform:translate(58px,198px) rotate(10deg) scale(1.4)}}' +
+    '.p2-carIn{transition:transform .12s cubic-bezier(.6,0,1,1)}.p2-in .p2-carIn{transform:translateX(34px)}' +
+    '.p2-leaves{transform-box:fill-box;transform-origin:100% 50%}.p2-in .p2-leaves{animation:p2Wig .12s infinite alternate ease-in-out}@keyframes p2Wig{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}' +
+    '.p2-all{transform-box:view-box;transform-origin:228px 312px}.p2-pls .p2-all{animation:p2Fall .55s cubic-bezier(.5,0,.7,1) forwards}.p2-pls .pk-chick{animation:none}' +
+    '@keyframes p2Fall{0%{transform:rotate(0)}70%{transform:translate(-110px,-116px) rotate(96deg)}85%{transform:translate(-110px,-126px) rotate(86deg)}100%{transform:translate(-110px,-122px) rotate(90deg)}}' +
+    '.p2-pls .pk-pup{animation:p2Daze .5s linear infinite}@keyframes p2Daze{0%{transform:translate(4px,0)}25%{transform:translate(0,4px)}50%{transform:translate(-4px,0)}75%{transform:translate(0,-4px)}100%{transform:translate(4px,0)}}' +
+    '.p2-pls .pk-lid{opacity:0}' +
+    '.fx3d{position:absolute;left:0;right:0;top:10%;bottom:14%}.fx3d canvas{display:block;width:100%!important;height:100%!important}' +
     '.pk-jaw{transform-box:view-box;transform-origin:340px 134px}.pk-hit .pk-jaw{animation:pkJaw .09s 10 alternate}@keyframes pkJaw{from{transform:rotate(8deg)}to{transform:rotate(28deg)}}' +
     '.pk-hit .pk-chick{animation:pkJolt .55s ease-out}' +
     '@keyframes pkJolt{0%{transform:scale(1,1)}18%{transform:scale(1.2,.76)}45%{transform:scale(.84,1.24) translateY(-40px)}72%{transform:scale(1.06,.95)}100%{transform:scale(1,1)}}' +
@@ -159,6 +178,63 @@
     '@keyframes fxConf{0%{transform:translateY(-10vh) rotate(0)}100%{transform:translateY(110vh) rotate(720deg)}}@keyframes fxPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}';
   function css() { if (document.getElementById('fxCss')) return; var st = document.createElement('style'); st.id = 'fxCss'; st.textContent = CSS; document.head.appendChild(st); }
   function el(cls, txt, style) { var d = document.createElement('div'); d.className = cls; d.textContent = txt; if (style) d.setAttribute('style', style); return d; }
+  // three.js + fx3d.js ne sont chargés que pour les animations en 3D
+  var W3 = null;
+  function need3d(cb) {
+    if (window.PA_FX3D && window.THREE) return cb();
+    if (W3) { W3.push(cb); return; } W3 = [cb];
+    function add(src, next) { var sc = document.createElement('script'); sc.src = src; sc.onload = next; sc.onerror = next; document.head.appendChild(sc); }
+    add('lib/three.min.js', function () { add('fx3d.js', function () { var w = W3; W3 = null; w.forEach(function (f) { try { f(); } catch (e) {} }); }); });
+  }
+  function PKSVG() { return '<svg class="pk" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg"><defs>' +
+          '<filter id="pkClay" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
+            '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.62" result="g"/><feComposite in="g" in2="d" operator="in" result="tex"/>' +
+            '<feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge></filter>' +
+          '<radialGradient id="pkBody" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fffdf7"/><stop offset=".5" stop-color="#f3ece0"/><stop offset=".85" stop-color="#d8cdbb"/><stop offset="1" stop-color="#b8aa94"/></radialGradient>' +
+          '<radialGradient id="pkRed" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff7468"/><stop offset=".6" stop-color="#e2262a"/><stop offset="1" stop-color="#9e0f17"/></radialGradient>' +
+          '<radialGradient id="pkLeg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#d77400"/></radialGradient>' +
+          '<linearGradient id="pkBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd54d"/><stop offset="1" stop-color="#e58a00"/></linearGradient>' +
+          '<radialGradient id="pkEye" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset=".8" stop-color="#f1f1f1"/><stop offset="1" stop-color="#cfcfcf"/></radialGradient>' +
+          '<linearGradient id="pkCar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb04a"/><stop offset=".5" stop-color="#ff7a00"/><stop offset="1" stop-color="#c24e00"/></linearGradient>' +
+          '<radialGradient id="pkFire" cx="80%" cy="50%" r="80%"><stop offset="0" stop-color="#fff6a0"/><stop offset=".45" stop-color="#ffb400"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
+          '<radialGradient id="pkShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+          '<ellipse cx="228" cy="318" rx="120" ry="15" fill="url(#pkShadow)"/>' +
+          '<g class="pk-chick"><g filter="url(#pkClay)">' +
+            // pattes trapues, trois doigts
+            '<g fill="url(#pkLeg)" stroke="#a85a00" stroke-width="2"><rect x="196" y="252" width="16" height="50" rx="8"/><rect x="246" y="252" width="16" height="50" rx="8"/>' +
+            '<ellipse cx="190" cy="304" rx="16" ry="7"/><ellipse cx="206" cy="307" rx="15" ry="7"/><ellipse cx="221" cy="304" rx="14" ry="7"/>' +
+            '<ellipse cx="241" cy="304" rx="14" ry="7"/><ellipse cx="257" cy="307" rx="15" ry="7"/><ellipse cx="272" cy="304" rx="15" ry="7"/></g>' +
+            // queue en boules de pâte
+            '<g fill="url(#pkBody)" stroke="#a89a84" stroke-width="2"><ellipse cx="112" cy="128" rx="24" ry="40" transform="rotate(-28 112 128)"/><ellipse cx="96" cy="160" rx="22" ry="36" transform="rotate(-52 96 160)"/><ellipse cx="134" cy="112" rx="20" ry="34" transform="rotate(-8 134 112)"/></g>' +
+            '<g class="pk-wing2"><path d="M250 150 C236 104 190 84 150 98 C170 130 206 152 250 150 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/></g>' +
+            // corps dodu
+            '<path d="M120 196 C118 130 170 96 230 98 C300 100 334 150 330 206 C326 262 280 286 222 286 C160 286 122 254 120 196 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+            '<path d="M168 150 q-18 30 4 62" stroke="#c9bca6" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>' +
+            // aile
+            '<g class="pk-wing"><path d="M176 178 C186 150 244 148 262 182 C270 206 238 226 204 222 C182 218 168 202 176 178 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+            '<path d="M196 196 q20 10 44 2 M200 208 q18 6 36 0" stroke="#c4b69e" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>' +
+            // tête
+            '<ellipse cx="300" cy="118" rx="64" ry="60" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+            // crête en trois boudins
+            '<g fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"><ellipse cx="272" cy="62" rx="15" ry="20" transform="rotate(-20 272 62)"/><ellipse cx="295" cy="52" rx="16" ry="23"/><ellipse cx="319" cy="58" rx="15" ry="20" transform="rotate(18 319 58)"/></g>' +
+            // joues
+            '<ellipse cx="282" cy="146" rx="14" ry="8" fill="#ff9aa0" opacity=".55"/>' +
+          '</g>' +
+            // gros yeux collés façon pâte à modeler (pas de filtre : bien nets)
+            '<g class="pk-eye pk-e1"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="21" ry="24" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="7" cy="3" r="8" fill="#141414"/><circle cx="10" cy="-1" r="2.6" fill="#fff"/></g>' +
+            '<g class="pk-eye pk-e2"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="19" ry="22" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="6" cy="3" r="7.5" fill="#141414"/><circle cx="9" cy="-1" r="2.4" fill="#fff"/></g>' +
+            '<path class="pk-lid" d="M276 86 q20 -10 40 0 M316 84 q18 -8 34 2" stroke="#6b5a45" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+            // bec en deux parties (le bas s’ouvre pour crier) et barbillon
+            '<g filter="url(#pkClay)"><path d="M346 130 q12 18 -2 34 q-16 -2 -12 -22 z" fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"/>' +
+            '<g class="pk-jaw"><path d="M338 130 L386 138 Q372 152 340 146 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/></g>' +
+            '<path d="M336 112 Q388 116 398 130 Q370 134 338 132 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/><circle cx="352" cy="120" r="2.2" fill="#a85e00"/></g>' +
+          '</g>' +
+          '<g class="pk-missile"><ellipse cx="-34" cy="0" rx="46" ry="16" fill="url(#pkFire)" class="pk-fire"/>' +
+            '<path d="M-8 -9 l-22 -10 M-8 -2 l-28 -2 M-8 6 l-22 12" stroke="#3aa635" stroke-width="7" stroke-linecap="round"/>' +
+            '<path d="M-8 -14 L62 0 L-8 14 Q-14 0 -8 -14 z" fill="url(#pkCar)" stroke="#a84300" stroke-width="2"/>' +
+            '<path d="M10 -8 l4 6 M26 -5 l3 5 M40 -3 l2 4" stroke="#a84300" stroke-width="2"/></g>' +
+          '<g class="pk-puff" opacity="0"><circle cx="122" cy="214" r="14" fill="#ddd"/><circle cx="108" cy="204" r="10" fill="#eee"/><circle cx="110" cy="226" r="9" fill="#ccc"/></g>' +
+          '</svg>'; }
   var SCENE = {
     chevre: function (ov) { // chèvre de face, en volume façon pâte à modeler : la gueule s'ouvre à chaque bêlement
       var W = document.createElement('div'); W.className = 'pk-wrap cv-wrap';
@@ -222,78 +298,58 @@
       setTimeout(function () { bl(true, 'MÊÊÊÊÊÊÊ !!'); }, 1320);
       setTimeout(function () { bl(false); }, 2100);
     },
-    poulet: function (ov) { // poulet façon pâte à modeler : carotte-missile au derrière, cri, yeux qui sortent, explosion
-      var W = document.createElement('div'); W.className = 'pk-wrap';
-      W.innerHTML = '<svg class="pk" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg"><defs>' +
-        '<filter id="pkClay" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
-          '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.62" result="g"/><feComposite in="g" in2="d" operator="in" result="tex"/>' +
-          '<feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge></filter>' +
-        '<radialGradient id="pkBody" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fffdf7"/><stop offset=".5" stop-color="#f3ece0"/><stop offset=".85" stop-color="#d8cdbb"/><stop offset="1" stop-color="#b8aa94"/></radialGradient>' +
-        '<radialGradient id="pkRed" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff7468"/><stop offset=".6" stop-color="#e2262a"/><stop offset="1" stop-color="#9e0f17"/></radialGradient>' +
-        '<radialGradient id="pkLeg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#d77400"/></radialGradient>' +
-        '<linearGradient id="pkBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd54d"/><stop offset="1" stop-color="#e58a00"/></linearGradient>' +
-        '<radialGradient id="pkEye" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset=".8" stop-color="#f1f1f1"/><stop offset="1" stop-color="#cfcfcf"/></radialGradient>' +
-        '<linearGradient id="pkCar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb04a"/><stop offset=".5" stop-color="#ff7a00"/><stop offset="1" stop-color="#c24e00"/></linearGradient>' +
-        '<radialGradient id="pkFire" cx="80%" cy="50%" r="80%"><stop offset="0" stop-color="#fff6a0"/><stop offset=".45" stop-color="#ffb400"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
-        '<radialGradient id="pkShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
-        '<ellipse cx="228" cy="318" rx="120" ry="15" fill="url(#pkShadow)"/>' +
-        '<g class="pk-chick"><g filter="url(#pkClay)">' +
-          // pattes trapues, trois doigts
-          '<g fill="url(#pkLeg)" stroke="#a85a00" stroke-width="2"><rect x="196" y="252" width="16" height="50" rx="8"/><rect x="246" y="252" width="16" height="50" rx="8"/>' +
-          '<ellipse cx="190" cy="304" rx="16" ry="7"/><ellipse cx="206" cy="307" rx="15" ry="7"/><ellipse cx="221" cy="304" rx="14" ry="7"/>' +
-          '<ellipse cx="241" cy="304" rx="14" ry="7"/><ellipse cx="257" cy="307" rx="15" ry="7"/><ellipse cx="272" cy="304" rx="15" ry="7"/></g>' +
-          // queue en boules de pâte
-          '<g fill="url(#pkBody)" stroke="#a89a84" stroke-width="2"><ellipse cx="112" cy="128" rx="24" ry="40" transform="rotate(-28 112 128)"/><ellipse cx="96" cy="160" rx="22" ry="36" transform="rotate(-52 96 160)"/><ellipse cx="134" cy="112" rx="20" ry="34" transform="rotate(-8 134 112)"/></g>' +
-          '<g class="pk-wing2"><path d="M250 150 C236 104 190 84 150 98 C170 130 206 152 250 150 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/></g>' +
-          // corps dodu
-          '<path d="M120 196 C118 130 170 96 230 98 C300 100 334 150 330 206 C326 262 280 286 222 286 C160 286 122 254 120 196 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
-          '<path d="M168 150 q-18 30 4 62" stroke="#c9bca6" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>' +
-          // aile
-          '<g class="pk-wing"><path d="M176 178 C186 150 244 148 262 182 C270 206 238 226 204 222 C182 218 168 202 176 178 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
-          '<path d="M196 196 q20 10 44 2 M200 208 q18 6 36 0" stroke="#c4b69e" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>' +
-          // tête
-          '<ellipse cx="300" cy="118" rx="64" ry="60" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
-          // crête en trois boudins
-          '<g fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"><ellipse cx="272" cy="62" rx="15" ry="20" transform="rotate(-20 272 62)"/><ellipse cx="295" cy="52" rx="16" ry="23"/><ellipse cx="319" cy="58" rx="15" ry="20" transform="rotate(18 319 58)"/></g>' +
-          // joues
-          '<ellipse cx="282" cy="146" rx="14" ry="8" fill="#ff9aa0" opacity=".55"/>' +
-        '</g>' +
-          // gros yeux collés façon pâte à modeler (pas de filtre : bien nets)
-          '<g class="pk-eye pk-e1"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="21" ry="24" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="7" cy="3" r="8" fill="#141414"/><circle cx="10" cy="-1" r="2.6" fill="#fff"/></g>' +
-          '<g class="pk-eye pk-e2"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="19" ry="22" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="6" cy="3" r="7.5" fill="#141414"/><circle cx="9" cy="-1" r="2.4" fill="#fff"/></g>' +
-          '<path class="pk-lid" d="M276 86 q20 -10 40 0 M316 84 q18 -8 34 2" stroke="#6b5a45" stroke-width="5" stroke-linecap="round" fill="none"/>' +
-          // bec en deux parties (le bas s’ouvre pour crier) et barbillon
-          '<g filter="url(#pkClay)"><path d="M346 130 q12 18 -2 34 q-16 -2 -12 -22 z" fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"/>' +
-          '<g class="pk-jaw"><path d="M338 130 L386 138 Q372 152 340 146 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/></g>' +
-          '<path d="M336 112 Q388 116 398 130 Q370 134 338 132 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/><circle cx="352" cy="120" r="2.2" fill="#a85e00"/></g>' +
-        '</g>' +
-        '<g class="pk-missile"><ellipse cx="-34" cy="0" rx="46" ry="16" fill="url(#pkFire)" class="pk-fire"/>' +
-          '<path d="M-8 -9 l-22 -10 M-8 -2 l-28 -2 M-8 6 l-22 12" stroke="#3aa635" stroke-width="7" stroke-linecap="round"/>' +
-          '<path d="M-8 -14 L62 0 L-8 14 Q-14 0 -8 -14 z" fill="url(#pkCar)" stroke="#a84300" stroke-width="2"/>' +
-          '<path d="M10 -8 l4 6 M26 -5 l3 5 M40 -3 l2 4" stroke="#a84300" stroke-width="2"/></g>' +
-        '<g class="pk-puff" opacity="0"><circle cx="122" cy="214" r="14" fill="#ddd"/><circle cx="108" cy="204" r="10" fill="#eee"/><circle cx="110" cy="226" r="9" fill="#ccc"/></g>' +
-        '</svg>';
-      ov.appendChild(W);
-      var cod = null, eyes = W.querySelectorAll('.pk-eye');
+    poulet: function (ov) { // poulet en 3D : vraie carotte, cri, yeux qui sortent, puis PLS et voix off
+      var gl = false; try { var c = document.createElement('canvas'); gl = !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) {}
+      if (!gl) return SCENE.poulet2d(ov);
+      var box = document.createElement('div'); box.className = 'fx3d'; ov.appendChild(box);
+      var t0 = performance.now(), txt = null;
+      need3d(function () { if (window.PA_FX3D) window.PA_FX3D.poulet(box, t0, function () { box.remove(); SCENE.poulet2d(ov); }); });
+      function say(t, st) { if (!txt) { txt = el('fx-s', '', ''); ov.appendChild(txt); } txt.textContent = t; txt.setAttribute('style', st); }
+      setTimeout(function () { say('TCHONK !', 'top:8%;left:10%;color:#ff8a1e;font-weight:900;font-size:clamp(34px,8vw,100px);transform:rotate(-12deg)'); }, 1400);
+      setTimeout(function () { say('CRÔÔÔÂÂÂÂK !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); }, 1480);
+      setTimeout(function () { say('cot… cot… CODÊÊÊK ?!', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(26px,6vw,72px)'); }, 2750);
+      setTimeout(function () { if (txt) txt.style.opacity = 0; }, 3500);
+      setTimeout(function () { say('« C’est pas carré… mais tu t’es fait fourrer ! »', 'left:4%;right:4%;top:6%;white-space:normal;text-align:center;color:#fff;font-style:italic;font-weight:800;font-size:clamp(24px,5.5vw,64px);line-height:1.2'); }, 4150);
+    },
+    poulet2d: function (ov) { // (repli sans 3D) le poulet en pâte (v1) prend une vraie carotte, puis tombe en PLS (si la 3D n'est pas disponible)
+      var W = document.createElement('div'); W.className = 'pk-wrap p2-wrap';
+      var car = '<g class="p2-car"><g class="p2-carIn"><path d="M0 -15 C30 -14 70 -6 96 0 C70 6 30 14 0 15 C-6 8 -6 -8 0 -15 z" fill="url(#pkCar)" stroke="#9a3f00" stroke-width="2"/>' +
+          '<path d="M18 -11 q3 5 0 10 M36 -9 q3 5 0 9 M54 -6 q2 4 0 7 M72 -4 q2 3 0 5" stroke="#a84a05" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+          '<g class="p2-leaves" stroke="#2f8f2a" stroke-width="5" stroke-linecap="round" fill="none"><path d="M-2 -4 C-20 -18 -34 -22 -50 -34"/><path d="M-2 0 C-24 -4 -42 -2 -60 -10"/><path d="M-2 4 C-22 10 -38 16 -52 26"/>' +
+          '<g fill="#3fae35" stroke="#2a7a24" stroke-width="1.5"><ellipse cx="-50" cy="-36" rx="10" ry="5" transform="rotate(-35 -50 -36)"/><ellipse cx="-38" cy="-26" rx="8" ry="4" transform="rotate(-30 -38 -26)"/><ellipse cx="-62" cy="-11" rx="10" ry="5" transform="rotate(-12 -62 -11)"/><ellipse cx="-46" cy="-5" rx="8" ry="4" transform="rotate(-8 -46 -5)"/><ellipse cx="-54" cy="28" rx="10" ry="5" transform="rotate(30 -54 28)"/><ellipse cx="-38" cy="16" rx="8" ry="4" transform="rotate(32 -38 16)"/></g></g></g></g>';
+      var svg = PKSVG(), m0 = svg.indexOf('<g class="pk-missile">'), m1 = svg.indexOf('<g class="pk-puff"');
+      svg = svg.slice(0, m0) + svg.slice(m1); // pas de missile
+      svg = svg.replace('<ellipse cx="228" cy="318"', '<g class="p2-all"><ellipse cx="228" cy="318"').replace('<g class="pk-chick">', car + '<g class="pk-chick">').replace('<g class="pk-puff"', '</g><g class="pk-puff"');
+      W.innerHTML = svg; ov.appendChild(W);
+      var txt = null, eyes = W.querySelectorAll('.pk-eye');
       eyes[0].setAttribute('transform', 'translate(290 106)'); eyes[1].setAttribute('transform', 'translate(328 104)');
-      setTimeout(function () { W.classList.add('pk-look'); }, 700); // il voit arriver la carotte
-      setTimeout(function () { W.classList.remove('pk-look'); W.classList.add('pk-in'); }, 1600); // la carotte rentre et disparaît
+      function say(t, st) { if (!txt) { txt = el('fx-s', '', ''); ov.appendChild(txt); } txt.textContent = t; txt.setAttribute('style', st); }
+      setTimeout(function () { W.classList.add('pk-look'); }, 500); // il voit arriver la carotte
+      setTimeout(function () { // TCHONK : la carotte rentre, il ne reste que les fanes
+        W.classList.remove('pk-look'); W.classList.add('p2-in');
+        say('TCHONK !', 'top:8%;left:10%;color:#ff8a1e;font-weight:900;font-size:clamp(34px,8vw,100px);transform:rotate(-12deg)');
+      }, 1400);
       setTimeout(function () { // le cri
-        W.classList.add('pk-hit');
-        cod = el('fx-s', 'CRÔÔÔÂÂÂÂK !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); ov.appendChild(cod);
-      }, 1670);
+        W.classList.add('pk-hit', 'pk-in');
+        say('CRÔÔÔÂÂÂÂK !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)');
+        for (var i = 0; i < 10; i++) { var g = Math.random() * Math.PI * 2, r = 20 + Math.random() * 30; ov.appendChild(el('fx-s', '🪶', 'left:38%;top:48%;font-size:clamp(20px,5vw,56px);--dx:' + (Math.cos(g) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(g) * r).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.4 + Math.random()).toFixed(2) + 's ease-out forwards')); }
+      }, 1480);
       setTimeout(function () { // les yeux sortent des orbites
         W.classList.add('pk-eyes');
         eyes[0].setAttribute('transform', 'translate(300 58) scale(2)'); eyes[1].setAttribute('transform', 'translate(352 50) scale(1.85)');
         W.querySelectorAll('.pk-stalk').forEach(function (l, k) { l.setAttribute('x2', k ? '-13' : '-6'); l.setAttribute('y2', k ? '26' : '25'); });
-      }, 2000);
-      setTimeout(function () { // BOUM
-        if (cod && cod.parentNode) cod.parentNode.removeChild(cod); W.classList.add('pk-boom'); ov.style.animation = 'fxShake .12s 7'; ov.style.background = 'rgba(255,150,0,.6)'; setTimeout(function () { ov.style.background = 'rgba(0,0,0,.72)'; }, 260);
-        ov.appendChild(el('fx-e', '💥', 'left:30%;top:20%;animation:fxBoom 1s ease-out forwards'));
-        ov.appendChild(el('fx-s', 'BOUM !', 'top:6%;left:50%;transform:translateX(-50%);color:#ff5a3c;font-weight:900;font-size:clamp(50px,12vw,150px)'));
-        var bits = ['🪶', '🪶', '🪶', '🪶', '🍗', '🪶', '🪶', '👀', '🪶'];
-        for (var i = 0; i < 30; i++) { var g = Math.random() * Math.PI * 2, r = 30 + Math.random() * 40; ov.appendChild(el('fx-s', bits[i % bits.length], 'left:46%;top:44%;font-size:clamp(26px,6vw,74px);--dx:' + (Math.cos(g) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(g) * r).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.1 + Math.random()).toFixed(2) + 's ease-out forwards')); }
-      }, 3000);
+      }, 1800);
+      setTimeout(function () { say('cot… cot… CODÊÊÊK ?!', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(26px,6vw,72px)'); }, 2750);
+      setTimeout(function () { // il tombe sur le côté, en PLS
+        if (txt) txt.style.opacity = 0;
+        eyes[0].setAttribute('transform', 'translate(290 106)'); eyes[1].setAttribute('transform', 'translate(328 104)');
+        W.querySelectorAll('.pk-stalk').forEach(function (l) { l.setAttribute('x2', '0'); l.setAttribute('y2', '0'); });
+        W.classList.remove('pk-eyes', 'pk-hit', 'pk-in'); W.classList.add('p2-pls');
+        setTimeout(function () { ov.appendChild(el('fx-s', '💫', 'left:62%;top:44%;font-size:clamp(40px,9vw,110px);animation:fxPulse .4s infinite')); }, 500);
+      }, 3500);
+      setTimeout(function () { // la voix off
+        say('« C’est pas carré… mais tu t’es fait fourrer ! »', 'left:4%;right:4%;top:6%;white-space:normal;text-align:center;color:#fff;font-style:italic;font-weight:800;font-size:clamp(24px,5.5vw,64px);line-height:1.2');
+      }, 4150);
     },
     trombone: function (ov) { ov.appendChild(el('fx-e', '🎺', 'left:8%;top:22%;transform:rotate(-20deg)')); ov.appendChild(el('fx-e', '😢', 'right:10%;top:22%;animation:fxSink 3s ease-in forwards')); },
     bombe: function (ov) {
