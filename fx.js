@@ -4,7 +4,7 @@
   'use strict';
   var LIST = [
     { id: 'chevre', e: '🐐', name: 'La chèvre qui braille' },
-    { id: 'poulet', e: '🐔', name: 'Le poulet et la carotte' },
+    { id: 'poulet', e: '🐔', name: 'Le poulet et la carotte-missile' },
     { id: 'trombone', e: '🎺', name: 'Le trombone triste' },
     { id: 'bombe', e: '💣', name: 'La bombe' },
     { id: 'tombe', e: '🪦', name: 'La pierre tombale' },
@@ -56,12 +56,16 @@
       voice(a, t + 1.25, 0.8, { f0: 470, f1: 330, vib: 10, vibDepth: 45, formant: 1000, formant2: 2600, q: 3, peak: 0.6, att: 0.04, rel: 0.3 });
       return 2.2;
     },
-    poulet: function (a, t) { // sifflement de la carotte, « tchok », puis « COT-COT-CODÊÊÊK » outré
-      noise(a, t, 0.55, { ft: 'bandpass', f0: 600, f1: 3000, q: 3, peak: 0.25, att: 0.3, rel: 0.1 });
-      tone(a, t + 0.55, 0.12, 180, { f1: 70, type: 'triangle', peak: 0.9, rel: 0.1 }); noise(a, t + 0.55, 0.08, { f0: 2500, peak: 0.6 });
-      [0.72, 0.86, 1.0].forEach(function (d) { voice(a, t + d, 0.09, { f0: 950, f1: 700, type: 'square', formant: 1400, q: 5, peak: 0.55, att: 0.005, rel: 0.05 }); });
-      voice(a, t + 1.18, 0.75, { f0: 700, f1: 1250, type: 'square', vib: 14, vibDepth: 60, formant: 1600, formant2: 3000, q: 4, peak: 0.6, att: 0.02, rel: 0.25 });
-      return 2.1;
+    poulet: function (a, t) { // missile-carotte qui siffle, impact, « CODÊÊÊK », yeux qui sortent (boïng), puis BOUM
+      noise(a, t, 0.75, { ft: 'bandpass', f0: 500, f1: 4000, q: 2, peak: 0.3, att: 0.5, rel: 0.05 }); // le missile arrive
+      tone(a, t, 0.75, 300, { f1: 1400, type: 'sawtooth', peak: 0.08, lp: 3000, att: 0.4 });
+      tone(a, t + 0.75, 0.14, 160, { f1: 60, type: 'triangle', peak: 0.9, rel: 0.12 }); noise(a, t + 0.75, 0.08, { f0: 2500, peak: 0.6 }); // l'impact
+      voice(a, t + 0.8, 0.7, { f0: 800, f1: 1500, type: 'square', vib: 16, vibDepth: 70, formant: 1700, formant2: 3100, q: 4, peak: 0.6, att: 0.02, rel: 0.2 }); // CODÊÊÊK
+      tone(a, t + 1.05, 0.45, 300, { f1: 1200, type: 'sine', vib: 22, vibDepth: 40, peak: 0.45 }); // boïng des yeux
+      tone(a, t + 1.25, 0.4, 350, { f1: 1400, type: 'sine', vib: 25, vibDepth: 45, peak: 0.4 });
+      noise(a, t + 1.8, 1.6, { ft: 'lowpass', f0: 2000, f1: 80, peak: 1, att: 0.005, rel: 1.5 }); tone(a, t + 1.8, 1.1, 100, { f1: 30, peak: 0.9, rel: 1 }); // BOUM
+      noise(a, t + 2.0, 1.2, { ft: 'bandpass', f0: 1500, f1: 600, q: 1.5, peak: 0.12, att: 0.1 }); // plumes
+      return 3.4;
     },
     trombone: function (a, t) { // « wouah-wouah-wouah-wouaaah »
       var n = [233.1, 220, 207.7, 196], d = [0.45, 0.45, 0.45, 1.4];
@@ -121,18 +125,67 @@
     '@keyframes fxGrow{0%{transform:scale(.4)}100%{transform:scale(1.15)}}@keyframes fxBoom{0%{transform:scale(.2);opacity:1}100%{transform:scale(2.6);opacity:0}}' +
     '@keyframes fxRise{0%{transform:translateY(60vh)}100%{transform:translateY(0)}}' +
     '@keyframes fxFly{0%{left:40%;top:45%;transform:scale(1)}30%{left:42%;top:42%}100%{left:115%;top:-20%;transform:scale(.6) rotate(-20deg)}}' +
+    '.pk-wrap{position:absolute;left:50%;top:44%;width:min(92vw,720px);transform:translate(-50%,-50%)}.pk{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 10px 20px rgba(0,0,0,.55))}' +
+    '.pk-missile{transform:translate(-260px,150px);animation:pkFly .75s cubic-bezier(.5,0,1,.6) forwards}.pk-fire{animation:pkFlick .07s infinite alternate}' +
+    '@keyframes pkFly{to{transform:translate(110px,192px) rotate(6deg)}}@keyframes pkFlick{from{opacity:.65;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1.25)}}' +
+    '.pk-chick{transform-box:fill-box;transform-origin:50% 100%}.pk-hit .pk-chick{animation:pkJolt .5s ease-out}.pk-hit .pk-missile{animation:none;transform:translate(110px,192px) rotate(6deg)}' +
+    '@keyframes pkJolt{0%{transform:scale(1,1)}20%{transform:scale(1.18,.78) translateY(10px)}45%{transform:scale(.86,1.22) translateY(-36px)}70%{transform:scale(1.06,.94)}100%{transform:scale(1,1)}}' +
+    '.pk-eye{transition:transform .28s cubic-bezier(.3,1.8,.5,1)}.pk-eyes .pk-chick{animation:pkTremble .06s infinite}@keyframes pkTremble{0%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}100%{transform:translate(-1px,-2px)}}' +
+    '.pk-boom .pk-chick,.pk-boom .pk-missile{animation:pkBoom .35s ease-out forwards}@keyframes pkBoom{to{transform:scale(1.6);opacity:0}}' +
     '@keyframes fxConf{0%{transform:translateY(-10vh) rotate(0)}100%{transform:translateY(110vh) rotate(720deg)}}@keyframes fxPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}';
   function css() { if (document.getElementById('fxCss')) return; var st = document.createElement('style'); st.id = 'fxCss'; st.textContent = CSS; document.head.appendChild(st); }
   function el(cls, txt, style) { var d = document.createElement('div'); d.className = cls; d.textContent = txt; if (style) d.setAttribute('style', style); return d; }
   var SCENE = {
     chevre: function (ov) { ov.appendChild(el('fx-e', '🐐', 'animation:fxHop 2.3s linear forwards')); ov.appendChild(el('fx-s', 'MÊÊÊÊÊ !', 'top:12%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;animation:fxPulse .3s 6')); },
-    poulet: function (ov) {
-      var ch = el('fx-e', '🐔', 'left:38%;top:36%'); ov.appendChild(ch);
-      ov.appendChild(el('fx-s', '🥕', 'animation:fxCarrot .55s ease-in forwards'));
-      setTimeout(function () {
-        ch.style.animation = 'fxJump 1s ease-out'; ov.appendChild(el('fx-s', 'CODÊÊÊK !', 'top:10%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900'));
-        for (var i = 0; i < 14; i++) { var f = el('fx-s', '🪶', 'left:44%;top:52%;font-size:clamp(24px,5vw,60px);--dx:' + ((Math.random() * 2 - 1) * 40) + 'vw;--dy:' + ((Math.random() * 2 - 1) * 35) + 'vh;--r:' + (Math.random() * 720 - 360) + 'deg;animation:fxFeather 1.3s ease-out forwards'); ov.appendChild(f); }
-      }, 560);
+    poulet: function (ov) { // poulet façon dessin animé 3D : missile-carotte au derrière, yeux qui sortent, explosion
+      var W = document.createElement('div'); W.className = 'pk-wrap';
+      W.innerHTML = '<svg class="pk" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg"><defs>' +
+        '<radialGradient id="pkBody" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f1ede6"/><stop offset="1" stop-color="#b9b1a4"/></radialGradient>' +
+        '<radialGradient id="pkWing" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fbf8f2"/><stop offset="1" stop-color="#c9c0b2"/></radialGradient>' +
+        '<radialGradient id="pkRed" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#b3121b"/></radialGradient>' +
+        '<linearGradient id="pkBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84a"/><stop offset="1" stop-color="#e08a00"/></linearGradient>' +
+        '<radialGradient id="pkEye" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d8d8d8"/></radialGradient>' +
+        '<linearGradient id="pkCar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb04a"/><stop offset=".5" stop-color="#ff7a00"/><stop offset="1" stop-color="#c24e00"/></linearGradient>' +
+        '<radialGradient id="pkFire" cx="80%" cy="50%" r="80%"><stop offset="0" stop-color="#fff6a0"/><stop offset=".45" stop-color="#ffb400"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
+        '<radialGradient id="pkShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+        '<ellipse cx="225" cy="292" rx="110" ry="16" fill="url(#pkShadow)"/>' +
+        '<g class="pk-chick">' +
+          '<path d="M205 250 l-8 34 M197 284 l-14 6 M197 284 l2 9 M197 284 l12 5 M245 250 l4 34 M249 284 l-12 6 M249 284 l3 9 M249 284 l13 4" stroke="#f08a00" stroke-width="7" stroke-linecap="round" fill="none"/>' +
+          '<path d="M118 150 q-30 -40 -6 -70 q10 30 30 40 q-4 -40 24 -56 q0 40 14 56 z" fill="url(#pkWing)" stroke="#a89f90" stroke-width="2"/>' +
+          '<ellipse cx="225" cy="185" rx="112" ry="82" fill="url(#pkBody)" stroke="#a89f90" stroke-width="2"/>' +
+          '<path d="M180 170 q40 -10 70 20 q-30 40 -80 20 q-14 -20 10 -40 z" fill="url(#pkWing)" stroke="#a89f90" stroke-width="2"/>' +
+          '<ellipse cx="292" cy="112" rx="52" ry="50" fill="url(#pkBody)" stroke="#a89f90" stroke-width="2"/>' +
+          '<path d="M262 70 q4 -26 20 -14 q6 -24 22 -8 q12 -18 22 4 q-30 14 -64 18 z" fill="url(#pkRed)"/>' +
+          '<path d="M334 112 l40 10 l-40 12 z" fill="url(#pkBeak)" stroke="#b86e00" stroke-width="2"/>' +
+          '<path d="M328 136 q8 26 -6 30 q-12 -8 -4 -30 z" fill="url(#pkRed)"/>' +
+          '<g class="pk-eye pk-e1"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#c43" stroke-width="4"/><circle r="15" fill="url(#pkEye)" stroke="#555" stroke-width="2"/><circle class="pk-pup" cx="4" cy="1" r="6.5" fill="#111"/><circle cx="6.5" cy="-2" r="2" fill="#fff"/></g>' +
+          '<g class="pk-eye pk-e2"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#c43" stroke-width="4"/><circle r="13" fill="url(#pkEye)" stroke="#555" stroke-width="2"/><circle class="pk-pup" cx="4" cy="1" r="5.5" fill="#111"/><circle cx="6" cy="-2" r="1.8" fill="#fff"/></g>' +
+          '<path class="pk-brow" d="M282 84 l22 8 M312 92 l18 -4" stroke="#333" stroke-width="4" stroke-linecap="round"/>' +
+        '</g>' +
+        '<g class="pk-missile"><ellipse cx="-34" cy="0" rx="46" ry="16" fill="url(#pkFire)" class="pk-fire"/>' +
+          '<path d="M-8 -9 l-22 -10 M-8 -2 l-28 -2 M-8 6 l-22 12" stroke="#3aa635" stroke-width="7" stroke-linecap="round"/>' +
+          '<path d="M-8 -14 L62 0 L-8 14 Q-14 0 -8 -14 z" fill="url(#pkCar)" stroke="#a84300" stroke-width="2"/>' +
+          '<path d="M10 -8 l4 6 M26 -5 l3 5 M40 -3 l2 4" stroke="#a84300" stroke-width="2"/></g>' +
+        '</svg>';
+      ov.appendChild(W);
+      var cod = null, svg = W.querySelector('svg'), eyes = W.querySelectorAll('.pk-eye'), chick = W.querySelector('.pk-chick');
+      eyes[0].setAttribute('transform', 'translate(300 104)'); eyes[1].setAttribute('transform', 'translate(322 100)');
+      setTimeout(function () { // impact
+        W.classList.add('pk-hit');
+        cod = el('fx-s', 'CODÊÊÊK !', 'top:6%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); ov.appendChild(cod);
+      }, 750);
+      setTimeout(function () { // les yeux sortent des orbites
+        W.classList.add('pk-eyes');
+        eyes[0].setAttribute('transform', 'translate(318 70) scale(2.1)'); eyes[1].setAttribute('transform', 'translate(352 62) scale(1.9)');
+        W.querySelectorAll('.pk-stalk').forEach(function (l, k) { l.setAttribute('x2', k ? '-14' : '-9'); l.setAttribute('y2', k ? '19' : '17'); });
+      }, 1000);
+      setTimeout(function () { // BOUM
+        if (cod && cod.parentNode) cod.parentNode.removeChild(cod); W.classList.add('pk-boom'); ov.style.animation = 'fxShake .12s 7'; ov.style.background = 'rgba(255,150,0,.6)'; setTimeout(function () { ov.style.background = 'rgba(0,0,0,.72)'; }, 260);
+        ov.appendChild(el('fx-e', '💥', 'left:30%;top:20%;animation:fxBoom 1s ease-out forwards'));
+        ov.appendChild(el('fx-s', 'BOUM !', 'top:6%;left:50%;transform:translateX(-50%);color:#ff5a3c;font-weight:900;font-size:clamp(50px,12vw,150px)'));
+        var bits = ['🪶', '🪶', '🪶', '🪶', '🍗', '🪶', '🥕', '🪶', '👀'];
+        for (var i = 0; i < 30; i++) { var g = Math.random() * Math.PI * 2, r = 30 + Math.random() * 40; ov.appendChild(el('fx-s', bits[i % bits.length], 'left:46%;top:44%;font-size:clamp(26px,6vw,74px);--dx:' + (Math.cos(g) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(g) * r).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.1 + Math.random()).toFixed(2) + 's ease-out forwards')); }
+      }, 1800);
     },
     trombone: function (ov) { ov.appendChild(el('fx-e', '🎺', 'left:8%;top:22%;transform:rotate(-20deg)')); ov.appendChild(el('fx-e', '😢', 'right:10%;top:22%;animation:fxSink 3s ease-in forwards')); },
     bombe: function (ov) {
