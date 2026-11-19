@@ -281,6 +281,25 @@
   }
   // saisie manuelle : reprendre un classement en cours, ou ajouter un tournoi déjà joué
   var INP = 'min-height:48px;background:var(--panel2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:1.05em';
+  function pastNames() { return String((document.getElementById('lgPastTxt') || {}).value || '').split('\n').map(function (ln) { return cleanName(ln.replace(/^\s*\d+\s*[.)\-:]?\s+/, '')); }).filter(Boolean); }
+  function pastPickOpts(names) {
+    var ui = U(), used = {}; names.forEach(function (n) { used[key(n)] = 1; });
+    var r = roster().filter(function (n) { return !used[key(n)]; }).sort(function (a, b) { return a.localeCompare(b, 'fr'); });
+    return '<option value="">' + (names.length ? '➕ ' + (names.length + 1) + 'e place : choisir le joueur…' : '🏆 1er (le vainqueur) : choisir le joueur…') + '</option>' + r.map(function (n) { return '<option>' + ui.esc(n) + '</option>'; }).join('');
+  }
+  function pastBonusOpts(names, cur) { var ui = U(); return '<option value="">Pas de prime</option>' + names.map(function (n) { return '<option' + (key(n) === key(cur) ? ' selected' : '') + '>' + ui.esc(n) + '</option>'; }).join(''); }
+  function pastRefresh() {
+    var nm = pastNames(), pk = document.getElementById('lgPastPick'), bo = document.getElementById('lgPastBonus'), ct = document.getElementById('lgPastCount');
+    if (pk) pk.innerHTML = pastPickOpts(nm);
+    if (bo) bo.innerHTML = pastBonusOpts(nm, bo.value);
+    if (ct) ct.textContent = nm.length + ' joueur' + (nm.length > 1 ? 's' : '');
+  }
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.id !== 'lgPastPick' || !e.target.value) return;
+    var ta = document.getElementById('lgPastTxt'); if (!ta) return;
+    var v = ta.value.replace(/\s+$/, ''); ta.value = (v ? v + '\n' : '') + e.target.value; pastRefresh();
+  });
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'lgPastTxt') pastRefresh(); });
   function manualCard(cy) {
     var ui = U(), h = '<div class="card stack"><b>✍️ Saisie manuelle</b>';
     if (V.form === 'carry') {
@@ -302,8 +321,12 @@
     } else if (V.form === 'past') {
       h += '<div class="small muted">Pour un tournoi déjà joué : un joueur par ligne, <b>du 1er au dernier</b>. Les points sont calculés avec le barème habituel.</div>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><input type="date" id="lgPastDate" value="' + today() + '" style="' + INP + ';flex:1"><select id="lgPastType" style="' + INP + ';flex:1"><option value="mercredi">Tournoi du mercredi</option><option value="deep">Deep du vendredi (×1,5)</option><option value="libre">Hors championnat</option></select></div>' +
+        '<label class="small" for="lgPastPick"><b>Choisis les joueurs dans l’ordre</b> : le vainqueur d’abord, puis le 2e, le 3e… jusqu’au premier sorti.</label>' +
+        '<select id="lgPastPick" style="' + INP + ';width:100%;border-color:var(--gold)">' + pastPickOpts([]) + '</select>' +
+        '<div class="small muted">La liste ci-dessous se remplit toute seule, une place par ligne. Tu peux aussi y écrire un pseudo à la main (nouveau joueur) ou corriger l’ordre.</div>' +
         '<textarea id="lgPastTxt" rows="10" spellcheck="false" autocapitalize="characters" placeholder="VAINQUEUR&#10;DEUXIÈME&#10;TROISIÈME&#10;…" style="' + INP + ';width:100%;font-family:monospace"></textarea>' +
-        '<label class="small muted" for="lgPastBonus">Prime de ' + BONUS + ' points (celui qui a sorti la tête mise à prix), si elle a été gagnée :</label><input type="text" id="lgPastBonus" placeholder="Pseudo, ou vide" style="' + INP + '">' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="pastUndo" style="flex:1">↩︎ Retirer le dernier</button><span id="lgPastCount" class="small muted" style="align-self:center">0 joueur</span></div>' +
+        '<label class="small muted" for="lgPastBonus">Prime de ' + BONUS + ' points (celui qui a sorti la tête mise à prix), si elle a été gagnée :</label><select id="lgPastBonus" style="' + INP + '">' + pastBonusOpts([], '') + '</select>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="savePast" style="flex:1">Enregistrer ce tournoi</button><button class="btn" data-lgact="formCancel">Annuler</button></div>';
     } else {
       h += '<div class="small muted">La saison a commencé avant l’appli ? Reprends le classement en cours, ou ajoute un par un les tournois déjà joués.</div>' +
@@ -384,6 +407,7 @@
       V.form = null; V.crows = null; V.cdate = null; V.choldM = V.choldD = null; V.fmsg = 'Reprise enregistrée : ' + rowsC.length + ' joueurs' + (hm2 || hdp ? ' ; têtes mises à prix : ' + [hm2 ? hm2 + ' (mercredi)' : '', hdp ? hdp + ' (vendredi)' : ''].filter(Boolean).join(', ') : '') + '.'; U().render(); return;
     }
     if (a === 'delCarry') { if (typeof confirm === 'function' && !confirm('Supprimer la reprise du classement ' + V.year + ' ?')) return; setCarry(V.year, today(), []); V.form = null; V.fmsg = 'Reprise supprimée.'; U().render(); return; }
+    if (a === 'pastUndo') { var tu = document.getElementById('lgPastTxt'); if (tu) { var ls = tu.value.replace(/\s+$/, '').split('\n'); ls.pop(); tu.value = ls.join('\n'); pastRefresh(); } return; }
     if (a === 'savePast') {
       var seenP = {}, namesP = [], dupP = [];
       String((document.getElementById('lgPastTxt') || {}).value || '').split('\n').forEach(function (ln) { var nm = cleanName(ln.replace(/^\s*\d+\s*[.)\-:]?\s+/, '')); if (!nm) return; if (seenP[key(nm)]) { dupP.push(nm); return; } seenP[key(nm)] = 1; namesP.push(nm); });
