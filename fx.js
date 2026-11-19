@@ -56,16 +56,21 @@
       voice(a, t + 1.25, 0.8, { f0: 470, f1: 330, vib: 10, vibDepth: 45, formant: 1000, formant2: 2600, q: 3, peak: 0.6, att: 0.04, rel: 0.3 });
       return 2.2;
     },
-    poulet: function (a, t) { // missile-carotte qui siffle, impact, « CODÊÊÊK », yeux qui sortent (boïng), puis BOUM
+    poulet: function (a, t) { // missile-carotte, « plop », CRI du poulet, boïng des yeux, puis BOUM
       noise(a, t, 0.75, { ft: 'bandpass', f0: 500, f1: 4000, q: 2, peak: 0.3, att: 0.5, rel: 0.05 }); // le missile arrive
       tone(a, t, 0.75, 300, { f1: 1400, type: 'sawtooth', peak: 0.08, lp: 3000, att: 0.4 });
-      tone(a, t + 0.75, 0.14, 160, { f1: 60, type: 'triangle', peak: 0.9, rel: 0.12 }); noise(a, t + 0.75, 0.08, { f0: 2500, peak: 0.6 }); // l'impact
-      voice(a, t + 0.8, 0.7, { f0: 800, f1: 1500, type: 'square', vib: 16, vibDepth: 70, formant: 1700, formant2: 3100, q: 4, peak: 0.6, att: 0.02, rel: 0.2 }); // CODÊÊÊK
-      tone(a, t + 1.05, 0.45, 300, { f1: 1200, type: 'sine', vib: 22, vibDepth: 40, peak: 0.45 }); // boïng des yeux
-      tone(a, t + 1.25, 0.4, 350, { f1: 1400, type: 'sine', vib: 25, vibDepth: 45, peak: 0.4 });
-      noise(a, t + 1.8, 1.6, { ft: 'lowpass', f0: 2000, f1: 80, peak: 1, att: 0.005, rel: 1.5 }); tone(a, t + 1.8, 1.1, 100, { f1: 30, peak: 0.9, rel: 1 }); // BOUM
-      noise(a, t + 2.0, 1.2, { ft: 'bandpass', f0: 1500, f1: 600, q: 1.5, peak: 0.12, att: 0.1 }); // plumes
-      return 3.4;
+      tone(a, t + 0.75, 0.12, 520, { f1: 90, type: 'sine', peak: 0.8, rel: 0.1 }); noise(a, t + 0.75, 0.07, { f0: 1800, peak: 0.45 }); // plop : la carotte rentre
+      // le cri : deux couches dentelées avec un vibrato très rapide, plus un souffle rauque
+      [[0, 900, 1650, 1.0], [0.012, 905, 1680, 0.7]].forEach(function (L) {
+        voice(a, t + 0.82 + L[0], 0.95, { f0: L[1], f1: L[2], type: 'sawtooth', vib: 31, vibDepth: 120, formant: 1800, formant2: 3200, q: 3, peak: 0.85 * L[3], att: 0.015, rel: 0.25 });
+      });
+      noise(a, t + 0.82, 0.95, { ft: 'bandpass', f0: 2600, f1: 3600, q: 3, peak: 0.25, att: 0.02, rel: 0.3 });
+      voice(a, t + 1.85, 0.35, { f0: 1500, f1: 700, type: 'sawtooth', vib: 28, vibDepth: 90, formant: 1600, q: 3, peak: 0.6, att: 0.01, rel: 0.1 }); // dernier couac
+      tone(a, t + 1.15, 0.45, 300, { f1: 1200, type: 'sine', vib: 22, vibDepth: 40, peak: 0.4 }); // boïng des yeux
+      tone(a, t + 1.35, 0.4, 350, { f1: 1400, type: 'sine', vib: 25, vibDepth: 45, peak: 0.35 });
+      noise(a, t + 2.15, 1.6, { ft: 'lowpass', f0: 2000, f1: 80, peak: 1, att: 0.005, rel: 1.5 }); tone(a, t + 2.15, 1.1, 100, { f1: 30, peak: 0.9, rel: 1 }); // BOUM
+      noise(a, t + 2.35, 1.2, { ft: 'bandpass', f0: 1500, f1: 600, q: 1.5, peak: 0.12, att: 0.1 }); // plumes
+      return 3.7;
     },
     trombone: function (a, t) { // « wouah-wouah-wouah-wouaaah »
       var n = [233.1, 220, 207.7, 196], d = [0.45, 0.45, 0.45, 1.4];
@@ -125,67 +130,156 @@
     '@keyframes fxGrow{0%{transform:scale(.4)}100%{transform:scale(1.15)}}@keyframes fxBoom{0%{transform:scale(.2);opacity:1}100%{transform:scale(2.6);opacity:0}}' +
     '@keyframes fxRise{0%{transform:translateY(60vh)}100%{transform:translateY(0)}}' +
     '@keyframes fxFly{0%{left:40%;top:45%;transform:scale(1)}30%{left:42%;top:42%}100%{left:115%;top:-20%;transform:scale(.6) rotate(-20deg)}}' +
-    '.pk-wrap{position:absolute;left:50%;top:44%;width:min(92vw,720px);transform:translate(-50%,-50%)}.pk{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 10px 20px rgba(0,0,0,.55))}' +
-    '.pk-missile{transform:translate(-260px,150px);animation:pkFly .75s cubic-bezier(.5,0,1,.6) forwards}.pk-fire{animation:pkFlick .07s infinite alternate}' +
-    '@keyframes pkFly{to{transform:translate(110px,192px) rotate(6deg)}}@keyframes pkFlick{from{opacity:.65;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1.25)}}' +
-    '.pk-chick{transform-box:fill-box;transform-origin:50% 100%}.pk-hit .pk-chick{animation:pkJolt .5s ease-out}.pk-hit .pk-missile{animation:none;transform:translate(110px,192px) rotate(6deg)}' +
-    '@keyframes pkJolt{0%{transform:scale(1,1)}20%{transform:scale(1.18,.78) translateY(10px)}45%{transform:scale(.86,1.22) translateY(-36px)}70%{transform:scale(1.06,.94)}100%{transform:scale(1,1)}}' +
-    '.pk-eye{transition:transform .28s cubic-bezier(.3,1.8,.5,1)}.pk-eyes .pk-chick{animation:pkTremble .06s infinite}@keyframes pkTremble{0%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}100%{transform:translate(-1px,-2px)}}' +
-    '.pk-boom .pk-chick,.pk-boom .pk-missile{animation:pkBoom .35s ease-out forwards}@keyframes pkBoom{to{transform:scale(1.6);opacity:0}}' +
+    '.pk-wrap{position:absolute;left:50%;top:44%;width:min(94vw,760px);transform:translate(-50%,-50%)}.pk{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 12px 22px rgba(0,0,0,.55))}' +
+    '.pk-chick{transform-box:view-box;transform-origin:228px 312px;animation:pkIdle .5s ease-in-out infinite alternate}@keyframes pkIdle{from{transform:scale(1,1)}to{transform:scale(1.02,.985)}}' +
+    '.pk-missile{transform:translate(-260px,214px);animation:pkFly .75s cubic-bezier(.5,0,1,.6) forwards}.pk-fire{animation:pkFlick .07s infinite alternate}' +
+    '@keyframes pkFly{to{transform:translate(70px,206px) rotate(4deg)}}@keyframes pkFlick{from{opacity:.65;transform:scaleX(.8)}to{opacity:1;transform:scaleX(1.25)}}' +
+    '.pk-in .pk-missile{animation:pkIn .14s ease-in forwards}@keyframes pkIn{from{transform:translate(70px,206px) rotate(4deg);opacity:1}to{transform:translate(128px,208px) rotate(4deg) scale(.15,.4);opacity:0}}' +
+    '.pk-in .pk-puff{animation:pkPuff .7s ease-out forwards}@keyframes pkPuff{0%{opacity:.95;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(-40px,-30px) scale(1.6)}}' +
+    '.pk-wing{transform-box:view-box;transform-origin:256px 182px}.pk-wing2{transform-box:view-box;transform-origin:248px 150px;opacity:0}' +
+    '.pk-in .pk-wing{animation:pkFlap .11s 13 alternate ease-in-out}.pk-in .pk-wing2{opacity:1;animation:pkFlap2 .11s 13 alternate ease-in-out}' +
+    '@keyframes pkFlap{from{transform:rotate(-8deg)}to{transform:rotate(58deg) scale(1.1,1.15)}}@keyframes pkFlap2{from{transform:rotate(-15deg)}to{transform:rotate(48deg) scale(1.15)}}' +
+    '.cv-goat{transform-box:view-box;transform-origin:200px 310px;animation:pkIdle .6s ease-in-out infinite alternate}' +
+    '.cv-head{transform-box:view-box;transform-origin:290px 170px;transition:transform .15s}.cv-jaw{transform-box:view-box;transform-origin:338px 146px;transition:transform .12s}' +
+    '.cv-bl .cv-head{transform:rotate(-12deg)}.cv-bl .cv-jaw{animation:cvJaw .1s infinite alternate}@keyframes cvJaw{from{transform:rotate(24deg)}to{transform:rotate(34deg)}}' +
+    '.cv-bl .cv-goat{animation:cvShake .1s infinite alternate}@keyframes cvShake{from{transform:translateX(-2px) scale(1,1)}to{transform:translateX(2px) scale(1.01,.99)}}' +
+    '.cv-bl .cv-brow{transform:translateY(-5px)}.cv-brow{transform-box:view-box;transition:transform .1s}' +
+    '.pk-jaw{transform-box:view-box;transform-origin:340px 134px}.pk-hit .pk-jaw{animation:pkJaw .09s 10 alternate}@keyframes pkJaw{from{transform:rotate(8deg)}to{transform:rotate(28deg)}}' +
+    '.pk-hit .pk-chick{animation:pkJolt .55s ease-out}' +
+    '@keyframes pkJolt{0%{transform:scale(1,1)}18%{transform:scale(1.2,.76)}45%{transform:scale(.84,1.24) translateY(-40px)}72%{transform:scale(1.06,.95)}100%{transform:scale(1,1)}}' +
+    '.pk-eye{transition:transform .3s cubic-bezier(.3,1.8,.5,1)}.pk-eyes .pk-chick{animation:pkTremble .06s infinite}@keyframes pkTremble{0%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}100%{transform:translate(-1px,-2px)}}' +
+    '.pk-eyes .pk-lid{opacity:0}' +
+    '.pk-boom .pk-chick,.pk-boom .pk-eye,.pk-boom .pk-lid{animation:pkBoom .35s ease-out forwards;transform-box:view-box;transform-origin:228px 200px}@keyframes pkBoom{to{transform:scale(1.6);opacity:0}}' +
     '@keyframes fxConf{0%{transform:translateY(-10vh) rotate(0)}100%{transform:translateY(110vh) rotate(720deg)}}@keyframes fxPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}';
   function css() { if (document.getElementById('fxCss')) return; var st = document.createElement('style'); st.id = 'fxCss'; st.textContent = CSS; document.head.appendChild(st); }
   function el(cls, txt, style) { var d = document.createElement('div'); d.className = cls; d.textContent = txt; if (style) d.setAttribute('style', style); return d; }
   var SCENE = {
-    chevre: function (ov) { ov.appendChild(el('fx-e', '🐐', 'animation:fxHop 2.3s linear forwards')); ov.appendChild(el('fx-s', 'MÊÊÊÊÊ !', 'top:12%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;animation:fxPulse .3s 6')); },
-    poulet: function (ov) { // poulet façon dessin animé 3D : missile-carotte au derrière, yeux qui sortent, explosion
+    chevre: function (ov) { // chèvre en pâte à modeler : reste au centre, la gueule s'ouvre à chaque bêlement
       var W = document.createElement('div'); W.className = 'pk-wrap';
-      W.innerHTML = '<svg class="pk" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg"><defs>' +
-        '<radialGradient id="pkBody" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#f1ede6"/><stop offset="1" stop-color="#b9b1a4"/></radialGradient>' +
-        '<radialGradient id="pkWing" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fbf8f2"/><stop offset="1" stop-color="#c9c0b2"/></radialGradient>' +
-        '<radialGradient id="pkRed" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#b3121b"/></radialGradient>' +
-        '<linearGradient id="pkBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84a"/><stop offset="1" stop-color="#e08a00"/></linearGradient>' +
-        '<radialGradient id="pkEye" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d8d8d8"/></radialGradient>' +
+      W.innerHTML = '<svg class="pk" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg"><defs>' +
+        '<filter id="cvClay" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="4" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
+          '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.62" result="g"/><feComposite in="g" in2="d" operator="in" result="tex"/>' +
+          '<feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge></filter>' +
+        '<radialGradient id="cvFur" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fbf6ee"/><stop offset=".55" stop-color="#e9dfcf"/><stop offset="1" stop-color="#b9a98f"/></radialGradient>' +
+        '<radialGradient id="cvDark" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#8a6a4c"/><stop offset="1" stop-color="#4b3420"/></radialGradient>' +
+        '<linearGradient id="cvHorn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9cdb4"/><stop offset="1" stop-color="#8d7d63"/></linearGradient>' +
+        '<radialGradient id="cvMouth" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#7a1020"/><stop offset="1" stop-color="#2a0308"/></radialGradient>' +
+        '<radialGradient id="cvShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+        '<ellipse cx="200" cy="318" rx="140" ry="14" fill="url(#cvShadow)"/>' +
+        '<g class="cv-goat"><g filter="url(#cvClay)">' +
+          // pattes et sabots
+          '<g fill="url(#cvFur)" stroke="#a08d70" stroke-width="2"><rect x="112" y="226" width="20" height="78" rx="10"/><rect x="146" y="232" width="20" height="74" rx="10"/><rect x="226" y="232" width="20" height="74" rx="10"/><rect x="256" y="226" width="20" height="78" rx="10"/></g>' +
+          '<g fill="url(#cvDark)"><ellipse cx="122" cy="306" rx="15" ry="8"/><ellipse cx="156" cy="308" rx="15" ry="8"/><ellipse cx="236" cy="308" rx="15" ry="8"/><ellipse cx="266" cy="306" rx="15" ry="8"/></g>' +
+          // petite queue relevée
+          '<ellipse cx="76" cy="160" rx="10" ry="22" transform="rotate(-35 76 160)" fill="url(#cvDark)" stroke="#3a2614" stroke-width="2"/>' +
+          // corps dodu + tache
+          '<ellipse cx="190" cy="196" rx="118" ry="62" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+          '<ellipse cx="160" cy="180" rx="34" ry="22" fill="#c9a97f" opacity=".55"/>' +
+          '<path d="M120 214 q30 20 70 18 M210 230 q30 4 56 -10" stroke="#cbbca2" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>' +
+          // cou
+          '<path d="M250 170 C262 140 280 126 300 124 L318 160 C300 172 286 196 270 214 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+        '</g>' +
+        '<g class="cv-head"><g filter="url(#cvClay)">' +
+          // cornes recourbées vers l'arrière
+          '<path d="M300 84 C292 46 258 34 238 52 C258 50 276 62 286 92 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
+          '<path d="M318 82 C318 44 292 26 270 38 C290 42 304 56 304 90 z" fill="url(#cvHorn)" stroke="#6f6048" stroke-width="2"/>' +
+          // intérieur de la gueule (caché bouche fermée)
+          '<path d="M334 142 Q362 136 392 142 Q384 168 340 162 z" fill="url(#cvMouth)"/><ellipse cx="362" cy="156" rx="16" ry="6" fill="#e2627a"/>' +
+          // tête + museau
+          '<ellipse cx="316" cy="112" rx="44" ry="36" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+          '<path d="M326 96 C356 96 394 112 396 134 C396 146 380 146 338 144 C322 140 316 112 326 96 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+          '<path d="M342 102 q22 4 40 20" stroke="#cbbca2" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+          '<ellipse cx="386" cy="126" rx="4" ry="2.6" fill="#4b3420"/>' +
+          '<path class="cv-teeth" d="M352 144 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6" fill="#fff" stroke="#ccc" stroke-width="1"/>' +
+          // oreille tombante
+          '<ellipse cx="278" cy="112" rx="28" ry="11" transform="rotate(28 278 112)" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/><ellipse cx="276" cy="113" rx="18" ry="5" transform="rotate(28 276 113)" fill="#e8a7a0"/>' +
+        '</g>' +
+          // œil de chèvre (pupille horizontale), net
+          '<g class="cv-eye"><ellipse cx="330" cy="98" rx="13" ry="12" fill="#f2d36b" stroke="#6b5a45" stroke-width="2"/><rect x="321" y="95" width="18" height="6" rx="3" fill="#141414"/><circle cx="334" cy="94" r="2.4" fill="#fff"/></g>' +
+          '<path class="cv-brow" d="M314 82 q16 -8 30 2" stroke="#6b5a45" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+          // mâchoire du bas + barbiche (elle s'ouvre)
+          '<g class="cv-jaw" filter="url(#cvClay)"><path d="M336 142 Q366 146 390 142 Q384 166 344 162 Q334 156 336 142 z" fill="url(#cvFur)" stroke="#a08d70" stroke-width="2.5"/>' +
+            '<path d="M346 158 C344 182 350 200 358 210 C362 196 366 180 366 162 z" fill="url(#cvDark)" stroke="#3a2614" stroke-width="2"/></g>' +
+        '</g></g></svg>';
+      ov.appendChild(W);
+      var me = el('fx-s', 'MÊÊÊÊÊ !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(40px,10vw,130px);opacity:0'); ov.appendChild(me);
+      function bl(on, txt) { W.classList.toggle('cv-bl', on); if (on) { me.textContent = txt; me.style.opacity = 1; me.style.animation = 'fxPulse .2s infinite'; } else { me.style.opacity = 0; me.style.animation = ''; } }
+      setTimeout(function () { bl(true, 'MÊÊÊÊÊ !'); }, 80);
+      setTimeout(function () { bl(false); }, 1200);
+      setTimeout(function () { bl(true, 'MÊÊÊÊÊÊÊ !!'); }, 1320);
+      setTimeout(function () { bl(false); }, 2100);
+    },
+    poulet: function (ov) { // poulet façon pâte à modeler : carotte-missile au derrière, cri, yeux qui sortent, explosion
+      var W = document.createElement('div'); W.className = 'pk-wrap';
+      W.innerHTML = '<svg class="pk" viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg"><defs>' +
+        '<filter id="pkClay" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
+          '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.62" result="g"/><feComposite in="g" in2="d" operator="in" result="tex"/>' +
+          '<feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge></filter>' +
+        '<radialGradient id="pkBody" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fffdf7"/><stop offset=".5" stop-color="#f3ece0"/><stop offset=".85" stop-color="#d8cdbb"/><stop offset="1" stop-color="#b8aa94"/></radialGradient>' +
+        '<radialGradient id="pkRed" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff7468"/><stop offset=".6" stop-color="#e2262a"/><stop offset="1" stop-color="#9e0f17"/></radialGradient>' +
+        '<radialGradient id="pkLeg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffc24a"/><stop offset="1" stop-color="#d77400"/></radialGradient>' +
+        '<linearGradient id="pkBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd54d"/><stop offset="1" stop-color="#e58a00"/></linearGradient>' +
+        '<radialGradient id="pkEye" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset=".8" stop-color="#f1f1f1"/><stop offset="1" stop-color="#cfcfcf"/></radialGradient>' +
         '<linearGradient id="pkCar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb04a"/><stop offset=".5" stop-color="#ff7a00"/><stop offset="1" stop-color="#c24e00"/></linearGradient>' +
         '<radialGradient id="pkFire" cx="80%" cy="50%" r="80%"><stop offset="0" stop-color="#fff6a0"/><stop offset=".45" stop-color="#ffb400"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>' +
-        '<radialGradient id="pkShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
-        '<ellipse cx="225" cy="292" rx="110" ry="16" fill="url(#pkShadow)"/>' +
-        '<g class="pk-chick">' +
-          '<path d="M205 250 l-8 34 M197 284 l-14 6 M197 284 l2 9 M197 284 l12 5 M245 250 l4 34 M249 284 l-12 6 M249 284 l3 9 M249 284 l13 4" stroke="#f08a00" stroke-width="7" stroke-linecap="round" fill="none"/>' +
-          '<path d="M118 150 q-30 -40 -6 -70 q10 30 30 40 q-4 -40 24 -56 q0 40 14 56 z" fill="url(#pkWing)" stroke="#a89f90" stroke-width="2"/>' +
-          '<ellipse cx="225" cy="185" rx="112" ry="82" fill="url(#pkBody)" stroke="#a89f90" stroke-width="2"/>' +
-          '<path d="M180 170 q40 -10 70 20 q-30 40 -80 20 q-14 -20 10 -40 z" fill="url(#pkWing)" stroke="#a89f90" stroke-width="2"/>' +
-          '<ellipse cx="292" cy="112" rx="52" ry="50" fill="url(#pkBody)" stroke="#a89f90" stroke-width="2"/>' +
-          '<path d="M262 70 q4 -26 20 -14 q6 -24 22 -8 q12 -18 22 4 q-30 14 -64 18 z" fill="url(#pkRed)"/>' +
-          '<path d="M334 112 l40 10 l-40 12 z" fill="url(#pkBeak)" stroke="#b86e00" stroke-width="2"/>' +
-          '<path d="M328 136 q8 26 -6 30 q-12 -8 -4 -30 z" fill="url(#pkRed)"/>' +
-          '<g class="pk-eye pk-e1"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#c43" stroke-width="4"/><circle r="15" fill="url(#pkEye)" stroke="#555" stroke-width="2"/><circle class="pk-pup" cx="4" cy="1" r="6.5" fill="#111"/><circle cx="6.5" cy="-2" r="2" fill="#fff"/></g>' +
-          '<g class="pk-eye pk-e2"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#c43" stroke-width="4"/><circle r="13" fill="url(#pkEye)" stroke="#555" stroke-width="2"/><circle class="pk-pup" cx="4" cy="1" r="5.5" fill="#111"/><circle cx="6" cy="-2" r="1.8" fill="#fff"/></g>' +
-          '<path class="pk-brow" d="M282 84 l22 8 M312 92 l18 -4" stroke="#333" stroke-width="4" stroke-linecap="round"/>' +
+        '<radialGradient id="pkShadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+        '<ellipse cx="228" cy="318" rx="120" ry="15" fill="url(#pkShadow)"/>' +
+        '<g class="pk-chick"><g filter="url(#pkClay)">' +
+          // pattes trapues, trois doigts
+          '<g fill="url(#pkLeg)" stroke="#a85a00" stroke-width="2"><rect x="196" y="252" width="16" height="50" rx="8"/><rect x="246" y="252" width="16" height="50" rx="8"/>' +
+          '<ellipse cx="190" cy="304" rx="16" ry="7"/><ellipse cx="206" cy="307" rx="15" ry="7"/><ellipse cx="221" cy="304" rx="14" ry="7"/>' +
+          '<ellipse cx="241" cy="304" rx="14" ry="7"/><ellipse cx="257" cy="307" rx="15" ry="7"/><ellipse cx="272" cy="304" rx="15" ry="7"/></g>' +
+          // queue en boules de pâte
+          '<g fill="url(#pkBody)" stroke="#a89a84" stroke-width="2"><ellipse cx="112" cy="128" rx="24" ry="40" transform="rotate(-28 112 128)"/><ellipse cx="96" cy="160" rx="22" ry="36" transform="rotate(-52 96 160)"/><ellipse cx="134" cy="112" rx="20" ry="34" transform="rotate(-8 134 112)"/></g>' +
+          '<g class="pk-wing2"><path d="M250 150 C236 104 190 84 150 98 C170 130 206 152 250 150 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/></g>' +
+          // corps dodu
+          '<path d="M120 196 C118 130 170 96 230 98 C300 100 334 150 330 206 C326 262 280 286 222 286 C160 286 122 254 120 196 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+          '<path d="M168 150 q-18 30 4 62" stroke="#c9bca6" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>' +
+          // aile
+          '<g class="pk-wing"><path d="M176 178 C186 150 244 148 262 182 C270 206 238 226 204 222 C182 218 168 202 176 178 z" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+          '<path d="M196 196 q20 10 44 2 M200 208 q18 6 36 0" stroke="#c4b69e" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>' +
+          // tête
+          '<ellipse cx="300" cy="118" rx="64" ry="60" fill="url(#pkBody)" stroke="#a89a84" stroke-width="2.5"/>' +
+          // crête en trois boudins
+          '<g fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"><ellipse cx="272" cy="62" rx="15" ry="20" transform="rotate(-20 272 62)"/><ellipse cx="295" cy="52" rx="16" ry="23"/><ellipse cx="319" cy="58" rx="15" ry="20" transform="rotate(18 319 58)"/></g>' +
+          // joues
+          '<ellipse cx="282" cy="146" rx="14" ry="8" fill="#ff9aa0" opacity=".55"/>' +
+        '</g>' +
+          // gros yeux collés façon pâte à modeler (pas de filtre : bien nets)
+          '<g class="pk-eye pk-e1"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="21" ry="24" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="7" cy="3" r="8" fill="#141414"/><circle cx="10" cy="-1" r="2.6" fill="#fff"/></g>' +
+          '<g class="pk-eye pk-e2"><line x1="0" y1="0" x2="0" y2="0" class="pk-stalk" stroke="#d24d4d" stroke-width="5" stroke-linecap="round"/><ellipse rx="19" ry="22" fill="url(#pkEye)" stroke="#6b6b6b" stroke-width="2"/><circle class="pk-pup" cx="6" cy="3" r="7.5" fill="#141414"/><circle cx="9" cy="-1" r="2.4" fill="#fff"/></g>' +
+          '<path class="pk-lid" d="M276 86 q20 -10 40 0 M316 84 q18 -8 34 2" stroke="#6b5a45" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+          // bec en deux parties (le bas s’ouvre pour crier) et barbillon
+          '<g filter="url(#pkClay)"><path d="M346 130 q12 18 -2 34 q-16 -2 -12 -22 z" fill="url(#pkRed)" stroke="#8a0d14" stroke-width="2"/>' +
+          '<g class="pk-jaw"><path d="M338 130 L386 138 Q372 152 340 146 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/></g>' +
+          '<path d="M336 112 Q388 116 398 130 Q370 134 338 132 z" fill="url(#pkBeak)" stroke="#a85e00" stroke-width="2"/><circle cx="352" cy="120" r="2.2" fill="#a85e00"/></g>' +
         '</g>' +
         '<g class="pk-missile"><ellipse cx="-34" cy="0" rx="46" ry="16" fill="url(#pkFire)" class="pk-fire"/>' +
           '<path d="M-8 -9 l-22 -10 M-8 -2 l-28 -2 M-8 6 l-22 12" stroke="#3aa635" stroke-width="7" stroke-linecap="round"/>' +
           '<path d="M-8 -14 L62 0 L-8 14 Q-14 0 -8 -14 z" fill="url(#pkCar)" stroke="#a84300" stroke-width="2"/>' +
           '<path d="M10 -8 l4 6 M26 -5 l3 5 M40 -3 l2 4" stroke="#a84300" stroke-width="2"/></g>' +
+        '<g class="pk-puff" opacity="0"><circle cx="122" cy="214" r="14" fill="#ddd"/><circle cx="108" cy="204" r="10" fill="#eee"/><circle cx="110" cy="226" r="9" fill="#ccc"/></g>' +
         '</svg>';
       ov.appendChild(W);
-      var cod = null, svg = W.querySelector('svg'), eyes = W.querySelectorAll('.pk-eye'), chick = W.querySelector('.pk-chick');
-      eyes[0].setAttribute('transform', 'translate(300 104)'); eyes[1].setAttribute('transform', 'translate(322 100)');
-      setTimeout(function () { // impact
+      var cod = null, eyes = W.querySelectorAll('.pk-eye');
+      eyes[0].setAttribute('transform', 'translate(290 106)'); eyes[1].setAttribute('transform', 'translate(328 104)');
+      setTimeout(function () { W.classList.add('pk-in'); }, 750); // la carotte rentre et disparaît
+      setTimeout(function () { // le cri
         W.classList.add('pk-hit');
-        cod = el('fx-s', 'CODÊÊÊK !', 'top:6%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); ov.appendChild(cod);
-      }, 750);
+        cod = el('fx-s', 'CRÔÔÔÂÂÂÂK !', 'top:5%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900;font-size:clamp(34px,8vw,110px)'); ov.appendChild(cod);
+      }, 820);
       setTimeout(function () { // les yeux sortent des orbites
         W.classList.add('pk-eyes');
-        eyes[0].setAttribute('transform', 'translate(318 70) scale(2.1)'); eyes[1].setAttribute('transform', 'translate(352 62) scale(1.9)');
-        W.querySelectorAll('.pk-stalk').forEach(function (l, k) { l.setAttribute('x2', k ? '-14' : '-9'); l.setAttribute('y2', k ? '19' : '17'); });
-      }, 1000);
+        eyes[0].setAttribute('transform', 'translate(300 58) scale(2)'); eyes[1].setAttribute('transform', 'translate(352 50) scale(1.85)');
+        W.querySelectorAll('.pk-stalk').forEach(function (l, k) { l.setAttribute('x2', k ? '-13' : '-6'); l.setAttribute('y2', k ? '26' : '25'); });
+      }, 1150);
       setTimeout(function () { // BOUM
         if (cod && cod.parentNode) cod.parentNode.removeChild(cod); W.classList.add('pk-boom'); ov.style.animation = 'fxShake .12s 7'; ov.style.background = 'rgba(255,150,0,.6)'; setTimeout(function () { ov.style.background = 'rgba(0,0,0,.72)'; }, 260);
         ov.appendChild(el('fx-e', '💥', 'left:30%;top:20%;animation:fxBoom 1s ease-out forwards'));
         ov.appendChild(el('fx-s', 'BOUM !', 'top:6%;left:50%;transform:translateX(-50%);color:#ff5a3c;font-weight:900;font-size:clamp(50px,12vw,150px)'));
-        var bits = ['🪶', '🪶', '🪶', '🪶', '🍗', '🪶', '🥕', '🪶', '👀'];
+        var bits = ['🪶', '🪶', '🪶', '🪶', '🍗', '🪶', '🪶', '👀', '🪶'];
         for (var i = 0; i < 30; i++) { var g = Math.random() * Math.PI * 2, r = 30 + Math.random() * 40; ov.appendChild(el('fx-s', bits[i % bits.length], 'left:46%;top:44%;font-size:clamp(26px,6vw,74px);--dx:' + (Math.cos(g) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(g) * r).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.1 + Math.random()).toFixed(2) + 's ease-out forwards')); }
-      }, 1800);
+      }, 2150);
     },
     trombone: function (ov) { ov.appendChild(el('fx-e', '🎺', 'left:8%;top:22%;transform:rotate(-20deg)')); ov.appendChild(el('fx-e', '😢', 'right:10%;top:22%;animation:fxSink 3s ease-in forwards')); },
     bombe: function (ov) {
