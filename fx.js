@@ -8,7 +8,8 @@
     { id: 'trombone', e: '🎺', name: 'Le trombone triste' },
     { id: 'bombe', e: '💣', name: 'La bombe' },
     { id: 'tombe', e: '🪦', name: 'La pierre tombale' },
-    { id: 'canard', e: '🦆', name: 'Le canard' }
+    { id: 'canard', e: '🦆', name: 'Le canard' },
+    { id: 'caisse', e: '💸', name: 'La caisse enregistreuse' }
   ];
   var KEY = 'pa2fx', C = { on: true, def: 'hasard', vol: 0.8 };
   try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv) C = Object.assign(C, sv); } catch (e) {}
@@ -82,6 +83,14 @@
       noise(a, t + 0.85, 0.7, { ft: 'bandpass', f0: 400, f1: 900, q: 2, peak: 0.12, att: 0.1 }); // battements d'ailes
       return 1.9;
     },
+    caisse: function (a, t) { // touches mécaniques, tiroir qui s'ouvre, « KA-CHING » et pièces
+      [0, 0.09, 0.18].forEach(function (d) { noise(a, t + d, 0.04, { ft: 'bandpass', f0: 2200, q: 4, peak: 0.5 }); tone(a, t + d, 0.05, 420, { type: 'square', peak: 0.12, lp: 2000 }); });
+      noise(a, t + 0.32, 0.38, { ft: 'lowpass', f0: 900, f1: 300, peak: 0.45, att: 0.02, rel: 0.2 }); // le tiroir glisse
+      tone(a, t + 0.66, 0.08, 120, { type: 'triangle', peak: 0.7, rel: 0.07 }); noise(a, t + 0.66, 0.06, { f0: 3000, peak: 0.5 }); // il bute
+      [2637, 3520, 5274].forEach(function (f, i) { tone(a, t + 0.7, 1.3 - i * 0.2, f, { type: 'sine', peak: 0.32 / (i + 1), att: 0.003, rel: 1.2 - i * 0.2 }); }); // la clochette
+      for (var i = 0; i < 7; i++) tone(a, t + 1.0 + i * 0.08 + Math.random() * 0.03, 0.12, 3000 + Math.random() * 1500, { type: 'triangle', peak: 0.1, att: 0.002 });
+      return 2.2;
+    },
     prime: function (a, t) { // machine à sous : ding-ding-ding et pièces
       [1046.5, 1318.5, 1568, 2093].forEach(function (f, i) { tone(a, t + i * 0.13, 0.5, f, { type: 'triangle', peak: 0.35, att: 0.004, rel: 0.45 }); });
       for (var i = 0; i < 9; i++) tone(a, t + 0.6 + i * 0.07, 0.09, 2600 + Math.random() * 900, { type: 'square', peak: 0.08, lp: 6000 });
@@ -132,6 +141,14 @@
     },
     tombe: function (ov) { ov.appendChild(el('fx-e', '🪦', 'top:14%;animation:fxRise .9s ease-out')); ov.appendChild(el('fx-s', '🕯️', 'left:22%;top:34%')); ov.appendChild(el('fx-s', '🕯️', 'right:22%;top:34%')); },
     canard: function (ov) { var d = el('fx-e', '🦆', 'left:40%;top:45%'); ov.appendChild(d); ov.appendChild(el('fx-s', 'COIN !', 'top:12%;left:50%;transform:translateX(-50%);color:#f2c14e;font-weight:900')); setTimeout(function () { d.style.animation = 'fxFly 1.1s ease-in forwards'; }, 800); },
+    caisse: function (ov) {
+      var c = el('fx-e', '💰', 'top:18%;animation:fxPulse .3s 3'); ov.appendChild(c);
+      ov.appendChild(el('fx-s', 'KA-CHING !', 'top:8%;left:50%;transform:translateX(-50%);color:#3ddc84;font-weight:900'));
+      setTimeout(function () {
+        var b = ['💵', '💶', '💸', '💵', '💶'];
+        for (var i = 0; i < 26; i++) { var a = Math.random() * Math.PI * 2, r = 35 + Math.random() * 30; ov.appendChild(el('fx-s', b[i % 5], 'left:46%;top:34%;font-size:clamp(34px,7vw,90px);--dx:' + (Math.cos(a) * r).toFixed(1) + 'vw;--dy:' + (Math.sin(a) * r - 15).toFixed(1) + 'vh;--r:' + (Math.random() * 900 - 450).toFixed(0) + 'deg;animation:fxFeather ' + (1.2 + Math.random() * 0.9).toFixed(2) + 's ' + (Math.random() * 0.35).toFixed(2) + 's ease-out forwards')); }
+      }, 650);
+    },
     prime: function (ov) { ov.appendChild(el('fx-e', '🎰', 'top:14%;animation:fxPulse .35s 5')); for (var i = 0; i < 12; i++) ov.appendChild(el('fx-s', '🪙', 'left:' + (8 + Math.random() * 84) + '%;top:-10%;font-size:clamp(28px,6vw,70px);animation:fxConf ' + (1.2 + Math.random()) + 's ' + (Math.random() * .6) + 's linear forwards')); },
     vainqueur: function (ov) { ov.appendChild(el('fx-e', '🏆', 'top:12%;animation:fxPulse .5s 5')); var c = ['🎉', '🎊', '✨', '⭐']; for (var i = 0; i < 26; i++) ov.appendChild(el('fx-s', c[i % 4], 'left:' + (Math.random() * 96) + '%;top:-10%;font-size:clamp(26px,5vw,64px);animation:fxConf ' + (1.6 + Math.random() * 1.4) + 's ' + (Math.random() * .8) + 's linear forwards')); }
   };
