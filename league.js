@@ -200,6 +200,29 @@
   }
 
   /* ---------- Résumé texte (WhatsApp) ---------- */
+  // places gagnées ou perdues au classement général par un tournoi (avant / après)
+  function moves(id) {
+    var d = load(), tn = d.list.filter(function (x) { return x.id === id; })[0]; if (!tn || tn.type === 'libre') return null;
+    var yr = tn.date.slice(0, 4), idx = d.list.indexOf(tn);
+    var upto = d.list.filter(function (x, i) { return x.date.slice(0, 4) === yr && (x.date < tn.date || (x.date === tn.date && i <= idx)); });
+    var st = standings(upto, yr), prev = standings(upto.filter(function (x) { return x !== tn; }), yr), pr = {}, pl = {};
+    prev.forEach(function (o) { if (o.total > 0) pr[key(o.name)] = o.rank; });
+    tn.rows.forEach(function (r) { pl[key(r.name)] = 1; });
+    return st.filter(function (o) { return o.total > 0; }).map(function (o) { var b = pr[key(o.name)]; return { name: o.name, rank: o.rank, prev: b == null ? null : b, total: o.total, played: !!pl[key(o.name)], d: b == null ? null : b - o.rank }; });
+  }
+  // pour le classement général : la place de chacun avant le dernier tournoi du championnat de l’année
+  function lastMoves(year) {
+    var d = load(), l = d.list.filter(function (x) { return x.date.slice(0, 4) === year && x.type !== 'libre'; }); if (!l.length) return null;
+    var tn = l[l.length - 1], mv = moves(tn.id), m = {}; (mv || []).forEach(function (x) { m[key(x.name)] = x; });
+    return { map: m, date: tn.date, type: tn.type };
+  }
+  function mvTxt(x) { return x.prev == null ? 'entre au classement : ' + x.rank + 'e' : x.d > 0 ? 'passe de la ' + x.prev + 'e à la ' + x.rank + 'e place' : x.d < 0 ? 'passe de la ' + x.prev + 'e à la ' + x.rank + 'e place' : 'reste ' + x.rank + 'e'; }
+  function mvBadge(x, was) { if (!x) return ''; var c = x.prev == null ? 'mv-new' : x.d > 0 ? 'mv-up' : x.d < 0 ? 'mv-down' : 'mv-eq'; return '<span class="mv ' + c + '">' + (x.prev == null ? '🆕' : (x.d > 0 ? '▲ ' + x.d : x.d < 0 ? '▼ ' + (-x.d) : '●') + (was && x.d !== 0 ? ' · était ' + x.prev + 'e' : '')) + '</span>'; }
+  function movesHtml(id) {
+    var ui = U(), mv = moves(id); if (!mv || !mv.length) return '';
+    return '<div class="card stack" style="gap:6px"><b>📊 Le classement général après ce tournoi</b><div class="small muted">Pour chaque joueur, sa place avant et après ce tournoi. <span class="mv mv-up">▲</span> places gagnées · <span class="mv mv-down">▼</span> places perdues · <span class="mv mv-eq">●</span> même place. En gras : ceux qui ont joué ce tournoi.</div>' +
+      '<div class="mv-list">' + mv.map(function (x) { return '<div class="mv-row"><b class="mv-rk">' + x.rank + '</b>' + mvBadge(x) + '<span class="mv-nm">' + (x.played ? '<b>' + ui.esc(x.name) + '</b>' : ui.esc(x.name)) + '</span><span class="small mv-tx">' + (x.prev == null ? 'nouveau' : x.prev === x.rank ? 'reste ' + x.rank + 'e' : x.prev + 'e → ' + x.rank + 'e') + '</span></div>'; }).join('') + '</div></div>';
+  }
   function summary(id) {
     var d = load(), tn = d.list.filter(function (x) { return x.id === id; })[0]; if (!tn) return '';
     var med = ['🥇', '🥈', '🥉'], ko = {}; tn.rows.forEach(function (r) { if (r.koBy) ko[r.koBy] = (ko[r.koBy] || 0) + 1; });
@@ -216,16 +239,13 @@
     if (last && last.koAt) L.push('🏁 Dernière main à ' + hmf(last.koAt) + (last.koLevel ? ' (' + last.koLevel + ')' : ''));
     if (tn.type !== 'libre') {
       // classement après ce tournoi, avec les places gagnées ou perdues depuis le précédent
-      var yr = tn.date.slice(0, 4), idx = d.list.indexOf(tn);
-      var upto = d.list.filter(function (x, i) { return x.date.slice(0, 4) === yr && (x.date < tn.date || (x.date === tn.date && i <= idx)); });
-      var st = standings(upto, yr), prev = standings(upto.filter(function (x) { return x !== tn; }), yr), pr = {};
-      prev.forEach(function (o) { if (o.total > 0) pr[key(o.name)] = o.rank; });
+      var yr = tn.date.slice(0, 4);
       L.push('', '📊 Classement ' + yr + ' après ce tournoi :');
-      st.filter(function (o) { return o.total > 0; }).forEach(function (o) {
-        var b = pr[key(o.name)], mv = b == null ? '🆕' : b > o.rank ? '⬆️ +' + (b - o.rank) : b < o.rank ? '🔻 −' + (o.rank - b) : '＝';
+      (moves(id) || []).forEach(function (o) {
+        var mv = o.prev == null ? '🆕' : o.d > 0 ? '🟢⬆️ +' + o.d + ' (était ' + o.prev + 'e)' : o.d < 0 ? '🔴⬇️ −' + (-o.d) + ' (était ' + o.prev + 'e)' : '🟠 =';
         L.push(o.rank + '. ' + o.name + ' — ' + f1(o.total) + ' pts  ' + mv);
       });
-      L.push('(⬆️ places gagnées · 🔻 places perdues · ＝ même place · 🆕 entre au classement)');
+      L.push('(🟢 places gagnées · 🔴 places perdues · 🟠 même place · 🆕 entre au classement)');
     }
     L.push('', 'Merci à tous, et merci à Lionel ! ♠️♥️♦️♣️');
     return L.join('\n');
@@ -247,12 +267,12 @@
     }).join('') + '</table>';
   }
   // classement en barres : mercredi (or), deep (bronze), primes (rouge)
-  function bars(st) {
+  function bars(st, pm) {
     var ui = U(), max = Math.max.apply(null, st.map(function (o) { return o.total; }).concat([1]));
     return '<div class="lg-leg"><span><i style="background:var(--gold)"></i>Mercredi</span><span><i style="background:#9a6a18"></i>Deep ×1,5</span><span><i style="background:#e0464c"></i>Primes</span>' + (st.some(function (o) { return o.carry; }) ? '<span><i style="background:#6b7280"></i>Reprise</span>' : '') + '<span class="lg-legr">Total · moyenne</span></div><div>' +
       st.map(function (o, i) {
         var seg = function (v, c) { return v > 0 ? '<i style="width:' + (v / max * 100).toFixed(1) + '%;background:' + c + '"></i>' : ''; };
-        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (o.rank || i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + (o.n ? o.n + ' t.' : 'reprise') + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.bty ? ' · 🎯 ' + o.bty + ' prime' + (o.bty > 1 ? 's' : '') + ' (+' + f1(o.bonus) + ')' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.carry || 0, '#6b7280') + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>' + (o.nT ? 'moy. ' + f1(o.moy || 0) : (o.carry ? 'repris' : '')) + '</small></div></div>';
+        return '<div class="lg-row' + (i < 3 ? ' lg-p' + (i + 1) : '') + '" data-lgact="pl" data-v="' + ui.esc(o.name) + '" role="button" tabindex="0"><b class="lg-rk">' + (o.rank || i + 1) + '</b><div class="lg-nm"><b>' + ui.esc(o.name) + '</b><small>' + (pm && pm.map[key(o.name)] ? mvBadge(pm.map[key(o.name)], true) + ' ' : '') + (o.n ? o.n + ' t.' : 'reprise') + (o.wins ? ' · ' + o.wins + ' vict.' : '') + (o.bty ? ' · 🎯 ' + o.bty + ' prime' + (o.bty > 1 ? 's' : '') + ' (+' + f1(o.bonus) + ')' : '') + (o.kos ? ' · ' + o.kos + ' élim.' : '') + '</small><div class="lg-bar">' + seg(o.carry || 0, '#6b7280') + seg(o.mer, 'var(--gold)') + seg(o.deep, '#9a6a18') + seg(o.bonus, '#e0464c') + '</div></div><div class="lg-tot"><b>' + f1(o.total) + '</b><small>' + (o.nT ? 'moy. ' + f1(o.moy || 0) : (o.carry ? 'repris' : '')) + '</small></div></div>';
       }).join('') + '</div>';
   }
   function tnCard(tn) {
@@ -262,7 +282,7 @@
     return head + '<div class="card stack"><table class="tbl" style="font-size:.9em"><tr><th>Place</th><th>Joueur</th><th>Points</th><th>Sorti par</th><th>Heure · niveau</th></tr>' + tn.rows.map(function (r) {
       var h = r.koAt ? new Date(r.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
       return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus ? ' <span class="small muted">(' + f1(r.pts) + ' + ' + f1(r.bonus) + ' prime)</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
-    }).join('') + '</table>' + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
+    }).join('') + '</table>' + movesHtml(tn.id) + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
   }
   function renHtml(tn) {
     var ui = U();
@@ -358,7 +378,7 @@
       out += '<div class="card stack"><b>Classement ' + V.year + '</b><div class="small muted">' + inY.filter(function (x) { return x.type !== 'libre'; }).length + ' tournois au championnat (' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mercredi(s), ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep(s)).</div>' +
         (st.length ? '<div class="lg-pod">' + [1, 0, 2].map(function (i) { var o = st[i]; if (!o) return '<div></div>'; return '<div class="lg-pod' + (i + 1) + '"><div class="lg-med">' + ['🥇', '🥈', '🥉'][i] + '</div><b>' + ui.esc(o.name) + '</b><span>' + f1(o.total) + ' pts</span><div class="lg-step">' + (i + 1) + '</div></div>'; }).join('') + '</div>' : '') +
         (cyv ? '<div class="small muted">Dont la reprise du classement au ' + dfr(cyv.date) + ' (' + cyv.rows.length + ' joueurs, en gris).</div>' : '') +
-        (st.length ? bars(st) : '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>') + '</div>';
+        (st.length ? (function () { var pm = lastMoves(V.year); return (pm ? '<div class="small muted">▲▼● : places gagnées ou perdues au dernier tournoi (' + TYPES[pm.type].name.toLowerCase() + ' du ' + dfr(pm.date) + ').</div>' : '') + bars(st, pm); })() : '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>') + '</div>';
       out += manualCard(cyv);
     } else if (V.tab === 'semaine') {
       var ws = {}; inY.forEach(function (x) { (ws[week(x.date)] = ws[week(x.date)] || []).push(x); });
@@ -435,5 +455,5 @@
   // retirer un tournoi du classement (il sera réenregistré corrigé)
   function removeRec(id) { var d = load(); d.list = d.list.filter(function (x) { return x.id !== id; }); d.deleted = (d.deleted || []).concat([id]); save(d); }
   seedClub();
-  window.PA_LEAGUE = { rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { moves: moves, lastMoves: lastMoves, rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
