@@ -106,7 +106,9 @@
   }
   function years() { var y = {}, dd = load(); dd.list.forEach(function (x) { y[x.date.slice(0, 4)] = 1; }); Object.keys(dd.carry || {}).forEach(function (k) { if (dd.carry[k] && dd.carry[k].rows && dd.carry[k].rows.length) y[k] = 1; }); var a = Object.keys(y).sort().reverse(); return a.length ? a : [String(new Date().getFullYear())]; }
   // reprise du classement : les points déjà acquis avant de commencer à utiliser l'appli, par saison
-  function carryOf(year) { var c = (load().carry || {})[year]; return c && c.rows && c.rows.length ? c : null; }
+  function covered(year, date) { var c = carryOf(year), dd = load(); return (dd.list || []).filter(function (x) { return x.type !== 'libre' && x.date.slice(0, 4) === year && c && x.date <= (date || c.date); }); }
+  function lastDate(year) { var m = ''; (load().list || []).forEach(function (x) { if (x.type !== 'libre' && x.date.slice(0, 4) === year && x.date > m) m = x.date; }); return m; }
+    function carryOf(year) { var c = (load().carry || {})[year]; return c && c.rows && c.rows.length ? c : null; }
   function holdArr(h) { return (Array.isArray(h) ? h : String(h || '').split(/\s*(?:,|;|\bpuis\b)\s*/i)).map(function (x) { return String(x || '').trim().toUpperCase(); }).filter(Boolean); }
   function setCarry(year, date, rows, holders) { var d = load(); d.carry = d.carry || {}; d.carry[year] = { at: Date.now(), date: date, rows: rows, holders: holders || {} }; save(d); }
   // enregistre à la main un tournoi déjà joué : la liste des joueurs du 1er au dernier
@@ -119,7 +121,8 @@
   }
   function standings(list, year) {
     var m = {}, cy = year ? carryOf(year) : null;
-    list.forEach(function (tn) { if (tn.type === 'libre') return; tn.rows.forEach(function (r) {
+    // un tournoi joué jusqu'à la date de la reprise (comprise) est déjà dans ses points : on ne le recompte pas
+    list.forEach(function (tn) { if (tn.type === 'libre' || (cy && cy.date && tn.date <= cy.date)) return; tn.rows.forEach(function (r) {
       var k = key(r.name), o = m[k] = m[k] || { name: r.name, total: 0, pts: 0, mer: 0, deep: 0, bonus: 0, n: 0, nT: 0, bty: 0, wins: 0, pod: 0, best: 99, kos: 0, places: 0 };
       o.total += r.total; o.pts += r.pts; if (tn.type === 'deep') o.deep += r.pts; else o.mer += r.pts; o.bonus += r.bonus; if (r.bonus) o.bty += Math.max(1, Math.round(r.bonus / BONUS)); o.n++; o.nT++; if (r.place === 1) o.wins++; if (r.place <= 3) o.pod++; o.places += r.place / tn.n; o.best = Math.min(o.best, r.place);
     }); tn.rows.forEach(function (r) { if (r.koBy && m[key(r.koBy)]) m[key(r.koBy)].kos++; }); });
@@ -317,6 +320,8 @@
     if (bo) bo.innerHTML = pastBonusOpts(nm, bo.value);
     if (ct) ct.textContent = nm.length + ' joueur' + (nm.length > 1 ? 's' : '');
   }
+  // reprise : en changeant la date, la liste des tournois déjà compris dans la reprise se met à jour
+  document.addEventListener('change', function (e) { if (e.target && e.target.id === 'lgCarryDate' && V.form === 'carry') { readCrows(); U().render(); } });
   document.addEventListener('change', function (e) {
     if (!e.target || e.target.id !== 'lgPastPick' || !e.target.value) return;
     var ta = document.getElementById('lgPastTxt'); if (!ta) return;
@@ -329,8 +334,11 @@
       if (!V.crows) V.crows = cy ? cy.rows.map(function (r) { return { name: r.name, pts: String(r.pts).replace('.', ','), n: r.n ? String(r.n) : '', b: r.b ? String(r.b) : '' }; }) : roster().map(function (nm) { return { name: nm, pts: '', n: '', b: '' }; });
       if (!V.crows.length) V.crows.push({ name: '', pts: '', n: '', b: '' });
       var hd = (cy && cy.holders) || {};
+      // date proposée : celle de la reprise existante, sinon le dernier tournoi déjà saisi (ou aujourd'hui)
+      var cdef = V.cdate || (cy ? cy.date : (lastDate(V.year) || today())), cov = covered(V.year, cdef), aft = (load().list || []).filter(function (x) { return x.type !== 'libre' && x.date.slice(0, 4) === V.year && x.date > cdef; });
       h += '<div class="small muted">La saison a déjà commencé : pour chaque joueur, son pseudo et ses points actuels. Facultatifs : le nombre de tournois joués (pour une moyenne juste) et le nombre de primes gagnées (têtes mises à prix éliminées). Les points de ces primes (+' + BONUS + ' chacune) sont déjà dans ses points : l’appli les sépare seulement dans les colonnes Primes et Classement. Une ligne sans points est ignorée.</div>' +
-        '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + (V.cdate || (cy ? cy.date : today())) + '" style="' + INP + '">' +
+        '<label class="small muted" for="lgCarryDate">Classement arrêté au :</label><input type="date" id="lgCarryDate" value="' + cdef + '" style="' + INP + '">' +
+        '<div class="small muted">Les tournois joués jusqu’à cette date (comprise) doivent déjà être dans les points ci-dessous : ils ne seront pas recomptés.' + (cov.length ? ' <b style="color:var(--gold)">Déjà dans la reprise : ' + cov.map(function (x) { return x.date.slice(8, 10) + '/' + x.date.slice(5, 7) + ' (' + x.type + ')'; }).join(', ') + '.</b>' : '') + (aft.length ? ' Comptés en plus de la reprise : ' + aft.map(function (x) { return x.date.slice(8, 10) + '/' + x.date.slice(5, 7) + ' (' + x.type + ')'; }).join(', ') + '.' : '') + '</div>' +
         '<datalist id="lgNames">' + roster().map(function (x) { return '<option value="' + ui.esc(x) + '">'; }).join('') + '</datalist>' +
         '<div class="lg-crows"><div class="lg-crow lg-crh"><span>Pseudo</span><span>Points</span><span>Tourn.</span><span>Primes</span><span></span></div>' + V.crows.map(function (r, i) {
           return '<div class="lg-crow"><input class="lg-cr" data-i="' + i + '" data-f="name" list="lgNames" autocapitalize="characters" value="' + ui.esc(r.name) + '" placeholder="Pseudo" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="pts" inputmode="decimal" value="' + ui.esc(r.pts) + '" placeholder="0" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="n" inputmode="numeric" value="' + ui.esc(r.n) + '" placeholder="–" style="' + INP + '"><input class="lg-cr" data-i="' + i + '" data-f="b" inputmode="numeric" value="' + ui.esc(r.b || '') + '" placeholder="–" aria-label="Primes gagnées" style="' + INP + '"><button class="btn" data-lgact="crDel" data-v="' + i + '" aria-label="Retirer">✕</button></div>';
@@ -377,8 +385,10 @@
       (ys.length > 1 ? '<div class="seg">' + ys.map(function (y) { return '<button class="' + (V.year === y ? 'on' : '') + '" data-lgact="year" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' : '') + '</div>';
     if (V.tab === 'annuel') {
       var st = standings(inY, V.year), cyv = carryOf(V.year), avgP = inY.length ? inY.reduce(function (a, x) { return a + x.n; }, 0) / inY.length : 0, prim = st.reduce(function (a, o) { return a + o.bonus; }, 0);
+      var cvd = cyv ? covered(V.year) : [];
       if (inY.length) out += '<div class="lg-kpis"><div><span>Tournois</span><b>' + inY.length + '</b><small>' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mer. · ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep</small></div><div><span>Joueurs classés</span><b>' + st.length + '</b><small>au championnat</small></div><div><span>Moyenne de joueurs</span><b>' + f1(avgP) + '</b><small>par tournoi</small></div><div><span>Primes</span><b style="color:#e0464c">+' + f1(prim) + '</b><small>points</small></div></div>';
       out += '<div class="card stack"><b>Classement ' + V.year + '</b><div class="small muted">' + inY.filter(function (x) { return x.type !== 'libre'; }).length + ' tournois au championnat (' + inY.filter(function (x) { return x.type === 'mercredi'; }).length + ' mercredi(s), ' + inY.filter(function (x) { return x.type === 'deep'; }).length + ' deep(s)).</div>' +
+        (cvd.length ? '<div class="small" style="color:var(--gold)">Reprise arrêtée au ' + cyv.date.slice(8, 10) + '/' + cyv.date.slice(5, 7) + ' : ' + (cvd.length > 1 ? 'les tournois du ' : 'le tournoi du ') + cvd.map(function (x) { return x.date.slice(8, 10) + '/' + x.date.slice(5, 7); }).join(', ') + (cvd.length > 1 ? ' sont déjà dans la reprise, ils ne sont pas comptés une deuxième fois.' : ' est déjà dans la reprise, il n’est pas compté une deuxième fois.') + '</div>' : '') +
         (st.length ? '<div class="lg-pod">' + [1, 0, 2].map(function (i) { var o = st[i]; if (!o) return '<div></div>'; return '<div class="lg-pod' + (i + 1) + '"><div class="lg-med">' + ['🥇', '🥈', '🥉'][i] + '</div><b>' + ui.esc(o.name) + '</b><span>' + f1(o.total) + ' pts</span><div class="lg-step">' + (i + 1) + '</div></div>'; }).join('') + '</div>' : '') +
         (cyv ? '<div class="small muted">Dont la reprise du classement au ' + dfr(cyv.date) + ' (' + cyv.rows.length + ' joueurs, en gris).</div>' : '') +
         (st.length ? (function () { var pm = lastMoves(V.year); return (pm ? '<div class="small muted">▲▼● : places gagnées ou perdues au dernier tournoi (' + TYPES[pm.type].name.toLowerCase() + ' du ' + dfr(pm.date) + ').</div>' : '') + bars(st, pm); })() : '<div class="small muted">Aucun tournoi du championnat sur cette période.</div>') + '</div>';
@@ -458,5 +468,5 @@
   // retirer un tournoi du classement (il sera réenregistré corrigé)
   function removeRec(id) { var d = load(); d.list = d.list.filter(function (x) { return x.id !== id; }); d.deleted = (d.deleted || []).concat([id]); save(d); }
   seedClub();
-  window.PA_LEAGUE = { moves: moves, lastMoves: lastMoves, rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, PODIUM: PODIUM, podiumPts: podiumPts, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { moves: moves, lastMoves: lastMoves, rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, PODIUM: PODIUM, podiumPts: podiumPts, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, covered: covered, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
