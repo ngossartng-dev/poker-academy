@@ -9196,22 +9196,22 @@
   L[40] = {
     minutes: 12,
     links: [{ href: '#classement', label: 'Club › Championnat' }, { href: '#tournoi', label: 'Club › Tournoi du club (tête mise à prix)' }, { href: '#mainsclub', label: 'Club › Mains du club' }, { href: '#lecon-3', label: 'Chapitre 3 : Le club' }],
-    key: ['Deux tournois comptent pour le championnat : le mercredi, chaque semaine, et le deep du vendredi, une fois par mois, avec des points multipliés par 1,5.', 'Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Qui sort la tête mise à prix gagne 2 points de plus.', 'Les règles du club changent ta façon de jouer : pas de limp sauf en tête-à-tête, pas de défense de blinde sous 40 BB, et la range d’ouverture du club.'],
+    key: ['Deux tournois comptent pour le championnat : le mercredi, chaque semaine, et le deep du vendredi, une fois par mois, avec des points multipliés par 1,5.', 'Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point, et les 3 premiers ont un bonus podium de 5, 3 et 1 points. Qui sort la tête mise à prix gagne 2 points de plus.', 'Les règles du club changent ta façon de jouer : pas de limp sauf en tête-à-tête, pas de défense de blinde sous 40 BB, et la range d’ouverture du club.'],
     sections: [
       { ask: 'Quels tournois comptent ?', h: 'Le mercredi et le deep du vendredi', p: ['Le tournoi du mercredi se joue chaque semaine. Le deep du vendredi se joue une fois par mois, avec des tapis plus profonds : on joue plus de coups après le flop, et la range d’ouverture du club (40 BB et plus) sert plus longtemps.', 'Les deux comptent pour le championnat. Au deep, les points de place sont multipliés par 1,5. Un tournoi « hors championnat » ne rapporte aucun point.', 'Les jetons du club : 25, 100, 500, 1 000 et 5 000. Il n’y a pas de jeton de 50 : les blindes sont arrondies au plus petit jeton encore en jeu. Le minuteur du club règle la structure niveau par niveau.'] },
-      { ask: 'Comment se comptent les points ?', h: 'Le barème du championnat', p: ['Le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins, et ainsi de suite jusqu’au dernier, qui marque 1 point. Exemple à 14 joueurs : le 1er marque 14 points, le 3e 12, le 14e 1.', 'Au deep, on multiplie par 1,5 : à 14 joueurs, le 1er marque 21 points, le 3e 18.', 'Chaque place gagnée ne vaut qu’un point (1,5 au deep). Gagner rapporte beaucoup plus que grappiller des places : à 16 joueurs, le vainqueur marque 16 points, le 8e seulement 9. Joue pour gagner, pas pour survivre.', 'Les 3 premiers du classement de l’année sont récompensés. Si la saison a commencé avant l’appli, le classement se reprend à la main (Club › Championnat).'] },
+      { ask: 'Comment se comptent les points ?', h: 'Le barème du championnat', p: ['Le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins, et ainsi de suite jusqu’au dernier, qui marque 1 point. En plus, bonus podium : +5 au 1er, +3 au 2e, +1 au 3e. Exemple à 14 joueurs : le 1er marque 14 + 5 = 19 points, le 3e 12 + 1 = 13, le 14e 1.', 'Au deep, les points de place sont multipliés par 1,5, le bonus podium reste le même : à 14 joueurs, le 1er marque 21 + 5 = 26 points, le 3e 18 + 1 = 19.', 'Chaque place gagnée ne vaut qu’un point (1,5 au deep), mais le podium rapporte gros. Gagner rapporte beaucoup plus que grappiller des places : à 16 joueurs, le vainqueur marque 16 + 5 = 21 points, le 8e seulement 9. Joue pour gagner, pas pour survivre.', 'Les 3 premiers du classement de l’année sont récompensés. Si la saison a commencé avant l’appli, le classement se reprend à la main (Club › Championnat).'] },
       { ask: 'Et la tête mise à prix ?', h: 'La tête mise à prix', p: ['Celui qui élimine la tête mise à prix gagne 2 points de plus. La tête mise à prix, c’est le vainqueur du tournoi précédent du même type : celui du dernier mercredi pour le mercredi, celui du dernier deep pour le deep.', 'S’il est absent, c’est le 2e de ce tournoi, puis le 3e, et ainsi de suite. L’appli la choisit toute seule d’après les inscrits et l’affiche en haut du tournoi.', 'Quand la tête mise à prix fait tapis sur toi, les 2 points valent deux places (un peu plus d’une au deep) : tu peux payer d’un cran plus large qu’en temps normal, pas davantage. Une main qui se couche largement reste un fold.', 'Si c’est toi la tête mise à prix, attends-toi à être payé plus large : pousse un peu plus serré, et mise plus gros pour la valeur.'] },
       { ask: 'Quelles règles du club changent mon jeu ?', h: 'Les règles du club', p: ['Pas de limp, sauf en tête-à-tête ; la petite blinde peut compléter. On ouvre en relançant, ou on se couche.', 'Pas de défense de blinde sous 40 BB : sous 40 BB, en grosse blinde, tu fais tapis avec tes grosses mains ou tu te couches ; payer le tapis d’un adversaire reste possible.', 'L’ouverture suit la range du club (une range de table à 6) : la 1re place à parler joue la range de la photo, puis un cran plus large à chaque place jusqu’au bouton ; la petite blinde ouvre comme le bouton. Entre 20 et 40 BB, un cran plus serré.'] },
       { ask: 'Comment progresser entre deux tournois ?', h: 'Les mains du club et les adversaires', p: ['Après un tournoi, note un coup intéressant dans Club › Mains du club, avec la question à te poser. Lionel y ajoute son commentaire : la main sert ensuite d’exercice à tout le monde.', 'Note aussi trois choses sur les habitués dans le carnet des adversaires : s’ils jouent beaucoup de mains, s’ils sont agressifs, et une habitude marquante (chapitre 46).'] }
     ],
-    mistake: 'Jouer pour « finir dans les points » : chaque place ne vaut qu’un point, alors que la victoire en vaut beaucoup plus. Survivre sans jetons ne rapporte presque rien.',
-    retain: ['Points : 1er = nombre de joueurs, puis un de moins par place ; deep ×1,5.', 'Tête mise à prix : +2 points ; c’est le vainqueur du tournoi précédent du même type, sinon le 2e, le 3e…', 'Contre la tête mise à prix, paie un tapis d’un cran plus large, pas plus.', 'Pas de limp (sauf tête-à-tête), pas de défense de blinde sous 40 BB, range d’ouverture du club.'],
+    mistake: 'Jouer pour « finir dans les points » : chaque place ne vaut qu’un point, alors que la victoire en vaut beaucoup plus (avec le bonus podium de 5 points). Survivre sans jetons ne rapporte presque rien.',
+    retain: ['Points : 1er = nombre de joueurs, puis un de moins par place ; deep ×1,5 ; bonus podium +5 / +3 / +1.', 'Tête mise à prix : +2 points ; c’est le vainqueur du tournoi précédent du même type, sinon le 2e, le 3e…', 'Contre la tête mise à prix, paie un tapis d’un cran plus large, pas plus.', 'Pas de limp (sauf tête-à-tête), pas de défense de blinde sous 40 BB, range d’ouverture du club.'],
     quiz: [
-      { q: 'Mercredi, 14 joueurs, tu finis 3e : combien de points ?', o: ['10', '11', '12', '14'], a: 2, why: '14 − 3 + 1 = 12 points.' },
-      { q: 'Même place au deep du vendredi (14 joueurs, 3e) ?', o: ['12', '15', '18', '24'], a: 2, why: '12 × 1,5 = 18 points.' },
+      { q: 'Mercredi, 14 joueurs, tu finis 3e : combien de points ?', o: ['11', '12', '13', '15'], a: 2, why: '14 − 3 + 1 = 12 points de place, plus 1 de bonus podium : 13 points.' },
+      { q: 'Même place au deep du vendredi (14 joueurs, 3e) ?', o: ['13', '18', '19', '19,5'], a: 2, why: '12 × 1,5 = 18 points de place ; le bonus podium ne se multiplie pas : 18 + 1 = 19 points.' },
       { q: 'Tu élimines la tête mise à prix : combien de points en plus ?', o: ['1', '2', '3', '5'], a: 1, why: 'La prime vaut 2 points.' },
       { q: 'Le vainqueur du dernier mercredi est absent. Qui est la tête mise à prix ?', o: ['Personne', 'Le 2e du dernier mercredi', 'Le 1er du championnat', 'Le vainqueur du dernier deep'], a: 1, why: 'Absent : le 2e de ce tournoi, puis le 3e, et ainsi de suite.' },
-      { q: 'À 16 joueurs, combien de points sépare le vainqueur du 8e ?', o: ['1', '4', '7', '16'], a: 2, why: '16 contre 9 : 7 points. Jouer pour gagner rapporte plus que grappiller des places.' },
+      { q: 'À 16 joueurs, combien de points sépare le vainqueur du 8e ?', o: ['5', '7', '12', '16'], a: 2, why: '16 + 5 de bonus podium = 21, contre 9 : 12 points. Jouer pour gagner rapporte plus que grappiller des places.' },
       { q: 'Au club, tu as 9-9 en UTG. Tu peux limper ?', o: ['Oui', 'Non, le limp est interdit sauf en tête-à-tête', 'Seulement au deep', 'Seulement avec une paire'], a: 1, why: 'On ouvre en relançant, ou on se couche.' },
       { q: '30 BB en grosse blinde, le bouton ouvre, tu as K-J dépareillé. Tu paies ?', o: ['Oui, c’est une bonne défense', 'Non : sous 40 BB, pas de défense de blinde', 'Oui, mais seulement au deep', 'Oui, si la tête mise à prix ouvre'], a: 1, why: 'Sous 40 BB : tapis avec les grosses mains, ou fold.' },
       { q: 'La tête mise à prix fait tapis sur toi. Comment tu paies ?', o: ['Avec n’importe quoi, pour les 2 points', 'D’un cran plus large qu’en temps normal', 'Plus serré', 'Jamais'], a: 1, why: 'Les 2 points valent deux places : un cran plus large, pas davantage.' },
@@ -9227,11 +9227,11 @@
     ['J', 'Et les deux comptent pour le championnat ?'],
     ['Y', 'Oui. Avec une différence : au deep, les points de place sont multipliés par un et demi.'],
     ['J', 'Comment on compte les points ?'],
-    ['Y', 'Le premier marque autant de points qu’il y a de joueurs. Le deuxième, un de moins. Et ainsi de suite jusqu’au dernier, qui marque un point.'],
+    ['Y', 'Le premier marque autant de points qu’il y a de joueurs. Le deuxième, un de moins. Et ainsi de suite jusqu’au dernier, qui marque un point. Et les trois premiers ont un bonus podium : cinq points pour le premier, trois pour le deuxième, un pour le troisième.'],
     ['J', 'Donc à quatorze joueurs, si je finis troisième ?'],
-    ['Y', 'Douze points. Et au deep, douze fois un et demi : dix-huit.'],
+    ['Y', 'Douze points, plus un de bonus podium : treize. Et au deep, douze fois un et demi, dix-huit, plus un : dix-neuf.'],
     ['J', 'Alors je devrais jouer pour survivre, pour gagner des places ?'],
-    ['Y', 'Non, et c’est le piège. Chaque place ne vaut qu’un point. À seize joueurs, le vainqueur marque seize points, le huitième seulement neuf. Sept points d’écart. Survivre sans jetons ne rapporte presque rien. Joue pour gagner.'],
+    ['Y', 'Non, et c’est le piège. Chaque place ne vaut qu’un point. À seize joueurs, le vainqueur marque seize points plus cinq de podium, vingt et un, le huitième seulement neuf. Douze points d’écart. Survivre sans jetons ne rapporte presque rien. Joue pour gagner.'],
     ['J', 'Et la tête mise à prix ?'],
     ['Y', 'Celui qui l’élimine gagne deux points de plus. La tête mise à prix, c’est le vainqueur du tournoi précédent du même type. Le vainqueur du dernier mercredi pour le mercredi, celui du dernier deep pour le deep.'],
     ['J', 'Et s’il n’est pas là ?'],
@@ -9247,14 +9247,14 @@
     ['J', 'Le quiz ?'],
     ['Y', 'Première question. Mercredi, quatorze joueurs, tu finis troisième. Combien de points ?'],
     ['P', 5],
-    ['J', 'Douze.'],
+    ['J', 'Douze, plus un de bonus podium : treize.'],
     ['Y', 'Oui. Deuxième question. Tu élimines la tête mise à prix. Combien de points en plus ?'],
     ['P', 5],
     ['J', 'Deux.'],
     ['Y', 'Exact. Troisième question. Trente grosses blindes en grosse blinde, le bouton ouvre, tu as roi-valet. Tu paies ?'],
     ['P', 5],
     ['J', 'Non. Sous quarante blindes, pas de défense : tapis ou fold.'],
-    ['Y', 'Parfait. On résume. Le mercredi et le deep comptent, le deep vaut une fois et demie. Une place vaut un point, la victoire en vaut beaucoup plus : joue pour gagner. La tête mise à prix vaut deux points : un cran plus large, pas plus. Et les règles du club : pas de limp, pas de défense sous quarante blindes, la range du club. À bientôt !']
+    ['Y', 'Parfait. On résume. Le mercredi et le deep comptent, le deep vaut une fois et demie. Une place vaut un point, le podium rapporte cinq, trois et un points de bonus, la victoire en vaut beaucoup plus : joue pour gagner. La tête mise à prix vaut deux points : un cran plus large, pas plus. Et les règles du club : pas de limp, pas de défense sous quarante blindes, la range du club. À bientôt !']
   ];
 
 

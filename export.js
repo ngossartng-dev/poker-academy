@@ -133,7 +133,7 @@
       r1s.push([{ v: p ? ['1er', '2e', '3e'][rk - 1] : rk, s: sc }, { v: o.name, s: s }, { v: o.total, s: p ? 5 : 14 }, { v: o.cls, s: sc }, { v: o.carry || '', s: sc }, { v: o.mer || '', s: sc }, { v: o.deep || '', s: sc }, { v: o.bty || '', s: o.bty ? 15 : sc }, { v: o.bonus || '', s: o.bonus ? 15 : sc }, { v: o.n || '', s: sc }, { v: o.nT ? o.moy : '', s: p ? 13 : 10 }, { v: o.wins || '', s: sc }, { v: o.best < 99 ? o.best : '', s: sc }, { v: o.kos || '', s: sc }]);
     });
     var last = r1s.length;
-    r1s.push([], [{ v: 'Barème : le 1er marque autant de points qu’il y a de joueurs, le dernier 1 point. Deep du vendredi ×1,5. Prime de ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués. Classement = points sans les primes. Reprise = points repris d’un classement déjà en cours. Les 3 premiers sont récompensés.', s: 16 }]);
+    r1s.push([], [{ v: 'Barème : le 1er marque autant de points qu’il y a de joueurs, le dernier 1 point. Deep du vendredi ×1,5. Bonus podium : +5 au 1er, +3 au 2e, +1 au 3e. Prime de ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués. Classement = points sans les primes. Reprise = points repris d’un classement déjà en cours. Les 3 premiers sont récompensés.', s: 16 }]);
     var s1 = { name: 'Classement ' + year, widths: [8, 22, 11, 13, 10, 11, 11, 10, 10, 10, 12, 10, 11, 12], freeze: top, rows: r1s, merge: ['A' + (last + 2) + ':N' + (last + 2)],
       cf: D.st.length ? [bar('C' + (top + 1) + ':C' + last, 'FFD4A72C'), heat('K' + (top + 1) + ':K' + last)] : [] };
     r1s[last + 1].h = 32;
@@ -407,7 +407,7 @@
     var PMV = L().lastMoves ? L().lastMoves(year) : null;
     if (PMV) doc.note('Triangle vert : places gagnées au dernier tournoi (' + L().TYPES[PMV.type].name.toLowerCase() + ' du ' + dfr(PMV.date) + '), rouge : perdues, rond orange : même place ; « av. 3e » = sa place avant ce tournoi.', 7.5);
     doc.bars(D.st, PMV);
-    doc.note('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5, ajoutés au même total que les mercredis. Colonnes : TOURN. = tournois joués, PRIMES = têtes mises à prix éliminées · points rapportés, CLASS. = points de classement sans les primes. Prime : ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués.');
+    doc.note('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point, plus un bonus podium de 5, 3 et 1 points aux 3 premiers. Deep du vendredi : points de place ×1,5, ajoutés au même total que les mercredis. Colonnes : TOURN. = tournois joués, PRIMES = têtes mises à prix éliminées · points rapportés, CLASS. = points de classement sans les primes. Prime : ' + L().BONUS + ' points pour qui élimine le vainqueur du tournoi précédent du même type. Moyenne = total ÷ tournois joués.');
     if (D.weeks.length) {
       doc.newPage(); doc.h1('La saison semaine après semaine', 'Course au titre (points cumulés des 5 premiers), puis les points marqués chaque semaine.');
       if (D.weeks.length > 1) { doc.h2('La course au titre'); doc.race(D); }

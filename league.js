@@ -9,7 +9,7 @@
   var CLUB = ["MONPIERROT", "YO", "VILVOORD", "JR", "ENFANT2GUETTO", "ENFANT2FISH", "BASTOSS", "ENFANT2COEUR", "KAKTUSSE", "BANEEST", "VINCENT", "NARUTI", "GREG", "PALLIX", "POOLSHARKS", "SIM", "UNDERTAKER", "TA_1_PB", "JOHNY", "AIGLEFOUR", "JUJU", "MACHINEGUN"];
   function roster() { var d = load(); return (d.roster || CLUB).slice(); }
   function setRoster(list) { var d = load(), seen = {}; d.roster = list.map(function (x) { return String(x || '').trim().slice(0, 30); }).filter(function (x) { var k = x.toLowerCase(); if (!x || seen[k]) return false; seen[k] = 1; return true; }); d.rosterAt = Date.now(); save(d); return d.roster; }
-  // les points se recalculent à chaque lecture avec le barème en vigueur (deep passé de ×1,4 à ×1,5)
+  // les points se recalculent à chaque lecture avec le barème en vigueur (deep passé de ×1,4 à ×1,5 ; bonus podium 5/3/1 depuis le 26/11/2026, appliqué à toute la saison)
   function load() {
     try { var d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.list) { d.list.forEach(function (tn) { if (!TYPES[tn.type]) return; tn.rows.forEach(function (r) { r.pts = placePts(tn.n, r.place, tn.type); r.total = Math.round((r.pts + (r.bonus || 0)) * 100) / 100; }); }); return d; } } catch (e) {}
     return { list: [] };
@@ -88,7 +88,10 @@
     if (window.PA_TIMER && window.PA_TIMER.renameLive) window.PA_TIMER.renameLive(id, old, nu);
     return '';
   }
-  function placePts(n, place, type) { return Math.round((n - place + 1) * TYPES[type].mult * 100) / 100; }
+  // points de place (1er = nombre de joueurs … dernier = 1, ×1,5 au deep) + bonus podium fixe : 5 / 3 / 1
+  var PODIUM = [0, 5, 3, 1];
+  function podiumPts(place, type) { return type !== 'libre' && TYPES[type].mult && place >= 1 && place <= 3 ? PODIUM[place] : 0; }
+  function placePts(n, place, type) { return Math.round(((n - place + 1) * TYPES[type].mult + podiumPts(place, type)) * 100) / 100; }
   // enregistre un tournoi terminé (état du tournoi du minuteur)
   function record(t) {
     var type = t.type || 'mercredi', date = t.date || today(), n = t.players.length, d = load();
@@ -281,7 +284,7 @@
     if (!op) return head;
     return head + '<div class="card stack"><table class="tbl" style="font-size:.9em"><tr><th>Place</th><th>Joueur</th><th>Points</th><th>Sorti par</th><th>Heure · niveau</th></tr>' + tn.rows.map(function (r) {
       var h = r.koAt ? new Date(r.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-      return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus ? ' <span class="small muted">(' + f1(r.pts) + ' + ' + f1(r.bonus) + ' prime)</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
+      return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus || podiumPts(r.place, tn.type) ? ' <span class="small muted">(' + (podiumPts(r.place, tn.type) ? 'dont +' + podiumPts(r.place, tn.type) + ' podium' : '') + (r.bonus ? (podiumPts(r.place, tn.type) ? ', ' : '') + '+' + f1(r.bonus) + ' prime' : '') + ')</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
     }).join('') + '</table>' + movesHtml(tn.id) + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
   }
   function renHtml(tn) {
@@ -339,7 +342,7 @@
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="saveCarry" style="flex:1">Enregistrer la reprise ' + V.year + '</button><button class="btn" data-lgact="formCancel">Annuler</button></div>' +
         (cy ? '<button class="btn" data-lgact="delCarry">Supprimer la reprise ' + V.year + '</button>' : '');
     } else if (V.form === 'past') {
-      h += '<div class="small muted">Pour un tournoi déjà joué : un joueur par ligne, <b>du 1er au dernier</b>. Les points sont calculés avec le barème habituel.</div>' +
+      h += '<div class="small muted">Pour un tournoi déjà joué : un joueur par ligne, <b>du 1er au dernier</b>. Les points sont calculés avec le barème habituel (bonus podium compris).</div>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><input type="date" id="lgPastDate" value="' + today() + '" style="' + INP + ';flex:1"><select id="lgPastType" style="' + INP + ';flex:1"><option value="mercredi">Tournoi du mercredi</option><option value="deep">Deep du vendredi (×1,5)</option><option value="libre">Hors championnat</option></select></div>' +
         '<label class="small" for="lgPastPick"><b>Choisis les joueurs dans l’ordre</b> : le vainqueur d’abord, puis le 2e, le 3e… jusqu’au premier sorti.</label>' +
         '<select id="lgPastPick" style="' + INP + ';width:100%;border-color:var(--gold)">' + pastPickOpts([]) + '</select>' +
@@ -369,7 +372,7 @@
     if (V.pl) return ui.shell('club', playerView(V.pl));
     var out = '<div class="stack"><a class="back" href="#tournoi">‹ Tournoi du club</a><h1>Championnat du club</h1>' +
       (window.PA_GUIDE ? '<div style="text-align:right">' + window.PA_GUIDE.link('championnat') + '</div>' : '') +
-      ui.yo('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5. Prime : celui qui élimine le vainqueur du tournoi précédent du même type (mercredi ou deep) gagne ' + BONUS + ' points. Les 3 premiers du classement annuel sont récompensés.') +
+      ui.yo('Barème : le 1er marque autant de points qu’il y a de joueurs, le 2e un de moins… le dernier 1 point. Deep du vendredi : points ×1,5. Bonus podium à chaque tournoi : +5 points au 1er, +3 au 2e, +1 au 3e (pareil au deep). Prime : celui qui élimine le vainqueur du tournoi précédent du même type (mercredi ou deep) gagne ' + BONUS + ' points. Les 3 premiers du classement annuel sont récompensés.') +
       '<div class="row" style="gap:8px;flex-wrap:wrap"><div class="seg">' + [['annuel', 'Classement'], ['semaine', 'Semaines'], ['tournois', 'Tournois'], ['trophees', 'Trophées']].map(function (o) { return '<button class="' + (V.tab === o[0] ? 'on' : '') + '" data-lgact="tab" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       (ys.length > 1 ? '<div class="seg">' + ys.map(function (y) { return '<button class="' + (V.year === y ? 'on' : '') + '" data-lgact="year" data-v="' + y + '">' + y + '</button>'; }).join('') + '</div>' : '') + '</div>';
     if (V.tab === 'annuel') {
@@ -455,5 +458,5 @@
   // retirer un tournoi du classement (il sera réenregistré corrigé)
   function removeRec(id) { var d = load(); d.list = d.list.filter(function (x) { return x.id !== id; }); d.deleted = (d.deleted || []).concat([id]); save(d); }
   seedClub();
-  window.PA_LEAGUE = { moves: moves, lastMoves: lastMoves, rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
+  window.PA_LEAGUE = { moves: moves, lastMoves: lastMoves, rename: renameInRec, remove: removeRec, hands: hands, saveHand: saveHand, delHand: delHand, holderInfo: holderInfo, holderChain: holderChain, saveRaw: saveRaw, roster: roster, setRoster: setRoster, openPlayer: function (n) { V.pl = n; V.year = String(new Date().getFullYear()); if (years().indexOf(V.year) < 0) V.year = years()[0]; if (location.hash === '#classement') U().render(); else location.hash = '#classement'; }, trophies: trophies, palmares: palmares, summary: summary, shareText: shareText, closedInfo: closedInfo, playerData: playerData, years: years, TYPES: TYPES, BONUS: BONUS, PODIUM: PODIUM, podiumPts: podiumPts, holder: holder, record: record, recordManual: recordManual, carryOf: carryOf, setCarry: setCarry, standings: standings, week: week, weekLabel: weekLabel, load: load, today: today, view: view };
 })();
