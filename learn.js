@@ -40,7 +40,7 @@
       '<div class="row"><button class="btn gold" data-lact="listen" data-v="' + n + '">' + (POD.n === n && POD.playing ? 'Pause' : 'Écouter la leçon') + '</button>' + (c.range ? '<button class="btn" data-lact="range" data-v="' + n + '">Voir dans ma range</button>' : '') + (c.sit ? '<button class="btn" data-act="startSit" data-v="' + c.sit + '">S’entraîner sur ce point</button>' : '') + (c.link ? '<a class="btn" href="' + c.link.href + '">' + c.link.label + '</a>' : '') + (c.links ? c.links.map(function (k) { return '<a class="btn" href="' + k.href + '">' + k.label + '</a>'; }).join('') : '') + '</div>' +
       (POD.n === n ? podControls() : '') +
       '<div class="card stack" style="border-color:#ffd23f"><b style="color:#ffd23f">L’idée clé</b>' + c.key.map(function (k) { return '<p>' + lx(k) + '</p>'; }).join('') + '</div>' +
-      c.sections.map(function (s) { return '<div class="stack" style="gap:8px"><h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + lx(x) + '</p>'; }).join('') + '</div>'; }).join('') +
+      c.sections.map(function (s) { return '<div class="stack" style="gap:8px"><h3>' + s.h + '</h3>' + paras(s, lx) + '</div>'; }).join('') +
       '<div class="card fb-err stack"><b>L’erreur fréquente</b><p>' + lx(c.mistake) + '</p></div>' +
       '<div class="card stack"><b>À retenir</b>' + c.retain.map(function (r) { return '<div>• ' + lx(r) + '</div>'; }).join('') + '</div>' +
       '<div class="small muted">Les mots soulignés en pointillés s’ouvrent d’un appui. Tous les termes sont dans le <a href="#lexique" style="color:#ffd23f">lexique</a>.</div>' +
@@ -249,12 +249,35 @@
     return ui.shell('apprendre', out + '</div>', true);
   }
 
+
+  /* ---------- mini-table : qui parle en premier / en dernier après le flop ---------- */
+  var SEATS = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN'];   // ordre de parole après le flop
+  function seatFig(f) {
+    if (!f || !f.seats) return '';
+    var inH = f.seats, out = f.out || [], W = 360, H = 230, cx = 180, cy = 108, rx = 140, ry = 78, svg = '';
+    // places autour de la table, le bouton en bas à droite, dans le sens des aiguilles d’une montre
+    var ang = { BTN: 60, SB: 100, BB: 140, UTG: 180, 'UTG+1': 215, MP: 250, LJ: 285, HJ: 320, CO: 15 };
+    var order = SEATS.filter(function (x) { return inH.indexOf(x) >= 0 && out.indexOf(x) < 0; });
+    svg += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (rx - 34) + '" ry="' + (ry - 24) + '" fill="#0f5132" stroke="#c9a227" stroke-width="3"/>';
+    SEATS.forEach(function (n) {
+      var a = ang[n] * Math.PI / 180, x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry, i = order.indexOf(n), gone = out.indexOf(n) >= 0, on = inH.indexOf(n) >= 0;
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="21" fill="' + (on && !gone ? '#ffd23f' : '#2a2a2e') + '" stroke="' + (on ? '#ffd23f' : '#55555c') + '" stroke-width="2"' + (gone ? ' stroke-dasharray="4 3"' : '') + '/>';
+      svg += '<text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '" text-anchor="middle" font-size="' + (n.length > 3 ? 11 : 13) + '" font-weight="800" fill="' + (on && !gone ? '#111' : '#9a9aa2') + '">' + n + '</text>';
+      if (gone) svg += '<line x1="' + (x - 14).toFixed(1) + '" y1="' + (y - 14).toFixed(1) + '" x2="' + (x + 14).toFixed(1) + '" y2="' + (y + 14).toFixed(1) + '" stroke="#e53935" stroke-width="3"/>';
+      if (i >= 0) svg += '<circle cx="' + (x + 17).toFixed(1) + '" cy="' + (y - 17).toFixed(1) + '" r="11" fill="#111" stroke="#ffd23f" stroke-width="2"/><text x="' + (x + 17).toFixed(1) + '" y="' + (y - 12.5).toFixed(1) + '" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd23f">' + (i + 1) + '</text>';
+      if (n === 'BTN') svg += '<circle cx="' + (x - 26).toFixed(1) + '" cy="' + (y - 20).toFixed(1) + '" r="9" fill="#fff" stroke="#111"/><text x="' + (x - 26).toFixed(1) + '" y="' + (y - 16).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="900" fill="#111">D</text>';
+    });
+    var txt = order.join(' → ');
+    return '<figure class="seatfig" style="margin:4px 0 6px;text-align:center"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Ordre de parole : ' + txt + '" style="width:100%;max-width:420px;height:auto">' + svg + '</svg>' +
+      '<figcaption class="small" style="color:#ffd23f;font-weight:700">' + (f.when || 'Après le flop') + ' : ' + txt + (order.length ? ' · ' + order[order.length - 1] + ' a la position' : '') + '</figcaption></figure>';
+  }
+  function paras(s, link) { return s.p.map(function (x, i) { return '<p>' + link(x) + '</p>' + (s.figs && s.figs[i] ? seatFig(s.figs[i]) : ''); }).join(''); }
   /* ---------- Version imprimable du nouveau cours ---------- */
   function printView() {
     var ui = U();
     var body = '<div class="stack"><button class="back" data-act="nav" data-v="cours">‹ Le cours</button><h1>Le cours (texte seul)</h1>' + (embed() ? '' : '<button class="btn gold" data-lact="print">Imprimer ou enregistrer en PDF</button>') +
       LS.CHAPTERS.filter(function (c) { return c.ready; }).map(function (c) {
-        return '<div class="stack" style="page-break-before:always"><h2>' + c.n + '. ' + c.title + '</h2><p><b>L’idée clé.</b> ' + c.key.join(' ') + '</p>' + c.sections.map(function (s) { return '<h3>' + s.h + '</h3>' + s.p.map(function (x) { return '<p>' + x + '</p>'; }).join(''); }).join('') + '<p><b>L’erreur fréquente.</b> ' + c.mistake + '</p><p><b>À retenir.</b> ' + c.retain.join(' · ') + '</p></div>';
+        return '<div class="stack" style="page-break-before:always"><h2>' + c.n + '. ' + c.title + '</h2><p><b>L’idée clé.</b> ' + c.key.join(' ') + '</p>' + c.sections.map(function (s) { return '<h3>' + s.h + '</h3>' + paras(s, function (x) { return x; }); }).join('') + '<p><b>L’erreur fréquente.</b> ' + c.mistake + '</p><p><b>À retenir.</b> ' + c.retain.join(' · ') + '</p></div>';
       }).join('') +
       (window.PA_MEMO && window.PA_MEMO.body ? '<div class="stack memo" style="page-break-before:always"><h2>Annexe 1 · La fiche mémo</h2>' + window.PA_MEMO.body() + '</div>' : '') +
       (window.PA_LEX ? '<div class="stack" style="page-break-before:always"><h2>Annexe 2 · Le lexique</h2>' + window.PA_LEX.printHtml() + '</div>' : '') + '</div>';

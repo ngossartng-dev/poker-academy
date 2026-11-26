@@ -225,7 +225,7 @@
   };
 
   L[2] = {
-    "minutes": 10,
+    "minutes": 14,
     "key": [
       "À neuf joueurs, la position décide de la largeur de ta range : UTG parle en premier avant le flop, le bouton en dernier après.",
       "Moins la table compte de joueurs, plus chaque position s’élargit."
@@ -272,15 +272,150 @@
           "Maintenant, la même main en grosse blinde : le cut-off ouvre, tu paies. Même flop. Tu dois parler en premier, sans rien savoir. Si tu checkes et qu’il mise, tu dois deviner s’il bluffe. Même cartes, même flop : un coup beaucoup plus difficile.",
           "C’est toute la raison pour laquelle on ouvre beaucoup plus large au bouton qu’en début de table : la position vaut des jetons à chaque coup."
         ]
+      },
+      {
+        "ask": "Après le flop, comment savoir qui parle en premier ?",
+        "h": "Qui parle en premier après le flop : la méthode",
+        "p": [
+          "Après le flop, on parle dans le sens des aiguilles d’une montre, en partant de la gauche du bouton : SB, BB, UTG, UTG+1, MP, LJ, HJ, CO, et le bouton en dernier.",
+          "Ne garde que les joueurs encore dans le coup : ceux qui se sont couchés ne comptent plus. Le premier de la liste parle en premier ; le dernier parle en dernier : c’est lui qui a la position.",
+          "Cet ordre ne change plus jusqu’à la fin du coup : le même au flop, à la turn et à la river. Si un joueur se couche en route, on le saute, c’est tout.",
+          "Avant le flop, c’est différent : UTG parle en premier et la BB en dernier, parce que les blindes ont déjà misé. Dès le flop, les blindes passent devant tout le monde.",
+          "En heads-up (deux joueurs), le bouton est aussi la petite blinde : il parle en premier avant le flop, puis en dernier à chaque tour après le flop."
+        ]
+      },
+      {
+        "ask": "Tu peux me montrer avec des exemples ?",
+        "h": "Exemples : qui parle en premier, qui parle en dernier ?",
+        "p": [
+          "UTG ouvre, le CO paie, tous les autres se couchent. Au flop, UTG parle en premier, le CO en dernier : le CO a la position pendant tout le coup.",
+          "Le MP ouvre, le bouton et la BB paient. Au flop : la BB d’abord, puis le MP, puis le bouton. L’ouvreur est coincé au milieu : il parle après la BB, mais avant le bouton.",
+          "Le HJ ouvre, le CO paie, le bouton se couche. Le bouton n’est plus dans le coup : c’est le CO qui parle en dernier, il a la position sur le HJ.",
+          "UTG ouvre, la SB et la BB paient. Au flop : SB, BB, puis UTG. L’ouvreur parle en dernier : les deux blindes jouent hors de position.",
+          "Tout le monde se couche jusqu’à la SB, qui relance ; la BB paie. Après le flop, la SB parle toujours en premier : en blinde contre blinde, c’est la BB qui a la position.",
+          "Le CO ouvre, le bouton et la BB paient. Au flop, la BB checke, le CO mise, le bouton se couche. À la turn, il ne reste que la BB, qui parle en premier, et le CO, qui parle en dernier."
+        ],
+        "figs": [
+          {
+            "seats": [
+              "UTG",
+              "CO"
+            ]
+          },
+          {
+            "seats": [
+              "MP",
+              "BTN",
+              "BB"
+            ]
+          },
+          {
+            "seats": [
+              "HJ",
+              "CO"
+            ]
+          },
+          {
+            "seats": [
+              "UTG",
+              "SB",
+              "BB"
+            ]
+          },
+          {
+            "seats": [
+              "SB",
+              "BB"
+            ]
+          },
+          {
+            "seats": [
+              "CO",
+              "BTN",
+              "BB"
+            ],
+            "out": [
+              "BTN"
+            ],
+            "when": "À la turn"
+          }
+        ]
       }
     ],
     "mistake": "Jouer la même range en UTG à neuf joueurs et en UTG à six joueurs : à six, il reste trois joueurs de moins derrière toi.",
     "retain": [
       "Avant le flop : UTG en premier, BB en dernier ; après : SB en premier, bouton en dernier.",
       "La position permet de voir avant de décider.",
-      "Compte les joueurs derrière toi pour choisir ta range."
+      "Compte les joueurs derrière toi pour choisir ta range.",
+      "Après le flop : parmi les joueurs encore en jeu, le premier à gauche du bouton parle en premier ; le plus proche du bouton parle en dernier."
     ],
     "quiz": [
+      {
+        "q": "Le HJ ouvre, seule la BB paie. Qui parle en premier au flop ?",
+        "o": [
+          "Le HJ",
+          "La BB",
+          "Celui qui a ouvert",
+          "Le bouton"
+        ],
+        "a": 1,
+        "why": "Après le flop, les blindes parlent avant tout le monde : la BB parle en premier, le HJ a la position."
+      },
+      {
+        "q": "UTG ouvre, le CO et la BB paient. Dans quel ordre parle-t-on au flop ?",
+        "o": [
+          "UTG, CO, BB",
+          "BB, UTG, CO",
+          "CO, BB, UTG",
+          "BB, CO, UTG"
+        ],
+        "a": 1,
+        "why": "On part de la gauche du bouton : la BB, puis UTG, puis le CO, le plus proche du bouton."
+      },
+      {
+        "q": "Le CO ouvre, le bouton se couche, la SB paie, la BB se couche. Qui a la position ?",
+        "o": [
+          "La SB",
+          "Le CO",
+          "Personne",
+          "Le bouton"
+        ],
+        "a": 1,
+        "why": "Le bouton n’est plus dans le coup : le CO parle en dernier, la SB en premier."
+      },
+      {
+        "q": "Le bouton ouvre, la SB et la BB paient. Au flop, la SB se couche. À la turn, qui parle en premier ?",
+        "o": [
+          "Le bouton",
+          "La BB",
+          "La SB",
+          "Celui qui a misé au flop"
+        ],
+        "a": 1,
+        "why": "La SB s’est couchée : on la saute. La BB parle en premier, le bouton reste le dernier."
+      },
+      {
+        "q": "La SB relance, la BB paie. Qui parle en dernier après le flop ?",
+        "o": [
+          "La SB",
+          "La BB",
+          "Celle qui a relancé",
+          "Ça change à chaque tour"
+        ],
+        "a": 1,
+        "why": "La SB parle toujours en premier après le flop : en blinde contre blinde, la BB a la position."
+      },
+      {
+        "q": "En heads-up, qui parle en premier après le flop ?",
+        "o": [
+          "Le bouton, qui est aussi la petite blinde",
+          "La grosse blinde",
+          "Celui qui a relancé avant le flop",
+          "Celui qui a le plus de jetons"
+        ],
+        "a": 1,
+        "why": "En heads-up, le bouton est la SB : premier avant le flop, dernier après. La grosse blinde parle donc en premier après le flop."
+      },
       {
         "q": "Qui parle en dernier après le flop ?",
         "o": [
@@ -4613,7 +4748,23 @@
     ['J', 'Qu’elle n’a pas misé. Je peux miser petit pour prendre le pot. Ou checker et voir la turn gratuitement.'],
     ['Y', 'Voilà. Maintenant, inverse les places. C’est toi la grosse blinde, avec roi-valet. Tu dois parler en premier.'],
     ['J', 'Et là, c’est moi qui devine.'],
-    ['Y', 'Même main, même flop. Mais un coup beaucoup plus dur. Allez, le quiz ?'],
+    ['Y', 'Même main, même flop. Mais un coup beaucoup plus dur.'],
+    ['J', 'Mais dans un coup à trois ou quatre, je m’y perds. Comment je sais qui parle en premier après le flop ?'],
+    ['Y', 'Une méthode, toujours la même. Tu pars de la gauche du bouton, et tu tournes dans le sens des aiguilles d’une montre. Petite blinde, grosse blinde, UTG, et ainsi de suite jusqu’au bouton.'],
+    ['J', 'Et ceux qui se sont couchés ?'],
+    ['Y', 'Tu les oublies. Tu ne gardes que les joueurs encore dans le coup. Le premier de ta liste parle en premier. Le dernier parle en dernier : c’est lui qui a la position.'],
+    ['J', 'Donne-moi un exemple.'],
+    ['Y', 'Le MP ouvre. Le bouton paie, la grosse blinde paie. Au flop, qui commence ?'],
+    ['J', 'La grosse blinde. Puis le MP. Puis le bouton.'],
+    ['Y', 'Exact. Et remarque : le MP, qui a ouvert, est coincé au milieu. Il parle après la grosse blinde, mais avant le bouton.'],
+    ['J', 'Et si le bouton se couche avant le flop ?'],
+    ['Y', 'Alors c’est le joueur le plus proche du bouton qui devient le dernier. Le hijack ouvre, le cut-off paie, le bouton se couche : c’est le cut-off qui a la position.'],
+    ['J', 'Et entre les deux blindes ?'],
+    ['Y', 'La petite blinde parle toujours en premier après le flop. Donc en blinde contre blinde, c’est la grosse blinde qui a la position.'],
+    ['J', 'Et l’ordre change à la turn ?'],
+    ['Y', 'Jamais. Il reste le même jusqu’à la river. Si quelqu’un se couche en route, tu le sautes, c’est tout. Seule exception à connaître : en tête-à-tête, le bouton est aussi la petite blinde. Il parle en premier avant le flop, et en dernier après.'],
+    ['J', 'Compris.'],
+    ['Y', 'Allez, le quiz ?'],
     ['J', 'Go.'],
     ['Y', 'Première question. Qui parle en dernier après le flop ?'],
     ['P', 5],
@@ -4623,7 +4774,11 @@
     ['P', 5],
     ['J', 'Au lojack.'],
     ['Y', 'Bravo.'],
-    ['Y', 'Troisième question. Pour choisir ta range, tu regardes quoi ?'],
+    ['Y', 'Troisième question. Le hijack ouvre, seule la grosse blinde paie. Qui parle en premier au flop ?'],
+    ['P', 5],
+    ['J', 'La grosse blinde. Le hijack a la position.'],
+    ['Y', 'Exactement.'],
+    ['Y', 'Quatrième question. Pour choisir ta range, tu regardes quoi ?'],
     ['P', 5],
     ['J', 'Le nombre de joueurs qui parlent après moi.'],
     ['Y', 'Parfait. On résume. Avant le flop, UTG parle en premier. Après, le bouton parle en dernier. Parler en dernier, c’est voir avant de décider. On ouvre de plus en plus large en approchant du bouton. Et à table courte, on compte les joueurs derrière soi. À bientôt !']
