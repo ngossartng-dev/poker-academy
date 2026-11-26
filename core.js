@@ -93,7 +93,8 @@
     // de 20 à 40 BB : chaque place joue un cran plus serré (les premières places un cran sous la range de la photo)
     CLUB_MID_STEP = { UTG: -1, 'UTG+1': -1, MP: -1, LJ: -1, HJ: 0, CO: 1, BTN: 2, SB: 2 }, RK = 'AKQJT98765432';
   // [carte haute, kicker le plus bas au départ, cran où la ligne apparaît, kicker le plus bas possible]
-  var CLUB_S = [['A', '2', 0, '2'], ['K', '8', 0, '2'], ['Q', '8', 0, '2'], ['J', '8', 0, '4'], ['T', '8', 0, '6'], ['9', '8', 0, '5'], ['8', '7', 0, '4'], ['7', '6', 1, '4'], ['6', '5', 2, '3'], ['5', '4', 3, '2'], ['4', '3', 4, '3']];
+  // ligne des 10 assortis : jusqu’à 105s au bouton et en petite blinde (correction de Lionel, 26/11/2026)
+  var CLUB_S = [['A', '2', 0, '2'], ['K', '8', 0, '2'], ['Q', '8', 0, '2'], ['J', '8', 0, '4'], ['T', '8', 0, '5'], ['9', '8', 0, '5'], ['8', '7', 0, '4'], ['7', '6', 1, '4'], ['6', '5', 2, '3'], ['5', '4', 3, '2'], ['4', '3', 4, '3']];
   var CLUB_O = [['A', '9', 0, '2'], ['K', 'T', 0, '7'], ['Q', 'J', 0, '8'], ['J', 'T', 1, '8'], ['T', '9', 2, '8'], ['9', '8', 3, '7'], ['8', '7', 4, '7'], ['7', '6', 5, '6']];
   function clubOpen(st) {
     st = Math.max(-1, Math.min(CLUB_MAX, st)); var out = [], i;
