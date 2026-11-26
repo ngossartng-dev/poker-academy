@@ -112,6 +112,8 @@
     Object.keys(t.bb.deep).forEach(function (o) { bbd[o] = EARLY.indexOf(o) >= 0 ? t.bb.deep.LJ : t.bb.deep[o]; });
     // correction de Lionel (26/11/2026) : face au bouton, les dépareillés connectés se défendent jusqu’à 87o (98o et 87o compris)
     bbd.BTN = { raise: t.bb.deep.BTN.raise, call: t.bb.deep.BTN.call.concat(['98o', '87o'].filter(function (h) { return t.bb.deep.BTN.call.indexOf(h) < 0; })) };
+    // et face à la petite blinde aussi (26/11/2026) : T9o, 98o et 87o se défendent
+    bbd.SB = { raise: t.bb.deep.SB.raise, call: t.bb.deep.SB.call.concat(['T9o', '98o', '87o'].filter(function (h) { return t.bb.deep.SB.call.indexOf(h) < 0 && t.bb.deep.SB.raise.indexOf(h) < 0; })) };
     Object.keys(t.vsOpen.deep).forEach(function (pos) {
       var row = t.vsOpen.deep[pos], late = ['HJ', 'CO', 'BTN', 'SB'].indexOf(pos) >= 0; vso[pos] = {};
       Object.keys(row).forEach(function (o) { vso[pos][o] = late && EARLY.indexOf(o) >= 0 && row.LJ ? row.LJ : row[o]; });
