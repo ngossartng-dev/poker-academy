@@ -10,7 +10,10 @@
   var CS = { busy: false, at: 0, msg: '', err: '', path: '', remoteAt: 0, timer: null };
   function app() { return window.PA_CLUB ? 'Club' : 'Complète'; }
   function device() { return IS_PC ? 'PC' : IS_ANDROID ? 'Android' : 'Web'; }
-  function configured() { if (IS_PC) return true; if (IS_ANDROID) { try { return !!window.PAAndroid.clubInfo(); } catch (e) { return false; } } return false; }
+  // serveur du club (script Google dans le compte de Nicolas) : prioritaire sur le fichier Drive, marche partout (PC, Android, iPhone, web)
+  var SRV_URL = 'https://script.google.com/macros/s/AKfycbyvOf8xMcYNXUD6_Cn4Qeu6BWX8IiHxQQm-_XmrDaLsyaygRGQcIWeo-qEDxWu7jonX/exec', SRV_CODE = 'G0HZy1wc4l9lXt30';
+  function srvUrl() { var u = ''; try { u = (JSON.parse(localStorage.getItem('pa2srv') || '{}').url) || ''; } catch (e) {} return u || SRV_URL; }
+  function configured() { if (srvUrl()) return true; if (IS_PC) return true; if (IS_ANDROID) { try { return !!window.PAAndroid.clubInfo(); } catch (e) { return false; } } return false; }
   function league() { return window.PA_LEAGUE; }
   function timer() { return window.PA_TIMER; }
 
@@ -62,7 +65,25 @@
     if (IS_ANDROID) { var ok = false; try { ok = window.PAAndroid.clubWrite(txt); } catch (e) {} cb(ok); return; }
     cb(false);
   }
+  function srvSync(manual) {
+    CS.busy = true; CS.err = '';
+    var loc = localData(), before = loc.league.list.length, sl = sig(loc);
+    fetch(srvUrl(), { method: 'POST', body: JSON.stringify({ code: SRV_CODE, data: loc }), redirect: 'follow', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) {
+        CS.busy = false; CS.at = Date.now();
+        if (!j || !j.ok) { CS.err = j && j.err === 'code' ? 'Le serveur du club refuse le code : mets l’appli à jour.' : 'Réponse inattendue du serveur du club.'; if (manual) U().render(); return; }
+        var mg = j.data, pulled = mg && mg.league && sig(mg) !== sl;
+        if (pulled) applyLocal(mg);
+        var added = pulled ? mg.league.list.length - before : 0;
+        CS.remoteAt = mg ? mg.at : 0;
+        CS.msg = pulled ? (added > 0 ? added + ' tournoi' + (added > 1 ? 's' : '') + ' reçu' + (added > 1 ? 's' : '') + ' du serveur du club.' : 'Championnat mis à jour depuis le serveur du club.') : manual ? 'Tout est à jour.' : CS.msg;
+        if (pulled || manual) { var h = location.hash || ''; if (!h || /^#(classement|tournoi|minuteur|home|club|sauvegarde)?$|^#(classement|tournoi|minuteur)/.test(h) || manual) U().render(); }
+      })
+      .catch(function () { CS.busy = false; CS.err = navigator.onLine === false ? 'Pas d’internet : la synchro reprendra toute seule.' : 'Serveur du club injoignable pour le moment : la synchro reprendra toute seule.'; if (manual) U().render(); });
+  }
   function sync(manual) {
+    if (league() && !CS.busy && srvUrl()) return srvSync(manual);
     if (!league() || CS.busy || !configured()) { if (manual) { CS.msg = configured() ? '' : 'Choisis d’abord le fichier partagé.'; U() && U().render(); } return; }
     CS.busy = true; CS.err = '';
     rRead(function (remote, fail) {
@@ -99,8 +120,9 @@
 
   function card() {
     var esc = U().esc, h = '<div class="card stack"><div class="row" style="justify-content:space-between;gap:8px"><b>🔄 Appli complète ↔ appli Club</b>' + (window.PA_GUIDE ? window.PA_GUIDE.link('synchro') : '') + '</div>';
-    h += '<div class="small muted">Le championnat, la liste du club et la structure des niveaux sont partagés entre l’appli complète et l’appli Club, sur le PC et les téléphones, par un fichier dans ton Google Drive. Rien n’est jamais perdu : les tournois s’additionnent.</div>';
-    if (IS_PC) h += '<div class="small">Fichier partagé : <b>' + esc(CS.path || 'Mon Drive › Poker Academy › Club › championnat-club.json') + '</b></div>';
+    h += srvUrl() ? '<div class="small muted">Le championnat, la liste du club, les structures et les mains du club sont partagés entre toutes les applis, sur le PC et les téléphones. Rien n’est jamais perdu : les tournois s’additionnent.</div>' : '<div class="small muted">Le championnat, la liste du club et la structure des niveaux sont partagés entre l’appli complète et l’appli Club, sur le PC et les téléphones, par un fichier dans ton Google Drive. Rien n’est jamais perdu : les tournois s’additionnent.</div>';
+    if (srvUrl()) h += '<div class="small">✅ <b>Serveur du club</b> : la synchro passe par internet, sur tous les appareils, sans fichier à choisir. Les données et une sauvegarde par jour restent dans ton Google Drive (Poker Academy › Club).</div>';
+    else if (IS_PC) h += '<div class="small">Fichier partagé : <b>' + esc(CS.path || 'Mon Drive › Poker Academy › Club › championnat-club.json') + '</b></div>';
     else if (IS_ANDROID) {
       var nm = ''; try { nm = window.PAAndroid.clubInfo(); } catch (e) {}
       h += nm ? '<div class="small">Fichier partagé : <b>' + esc(nm) + '</b></div>' : '<div class="small">Sur ce téléphone, choisis le fichier <b>championnat-club.json</b> dans Mon Drive › Poker Academy › Club (le PC le crée tout seul), ou crée-le ici s’il n’existe pas encore.</div>';
@@ -109,6 +131,7 @@
     if (configured()) h += '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span class="small">' + (CS.at ? 'Dernière synchro : ' + new Date(CS.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Pas encore synchronisé') + '</span><button class="btn gold" data-csact="now">' + (CS.busy ? 'Synchro…' : 'Synchroniser maintenant') + '</button></div>';
     if (CS.msg) h += '<div class="small" style="color:var(--gold)">' + esc(CS.msg) + '</div>';
     if (CS.err) h += '<div class="small" style="color:#ff8a8f">' + esc(CS.err) + '</div>';
+    h += '<details><summary class="small" style="cursor:pointer">Adresse du serveur du club</summary><div class="stack" style="margin-top:8px"><div class="small muted">Elle est déjà intégrée à l’appli. Ne la change que si on te le demande.</div><input id="csSrv" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc((function () { try { return JSON.parse(localStorage.getItem('pa2srv') || '{}').url || ''; } catch (e) { return ''; } })()) + '" style="width:100%"><button class="btn" data-csact="srv">Enregistrer l’adresse</button></div></details>';
     h += '<details><summary class="small" style="cursor:pointer">Sans Drive : par fichier</summary><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" data-csact="export" style="flex:1">Exporter le championnat</button><label class="btn" style="flex:1;text-align:center;cursor:pointer">Importer un fichier<input id="csImport" type="file" accept=".json,application/json" style="display:none"></label></div></details>';
     return h + '</div>';
   }
@@ -118,16 +141,17 @@
     if (a === 'now') sync(true);
     else if (a === 'pick' || a === 'create') window.PAAndroid.clubPick(a === 'create');
     else if (a === 'export') exportFile();
+    else if (a === 'srv') { var v = (document.getElementById('csSrv') || {}).value || ''; v = v.trim(); try { localStorage.setItem('pa2srv', JSON.stringify({ url: v })); } catch (e) {} CS.msg = v ? 'Adresse du serveur enregistrée.' : 'Adresse personnalisée effacée.'; sync(true); }
   });
   document.addEventListener('change', function (e) {
     if (!e.target || e.target.id !== 'csImport' || !e.target.files || !e.target.files[0]) return;
     var rd = new FileReader(); rd.onload = function () { importText(String(rd.result || '')); }; rd.readAsText(e.target.files[0]);
   });
   window.__paClubPicked = function (name) { if (name) { CS.msg = 'Fichier choisi : ' + name + '.'; sync(true); } else U() && U().render(); };
-  if ((IS_PC || IS_ANDROID) && !window.PA_RANGEWIN) {
+  if ((IS_PC || IS_ANDROID || srvUrl()) && !window.PA_RANGEWIN) {
     setTimeout(function () { sync(false); }, 2500);
     setInterval(function () { if (!document.hidden) sync(false); }, 60000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) sync(false); });
   }
-  window.PA_CLUBSYNC = { sync: sync, dirty: dirty, card: card, merge: merge, _local: localData, _import: importText, state: CS };
+  window.PA_CLUBSYNC = { sync: sync, dirty: dirty, card: card, merge: merge, _local: localData, _import: importText, state: CS, server: srvUrl };
 })();
