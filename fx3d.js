@@ -501,5 +501,203 @@
     }
     raf = requestAnimationFrame(loop);
   }
-  window.PA_FX3D = { poulet: poulet, ane: ane, loup: loup };
+  // le bouchon de Lionel : une bouteille arrive, POP, le bouchon « Château Margot » atterrit sur la table,
+  // fait non de la tête, « Non ! Là, c'est pas un call… c'est une relance ! », et envoie les jetons au milieu
+  function bouchon(box, t0, onFail, env) {
+    var T = window.THREE; if (!T) { onFail && onFail(); return; }
+    var W = box.clientWidth || innerWidth, H = box.clientHeight || innerHeight * 0.7, R;
+    try { R = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { onFail && onFail(); return; }
+    R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); R.setSize(W, H);
+    R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
+    if ('outputColorSpace' in R) R.outputColorSpace = T.SRGBColorSpace;
+    R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.1;
+    box.appendChild(R.domElement);
+    var S = new T.Scene(), cam = new T.PerspectiveCamera(30, W / H, 0.1, 100);
+    try { // petite pièce lumineuse pour les reflets (verre de la bouteille, yeux)
+      var pm = new T.PMREMGenerator(R), es = new T.Scene(), room = new T.Mesh(new T.BoxGeometry(12, 8, 12), new T.MeshBasicMaterial({ color: 0x3a3632, side: T.BackSide })); es.add(room);
+      [[0, 3.9, 0, 6, 0.1, 6, 3], [-5.9, 1, 1, 0.1, 3, 4, 1.6], [5.9, 1.5, -1, 0.1, 2, 3, 1.2], [0, 1, 5.9, 4, 2, 0.1, 1.4]].forEach(function (q) { var m = new T.Mesh(new T.BoxGeometry(q[3], q[4], q[5]), new T.MeshBasicMaterial({ color: new T.Color(q[6], q[6], q[6] * 0.95) })); m.position.set(q[0], q[1], q[2]); es.add(m); });
+      S.environment = pm.fromScene(es, 0.04).texture;
+    } catch (e) {}
+    function aim() { var th = Math.tan(15 * PI / 180), d = Math.max(3.9, 1.15 / (th * (W / H))); cam.position.set(0.1, 1.15 + d * 0.3, 1.25 + d); cam.lookAt(0.02, 1.42, 1.1); }
+    aim();
+    var hemi = new T.HemisphereLight(0xfff3e2, 0x4a3426, 1.25); S.add(hemi);
+    var sun = new T.DirectionalLight(0xffffff, 2.3); sun.position.set(3, 7, 6); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    var sc = sun.shadow.camera; sc.left = -4; sc.right = 4; sc.top = 5; sc.bottom = -4; sc.near = 1; sc.far = 25; sun.shadow.radius = 5; sun.shadow.bias = -0.0005; S.add(sun);
+    var rim = new T.DirectionalLight(0xffd9a8, 0.9); rim.position.set(-5, 3, -4); S.add(rim);
+    var gr = new T.Mesh(new T.PlaneGeometry(30, 30), new T.ShadowMaterial({ opacity: 0.45 })); gr.rotation.x = -PI / 2; gr.receiveShadow = true; S.add(gr);
+    var tex = clayTex(T);
+    function M(c, r, noBump) { return new T.MeshStandardMaterial({ color: c, roughness: r == null ? 0.82 : r, metalness: 0, bumpMap: noBump ? null : tex, bumpScale: noBump ? 0 : 0.6 }); }
+    function ball(r, m, sx, sy, sz, x, y, z) { var o = new T.Mesh(new T.SphereGeometry(r, 40, 28), m); o.scale.set(sx || 1, sy || 1, sz || 1); o.position.set(x || 0, y || 0, z || 0); o.castShadow = true; o.receiveShadow = true; return o; }
+    function cyl(r1, r2, h, m, x, y, z, seg) { var o = new T.Mesh(new T.CylinderGeometry(r1, r2, h, seg || 32), m); o.position.set(x || 0, y || 0, z || 0); o.castShadow = true; o.receiveShadow = true; return o; }
+    function canvasTex(c) { var t = new T.CanvasTexture(c); if ('colorSpace' in t) t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t; }
+    var mFelt = M(0x1f6b3a, 0.95), mWood = M(0x6b3e1e, 0.6);
+
+    // table de poker (la même que celle du loup)
+    var table = new T.Group(); table.position.set(0, 0, 1.0); S.add(table);
+    table.add(cyl(1.0, 1.0, 0.1, mFelt, 0, 1.0, 0, 64));
+    var rail = new T.Mesh(new T.TorusGeometry(1.02, 0.09, 14, 64), M(0x2a1a12, 0.45)); rail.rotation.x = PI / 2; rail.position.y = 1.06; rail.castShadow = true; table.add(rail);
+    table.add(cyl(1.06, 0.98, 0.1, mWood, 0, 0.94, 0, 64));
+    var line = new T.Mesh(new T.TorusGeometry(0.72, 0.008, 6, 64), M(0xd9c27a, 0.5, true)); line.rotation.x = PI / 2; line.position.y = 1.052; table.add(line);
+    table.add(cyl(0.12, 0.2, 0.9, mWood, 0, 0.45, 0)); table.add(cyl(0.45, 0.5, 0.06, mWood, 0, 0.03, 0));
+    var TOP = 1.055;
+
+    // le liège : grain, pores, marque gravée au fer « CHÂTEAU MARGOT »
+    function corkCanvas(withText) { // liège vieilli, rougi par le vin vers le bas
+      var c = document.createElement('canvas'); c.width = 1024; c.height = 512; var g = c.getContext('2d');
+      g.fillStyle = '#ad8250'; g.fillRect(0, 0, 1024, 512);
+      var i, x, y, r, gr;
+      for (i = 0; i < 11000; i++) { x = Math.random() * 1024; y = Math.random() * 512; r = Math.random() * 2.4 + 0.4; var l = 120 + Math.random() * 85 | 0; g.fillStyle = 'rgba(' + l + ',' + (l * 0.72 | 0) + ',' + (l * 0.44 | 0) + ',0.55)'; g.fillRect(x, y, r, r); }
+      for (i = 0; i < 40; i++) { x = Math.random() * 1024; y = Math.random() * 512; r = 30 + Math.random() * 70; gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(70,42,20,0.22)'); gr.addColorStop(1, 'rgba(70,42,20,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); } // taches de vieillesse
+      for (i = 0; i < 700; i++) { x = Math.random() * 1024; y = Math.random() * 512; r = Math.random() * 6 + 1.5; g.fillStyle = 'rgba(' + (45 + Math.random() * 35 | 0) + ',26,12,' + (0.4 + Math.random() * 0.45) + ')'; g.beginPath(); g.ellipse(x, y, r * (0.4 + Math.random() * 0.6), r, Math.random() * 3, 0, 2 * PI); g.fill(); }
+      g.strokeStyle = 'rgba(50,28,12,0.45)'; g.lineWidth = 1.5; for (i = 0; i < 18; i++) { x = Math.random() * 1024; y = Math.random() * 512; g.beginPath(); g.moveTo(x, y); for (var k = 0; k < 4; k++) { x += (Math.random() - 0.5) * 40; y += 6 + Math.random() * 14; g.lineTo(x, y); } g.stroke(); } // petites fissures
+      if (withText) {
+        // le vin est remonté par le bas : bord irrégulier, plus foncé tout en bas
+        gr = g.createLinearGradient(0, 512, 0, 360); gr.addColorStop(0, 'rgba(78,8,30,0.95)'); gr.addColorStop(0.45, 'rgba(112,18,44,0.75)'); gr.addColorStop(1, 'rgba(120,24,50,0)'); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(0, 512); for (x = 0; x <= 1024; x += 16) g.lineTo(x, 392 + Math.sin(x * 0.021) * 18 + Math.sin(x * 0.057 + 1) * 10 + Math.random() * 6); g.lineTo(1024, 512); g.closePath(); g.fill();
+        for (i = 0; i < 70; i++) { x = Math.random() * 1024; y = 300 + Math.random() * 140; r = 3 + Math.random() * 12; g.fillStyle = 'rgba(105,16,42,' + (0.25 + Math.random() * 0.35) + ')'; g.beginPath(); g.ellipse(x, y, r, r * (0.6 + Math.random() * 0.5), Math.random() * 3, 0, 2 * PI); g.fill(); } // éclaboussures
+        var cx = 512; g.save(); g.fillStyle = 'rgba(48,20,8,0.92)'; g.strokeStyle = 'rgba(48,20,8,0.85)'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.lineWidth = 4; g.beginPath(); g.moveTo(cx - 105, 288); g.lineTo(cx + 105, 288); g.moveTo(cx - 105, 418); g.lineTo(cx + 105, 418); g.stroke();
+        g.font = 'bold 44px Georgia, "DejaVu Serif", serif'; g.fillText('CHÂTEAU', cx, 324);
+        g.font = 'bold 52px Georgia, "DejaVu Serif", serif'; g.fillText('MARGOT', cx, 380);
+        g.font = '22px "DejaVu Sans", sans-serif'; g.fillText('★ ★ ★', cx, 440);
+        g.restore();
+      }
+      return c;
+    }
+    var cc = corkCanvas(true), ccTop = corkCanvas(false);
+    function bumpOf(c) { var b = document.createElement('canvas'); b.width = c.width; b.height = c.height; var g = b.getContext('2d'); g.filter = 'grayscale(1) contrast(1.6)'; g.drawImage(c, 0, 0); var t = new T.CanvasTexture(b); return t; }
+    var mCorkSide = new T.MeshStandardMaterial({ map: canvasTex(cc), bumpMap: bumpOf(cc), bumpScale: 1.4, roughness: 0.92 });
+    var mCorkTop = new T.MeshStandardMaterial({ map: canvasTex(ccTop), bumpMap: bumpOf(ccTop), bumpScale: 1.4, roughness: 0.92 });
+    var wc = document.createElement('canvas'); wc.width = wc.height = 256; (function (g) { g.fillStyle = '#c99d68'; g.fillRect(0, 0, 256, 256); var gr2 = g.createRadialGradient(128, 128, 20, 128, 128, 128); gr2.addColorStop(0, 'rgba(70,6,26,0.97)'); gr2.addColorStop(0.85, 'rgba(96,12,38,0.92)'); gr2.addColorStop(1, 'rgba(96,12,38,0.6)'); g.fillStyle = gr2; g.fillRect(0, 0, 256, 256); })(wc.getContext('2d'));
+    var mCorkWine = new T.MeshStandardMaterial({ map: canvasTex(wc), roughness: 0.7 });
+    var CR = 0.2, CH2 = 0.5;
+    var cork = new T.Group(); S.add(cork);          // position / saut
+    var body = new T.Group(); cork.add(body);        // écrasement, balancement
+    var cm = new T.Mesh(new T.CylinderGeometry(CR, CR * 0.95, CH2, 72, 1, false, PI), [mCorkSide, mCorkTop, mCorkWine]);
+    cm.position.y = CH2 / 2; cm.castShadow = true; cm.receiveShadow = true; body.add(cm);
+    // le visage
+    var mEye = M(0xffffff, 0.25, true), mPup = M(0x141414, 0.2, true), mLine = M(0x3b2210, 0.6, true), mMouth = M(0x5a1020, 0.7, true);
+    var gWhite = new T.MeshBasicMaterial({ color: 0xffffff });
+    var eyes = [];
+    [1, -1].forEach(function (s) {
+      var e = new T.Group(); e.position.set(0.078 * s, CH2 / 2 + 0.105, CR * 0.93); body.add(e);
+      var w = ball(0.058, mEye, 1, 1.12, 0.55); e.add(w);
+      var p = ball(0.028, mPup, 1, 1.1, 0.6, 0, 0, 0.028); e.add(p);
+      var hl = new T.Mesh(new T.SphereGeometry(0.009, 12, 8), gWhite); hl.position.set(0.011, 0.013, 0.046); e.add(hl);
+      var lid = ball(0.062, mCorkTop, 1.05, 0.62, 0.62, 0, 0.05, 0.004); e.add(lid);
+      var bg = new T.CapsuleGeometry(0.011, 0.07, 4, 8); bg.rotateZ(PI / 2); var brow = new T.Mesh(bg, mLine); brow.position.set(0, 0.085, 0.03); e.add(brow);
+      eyes.push({ g: e, p: p, hl: hl, lid: lid, brow: brow, s: s });
+    });
+    var mouth = new T.Group(); mouth.position.set(0, CH2 / 2 + 0.005, CR * 0.96); body.add(mouth);
+    var mo = ball(0.045, mMouth, 1, 0.25, 0.35); mouth.add(mo);
+    var lip = new T.Mesh(new T.TorusGeometry(0.045, 0.007, 8, 32), mLine); lip.scale.set(1, 0.25, 1); mouth.add(lip);
+
+    // la bouteille (sans marque) : verre vert sombre, étiquette « Cuvée du club »
+    var bottle = new T.Group(); S.add(bottle);
+    var mGlass = new T.MeshPhysicalMaterial({ color: 0x173a22, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.6 });
+    bottle.add(cyl(0.16, 0.16, 0.62, mGlass, 0, 0.31, 0, 48));
+    var sh = ball(0.16, mGlass, 1, 0.75, 1, 0, 0.62, 0); bottle.add(sh);
+    bottle.add(cyl(0.056, 0.06, 0.34, mGlass, 0, 0.86, 0, 32));
+    var lipR = new T.Mesh(new T.TorusGeometry(0.058, 0.014, 10, 32), mGlass); lipR.rotation.x = PI / 2; lipR.position.y = 1.03; bottle.add(lipR);
+    var lc = document.createElement('canvas'); lc.width = 512; lc.height = 256; (function (g) {
+      g.fillStyle = '#f3e7c9'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#b8902f'; g.lineWidth = 8; g.strokeRect(150, 18, 212, 220); g.lineWidth = 2; g.strokeRect(160, 28, 192, 200);
+      g.fillStyle = '#6e1a2a'; g.textAlign = 'center'; g.font = 'italic bold 34px Georgia, "DejaVu Serif", serif'; g.fillText('Cuvée', 256, 104); g.fillText('du club', 256, 146);
+      g.fillStyle = '#b8902f'; g.font = '22px Georgia, serif'; g.fillText('♠ ♥ ♦ ♣', 256, 196);
+    })(lc.getContext('2d'));
+    var label = new T.Mesh(new T.CylinderGeometry(0.163, 0.163, 0.3, 48, 1, true, PI), new T.MeshStandardMaterial({ map: canvasTex(lc), roughness: 0.8 })); label.position.y = 0.3; bottle.add(label);
+    var foil = cyl(0.064, 0.066, 0.16, M(0x6e1426, 0.35, true), 0, 1.0, 0); bottle.add(foil);
+    var BX = 0.62, BZ = 0.62;
+
+    // jetons : deux piles à côté du bouchon, poussées au milieu sur « relance »
+    function chipTex(col, val) {
+      var c = document.createElement('canvas'); c.width = c.height = 256; var g = c.getContext('2d');
+      g.fillStyle = col; g.beginPath(); g.arc(128, 128, 128, 0, 2 * PI); g.fill();
+      g.fillStyle = '#fff'; for (var k = 0; k < 8; k++) { g.save(); g.translate(128, 128); g.rotate(k * PI / 4); g.fillRect(-14, -128, 28, 30); g.restore(); }
+      g.strokeStyle = '#fff'; g.lineWidth = 5; g.setLineDash([10, 8]); g.beginPath(); g.arc(128, 128, 84, 0, 2 * PI); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.arc(128, 128, 64, 0, 2 * PI); g.fill();
+      g.fillStyle = col; g.font = 'bold 54px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(val, 128, 132);
+      return canvasTex(c);
+    }
+    function edgeTex(col) { var c = document.createElement('canvas'); c.width = 256; c.height = 16; var g = c.getContext('2d'); g.fillStyle = col; g.fillRect(0, 0, 256, 16); g.fillStyle = '#fff'; for (var k = 0; k < 8; k++) g.fillRect(k * 32 + 8, 0, 14, 16); return canvasTex(c); }
+    var CHM = [['#c9161d', '5'], ['#1f4fc4', '10'], ['#178a3a', '25'], ['#161616', '100']].map(function (q) { var top = new T.MeshStandardMaterial({ map: chipTex(q[0], q[1]), roughness: 0.45 }); return [new T.MeshStandardMaterial({ map: edgeTex(q[0]), roughness: 0.5 }), top, top]; });
+    var chips = [], chipG = new T.CylinderGeometry(0.11, 0.11, 0.022, 40);
+    [[0.08, 1.48, 3, 9, 0], [0.32, 1.42, 0, 8, 1], [-0.62, 1.4, 1, 6, 0], [0.22, 1.66, 2, 6, 1]].forEach(function (st) {
+      for (var k = 0; k < st[3]; k++) {
+        var c = new T.Mesh(chipG, CHM[st[2]]); c.castShadow = true; c.receiveShadow = true;
+        var x0 = st[0] + (Math.random() - 0.5) * 0.008, z0 = st[1] + (Math.random() - 0.5) * 0.008, y0 = TOP + 0.011 + k * 0.0225;
+        c.position.set(x0, y0, z0); c.rotation.y = Math.random() * 6; S.add(c);
+        // arrivée au pot : un petit tas au milieu de la table
+        var a = Math.random() * 2 * PI, rr = 0.05 + Math.random() * 0.14;
+        chips.push({ m: c, x0: x0, y0: y0, z0: z0, x1: 0.12 + Math.cos(a) * rr, z1: 0.9 + Math.sin(a) * rr * 0.8, y1: TOP + 0.011 + (k % 4) * 0.0225, d: k * 0.025 + st[4] * 0.05, ry: c.rotation.y });
+      }
+    });
+    // étincelles dorées
+    var mGold = new T.MeshStandardMaterial({ color: 0xf2c14e, emissive: 0xc8901a, emissiveIntensity: 0.9, metalness: 0.6, roughness: 0.3 });
+    var spark = []; for (var q = 0; q < 22; q++) { var o = new T.Mesh(new T.OctahedronGeometry(0.03 + Math.random() * 0.025), mGold); o.visible = false; S.add(o); spark.push({ m: o, a: Math.random() * 2 * PI, sp: 0.5 + Math.random() * 0.9, up: 0.4 + Math.random() * 0.9, d: Math.random() * 0.35 }); }
+
+    function envAt(x) { if (!env || x < 0) return 0; var i = Math.floor(x / 0.03); return i < env.length ? (+env.charAt(i)) / 9 : 0; }
+    var LAND = { x: -0.3, z: 1.42 }, P0 = new T.Vector3(), V = 3.3; // voix à 3,3 s
+    function frame(now) {
+      var t = (now - t0) / 1000;
+      // la bouteille glisse sur la table (0–0,8 s), tremble (0,9–1,5 s), POP à 1,5 s, recule un peu
+      var inb = easeOut(seg(t, 0, 0.8)), shake = t > 0.9 && t < 1.5 ? Math.sin(t * 70) * 0.06 * seg(t, 0.9, 1.4) : 0, kick = t > 1.5 ? Math.exp(-(t - 1.5) * 6) * Math.sin((t - 1.5) * 30) * 0.12 : 0;
+      bottle.position.set(BX + (1 - inb) * 2.6, TOP, BZ); bottle.rotation.set(0, 0, shake + kick - (1 - inb) * 0.25);
+      foil.visible = t < 1.5;
+      // le bouchon : dans le goulot, puis vol en tournant et en grossissant, atterrissage debout
+      var fl = seg(t, 1.5, 2.35), sq = 0, hop = 0;
+      if (t < 1.5) { cork.visible = t > 0.9; cork.position.set(bottle.position.x + Math.sin(-bottle.rotation.z) * 1.0, TOP + 1.0 + (t > 0.9 ? seg(t, 0.9, 1.5) * 0.06 : 0), BZ); cork.scale.setScalar(0.27); cork.rotation.set(0, 0, bottle.rotation.z); }
+      else if (fl < 1) {
+        cork.visible = true; var sx = BX, sy = TOP + 1.06;
+        cork.position.set(sx + (LAND.x - sx) * fl, sy + (TOP - sy) * fl + Math.sin(fl * PI) * 0.75, BZ + (LAND.z - BZ) * fl);
+        cork.scale.setScalar(0.27 + 0.73 * easeOut(fl)); cork.rotation.set(fl * PI * 4, 0, fl * PI * 1.2);
+      } else {
+        cork.visible = true; cork.position.set(LAND.x, TOP, LAND.z); cork.scale.setScalar(1); cork.rotation.set(0, 0, 0);
+        sq = t < 2.75 ? Math.exp(-(t - 2.35) * 9) * Math.cos((t - 2.35) * 28) * 0.28 : 0;
+      }
+      // « Non ! » : il secoue tout le corps (3,3–3,8 s) ; « … pas un call » : penché, sourcils froncés
+      var no = t > V && t < V + 0.65 ? Math.sin((t - V) * 26) * (1 - seg(t, V + 0.4, V + 0.65)) : 0;
+      var lean = seg(t, V + 0.75, V + 1.1) * (1 - seg(t, V + 2.1, V + 2.3));
+      // « …c'est une relance ! » : il s'accroupit, saute, et les jetons partent au pot
+      var J = 5.75, jump = seg(t, J, J + 0.45); hop = jump > 0 && jump < 1 ? Math.sin(jump * PI) * 0.45 : 0;
+      var crouch = (t > J - 0.25 && t < J) ? Math.sin(seg(t, J - 0.25, J) * PI) : 0;
+      var spin = seg(t, 7.2, 7.8);
+      body.scale.set(1 + sq * 0.6 + crouch * 0.12, 1 - sq - crouch * 0.18, 1 + sq * 0.6 + crouch * 0.12);
+      body.rotation.set(-lean * 0.22, no * 0.55 + easeOut(spin) * 2 * PI, no * 0.12 + Math.sin(t * 5) * 0.03 * lean);
+      if (fl >= 1) cork.position.y = TOP + hop + (spin > 0 && spin < 1 ? Math.sin(spin * PI) * 0.22 : 0);
+      // yeux : fermés dans la bouteille, s'ouvrent après l'atterrissage, en colère, clin d'œil à la fin
+      var open = seg(t, 2.55, 2.75), angry = seg(t, V - 0.1, V + 0.1) * (1 - seg(t, 6.6, 6.9));
+      eyes.forEach(function (e) {
+        var closed = 1 - open; if (t > 7.85 && t < 8.25 && e.s > 0) closed = 1; // clin d'œil
+        if (no) closed = Math.max(closed, 0.15);
+        e.lid.position.y = 0.05 - (closed * 0.05) + angry * -0.012; e.lid.scale.y = 0.55 + closed * 0.55 + angry * 0.12;
+        e.lid.rotation.z = angry * 0.35 * e.s;
+        e.brow.rotation.z = angry * -0.5 * e.s + (1 - angry) * 0.12 * e.s * open; e.brow.position.y = 0.085 - angry * 0.02;
+        var px = lean * 0.0 + no * 0.012, py = -lean * 0.008;
+        e.p.position.set(px, py, 0.028); e.hl.position.set(px + 0.011, py + 0.013, 0.046);
+      });
+      // bouche synchronisée sur la voix ; sourire satisfait à la fin
+      var v = envAt(t - V), smile = seg(t, 6.9, 7.2);
+      mo.scale.set(1 - v * 0.15 + smile * 0.25, 0.22 + v * 1.05, 0.35); lip.scale.set(1 - v * 0.15 + smile * 0.25, 0.22 + v * 1.0 + smile * 0.08, 1);
+      mouth.rotation.z = 0;
+      // jetons : au pot quand il retombe
+      var land = J + 0.42;
+      chips.forEach(function (c) {
+        var k = easeOut(seg(t, land + c.d, land + c.d + 0.45)), arc = Math.sin(k * PI) * 0.18;
+        c.m.position.set(c.x0 + (c.x1 - c.x0) * k, c.y0 + (c.y1 - c.y0) * k + arc, c.z0 + (c.z1 - c.z0) * k);
+        c.m.rotation.set(k < 1 && k > 0 ? Math.sin(k * PI) * 0.6 : 0, c.ry + k * 3, 0);
+      });
+      // étincelles dorées autour du bouchon après la relance
+      spark.forEach(function (s) { var u = t - (land + s.d); s.m.visible = u > 0 && u < 1.6; if (!s.m.visible) return; var r2 = 0.25 + s.sp * u * 0.6; s.m.position.set(LAND.x + Math.cos(s.a + u * 2) * r2, TOP + 0.3 + s.up * u - 0.25 * u * u, LAND.z + Math.sin(s.a + u * 2) * r2 * 0.6); s.m.rotation.set(u * 6, u * 5, 0); s.m.scale.setScalar(1 - seg(u, 1.1, 1.6)); });
+      R.render(S, cam);
+    }
+    var started = false, raf = 0;
+    function loop() {
+      if (box.isConnected) started = true;
+      if (started && !box.isConnected) { cancelAnimationFrame(raf); try { R.dispose(); R.forceContextLoss(); } catch (e) {} return; }
+      var w2 = box.clientWidth, h2 = box.clientHeight; if (w2 && h2 && (w2 !== W || h2 !== H)) { W = w2; H = h2; R.setSize(W, H); cam.aspect = W / H; aim(); cam.updateProjectionMatrix(); }
+      frame(performance.now()); raf = requestAnimationFrame(loop);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  window.PA_FX3D = { poulet: poulet, ane: ane, loup: loup, bouchon: bouchon };
 })();
