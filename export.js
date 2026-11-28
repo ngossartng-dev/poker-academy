@@ -164,7 +164,7 @@
     });
     var s4 = { name: 'Résultats détaillés', widths: TN_W, rows: r4, land: true };
     var trs = L().trophies(D.list), h5 = H(['Trophée', 'Gagnant', 'Résultat', 'Ce qui compte']); h5.h = 28;
-    var s5 = { name: 'Trophées', widths: [26, 20, 30, 44], rows: [[{ v: 'Trophées de la saison ' + year, s: 2 }], [{ v: 'Remis à la fin de l’année · merci à Lionel et au club', s: 3 }], [], h5].concat(trs.map(function (t, i) { return [{ v: t.title, s: i ? 7 : 4 }, { v: t.who, s: i ? 8 : 4 }, { v: t.val, s: i ? 8 : 4 }, { v: t.desc, s: i ? 8 : 4 }]; })) };
+    var s5 = { name: 'Trophées', widths: [26, 20, 30, 44], rows: [[{ v: 'Trophées de la saison ' + year, s: 2 }], [{ v: 'Remis à la fin de l’année · merci à tous', s: 3 }], [], h5].concat(trs.map(function (t, i) { return [{ v: t.title, s: i ? 7 : 4 }, { v: t.who, s: i ? 8 : 4 }, { v: t.val, s: i ? 8 : 4 }, { v: t.desc, s: i ? 8 : 4 }]; })) };
     return xlsx(trs.length ? [s1, s5, s2, s3, s4] : [s1, s2, s3, s4]);
   }
   function tnXlsx(tn) {
@@ -378,7 +378,7 @@
       pages.forEach(function (p, i) {
         var po = 5 + i * 2, co = po + 1;
         p.push(GOLD + ' rg ' + M + ' 34 ' + CW.toFixed(2) + ' 0.6 re f');
-        p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + M + ' 22 Td (' + pdesc('Édité le ' + new Date().toLocaleDateString('fr-FR') + ' avec Poker Academy · merci à Lionel et au club') + ') Tj ET');
+        p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + M + ' 22 Td (' + pdesc('Édité le ' + new Date().toLocaleDateString('fr-FR') + ' avec Poker Academy · merci à tous') + ') Tj ET');
         var pg = 'Page ' + (i + 1) + ' / ' + n; p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + (PW - M - tw(pg, 7.5)).toFixed(2) + ' 22 Td (' + pg + ') Tj ET');
         var s = p.join('\n');
         objs[po] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PW + ' ' + PH + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + co + ' 0 R >>';
@@ -435,7 +435,7 @@
   }
   function awardsPdf(year) {
     var lg = L(), list = lg.load().list.filter(function (x) { return x.date.slice(0, 4) === year; }), st = lg.standings(list, year), tr = lg.trophies(list), doc = Doc('Remise des prix ' + year);
-    doc.newPage(); doc.h1('Remise des prix', 'Championnat du club · ' + list.length + ' tournois · merci à tous les joueurs, à Lionel et au club', year);
+    doc.newPage(); doc.h1('Remise des prix', 'Championnat du club · ' + list.length + ' tournois · merci à tous', year);
     doc.podium(st);
     doc.h2('Les trophées de la saison');
     var cw = (CW - 12) / 2, h = 64;
@@ -517,7 +517,7 @@
     var lx = 60; [['Mercredi', G], ['Deep ×1,5', BR], ['Prime', RD]].forEach(function (it) { c.fillStyle = it[1]; c.fillRect(lx, 1291, 22, 22); txt(it[0], lx + 32, 1310, F(TXT, 24, 400), '#bbb'); c.font = F(TXT, 24, 400); lx += 60 + c.measureText(it[0]).width; });
     var cyI = L().carryOf ? L().carryOf(year) : null;
     txt(list.length ? list.length + ' tournois · moyenne ' + f1(D.avgPlayers) + ' joueurs' + (cyI ? ' · reprise au ' + dfr(cyI.date) : '') : (cyI ? 'Classement repris au ' + dfr(cyI.date) : '0 tournoi'), W - 60, 1310, F(TXT, 24, 400), '#bbb', 'right');
-    txt('Merci à Lionel et au club', W / 2 - 12, 1340, F(TXT, 20, 400), '#777', 'center'); c.font = F(TXT, 20, 400); txt('♥', W / 2 + c.measureText('Merci à Lionel et au club').width / 2 - 4, 1340, F(TXT, 20, 700), RD, 'left');
+    txt('Merci à tous', W / 2 - 12, 1340, F(TXT, 20, 400), '#777', 'center'); c.font = F(TXT, 20, 400); txt('♥', W / 2 + c.measureText('Merci à tous').width / 2 - 4, 1340, F(TXT, 20, 700), RD, 'left');
     return cv;
   }
   function rankImage(year, done) {

@@ -253,7 +253,7 @@
       });
       L.push('(🟢 places gagnées · 🔴 places perdues · 🟠 même place · 🆕 entre au classement)');
     }
-    L.push('', 'Merci à tous, et merci à Lionel ! ♠️♥️♦️♣️');
+    L.push('', 'Merci à tous ! ♠️♥️♦️♣️');
     return L.join('\n');
   }
   function shareText(txt, done) {
