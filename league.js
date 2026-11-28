@@ -285,11 +285,75 @@
     var ui = U(), op = V.open === tn.id;
     var head = '<button class="card stack" data-lgact="open" data-v="' + tn.id + '" style="text-align:left;width:100%;cursor:pointer;color:var(--ink)"><div class="row" style="justify-content:space-between;gap:8px"><b>' + TYPES[tn.type].name + ' · ' + dfr(tn.date) + '</b><span class="small muted">' + tn.n + ' joueurs' + (tn.type === 'deep' ? ' · points ×1,5' : '') + '</span></div><div class="small">Vainqueur : <b style="color:var(--gold)">' + ui.esc(tn.winner || '—') + '</b>' + (tn.holder ? ' · tête mise à prix : ' + ui.esc(tn.holder) : '') + '</div></button>';
     if (!op) return head;
+    if (V.ed && V.ed.id === tn.id) return head + edHtml(tn);
     return head + '<div class="card stack"><table class="tbl" style="font-size:.9em"><tr><th>Place</th><th>Joueur</th><th>Points</th><th>Sorti par</th><th>Heure · niveau</th></tr>' + tn.rows.map(function (r) {
       var h = r.koAt ? new Date(r.koAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
       return '<tr><td>' + r.place + '</td><td>' + ui.esc(r.name) + (r.entries > 1 ? ' <span class="small muted">(' + r.entries + ' entrées)</span>' : '') + '</td><td>' + f1(r.total) + (r.bonus || podiumPts(r.place, tn.type) ? ' <span class="small muted">(' + (podiumPts(r.place, tn.type) ? 'dont +' + podiumPts(r.place, tn.type) + ' podium' : '') + (r.bonus ? (podiumPts(r.place, tn.type) ? ', ' : '') + '+' + f1(r.bonus) + ' prime' : '') + ')</span>' : '') + '</td><td>' + (r.koBy ? ui.esc(r.koBy) : (r.place === 1 ? 'vainqueur' : '')) + '</td><td>' + h + (r.koLevel ? ' · ' + r.koLevel : '') + '</td></tr>';
-    }).join('') + '</table>' + movesHtml(tn.id) + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
+    }).join('') + '</table>' + movesHtml(tn.id) + (window.PA_EXPORT ? '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-lgact="xt" data-f="xlsx" data-v="' + tn.id + '" style="flex:1">Excel de ce tournoi</button><button class="btn" data-lgact="xt" data-f="pdf" data-v="' + tn.id + '" style="flex:1">PDF de ce tournoi</button></div>' : '') + (V.edDone && V.edDone.id === tn.id ? '<div class="tn-done">' + ui.esc(V.edDone.txt) + '</div>' : '') + (V.pdfMsg ? '<div class="small" style="color:var(--gold)">📄 ' + ui.esc(V.pdfMsg) + '</div>' : '') + '<button class="btn gold block" data-lgact="edOpen" data-v="' + tn.id + '">✏️ Corriger le classement</button>' + (tn.prev ? '<button class="btn block" data-lgact="edUndo" data-v="' + tn.id + '">↩︎ Annuler la dernière correction</button>' : '') + '<button class="btn block" data-lgact="sum" data-v="' + tn.id + '">📝 Résumé texte pour WhatsApp</button>' + (V.sum === tn.id ? '<textarea class="tn-in" rows="9" readonly style="width:100%">' + ui.esc(summary(tn.id)) + '</textarea>' : '') + renHtml(tn) + '<button class="btn" data-lgact="del" data-v="' + tn.id + '">Supprimer ce tournoi du classement</button></div>';
   }
+  // ✏️ corriger le classement d'un tournoi terminé : places (▲▼), « éliminé par », prime, joueur oublié ou en trop.
+  // Les lignes sont des « places » : l'heure et le niveau de sortie, les gains et « éliminé par » restent à la place,
+  // seuls le joueur (et ses entrées) changent de place. La prime suit le joueur qui a éliminé la tête mise à prix.
+  function ord(p) { return p === 1 ? '1er' : p + 'e'; }
+  function edOpen(tn) {
+    var rows = tn.rows.slice().sort(function (a, b) { return a.place - b.place; }).map(function (r) { return { name: r.name, entries: r.entries || 1, koBy: r.koBy || null, koAt: r.koAt || null, koLevel: r.koLevel || null, prize: r.prize == null ? null : r.prize, bonus: r.bonus || 0, bountyFrom: r.bountyFrom || null }; });
+    var bon = rows.filter(function (r) { return r.bonus > 0; });
+    V.ed = { id: tn.id, rows: rows, bonusTo: bon.length === 1 ? bon[0].name : '', bonusVal: bon.length ? bon[0].bonus : BONUS, bountyFrom: bon.length ? bon[0].bountyFrom : null, multi: bon.length > 1, msg: '' };
+  }
+  function edHolders(tn) { return holdArr(tn.holder).map(key).concat(V.ed && V.ed.bountyFrom ? [key(V.ed.bountyFrom)] : []); }
+  function edBuild(tn) { // le tournoi tel qu'il sera enregistré
+    var E = V.ed, n = E.rows.length, bk = key(E.bonusTo);
+    var rows = E.rows.map(function (r, i) {
+      var place = i + 1, bonus = E.multi ? (r.bonus || 0) : (bk && key(r.name) === bk && tn.type !== 'libre' ? E.bonusVal : 0), pts = placePts(n, place, tn.type);
+      return { name: r.name, place: place, pts: pts, bonus: bonus, total: Math.round((pts + bonus) * 100) / 100, prize: r.prize, entries: r.entries || 1, koBy: place === 1 ? null : (r.koBy || null), koAt: place === 1 ? null : r.koAt, koLevel: place === 1 ? null : r.koLevel, bountyFrom: E.multi ? r.bountyFrom : (bonus ? (E.bountyFrom || tn.holder || null) : null) };
+    });
+    var o = JSON.parse(JSON.stringify(tn)); delete o.prev; o.rows = rows; o.n = n; o.winner = rows[0] ? rows[0].name : null; return o;
+  }
+  function edCheck() { var E = V.ed, seen = {}, dup = []; E.rows.forEach(function (r) { var k = key(r.name); if (seen[k]) dup.push(r.name); seen[k] = 1; }); if (dup.length) return 'Pseudo en double : ' + dup.join(', ') + '.'; if (E.rows.length < 2) return 'Il faut au moins 2 joueurs.'; return ''; }
+  function edPreview(tn) {
+    var ui = U(), nw = edBuild(tn), old = {}, nu = {}, out = [];
+    tn.rows.forEach(function (r) { old[key(r.name)] = r; }); nw.rows.forEach(function (r) { nu[key(r.name)] = r; });
+    nw.rows.forEach(function (r) { var o = old[key(r.name)]; if (!o) out.push('<b>' + ui.esc(r.name) + '</b> ajouté : ' + ord(r.place) + ', ' + f1(r.total) + ' pts'); else if (o.place !== r.place || o.total !== r.total) out.push('<b>' + ui.esc(r.name) + '</b> : ' + (o.place !== r.place ? ord(o.place) + ' → ' + ord(r.place) + ', ' : '') + f1(o.total) + ' → ' + f1(r.total) + ' pts'); });
+    tn.rows.forEach(function (r) { if (!nu[key(r.name)]) out.push('<b>' + ui.esc(r.name) + '</b> retiré (' + f1(r.total) + ' pts en moins)'); });
+    var y = tn.date.slice(0, 4), all = load().list.filter(function (x) { return x.date.slice(0, 4) === y; });
+    var before = standings(all, y), after = standings(all.map(function (x) { return x.id === tn.id ? nw : x; }), y), rb = {}, gen = [];
+    before.forEach(function (o, i) { rb[key(o.name)] = i + 1; });
+    after.forEach(function (o, i) { var p = rb[key(o.name)]; if (p !== i + 1) gen.push(ui.esc(o.name) + ' ' + (p ? ord(p) : '—') + ' → ' + ord(i + 1)); });
+    if (!out.length) return '<div class="small muted">Aucun changement pour l’instant.</div>';
+    return '<div class="small" style="line-height:1.6"><b style="color:var(--gold)">Ce qui change dans ce tournoi</b><br>' + out.join('<br>') + (gen.length ? '<br><b style="color:var(--gold)">Classement général</b><br>' + gen.slice(0, 12).join(' · ') : '<br><span class="muted">Le classement général garde le même ordre.</span>') + '</div>';
+  }
+  function edHtml(tn) {
+    var ui = U(), E = V.ed, nw = edBuild(tn), names = E.rows.map(function (r) { return r.name; });
+    var SB = 'padding:4px 9px;min-width:0;font-size:.95em';
+    var lines = E.rows.map(function (r, i) {
+      var t = nw.rows[i];
+      var ko = i === 0 ? '<span class="small" style="color:var(--gold)">vainqueur</span>' : '<select class="tn-in lg-edko" data-i="' + i + '" style="' + INP + ';padding:4px 6px;font-size:.9em;max-width:100%"><option value="">éliminé par : ?</option>' + names.filter(function (n) { return key(n) !== key(r.name); }).map(function (n) { return '<option value="' + ui.esc(n) + '"' + (key(n) === key(r.koBy) ? ' selected' : '') + '>éliminé par ' + ui.esc(n) + '</option>'; }).join('') + '</select>';
+      return '<div style="border-top:1px solid var(--line,#333);padding:7px 0;display:grid;grid-template-columns:2.2em 1fr auto;gap:4px 8px;align-items:center">' +
+        '<b style="font-size:1.15em;color:var(--gold)">' + (i + 1) + '</b><div><b>' + ui.esc(r.name) + '</b> <span class="small muted">' + f1(t.total) + ' pts' + (t.bonus ? ' (dont +' + f1(t.bonus) + ' prime)' : '') + '</span></div>' +
+        '<div class="row" style="gap:4px"><button class="btn" style="' + SB + '" data-lgact="edUp" data-v="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Monter">▲</button><button class="btn" style="' + SB + '" data-lgact="edDown" data-v="' + i + '"' + (i === E.rows.length - 1 ? ' disabled' : '') + ' aria-label="Descendre">▼</button><button class="btn" style="' + SB + '" data-lgact="edDel" data-v="' + i + '" aria-label="Retirer">✕</button></div>' +
+        '<span></span><div style="grid-column:2 / 4">' + ko + '</div></div>';
+    }).join('');
+    var bon = tn.type === 'libre' ? '' : E.multi ? '<div class="small muted">Plusieurs primes dans ce tournoi : chacune reste au joueur qui l’a gagnée.</div>' :
+      '<label class="small">Prime de la tête mise à prix (+' + f1(E.bonusVal) + ')' + (tn.holder ? ' · tête : ' + ui.esc(holdArr(tn.holder).join(', ')) : '') + '</label><select class="tn-in lg-edbo" style="' + INP + '"><option value="">Pas de prime</option>' + names.map(function (n) { return '<option value="' + ui.esc(n) + '"' + (key(n) === key(E.bonusTo) ? ' selected' : '') + '>' + ui.esc(n) + '</option>'; }).join('') + '</select>';
+    var add = '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><input id="lgEdAdd" list="lgEdList" autocomplete="off" placeholder="Joueur oublié" style="' + INP + ';flex:2;min-width:9em"><datalist id="lgEdList">' + roster().filter(function (n) { return names.map(key).indexOf(key(n)) < 0; }).map(function (n) { return '<option value="' + ui.esc(n) + '">'; }).join('') + '</datalist><input id="lgEdPlace" type="number" min="1" max="' + (E.rows.length + 1) + '" value="' + (E.rows.length + 1) + '" style="' + INP + ';width:4.5em" aria-label="Place"><button class="btn" data-lgact="edAdd" data-v="' + tn.id + '">+ Ajouter</button></div>';
+    return '<div class="card stack" style="gap:8px;border-color:var(--gold)"><b>✏️ Corriger le classement · ' + TYPES[tn.type].name + ' du ' + dfr(tn.date) + '</b>' +
+      '<div class="small muted">▲ ▼ pour changer un joueur de place, ✕ pour le retirer. Les points se recalculent avec le barème ; l’heure et le niveau de sortie restent à la place.</div>' +
+      '<div>' + lines + '</div>' + bon + '<label class="small">Ajouter un joueur oublié, à la place :</label>' + add +
+      (E.msg ? '<div class="small" style="color:var(--gold)">' + ui.esc(E.msg) + '</div>' : '') +
+      '<div class="card" style="padding:10px">' + edPreview(tn) + '</div>' +
+      '<div class="row" style="gap:8px"><button class="btn gold" style="flex:1" data-lgact="edSave" data-v="' + tn.id + '">Enregistrer la correction</button><button class="btn" data-lgact="edCancel">Annuler</button></div></div>';
+  }
+  function edSave(id) {
+    var d = load(), i = -1; d.list.forEach(function (x, k) { if (x.id === id) i = k; }); if (i < 0) return null;
+    var old = d.list[i], nw = edBuild(old), pv = JSON.parse(JSON.stringify(old)); delete pv.prev;
+    nw.prev = pv; nw.editAt = Date.now(); d.list[i] = nw; save(d); addToRoster(nw.rows.map(function (r) { return r.name; }));
+    return nw;
+  }
+  function edUndo(id) {
+    var d = load(), i = -1; d.list.forEach(function (x, k) { if (x.id === id) i = k; }); if (i < 0 || !d.list[i].prev) return null;
+    var back = JSON.parse(JSON.stringify(d.list[i].prev)); delete back.prev; back.editAt = Date.now(); d.list[i] = back; save(d); return back;
+  }
+  function pdfAfter(rec, what) { if (window.PA_EXPORT && window.PA_EXPORT.afterChange && rec && rec.type !== 'libre') window.PA_EXPORT.afterChange(rec, what, function (m) { V.pdfMsg = m; U().render(); }); }
   function renHtml(tn) {
     var ui = U();
     if (V.ren !== tn.id) return (V.renDone && V.renDone.id === tn.id ? '<div class="tn-done">' + ui.esc(V.renDone.txt) + '</div>' : '') + '<button class="btn block" data-lgact="renOpen" data-v="' + tn.id + '">✏️ Corriger un pseudo</button>';
@@ -321,6 +385,12 @@
     if (ct) ct.textContent = nm.length + ' joueur' + (nm.length > 1 ? 's' : '');
   }
   // reprise : en changeant la date, la liste des tournois déjà compris dans la reprise se met à jour
+  document.addEventListener('change', function (e) {
+    var tg = e.target; if (!tg || !V.ed || !tg.classList) return;
+    var tn = load().list.filter(function (x) { return x.id === V.ed.id; })[0]; if (!tn) return;
+    if (tg.classList.contains('lg-edko')) { var r = V.ed.rows[+tg.getAttribute('data-i')]; r.koBy = tg.value || null; if (!V.ed.multi && edHolders(tn).indexOf(key(r.name)) >= 0) V.ed.bonusTo = r.koBy || ''; U().render(); }
+    else if (tg.classList.contains('lg-edbo')) { V.ed.bonusTo = tg.value || ''; U().render(); }
+  });
   document.addEventListener('change', function (e) { if (e.target && e.target.id === 'lgCarryDate' && V.form === 'carry') { readCrows(); U().render(); } });
   document.addEventListener('change', function (e) {
     if (!e.target || e.target.id !== 'lgPastPick' || !e.target.value) return;
@@ -363,7 +433,7 @@
       h += '<div class="small muted">La saison a commencé avant l’appli ? Reprends le classement en cours, ou ajoute un par un les tournois déjà joués.</div>' +
         '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn gold" data-lgact="formCarry" style="flex:1">' + (cy ? 'Modifier la reprise du classement' : 'Reprendre le classement en cours') + '</button><button class="btn" data-lgact="formPast" style="flex:1">Ajouter un tournoi déjà joué</button></div>';
     }
-    return h + (V.fmsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.fmsg) + '</div>' : '') + '</div>';
+    return h + (V.fmsg ? '<div class="small" style="color:var(--gold)">' + ui.esc(V.fmsg) + '</div>' : '') + (V.fmsg && V.pdfMsg ? '<div class="small" style="color:var(--gold)">📄 ' + ui.esc(V.pdfMsg) + '</div>' : '') + '</div>';
   }
   // garde ce qui est tapé dans le tableau de reprise avant de redessiner la page
   function readCrows() {
@@ -449,8 +519,34 @@
       var dp = (document.getElementById('lgPastDate') || {}).value || today(), tp = (document.getElementById('lgPastType') || {}).value || 'mercredi', bo = cleanName((document.getElementById('lgPastBonus') || {}).value);
       if (bo && !seenP[key(bo)]) { V.fmsg = 'La prime est pour « ' + bo + ' », qui n’est pas dans la liste des joueurs.'; U().render(); return; }
       var recP = recordManual({ date: dp, type: tp, names: namesP, bonusTo: bo }); addToRoster(namesP);
-      V.year = dp.slice(0, 4); V.form = null; V.fmsg = TYPES[tp].name + ' du ' + dfr(dp) + ' enregistré : ' + namesP.length + ' joueurs, vainqueur ' + recP.winner + '.'; U().render(); return;
+      V.year = dp.slice(0, 4); V.form = null; V.fmsg = TYPES[tp].name + ' du ' + dfr(dp) + ' enregistré : ' + namesP.length + ' joueurs, vainqueur ' + recP.winner + '.'; pdfAfter(recP, 'new'); U().render(); return;
     }
+    if (a === 'edOpen') { var te = load().list.filter(function (x) { return x.id === v; })[0]; if (te) { edOpen(te); V.edDone = null; V.ren = null; } U().render(); return; }
+    if (a === 'edCancel') { V.ed = null; U().render(); return; }
+    if (V.ed && (a === 'edUp' || a === 'edDown' || a === 'edDel')) {
+      var R0 = V.ed.rows, ix = +v; V.ed.msg = '';
+      if (a === 'edDel') { var gone = R0.splice(ix, 1)[0]; if (key(V.ed.bonusTo) === key(gone.name)) V.ed.bonusTo = ''; }
+      else {
+        var jx = a === 'edUp' ? ix - 1 : ix + 1; if (jx < 0 || jx >= R0.length) return;
+        var A1 = R0[ix], B1 = R0[jx], nA = A1.name, eA = A1.entries; A1.name = B1.name; A1.entries = B1.entries; B1.name = nA; B1.entries = eA;
+        // « éliminé par lui-même » après l'échange : c'était l'autre joueur échangé
+        [[A1, B1], [B1, A1]].forEach(function (p) { if (p[0].koBy && key(p[0].koBy) === key(p[0].name)) p[0].koBy = p[1].name; });
+      }
+      U().render(); return;
+    }
+    if (a === 'edAdd' && V.ed) {
+      var inA = document.getElementById('lgEdAdd'), inP = document.getElementById('lgEdPlace'), nmA = cleanName(inA ? inA.value : '').toUpperCase(), pl = parseInt(inP ? inP.value : '', 10) || V.ed.rows.length + 1;
+      if (!nmA) { V.ed.msg = 'Écris le pseudo du joueur à ajouter.'; U().render(); return; }
+      if (V.ed.rows.some(function (r) { return key(r.name) === key(nmA); })) { V.ed.msg = nmA + ' est déjà dans ce tournoi.'; U().render(); return; }
+      pl = Math.max(1, Math.min(V.ed.rows.length + 1, pl)); V.ed.rows.splice(pl - 1, 0, { name: nmA, entries: 1, koBy: null, koAt: null, koLevel: null, prize: null, bonus: 0, bountyFrom: null }); V.ed.msg = ''; U().render(); return;
+    }
+    if (a === 'edSave' && V.ed) {
+      var er2 = edCheck(); if (er2) { V.ed.msg = er2; U().render(); return; }
+      var saved = edSave(v); V.ed = null;
+      if (saved) { V.edDone = { id: v, txt: '✓ Classement corrigé : ' + saved.winner + ' gagne. Le classement général est à jour et part sur les autres appareils.' }; pdfAfter(saved, 'fix'); }
+      U().render(); return;
+    }
+    if (a === 'edUndo') { if (typeof confirm === 'function' && !confirm('Remettre ce tournoi comme avant la dernière correction ?')) return; var bk2 = edUndo(v); if (bk2) { V.edDone = { id: v, txt: '↩︎ Correction annulée : le tournoi est revenu comme avant.' }; pdfAfter(bk2, 'fix'); } U().render(); return; }
     if (a === 'sum') { V.sum = V.sum === v ? null : v; if (V.sum) shareText(summary(v), done); else U().render(); return; }
     if (a === 'pl') { V.pl = v || null; U().render(); window.scrollTo(0, 0); return; }
     if (a === 'awards') { V.msg = ''; window.PA_EXPORT.awards(V.year, done); return; }
@@ -461,7 +557,7 @@
     if (a === 'xt') { V.msg = ''; window.PA_EXPORT.tournament(v, t.getAttribute('data-f'), done); return; }
     V.msg = ''; if (a === 'tab') V.tab = v; else if (a === 'year') V.year = v; else if (a === 'open') V.open = V.open === v ? null : v;
     else if (a === 'renOpen') { V.ren = v || null; V.renMsg = ''; V.renOld = ''; V.renDone = null; }
-    else if (a === 'renDo') { var o = document.getElementById('lgRenOld'), nn = document.getElementById('lgRenNew'), ov = o ? o.value : '', nv = nn ? nn.value : ''; var er = renameInRec(v, ov, nv); if (er) { V.renMsg = er; V.renOld = ov; } else { V.ren = null; V.renDone = { id: v, txt: '✓ « ' + ov + ' » est devenu « ' + nv.trim() + ' » dans ce tournoi. Le classement est à jour.' }; } }
+    else if (a === 'renDo') { var o = document.getElementById('lgRenOld'), nn = document.getElementById('lgRenNew'), ov = o ? o.value : '', nv = nn ? nn.value : ''; var er = renameInRec(v, ov, nv); if (er) { V.renMsg = er; V.renOld = ov; } else { V.ren = null; V.renDone = { id: v, txt: '✓ « ' + ov + ' » est devenu « ' + nv.trim() + ' » dans ce tournoi. Le classement est à jour.' };  pdfAfter(load().list.filter(function (x) { return x.id === v; })[0], 'fix'); } }
     else if (a === 'del') { if (typeof confirm === 'function' && !confirm('Supprimer ce tournoi du classement ?')) return; var d = load(); d.list = d.list.filter(function (x) { return x.id !== v; }); d.deleted = (d.deleted || []).concat([v]); save(d); V.open = null; }
     U().render();
   });

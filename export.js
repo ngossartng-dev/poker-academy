@@ -378,7 +378,7 @@
       pages.forEach(function (p, i) {
         var po = 5 + i * 2, co = po + 1;
         p.push(GOLD + ' rg ' + M + ' 34 ' + CW.toFixed(2) + ' 0.6 re f');
-        p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + M + ' 22 Td (' + pdesc('Édité le ' + new Date().toLocaleDateString('fr-FR') + ' avec Poker Academy · merci à tous') + ') Tj ET');
+        p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + M + ' 22 Td (' + pdesc('Édité le ' + new Date().toLocaleDateString('fr-FR') + ' à ' + hhmm(new Date()) + ' avec Poker Academy · merci à tous') + ') Tj ET');
         var pg = 'Page ' + (i + 1) + ' / ' + n; p.push('BT ' + GREY + ' rg /F1 7.5 Tf ' + (PW - M - tw(pg, 7.5)).toFixed(2) + ' 22 Td (' + pg + ') Tj ET');
         var s = p.join('\n');
         objs[po] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PW + ' ' + PH + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + co + ' 0 R >>';
@@ -395,10 +395,11 @@
     };
     return d;
   }
-  function yearPdf(year) {
+  function yearPdf(year, stamp) {
     var D = yearData(year), doc = Doc('Championnat du club ' + year);
     doc.newPage();
     doc.h1('Championnat du club', 'Classement général : mercredis et deeps comptent ensemble (le deep rapporte ×1,5) · les 3 premiers sont récompensés' + carryNote(year), year);
+    if (stamp) { doc.text(M, doc.y - 10, stamp, 10.5, true, GOLD, null, CW); doc.y -= 20; } // horodatage : quand et après quoi ce PDF a été fait
     var cyK = L().carryOf ? L().carryOf(year) : null;
     doc.kpis([['Tournois', D.nT, (cyK ? 'depuis la reprise du ' + dfr(cyK.date) + ' · ' : '') + D.nMer + ' mercredi · ' + D.nDeep + ' deep' + (D.nLib ? ' · ' + D.nLib + ' hors champ.' : '')], ['Joueurs classés', D.st.length, cyK ? 'reprise comprise' : 'au moins un tournoi'], ['Moyenne de joueurs', D.nT ? f1(D.avgPlayers) : '—', 'par tournoi'], ['Primes', '+' + f1(D.primes), 'points de prime', RED]]);
     doc.podium(D.st);
@@ -546,6 +547,27 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 30000);
     done('Fichier créé : ' + name);
   }
+  function hhmm(d) { return ('0' + d.getHours()).slice(-2) + ' h ' + ('0' + d.getMinutes()).slice(-2); }
+  /* Après chaque tournoi enregistré ou corrigé : le PDF complet du championnat (classement général, semaine après semaine,
+     chaque tournoi), nommé et horodaté. Sur le PC il est gardé dans Mon Drive › Poker Academy › Classement (une version par
+     changement, rien n'est écrasé) ; sur téléphone, le menu de partage s'ouvre tout de suite (WhatsApp, mail…). */
+  function afterChange(tn, what, done) {
+    done = done || function () {};
+    try {
+      var y = tn.date.slice(0, 4), now = new Date(), T = L().TYPES[tn.type] || { short: tn.type, name: tn.type };
+      var p2 = function (v) { return ('0' + v).slice(-2); }, dd = tn.date.slice(8, 10) + '-' + tn.date.slice(5, 7);
+      var lab = String(T.short || tn.type).toLowerCase() + ' du ' + dd + (what === 'fix' ? ' corrigé' : '');
+      var name = 'Championnat-club-' + y + ' - ' + lab.replace(/[\\/:*?"<>|]/g, '-') + ' - ' + p2(now.getDate()) + '-' + p2(now.getMonth() + 1) + '-' + now.getFullYear() + ' ' + p2(now.getHours()) + 'h' + p2(now.getMinutes()) + '.pdf';
+      var stamp = 'Édité le ' + now.toLocaleDateString('fr-FR') + ' à ' + hhmm(now) + ', ' + (what === 'fix' ? 'après la correction du ' : 'après le ') + (T.name || tn.type).toLowerCase() + ' du ' + tn.date.slice(8, 10) + '/' + tn.date.slice(5, 7);
+      var bytes = yearPdf(y, stamp);
+      if (window.PA_SYNC && window.PA_SYNC.isPC) {
+        fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, b64: b64(bytes), open: false, dir: 'Classement' }) })
+          .then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) { done('PDF du classement enregistré : ' + (j.path || name)); }).catch(function () { done('Le PDF du classement n’a pas pu être enregistré.'); });
+        return;
+      }
+      deliver(bytes, name, function (m) { done(m); });
+    } catch (e) { done('PDF du classement impossible : ' + e.message); }
+  }
   function slug(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
   function awards(y, done) { deliver(awardsPdf(y), 'Remise-des-prix-' + y + '.pdf', done); }
   function year(y, fmt, done) { deliver(fmt === 'pdf' ? yearPdf(y) : yearXlsx(y), 'Championnat-' + y + '.' + fmt, done); }
@@ -573,5 +595,5 @@
   }
   function autoSoon() { if (!(window.PA_SYNC && window.PA_SYNC.isPC) || window.PA_RANGEWIN) return; if (AUTO.t) clearTimeout(AUTO.t); AUTO.t = setTimeout(autoRun, 4000); }
   setTimeout(autoSoon, 6000);
-  window.PA_EXPORT = { autoSoon: autoSoon, autoInfo: function () { return AUTO; }, awards: awards, _awardsPdf: awardsPdf, year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, image: rankImage, _canvas: rankCanvas, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
+  window.PA_EXPORT = { afterChange: afterChange, autoSoon: autoSoon, autoInfo: function () { return AUTO; }, awards: awards, _awardsPdf: awardsPdf, year: year, tournament: tournament, _yearXlsx: yearXlsx, _yearPdf: yearPdf, image: rankImage, _canvas: rankCanvas, _tnPdf: tnPdf, _tnXlsx: tnXlsx };
 })();

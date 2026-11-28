@@ -883,7 +883,9 @@
     else if (a === 'movesDone') { T().pending = []; T().closed = []; MSHEET = false; }
     else if (a === 'movesLater') { MSHEET = false; }
     else if (a === 'ttype') { T().type = t.getAttribute('data-v'); }
-    else if (a === 'saveLeague') { var ts = T(); if (ts.saved && ts.dirty && window.PA_LEAGUE && ts.recId) { window.PA_LEAGUE.remove(ts.recId); ts.saved = false; ts.dirty = false; } if (!ts.saved && window.PA_LEAGUE) { ts.payout = payout(ts); var rec = window.PA_LEAGUE.record(ts); ts.recId = rec.id; ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.'; } }
+    else if (a === 'saveLeague') { var ts = T(), wasFix = !!(ts.saved && ts.dirty); if (ts.saved && ts.dirty && window.PA_LEAGUE && ts.recId) { window.PA_LEAGUE.remove(ts.recId); ts.saved = false; ts.dirty = false; } if (!ts.saved && window.PA_LEAGUE) { ts.payout = payout(ts); var rec = window.PA_LEAGUE.record(ts); ts.recId = rec.id; ts.saved = true; ts.msg = 'Tournoi enregistré : ' + rec.winner + ' gagne ' + (rec.rows[0] ? String(rec.rows[0].total).replace('.', ',') : '') + ' points. Le classement est à jour.';  // PDF du classement nommé et horodaté : menu de partage sur téléphone, Drive sur le PC
+      if (window.PA_EXPORT && window.PA_EXPORT.afterChange && rec.type !== 'libre') window.PA_EXPORT.afterChange(rec, wasFix ? 'fix' : 'new', function (m) { var t2 = T(); t2.msg = (t2.msg ? t2.msg + ' ' : '') + '📄 ' + m; save(); U().render(); });
+    } }
     else if (a === 'shareSum') { var tz = T(); if (tz.recId && window.PA_LEAGUE) window.PA_LEAGUE.shareText(window.PA_LEAGUE.summary(tz.recId), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'shareImg') { window.PA_EXPORT.image((T().date || '').slice(0, 4) || String(new Date().getFullYear()), function (m) { T().msg = m; save(); U().render(); }); return; }
     else if (a === 'editFromT') { EDIT = true; save(); location.hash = '#minuteur'; return; }

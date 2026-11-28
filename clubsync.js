@@ -74,6 +74,8 @@
         CS.busy = false; CS.at = Date.now();
         if (!j || !j.ok) { CS.err = j && j.err === 'code' ? 'Le serveur du club refuse le code : mets l’appli à jour.' : 'Réponse inattendue du serveur du club.'; if (manual) U().render(); return; }
         var mg = j.data, pulled = mg && mg.league && sig(mg) !== sl;
+        // une modification faite pendant la synchro (correction, tournoi enregistré) ne doit pas être écrasée par la réponse : on resynchronise
+        if (pulled && sig(localData()) !== sl) { setTimeout(function () { srvSync(manual); }, 300); return; }
         if (pulled) applyLocal(mg);
         var added = pulled ? mg.league.list.length - before : 0;
         CS.remoteAt = mg ? mg.at : 0;
